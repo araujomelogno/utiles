@@ -37,99 +37,102 @@ import uy.com.bay.utiles.security.AuthenticatedUser;
 @AnonymousAllowed
 public class MainLayout extends AppLayout {
 
-    private H1 viewTitle;
+	private H1 viewTitle;
 
-    private AuthenticatedUser authenticatedUser;
-    private AccessAnnotationChecker accessChecker;
+	private AuthenticatedUser authenticatedUser;
+	private AccessAnnotationChecker accessChecker;
 
-    public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
-        this.authenticatedUser = authenticatedUser;
-        this.accessChecker = accessChecker;
+	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
+		this.authenticatedUser = authenticatedUser;
+		this.accessChecker = accessChecker;
 
-        setPrimarySection(Section.DRAWER);
-        addDrawerContent();
-        addHeaderContent();
-    }
+		setPrimarySection(Section.DRAWER);
+		addDrawerContent();
+		addHeaderContent();
+	}
 
-    private void addHeaderContent() {
-        DrawerToggle toggle = new DrawerToggle();
-        toggle.setAriaLabel("Menu toggle");
+	private void addHeaderContent() {
+		DrawerToggle toggle = new DrawerToggle();
+		toggle.setAriaLabel("Menu toggle");
 
-        viewTitle = new H1();
-        viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+		viewTitle = new H1();
+		viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        addToNavbar(true, toggle, viewTitle);
-    }
+		addToNavbar(true, toggle, viewTitle);
+	}
 
-    private void addDrawerContent() {
-        Span appName = new Span("Útiles");
-        appName.addClassNames(LumoUtility.FontWeight.SEMIBOLD, LumoUtility.FontSize.LARGE);
-        Header header = new Header(appName);
+	private void addDrawerContent() {
+		Span appName = new Span("Útiles");
+		appName.addClassNames(LumoUtility.FontWeight.SEMIBOLD, LumoUtility.FontSize.LARGE);
+		Header header = new Header(appName);
 
-        Scroller scroller = new Scroller(createNavigation());
+		Scroller scroller = new Scroller(createNavigation());
 
-        addToDrawer(header, scroller, createFooter());
-    }
+		addToDrawer(header, scroller, createFooter());
+	}
 
-    private SideNav createNavigation() {
-        SideNav nav = new SideNav();
+	private SideNav createNavigation() {
+		SideNav nav = new SideNav();
 
-        List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
-        menuEntries.forEach(entry -> {
-            if (entry.icon() != null) {
-                nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
-            } else {
-                nav.addItem(new SideNavItem(entry.title(), entry.path()));
-            }
-        });
+		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
+		menuEntries.forEach(entry -> {
+			if (entry.icon() != null) {
+				nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
+			} else {
+				nav.addItem(new SideNavItem(entry.title(), entry.path()));
+			}
+		});
 
-        return nav;
-    }
+		return nav;
+	}
 
-    private Footer createFooter() {
-        Footer layout = new Footer();
+	private Footer createFooter() {
+		Footer layout = new Footer();
 
-        Optional<User> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.get();
+		Optional<User> maybeUser = authenticatedUser.get();
+		if (maybeUser.isPresent()) {
+			User user = maybeUser.get();
 
-            Avatar avatar = new Avatar(user.getName());
-            StreamResource resource = new StreamResource("profile-pic",
-                    () -> new ByteArrayInputStream(user.getProfilePicture()));
-            avatar.setImageResource(resource);
-            avatar.setThemeName("xsmall");
-            avatar.getElement().setAttribute("tabindex", "-1");
+			Avatar avatar = new Avatar(user.getName());
+			byte[] profilePictureData = user.getProfilePicture();
+			if (profilePictureData != null) {
+				StreamResource resource = new StreamResource("profile-pic",
+						() -> new ByteArrayInputStream(profilePictureData));
+				avatar.setImageResource(resource);
+			}
+			avatar.setThemeName("xsmall");
+			avatar.getElement().setAttribute("tabindex", "-1");
 
-            MenuBar userMenu = new MenuBar();
-            userMenu.setThemeName("tertiary-inline contrast");
+			MenuBar userMenu = new MenuBar();
+			userMenu.setThemeName("tertiary-inline contrast");
 
-            MenuItem userName = userMenu.addItem("");
-            Div div = new Div();
-            div.add(avatar);
-            div.add(user.getName());
-            div.add(new Icon("lumo", "dropdown"));
-            div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.AlignItems.CENTER, LumoUtility.Gap.SMALL);
-            userName.add(div);
-            userName.getSubMenu().addItem("Sign out", e -> {
-                authenticatedUser.logout();
-            });
+			MenuItem userName = userMenu.addItem("");
+			Div div = new Div();
+			div.add(avatar);
+			div.add(user.getName());
+			div.add(new Icon("lumo", "dropdown"));
+			div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.AlignItems.CENTER, LumoUtility.Gap.SMALL);
+			userName.add(div);
+			userName.getSubMenu().addItem("Sign out", e -> {
+				authenticatedUser.logout();
+			});
 
-            layout.add(userMenu);
-        } else {
-            Anchor loginLink = new Anchor("login", "Sign in");
-            layout.add(loginLink);
-        }
+			layout.add(userMenu);
+		} else {
+			Anchor loginLink = new Anchor("login", "Sign in");
+			layout.add(loginLink);
+		}
 
-        return layout;
-    }
+		return layout;
+	}
 
-    @Override
-    protected void afterNavigation() {
-        super.afterNavigation();
-        viewTitle.setText(getCurrentPageTitle());
-    }
+	@Override
+	protected void afterNavigation() {
+		super.afterNavigation();
+		viewTitle.setText(getCurrentPageTitle());
+	}
 
-    private String getCurrentPageTitle() {
-        return MenuConfiguration.getPageHeader(getContent()).orElse("");
-    }
+	private String getCurrentPageTitle() {
+		return MenuConfiguration.getPageHeader(getContent()).orElse("");
+	}
 }

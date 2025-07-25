@@ -34,6 +34,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -43,8 +44,9 @@ import uy.com.bay.utiles.services.UserService;
 
 @PageTitle("Usuarios")
 @Route("useradmin/:samplePersonID?/:action?(edit)")
-@Menu(order = 2, icon = LineAwesomeIconUrl.COLUMNS_SOLID)
-@RolesAllowed("ADMIN")
+@Menu(order = 2, icon = LineAwesomeIconUrl.USER_CIRCLE)
+//@RolesAllowed("ADMIN")
+@AnonymousAllowed
 @Uses(Icon.class)
 public class UserAdminView extends Div implements BeforeEnterObserver {
 
@@ -54,6 +56,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 	private final Grid<User> grid = new Grid<>(User.class, false);
 
 	private TextField userName;
+	private TextField name;
 	PasswordField password;
 	private ComboBox<Role> roles;
 	private TextField usernameFilterField;
@@ -89,7 +92,6 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 		usernameFilterField = new TextField();
 		usernameFilterField.setPlaceholder("Filtrar por usuario...");
 		usernameFilterField.setClearButtonVisible(true);
-		usernameFilterField.setWidth("100%");
 		usernameFilterField.addValueChangeListener(e -> grid.getDataProvider().refreshAll());
 
 		// Initialize deleteButton before layout creation
@@ -146,6 +148,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 						set -> set != null && !set.isEmpty() ? set.iterator().next() : null)
 				.bind(User::getRoles, User::setRoles);
 		binder.bind(userName, "username");
+		binder.bind(name, "name");
 		binder.bind(password, "password");
 	}
 
@@ -259,8 +262,9 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 
 		FormLayout formLayout = new FormLayout();
 		userName = new TextField("Usuario:");
+		name = new TextField("Nombre:");
 		password = new PasswordField("Password:");
-		formLayout.add(userName, password, roles);
+		formLayout.add(userName, name, password, roles);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);
