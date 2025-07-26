@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "alchemer_survey_response")
+@Table(name = "alchemer_contact")
 public class AlchemerContact extends AbstractEntity {
 
     @JsonProperty("Email")
