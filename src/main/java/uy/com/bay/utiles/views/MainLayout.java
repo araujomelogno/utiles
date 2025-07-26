@@ -74,12 +74,21 @@ public class MainLayout extends AppLayout {
 	private SideNav createNavigation() {
 		SideNav nav = new SideNav();
 
+		SideNavItem settingsItem = new SideNavItem("Configuración");
+		settingsItem.setPrefixComponent(new SvgIcon("la la-cog"));
+		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
+		usersItem.setPrefixComponent(new SvgIcon("la la-user"));
+		settingsItem.addItem(usersItem);
+		nav.addItem(settingsItem);
+
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
 		menuEntries.forEach(entry -> {
-			if (entry.icon() != null) {
-				nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
-			} else {
-				nav.addItem(new SideNavItem(entry.title(), entry.path()));
+			if (!entry.title().equals("Usuarios")) {
+				if (entry.icon() != null) {
+					nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
+				} else {
+					nav.addItem(new SideNavItem(entry.title(), entry.path()));
+				}
 			}
 		});
 
