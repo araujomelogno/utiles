@@ -41,28 +41,8 @@ public class TasksView extends Div {
         grid = new Grid<>(Task.class, false);
 
         gridListDataView = grid.setItems(tasks);
-        addFiltersToGrid();
+        
     }
 
-    private void addFiltersToGrid() {
-        HeaderRow filterRow = grid.appendHeaderRow();
-
-        TextField nameFilter = new TextField();
-        nameFilter.setPlaceholder("Filter by name");
-        nameFilter.setClearButtonVisible(true);
-        nameFilter.setWidth("100%");
-        nameFilter.setValueChangeMode(ValueChangeMode.LAZY);
-        nameFilter.addValueChangeListener(e -> gridListDataView.addFilter(
-                task -> org.apache.commons.lang3.StringUtils.containsIgnoreCase(task.getName(), nameFilter.getValue())));
-        filterRow.getCell(grid.getColumnByKey("name")).setComponent(nameFilter);
-
-        TextField descriptionFilter = new TextField();
-        descriptionFilter.setPlaceholder("Filter by description");
-        descriptionFilter.setClearButtonVisible(true);
-        descriptionFilter.setWidth("100%");
-        descriptionFilter.setValueChangeMode(ValueChangeMode.LAZY);
-        descriptionFilter.addValueChangeListener(e -> gridListDataView.addFilter(
-                task -> org.apache.commons.lang3.StringUtils.containsIgnoreCase(task.getDescription(), descriptionFilter.getValue())));
-        filterRow.getCell(grid.getColumnByKey("description")).setComponent(descriptionFilter);
-    }
+    
 }
