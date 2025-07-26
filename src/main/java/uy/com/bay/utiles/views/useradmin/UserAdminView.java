@@ -9,8 +9,8 @@ import org.vaadin.lineawesome.LineAwesomeIconUrl;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.confirmdialog.ConfirmDialog; // Added import
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -58,7 +58,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 	private TextField userName;
 	private TextField name;
 	PasswordField password;
-	private ComboBox<Role> roles;
+	private MultiSelectComboBox<Role> roles;
 	private TextField usernameFilterField;
 
 	private final Button cancel = new Button("Cancel");
@@ -79,7 +79,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 		this.binder = new BeanValidationBinder<>(User.class);
 		addClassNames("useradmin-view");
 
-		roles = new ComboBox<>("Role");
+		roles = new MultiSelectComboBox<>("Role");
 		roles.setItems(Role.values());
 		roles.setItemLabelGenerator(Role::name);
 
@@ -112,7 +112,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 		grid.addColumn(user -> {
 			Set<Role> userRoles = user.getRoles();
 			if (userRoles != null && !userRoles.isEmpty()) {
-				return userRoles.iterator().next().name();
+				return userRoles.stream().map(Role::name).collect(java.util.stream.Collectors.joining(", "));
 			}
 			return "";
 		}).setHeader("Rol").setAutoWidth(true);
@@ -143,10 +143,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 
 		// Configure Form fields
 		// Note: binder itself is initialized at the top of the constructor
-		binder.forField(roles)
-				.withConverter(role -> role != null ? java.util.Set.of(role) : java.util.Collections.<Role>emptySet(),
-						set -> set != null && !set.isEmpty() ? set.iterator().next() : null)
-				.bind(User::getRoles, User::setRoles);
+		binder.forField(roles).bind(User::getRoles, User::setRoles);
 		binder.bind(userName, "username");
 		binder.bind(name, "name");
 		binder.bind(password, "password");
