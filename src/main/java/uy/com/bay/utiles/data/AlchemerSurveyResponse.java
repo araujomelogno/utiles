@@ -1,20 +1,22 @@
 package uy.com.bay.utiles.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "alchemer_survey_response")
 public class AlchemerSurveyResponse extends AbstractEntity {
 
     @JsonProperty("webhook_name")
     private String webhookName;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private Data data;
+    private AlchemerSurveyResponseData data;
 
     @ManyToOne
     private Proyecto proyecto;
@@ -27,11 +29,11 @@ public class AlchemerSurveyResponse extends AbstractEntity {
         this.webhookName = webhookName;
     }
 
-    public Data getData() {
+    public AlchemerSurveyResponseData getData() {
         return data;
     }
 
-    public void setData(Data data) {
+    public void setData(AlchemerSurveyResponseData data) {
         this.data = data;
     }
 

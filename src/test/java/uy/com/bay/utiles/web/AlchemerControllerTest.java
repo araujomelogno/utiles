@@ -9,7 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
-import uy.com.bay.utiles.data.Data;
+import uy.com.bay.utiles.data.AlchemerSurveyResponseData;
 import uy.com.bay.utiles.data.Proyecto;
 import uy.com.bay.utiles.data.ProyectoRepository;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseRepository;

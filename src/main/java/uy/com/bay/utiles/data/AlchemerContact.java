@@ -2,9 +2,11 @@ package uy.com.bay.utiles.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
-public class Contact extends AbstractEntity {
+@Table(name = "alchemer_survey_response")
+public class AlchemerContact extends AbstractEntity {
 
     @JsonProperty("Email")
     private String email;

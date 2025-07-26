@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
-public class Data extends AbstractEntity {
+@Table(name = "alchemer_survey_response_data")
+public class AlchemerSurveyResponseData extends AbstractEntity {
 
     @JsonProperty("is_test")
     private boolean isTest;
@@ -27,7 +29,7 @@ public class Data extends AbstractEntity {
     private String responseStatus;
 
     @OneToOne(cascade = CascadeType.ALL)
-    private Contact contact;
+    private AlchemerContact contact;
 
     public boolean isTest() {
         return isTest;
@@ -77,11 +79,11 @@ public class Data extends AbstractEntity {
         this.responseStatus = responseStatus;
     }
 
-    public Contact getContact() {
+    public AlchemerContact getContact() {
         return contact;
     }
 
-    public void setContact(Contact contact) {
+    public void setContact(AlchemerContact contact) {
         this.contact = contact;
     }
 }

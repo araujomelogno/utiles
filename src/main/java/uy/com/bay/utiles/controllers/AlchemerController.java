@@ -1,4 +1,4 @@
-package uy.com.bay.utiles.web;
+package uy.com.bay.utiles.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/alchemer")
+@RequestMapping("/api/webhook")
 public class AlchemerController {
 
     @Autowired
@@ -31,12 +31,12 @@ public class AlchemerController {
     @Autowired
     private TaskRepository taskRepository;
 
-    @PostMapping("/response")
+    @PostMapping("/survey-response")
     public ResponseEntity<Void> receiveAlchemerResponse(@RequestBody AlchemerSurveyResponse response) {
         Optional<Proyecto> optionalProyecto = proyectoRepository.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
         optionalProyecto.ifPresent(response::setProyecto);
 
-        alchemerSurveyResponseRepository.save(response);
+		alchemerSurveyResponseRepository.save(response);
 
         Task task = new Task();
         task.setJobType(JobType.ALCHEMERANSWERRETRIEVAL);
