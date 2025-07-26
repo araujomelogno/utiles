@@ -1,6 +1,10 @@
 package uy.com.bay.utiles.data;
 
+import java.util.Date;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -8,34 +12,66 @@ import jakarta.persistence.Id;
 @Entity
 public class Task {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	@Enumerated(EnumType.STRING)
+	private JobType jobType;
 
-    private String name;
-    private String description;
+	private Date created;
 
-    public Long getId() {
-        return id;
-    }
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	private Integer surveyId;
 
-    public String getName() {
-        return name;
-    }
+	private Integer responseId;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public JobType getJobType() {
+		return jobType;
+	}
+
+	public void setJobType(JobType jobType) {
+		this.jobType = jobType;
+	}
+
+	public Date getCreated() {
+		return created;
+	}
+
+	public void setCreated(Date created) {
+		this.created = created;
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	public Integer getSurveyId() {
+		return surveyId;
+	}
+
+	public void setSurveyId(Integer surveyId) {
+		this.surveyId = surveyId;
+	}
+
+	public Integer getResponseId() {
+		return responseId;
+	}
+
+	public void setResponseId(Integer responseId) {
+		this.responseId = responseId;
+	}
 }

@@ -10,6 +10,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Task;
 import uy.com.bay.utiles.data.service.TaskService;
 import uy.com.bay.utiles.views.MainLayout;
@@ -17,6 +18,7 @@ import uy.com.bay.utiles.views.MainLayout;
 import java.util.List;
 
 @PageTitle("Tareas")
+@RolesAllowed("ADMIN")
 @Route(value = "tasks", layout = MainLayout.class)
 public class TasksView extends Div {
 
@@ -37,8 +39,6 @@ public class TasksView extends Div {
 
     private void createGrid(List<Task> tasks) {
         grid = new Grid<>(Task.class, false);
-        grid.addColumn(Task::getName).setHeader("Name").setKey("name");
-        grid.addColumn(Task::getDescription).setHeader("Description").setKey("description");
 
         gridListDataView = grid.setItems(tasks);
         addFiltersToGrid();

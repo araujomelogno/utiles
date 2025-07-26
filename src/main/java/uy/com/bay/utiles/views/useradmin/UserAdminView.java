@@ -44,8 +44,7 @@ import uy.com.bay.utiles.services.UserService;
 
 @PageTitle("Usuarios")
 @Route("useradmin/:samplePersonID?/:action?(edit)")
-//@RolesAllowed("ADMIN")
-@AnonymousAllowed
+@RolesAllowed("ADMIN")
 @Uses(Icon.class)
 public class UserAdminView extends Div implements BeforeEnterObserver {
 
