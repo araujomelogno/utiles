@@ -44,7 +44,6 @@ import uy.com.bay.utiles.services.UserService;
 
 @PageTitle("Usuarios")
 @Route("useradmin/:samplePersonID?/:action?(edit)")
-@Menu(order = 2, icon = LineAwesomeIconUrl.USER_CIRCLE)
 //@RolesAllowed("ADMIN")
 @AnonymousAllowed
 @Uses(Icon.class)
