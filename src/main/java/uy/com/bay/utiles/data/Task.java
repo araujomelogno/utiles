@@ -1,4 +1,4 @@
-package uy.com.bay.utiles.data.entity;
+package uy.com.bay.utiles.data;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -9,7 +9,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import uy.com.bay.utiles.data.entity.Task;
+
+import uy.com.bay.utiles.data.Task;
 import uy.com.bay.utiles.data.service.TaskService;
 import uy.com.bay.utiles.views.MainLayout;
 
