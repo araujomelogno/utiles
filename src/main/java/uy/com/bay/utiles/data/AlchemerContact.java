@@ -5,14 +5,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import jakarta.persistence.JoinColumn;
-
 @Entity
 @Table(name = "alchemer_contact")
 public class AlchemerContact extends AbstractEntity {
 
-    @OneToOne
-    @JoinColumn(name = "survey_response_data_id")
+    @OneToOne(mappedBy = "contact")
     private AlchemerSurveyResponseData surveyResponseData;
 
     @JsonProperty("Email")
