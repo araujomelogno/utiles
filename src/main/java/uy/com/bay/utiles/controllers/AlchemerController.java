@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.transaction.Transactional;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
-import uy.com.bay.utiles.data.AlchemerSurveyResponseData;
 import uy.com.bay.utiles.data.JobType;
 import uy.com.bay.utiles.data.Proyecto;
 import uy.com.bay.utiles.data.ProyectoRepository;
@@ -39,10 +38,9 @@ public class AlchemerController {
         Optional<Proyecto> optionalProyecto = proyectoRepository.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
         optionalProyecto.ifPresent(response::setProyecto);
 
-        AlchemerSurveyResponseData data = response.getData();
-        response.setData(data);
+        response.setData(response.getData());
 
-        alchemerSurveyResponseRepository.save(response);
+		alchemerSurveyResponseRepository.save(response);
 
         Task task = new Task();
         task.setJobType(JobType.ALCHEMERANSWERRETRIEVAL);
