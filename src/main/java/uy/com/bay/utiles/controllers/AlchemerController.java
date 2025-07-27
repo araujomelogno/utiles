@@ -37,6 +37,15 @@ public class AlchemerController {
 
     @PostMapping("/survey-response")
     public ResponseEntity<Void> receiveAlchemerResponse(@RequestBody AlchemerSurveyResponse response) {
+        Optional<AlchemerSurveyResponse> existingResponse = alchemerSurveyResponseRepository.findByDataResponseIdAndDataSurveyId(
+                (long) response.getData().getResponseId(),
+                response.getData().getSurveyId()
+        );
+
+        if (existingResponse.isPresent()) {
+            return ResponseEntity.ok().build();
+        }
+
         Optional<Proyecto> optionalProyecto = proyectoRepository.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
         optionalProyecto.ifPresent(response::setProyecto);
 
