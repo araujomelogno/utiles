@@ -34,6 +34,9 @@ public class AlchemerSurveyResponse extends AbstractEntity {
     }
 
     public void setData(AlchemerSurveyResponseData data) {
+        if (data != null) {
+            data.setContact(data.getContact());
+        }
         this.data = data;
     }
 
