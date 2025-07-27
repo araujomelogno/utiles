@@ -29,6 +29,9 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
     @JoinColumn(name = "contact_id", referencedColumnName = "id")
     private AlchemerContact contact;
 
+    @OneToOne(mappedBy = "data")
+    private AlchemerSurveyResponse surveyResponse;
+
     public boolean isTest() {
         return isTest;
     }
@@ -86,5 +89,13 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
             contact.setSurveyResponseData(this);
         }
         this.contact = contact;
+    }
+
+    public AlchemerSurveyResponse getSurveyResponse() {
+        return surveyResponse;
+    }
+
+    public void setSurveyResponse(AlchemerSurveyResponse surveyResponse) {
+        this.surveyResponse = surveyResponse;
     }
 }
