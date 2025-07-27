@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.transaction.Transactional;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
+import uy.com.bay.utiles.data.AlchemerSurveyResponseData;
 import uy.com.bay.utiles.data.JobType;
 import uy.com.bay.utiles.data.Proyecto;
 import uy.com.bay.utiles.data.ProyectoRepository;
@@ -32,13 +34,15 @@ public class AlchemerController {
     private TaskRepository taskRepository;
 
     @PostMapping("/survey-response")
+    @Transactional
     public ResponseEntity<Void> receiveAlchemerResponse(@RequestBody AlchemerSurveyResponse response) {
         Optional<Proyecto> optionalProyecto = proyectoRepository.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
         optionalProyecto.ifPresent(response::setProyecto);
 
-        response.setData(response.getData());
+        AlchemerSurveyResponseData data = response.getData();
+        response.setData(data);
 
-		alchemerSurveyResponseRepository.save(response);
+        alchemerSurveyResponseRepository.save(response);
 
         Task task = new Task();
         task.setJobType(JobType.ALCHEMERANSWERRETRIEVAL);
