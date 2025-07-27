@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -16,6 +17,7 @@ public class AlchemerSurveyResponse extends AbstractEntity {
     private String webhookName;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "data_id", referencedColumnName = "id")
     private AlchemerSurveyResponseData data;
 
     @ManyToOne

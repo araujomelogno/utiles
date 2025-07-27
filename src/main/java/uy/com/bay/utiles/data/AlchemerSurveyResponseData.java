@@ -25,8 +25,7 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
     @JsonProperty("response_status")
     private String responseStatus;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "contact_id", referencedColumnName = "id")
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "surveyResponseData")
     private AlchemerContact contact;
 
     @OneToOne(mappedBy = "data")
