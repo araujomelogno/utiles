@@ -2,11 +2,15 @@ package uy.com.bay.utiles.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "alchemer_contact")
 public class AlchemerContact extends AbstractEntity {
+
+    @OneToOne(mappedBy = "contact")
+    private AlchemerSurveyResponseData surveyResponseData;
 
     @JsonProperty("Email")
     private String email;
@@ -370,5 +374,13 @@ public class AlchemerContact extends AbstractEntity {
 
     public void setInviteCustom10(String inviteCustom10) {
         this.inviteCustom10 = inviteCustom10;
+    }
+
+    public AlchemerSurveyResponseData getSurveyResponseData() {
+        return surveyResponseData;
+    }
+
+    public void setSurveyResponseData(AlchemerSurveyResponseData surveyResponseData) {
+        this.surveyResponseData = surveyResponseData;
     }
 }

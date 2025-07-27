@@ -36,6 +36,8 @@ public class AlchemerController {
         Optional<Proyecto> optionalProyecto = proyectoRepository.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
         optionalProyecto.ifPresent(response::setProyecto);
 
+        response.setData(response.getData());
+
 		alchemerSurveyResponseRepository.save(response);
 
         Task task = new Task();

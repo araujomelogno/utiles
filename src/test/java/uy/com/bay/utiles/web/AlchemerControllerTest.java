@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
@@ -37,6 +38,7 @@ public class AlchemerControllerTest {
     private TaskRepository taskRepository;
 
     @Test
+    @WithMockUser
     public void testReceiveAlchemerResponse() throws Exception {
         Proyecto proyecto = new Proyecto();
         proyecto.setAlchemerId("8399892");
@@ -68,7 +70,7 @@ public class AlchemerControllerTest {
                 "  }\n" +
                 "}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/alchemer/response")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/webhook/survey-response")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());

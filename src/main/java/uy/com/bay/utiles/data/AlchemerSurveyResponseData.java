@@ -1,10 +1,7 @@
 package uy.com.bay.utiles.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "alchemer_survey_response_data")
@@ -29,6 +26,7 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
     private String responseStatus;
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "contact_id", referencedColumnName = "id")
     private AlchemerContact contact;
 
     public boolean isTest() {
@@ -84,6 +82,9 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
     }
 
     public void setContact(AlchemerContact contact) {
+        if (contact != null) {
+            contact.setSurveyResponseData(this);
+        }
         this.contact = contact;
     }
 }
