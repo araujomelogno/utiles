@@ -21,7 +21,7 @@ import com.vaadin.flow.theme.Theme;
  */
 @SpringBootApplication
 @Theme(value = "Utiles")
-@EnableScheduling // Add this annotation
+@EnableScheduling
 public class Application implements AppShellConfigurator {
 
 	public static void main(String[] args) {
