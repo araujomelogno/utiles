@@ -31,4 +31,20 @@ public class AlchemerAnswerFilter implements Serializable {
         this.type = type;
         dataView.refreshAll();
     }
+
+	public GridLazyDataView<AlchemerAnswer> getDataView() {
+		return dataView;
+	}
+
+	public String getQuestion() {
+		return question;
+	}
+
+	public String getAnswer() {
+		return answer;
+	}
+
+	public String getType() {
+		return type;
+	}
 }
