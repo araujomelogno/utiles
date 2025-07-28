@@ -65,10 +65,14 @@ public class AnswersView extends Div {
 		TextField questionFilter = createTextFieldFilter(filter::setQuestion);
 		TextField answerFilter = createTextFieldFilter(filter::setAnswer);
 		TextField typeFilter = createTextFieldFilter(filter::setType);
-		
+		TextField surveyIdFilter = createTextFieldFilter(filter::setSurveyId);
+		TextField responseIdFilter = createTextFieldFilter(filter::setResponseId);
+
 		headerRow.getCell(questionColumn).setComponent(questionFilter);
 		headerRow.getCell(answerColumn).setComponent(answerFilter);
-		headerRow.getCell(typeColumn).setComponent(typeFilter); 
+		headerRow.getCell(typeColumn).setComponent(typeFilter);
+		headerRow.getCell(surveyIdColumn).setComponent(surveyIdFilter);
+		headerRow.getCell(responseIdColumn).setComponent(responseIdFilter);
 	}
 
 	private TextField createTextFieldFilter(java.util.function.Consumer<String> consumer) {
@@ -93,6 +97,14 @@ public class AnswersView extends Div {
 			if (!filter.getType().isEmpty()) {
 				spec = spec
 						.and((r, q, c) -> c.like(c.lower(r.get("type")), "%" + filter.getType().toLowerCase() + "%"));
+			}
+			if (!filter.getSurveyId().isEmpty()) {
+				spec = spec.and((r, q, c) -> c.like(c.lower(r.get("surveyId")),
+						"%" + filter.getSurveyId().toLowerCase() + "%"));
+			}
+			if (!filter.getResponseId().isEmpty()) {
+				spec = spec.and((r, q, c) -> c.like(c.lower(r.get("responseId")),
+						"%" + filter.getResponseId().toLowerCase() + "%"));
 			}
 			return spec.toPredicate(root, query, cb);
 		};
