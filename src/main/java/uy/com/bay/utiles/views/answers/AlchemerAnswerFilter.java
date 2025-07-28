@@ -13,7 +13,9 @@ public class AlchemerAnswerFilter implements Serializable {
 	private GridLazyDataView<AlchemerAnswer> dataView;
 	private String question = "";
 	private String answer = "";
-	private String type = ""; 
+	private String type = "";
+	private String surveyId = "";
+	private String responseId = "";
 
 	public void setDataView(GridLazyDataView<AlchemerAnswer> dataView) {
 		this.dataView = dataView;
@@ -23,8 +25,7 @@ public class AlchemerAnswerFilter implements Serializable {
 		this.question = question;
 		dataView.refreshAll();
 	}
- 
-	
+
 	public void setAnswer(String answer) {
 		this.answer = answer;
 		dataView.refreshAll();
@@ -32,6 +33,16 @@ public class AlchemerAnswerFilter implements Serializable {
 
 	public void setType(String type) {
 		this.type = type;
+		dataView.refreshAll();
+	}
+
+	public void setSurveyId(String surveyId) {
+		this.surveyId = surveyId;
+		dataView.refreshAll();
+	}
+
+	public void setResponseId(String responseId) {
+		this.responseId = responseId;
 		dataView.refreshAll();
 	}
 
@@ -49,6 +60,14 @@ public class AlchemerAnswerFilter implements Serializable {
 
 	public String getType() {
 		return type;
+	}
+
+	public String getSurveyId() {
+		return surveyId;
+	}
+
+	public String getResponseId() {
+		return responseId;
 	}
  
 }
