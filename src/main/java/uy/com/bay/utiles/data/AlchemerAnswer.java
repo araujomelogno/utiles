@@ -63,9 +63,10 @@ public class AlchemerAnswer {
     public void setShown(boolean shown) {
         this.shown = shown;
     }
-
-    public Integer getSurveyId() {
-        return surveyId;
+ 
+    
+    public String getSurveyId() {
+        return surveyId.toString();
     }
 
     public void setSurveyId(Integer surveyId) {
