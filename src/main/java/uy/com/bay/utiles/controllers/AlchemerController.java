@@ -69,6 +69,7 @@ public class AlchemerController {
         task.setStatus(Status.PENDING);
         task.setCreated(new Date());
         task.setSurveyId(response.getData().getSurveyId());
+        task.setResponseId(response.getData().getResponseId());
         taskRepository.save(task);
         logger.info("Created new Task with id: {}", task.getId());
 

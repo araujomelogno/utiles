@@ -40,7 +40,7 @@ public class AlchemerAnswerRetriever {
         this.restTemplate = new RestTemplate();
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */1 * * * *")
     public void retrieveAlchemerAnswers() {
         LOGGER.info("Starting Alchemer Answer Retriever task...");
         List<Task> pendingTasks = taskRepository.findByJobTypeAndStatus(JobType.ALCHEMERANSWERRETRIEVAL, Status.PENDING);
@@ -49,7 +49,7 @@ public class AlchemerAnswerRetriever {
         for (Task task : pendingTasks) {
             try {
                 LOGGER.info("Processing task ID: {}", task.getId());
-                String url = String.format("https://api.alchemer.com/v4/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
+                String url = String.format("https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
                         task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
 
                 String response = restTemplate.getForObject(url, String.class);
@@ -83,6 +83,8 @@ public class AlchemerAnswerRetriever {
                 LOGGER.info("Task ID: {} processed successfully.", task.getId());
 
             } catch (Exception e) {
+            	task.setStatus(Status.DONE);
+                taskRepository.save(task);
                 LOGGER.error("Error processing task ID: {}", task.getId(), e);
             }
         }
