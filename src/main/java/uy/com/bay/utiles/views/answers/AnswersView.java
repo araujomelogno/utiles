@@ -99,12 +99,12 @@ public class AnswersView extends Div {
 						.and((r, q, c) -> c.like(c.lower(r.get("type")), "%" + filter.getType().toLowerCase() + "%"));
 			}
 			if (!filter.getSurveyId().isEmpty()) {
-				spec = spec.and((r, q, c) -> c.like(c.lower(r.get("surveyId")),
-						"%" + filter.getSurveyId().toLowerCase() + "%"));
+				spec = spec.and((r, q, c) -> c.like(r.get("surveyId").as(String.class),
+						"%" + filter.getSurveyId() + "%"));
 			}
 			if (!filter.getResponseId().isEmpty()) {
-				spec = spec.and((r, q, c) -> c.like(c.lower(r.get("responseId")),
-						"%" + filter.getResponseId().toLowerCase() + "%"));
+				spec = spec.and((r, q, c) -> c.like(r.get("responseId").as(String.class),
+						"%" + filter.getResponseId() + "%"));
 			}
 			return spec.toPredicate(root, query, cb);
 		};
