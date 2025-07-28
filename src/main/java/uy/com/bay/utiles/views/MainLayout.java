@@ -99,6 +99,10 @@ public class MainLayout extends AppLayout {
 
 		nav.addItem(settingsItem);
 
+		SideNavItem answersItem = new SideNavItem("Respuestas Alchemer", "answers");
+		answersItem.setPrefixComponent(new Icon("vaadin", "comment-ellipsis-o"));
+		nav.addItem(answersItem);
+
 		return nav;
 	}
 
