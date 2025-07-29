@@ -41,6 +41,7 @@ public class TasksView extends Div {
 		grid.addColumn(Task::getJobType).setKey("jobType").setHeader("Tipo de tarea").setSortable(true);
 		grid.addColumn(Task::getStatus).setKey("status").setHeader("Estado").setSortable(true);
 		grid.addColumn(Task::getSurveyId).setKey("surveyId").setHeader("Id encuesta").setSortable(true);
+		grid.addColumn(Task::getResponseId).setKey("responseId").setHeader("Id respuesta").setSortable(true);
 
 		gridListDataView = grid.setItems(tasks);
 		addFiltersToGrid();
@@ -54,8 +55,8 @@ public class TasksView extends Div {
 		jobTypeFilter.setClearButtonVisible(true);
 		jobTypeFilter.setWidth("100%");
 		jobTypeFilter.setValueChangeMode(ValueChangeMode.LAZY);
-		jobTypeFilter.addValueChangeListener(event -> gridListDataView
-				.addFilter(task -> caseInsensitiveContains(task.getJobType().name(), jobTypeFilter.getValue())));
+		jobTypeFilter.addValueChangeListener(event -> gridListDataView.addFilter(
+				task -> caseInsensitiveContains(task.getJobType() == null ? "" : task.getJobType().name(), jobTypeFilter.getValue())));
 		filterRow.getCell(grid.getColumnByKey("jobType")).setComponent(jobTypeFilter);
 
 		TextField statusFilter = new TextField();
@@ -63,8 +64,8 @@ public class TasksView extends Div {
 		statusFilter.setClearButtonVisible(true);
 		statusFilter.setWidth("100%");
 		statusFilter.setValueChangeMode(ValueChangeMode.LAZY);
-		statusFilter.addValueChangeListener(event -> gridListDataView
-				.addFilter(task -> caseInsensitiveContains(task.getStatus().name(), statusFilter.getValue())));
+		statusFilter.addValueChangeListener(event -> gridListDataView.addFilter(
+				task -> caseInsensitiveContains(task.getStatus() == null ? "" : task.getStatus().name(), statusFilter.getValue())));
 		filterRow.getCell(grid.getColumnByKey("status")).setComponent(statusFilter);
 
 		TextField surveyIdFilter = new TextField();
@@ -72,9 +73,18 @@ public class TasksView extends Div {
 		surveyIdFilter.setClearButtonVisible(true);
 		surveyIdFilter.setWidth("100%");
 		surveyIdFilter.setValueChangeMode(ValueChangeMode.LAZY);
-		surveyIdFilter.addValueChangeListener(event -> gridListDataView
-				.addFilter(task -> caseInsensitiveContains(task.getSurveyId().toString(), surveyIdFilter.getValue())));
+		surveyIdFilter.addValueChangeListener(event -> gridListDataView.addFilter(task -> caseInsensitiveContains(
+				task.getSurveyId() == null ? "" : task.getSurveyId().toString(), surveyIdFilter.getValue())));
 		filterRow.getCell(grid.getColumnByKey("surveyId")).setComponent(surveyIdFilter);
+
+		TextField responseIdFilter = new TextField();
+		responseIdFilter.setPlaceholder("Filter");
+		responseIdFilter.setClearButtonVisible(true);
+		responseIdFilter.setWidth("100%");
+		responseIdFilter.setValueChangeMode(ValueChangeMode.LAZY);
+		responseIdFilter.addValueChangeListener(event -> gridListDataView.addFilter(task -> caseInsensitiveContains(
+				task.getResponseId() == null ? "" : task.getResponseId().toString(), responseIdFilter.getValue())));
+		filterRow.getCell(grid.getColumnByKey("responseId")).setComponent(responseIdFilter);
 	}
 
 	private boolean caseInsensitiveContains(String where, String what) {
