@@ -77,6 +77,10 @@ public class AlchemerAnswer {
         return responseId;
     }
 
+    public String getResponseIdString() {
+        return responseId.toString();
+    }
+
     public void setResponseId(Integer responseId) {
         this.responseId = responseId;
     }
