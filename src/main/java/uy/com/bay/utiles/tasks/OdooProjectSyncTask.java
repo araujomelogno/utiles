@@ -25,7 +25,7 @@ public class OdooProjectSyncTask {
 
     //@Scheduled(cron = "0 0 * * * ?") // Runs every hour at the beginning of the hour
     // For testing, you might use a more frequent cron like "*/30 * * * * ?" (every 30 seconds)
-    @Scheduled(cron = "*/30 * * * * ?")
+    @Scheduled(cron = "0 */7 * * * *")
     public void syncOdooProjects() {
         System.out.println("Starting Odoo Project Sync Task...");
 

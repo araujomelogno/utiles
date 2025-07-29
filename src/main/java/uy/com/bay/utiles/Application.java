@@ -6,10 +6,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;
 import org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling; // Import this
 
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 
 /**
@@ -17,17 +20,24 @@ import com.vaadin.flow.theme.Theme;
  *
  * Use the @PWA annotation make the application installable on phones, tablets
  * and some desktop browsers.
+ * extends SpringBootServletInitializer 
  *
  */
+@PWA(name = "Utiles", shortName = "Utiles")
 @SpringBootApplication
 @Theme(value = "Utiles")
 @EnableScheduling
-public class Application implements AppShellConfigurator {
+public class Application  extends SpringBootServletInitializer implements AppShellConfigurator   {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}
 
+	
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+		return builder.sources(Application.class); // Cambiá 'Application' si tu clase principal tiene otro nombre
+	}
 	@Bean
 	SqlDataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource,
 			SqlInitializationProperties properties) {

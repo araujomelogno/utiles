@@ -27,6 +27,7 @@ public class User extends AbstractEntity {
 	 
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
+    @Column(length = 20)
     private Set<Role> roles;
     @Lob
     @Column(length = 1000000)

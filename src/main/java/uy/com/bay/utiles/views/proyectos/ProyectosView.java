@@ -32,7 +32,6 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 import uy.com.bay.utiles.data.Proyecto;
-import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.services.ProyectoService;
 
 @PageTitle("Proyectos")
@@ -52,7 +51,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private TextField doobloId;
     private TextField odooId;
     private TextField obs;
-    private TextField casosCompletos;
 
     private Button addButton;
     private TextField nameFilter;
@@ -71,11 +69,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private Div editorLayoutDiv; // Added field declaration
 
     private final ProyectoService proyectoService;
-    private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 
-    public ProyectosView(ProyectoService proyectoService, AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
+    public ProyectosView(ProyectoService proyectoService) {
         this.proyectoService = proyectoService;
-        this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
         this.binder = new BeanValidationBinder<>(Proyecto.class); // Moved initialization here
         addClassNames("proyectos-view");
 
@@ -276,9 +272,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
         doobloId = new TextField("Dooblo Id");
         odooId = new TextField("Odoo Id");
         obs = new TextField("Obs");
-        casosCompletos = new TextField("Casos completos");
-        casosCompletos.setReadOnly(true);
-        formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos);
+        formLayout.add(name, alchemerId, doobloId, odooId, obs);
 
         editorDiv.add(formLayout);
         createButtonLayout(this.editorLayoutDiv);
@@ -331,16 +325,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private void populateForm(Proyecto value) {
         this.proyecto = value;
         binder.readBean(this.proyecto);
-        if (value != null && value.getAlchemerId() != null) {
-            try {
-                long count = alchemerSurveyResponseDataRepository.countBySurveyId(Integer.parseInt(value.getAlchemerId()));
-                casosCompletos.setValue(String.valueOf(count));
-            } catch (NumberFormatException e) {
-                casosCompletos.setValue("Invalid Alchemer ID");
-            }
-        } else {
-            casosCompletos.setValue("");
-        }
         if (this.editorLayoutDiv != null) {
             this.editorLayoutDiv.setVisible(value != null);
         }

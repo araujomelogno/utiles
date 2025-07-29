@@ -40,7 +40,7 @@ public class AlchemerAnswerRetriever {
         this.restTemplate = new RestTemplate();
     }
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     public void retrieveAlchemerAnswers() {
         LOGGER.info("Starting Alchemer Answer Retriever task...");
         List<Task> pendingTasks = taskRepository.findByJobTypeAndStatus(JobType.ALCHEMERANSWERRETRIEVAL, Status.PENDING);

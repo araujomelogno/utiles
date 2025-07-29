@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views.encuestadores;
 
+import java.util.Optional;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -24,12 +28,9 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import jakarta.annotation.security.PermitAll;
-import java.util.Optional;
-import java.util.stream.Stream;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
+import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.Encuestador;
 import uy.com.bay.utiles.services.EncuestadorService;
 

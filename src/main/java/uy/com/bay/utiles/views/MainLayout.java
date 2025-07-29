@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views;
 
+import java.io.ByteArrayInputStream;
+import java.util.List;
+import java.util.Optional;
+
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -17,15 +21,13 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Layout;
+import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import java.io.ByteArrayInputStream;
-import java.util.List;
-import java.util.Optional;
 
 import uy.com.bay.utiles.data.User;
 import uy.com.bay.utiles.security.AuthenticatedUser;
@@ -33,6 +35,7 @@ import uy.com.bay.utiles.security.AuthenticatedUser;
 /**
  * The main view is a top-level placeholder for other views.
  */
+
 @Layout
 @AnonymousAllowed
 public class MainLayout extends AppLayout {
@@ -74,8 +77,6 @@ public class MainLayout extends AppLayout {
 	private SideNav createNavigation() {
 		SideNav nav = new SideNav();
 
-		
-
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
 		menuEntries.forEach(entry -> {
 			if (!entry.title().equals("Usuarios")) {
@@ -86,6 +87,9 @@ public class MainLayout extends AppLayout {
 				}
 			}
 		});
+		SideNavItem answersItem = new SideNavItem("Respuestas Alchemer", "answers");
+		answersItem.setPrefixComponent(new Icon("vaadin", "comment-ellipsis-o"));
+		nav.addItem(answersItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
@@ -98,10 +102,6 @@ public class MainLayout extends AppLayout {
 		settingsItem.addItem(tasksItem);
 
 		nav.addItem(settingsItem);
-
-		SideNavItem answersItem = new SideNavItem("Respuestas Alchemer", "answers");
-		answersItem.setPrefixComponent(new Icon("vaadin", "comment-ellipsis-o"));
-		nav.addItem(answersItem);
 
 		return nav;
 	}
