@@ -46,7 +46,7 @@ public class AnswersView extends Div {
 				.setSortable(true);
 		Grid.Column<AlchemerAnswer> surveyIdColumn = grid.addColumn(AlchemerAnswer::getSurveyId).setHeader("Survey ID")
 				.setSortable(true);
-		Grid.Column<AlchemerAnswer> responseIdColumn = grid.addColumn(AlchemerAnswer::getResponseId)
+		Grid.Column<AlchemerAnswer> responseIdColumn = grid.addColumn(AlchemerAnswer::getResponseIdString)
 				.setHeader("Response ID").setSortable(true);
 
 		GridLazyDataView<AlchemerAnswer> dataView = grid.setItems(q -> alchemerAnswerService
