@@ -326,8 +326,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
     private void clearForm() {
         populateForm(null);
-    } 
+    }  
 
+ 
     private void populateForm(Proyecto value) {
         this.proyecto = value;
         binder.readBean(this.proyecto);
