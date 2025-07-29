@@ -57,7 +57,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private TextField alchemerIdFilter;
     private TextField doobloIdFilter;
     private TextField odooIdFilter;
-    private TextField obsFilter;
+    private TextField obsFilter; 
 
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
