@@ -1,7 +1,11 @@
 package uy.com.bay.utiles.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "alchemer_survey_response_data")
@@ -84,11 +88,24 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
         return contact;
     }
 
+    @JsonIgnore
     public void setContact(AlchemerContact contact) {
         if (contact != null) {
             contact.setSurveyResponseData(this);
         }
         this.contact = contact;
+    }
+
+    @JsonProperty("contact")
+    @SuppressWarnings("unchecked")
+    public void setContactValue(Object contactJson) {
+        if (contactJson instanceof Map) {
+            final ObjectMapper mapper = new ObjectMapper();
+            AlchemerContact contact = mapper.convertValue(contactJson, AlchemerContact.class);
+            setContact(contact);
+        } else if (contactJson instanceof List) {
+            setContact(null);
+        }
     }
 
     public AlchemerSurveyResponse getSurveyResponse() {
