@@ -72,6 +72,7 @@ public class AlchemerController {
 	public ResponseEntity<String> receiveBytes(@RequestBody byte[] raw, HttpServletRequest req) {
 		// Intento de mostrar como texto (si no es texto, verá binario)
 		String preview = new String(raw, java.nio.charset.StandardCharsets.UTF_8);
+		log.info("este es el string:"+preview);
 		ObjectMapper mapper = new ObjectMapper();
 
 		AlchemerSurveyResponse response;
