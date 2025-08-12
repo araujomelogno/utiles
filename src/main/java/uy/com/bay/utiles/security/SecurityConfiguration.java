@@ -2,44 +2,61 @@ package uy.com.bay.utiles.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 
+import jakarta.servlet.http.HttpServletResponse;
 import uy.com.bay.utiles.views.login.LoginView;
 
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration extends VaadinWebSecurity {
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
+    // Recomendado en prod (usa {bcrypt}, {noop}, etc.)
+    @Bean
+    public PasswordEncoder passwordEncoder() {
 		return NoOpPasswordEncoder.getInstance();
-	}
+    }
+    @Bean
+    @Order(1)
+    public SecurityFilterChain webhookChain(HttpSecurity http) throws Exception {
+      // Matchea /api/webhook/** con o SIN context path (/utiles, /lo-que-sea)
+      RequestMatcher r1 = new RegexRequestMatcher(".*/api/webhook/.*", null);
+      RequestMatcher r2 = new AntPathRequestMatcher("/api/webhook/**");         // por si acaso
+      RequestMatcher r3 = new AntPathRequestMatcher("/utiles/api/webhook/**");  // por si acaso
+      RequestMatcher matcher = new OrRequestMatcher(r1, r2, r3);
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
+      http
+        .securityMatcher(matcher)
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .requestCache(rc -> rc.disable())
+        .formLogin(form -> form.disable())
+        .logout(lo -> lo.disable())
+        .exceptionHandling(eh -> eh.authenticationEntryPoint(
+            (req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN)))
+        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+        .httpBasic(Customizer.withDefaults());
 
-		http.authorizeHttpRequests(
-				authorize -> authorize.requestMatchers(new AntPathRequestMatcher("/images/*.png")).permitAll());
+      return http.build();
+    }
 
-		// Icons from the line-awesome addon
-		http.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(new AntPathRequestMatcher("/line-awesome/**/*.svg")).permitAll());
-
-		http.csrf(csrf -> csrf.ignoringRequestMatchers(new AntPathRequestMatcher("/api/webhook/**")));
-
-		http.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(new AntPathRequestMatcher("/api/webhook/survey-response", HttpMethod.POST.toString()))
-				.permitAll());
-
-		super.configure(http);
-		setLoginView(http, LoginView.class);
-	}
-
-}
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      // (si querés, dejá estáticos en permitAll)
+      super.configure(http);
+      setLoginView(http, LoginView.class);
+    }
+  }

@@ -36,7 +36,7 @@ public class Application  extends SpringBootServletInitializer implements AppShe
 	
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
-		return builder.sources(Application.class); // Cambiá 'Application' si tu clase principal tiene otro nombre
+		return builder.sources(Application.class); 
 	}
 	@Bean
 	SqlDataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource,

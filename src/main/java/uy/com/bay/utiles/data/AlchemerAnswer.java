@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.data;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -9,8 +10,10 @@ public class AlchemerAnswer {
     @Id
     private Long id;
     private String type;
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String question;
     private Integer sectionId;
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String answer;
     private boolean shown;
     private Integer surveyId;

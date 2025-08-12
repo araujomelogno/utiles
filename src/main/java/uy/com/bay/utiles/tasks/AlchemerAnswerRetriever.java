@@ -40,7 +40,7 @@ public class AlchemerAnswerRetriever {
         this.restTemplate = new RestTemplate();
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */1 * * * *")
     public void retrieveAlchemerAnswers() {
         LOGGER.info("Starting Alchemer Answer Retriever task...");
         List<Task> pendingTasks = taskRepository.findByJobTypeAndStatus(JobType.ALCHEMERANSWERRETRIEVAL, Status.PENDING);
@@ -71,11 +71,13 @@ public class AlchemerAnswerRetriever {
                     alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
                     alchemerAnswer.setAnswer(answerNode.path("answer").asText());
                     alchemerAnswer.setShown(answerNode.path("shown").asBoolean());
-                    alchemerAnswer.setSurveyId(task.getSurveyId());
-                    alchemerAnswer.setResponseId(task.getResponseId());
+                    if(alchemerAnswer.isShown()) {
+                        alchemerAnswer.setSurveyId(task.getSurveyId());
+                        alchemerAnswer.setResponseId(task.getResponseId());
+                        alchemerAnswerRepository.save(alchemerAnswer);
+                        LOGGER.info("Saved answer for question ID: {}", alchemerAnswer.getId());
+                    }
 
-                    alchemerAnswerRepository.save(alchemerAnswer);
-                    LOGGER.info("Saved answer for question ID: {}", alchemerAnswer.getId());
                 }
 
                 task.setStatus(Status.DONE);
@@ -83,7 +85,7 @@ public class AlchemerAnswerRetriever {
                 LOGGER.info("Task ID: {} processed successfully.", task.getId());
 
             } catch (Exception e) {
-            	task.setStatus(Status.DONE);
+            	task.setStatus(Status.ERROR);
                 taskRepository.save(task);
                 LOGGER.error("Error processing task ID: {}", task.getId(), e);
             }
