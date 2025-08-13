@@ -61,7 +61,6 @@ public class AlchemerController {
 	@PostMapping(path = "/survey-response", consumes = { MediaType.APPLICATION_JSON_VALUE,
 			"application/*+json" }, produces = MediaType.TEXT_PLAIN_VALUE)
 	public ResponseEntity<String> receiveJson(@RequestBody AlchemerSurveyResponse response, HttpServletRequest req) {
-//		log.info("webhook JSON ct={} body={}", req.getContentType(), rawJson);&
 		log.info("Received Alchemer survey response with response_id: {} and survey_id: {}",
 				response.getData().getResponseId(), response.getData().getSurveyId());
 		return this.process(response);
@@ -72,7 +71,7 @@ public class AlchemerController {
 	public ResponseEntity<String> receiveBytes(@RequestBody byte[] raw, HttpServletRequest req) {
 		// Intento de mostrar como texto (si no es texto, verá binario)
 		String preview = new String(raw, java.nio.charset.StandardCharsets.UTF_8);
-		log.info("este es el string:"+preview);
+		log.info("este es el string:" + preview);
 		ObjectMapper mapper = new ObjectMapper();
 
 		AlchemerSurveyResponse response;
