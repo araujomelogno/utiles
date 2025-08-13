@@ -64,20 +64,32 @@ public class AlchemerAnswerRetriever {
                     Map.Entry<String, JsonNode> entry = fields.next();
                     JsonNode answerNode = entry.getValue();
 
-                    AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-                    alchemerAnswer.setId(answerNode.path("id").asLong());
-                    alchemerAnswer.setType(answerNode.path("type").asText());
-                    alchemerAnswer.setQuestion(answerNode.path("question").asText());
-                    alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-                    alchemerAnswer.setAnswer(answerNode.path("answer").asText());
-                    alchemerAnswer.setShown(answerNode.path("shown").asBoolean());
-                    if(alchemerAnswer.isShown()) {
-                        alchemerAnswer.setSurveyId(task.getSurveyId());
-                        alchemerAnswer.setResponseId(task.getResponseId());
-                        alchemerAnswerRepository.save(alchemerAnswer);
-                        LOGGER.info("Saved answer for question ID: {}", alchemerAnswer.getId());
+                    String type = answerNode.path("type").asText();
+                    if (answerNode.path("shown").asBoolean()) {
+                        switch (type) {
+                            case "RADIO":
+                            case "MENU":
+                            case "TEXTBOX":
+                                AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+                                alchemerAnswer.setId(answerNode.path("id").asLong());
+                                alchemerAnswer.setType(type);
+                                alchemerAnswer.setQuestion(answerNode.path("question").asText());
+                                alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+                                alchemerAnswer.setAnswer(answerNode.path("answer").asText());
+                                alchemerAnswer.setShown(true);
+                                alchemerAnswer.setSurveyId(task.getSurveyId());
+                                alchemerAnswer.setResponseId(task.getResponseId());
+                                alchemerAnswerRepository.save(alchemerAnswer);
+                                LOGGER.info("Saved answer for question ID: {}", alchemerAnswer.getId());
+                                break;
+                            case "parent":
+                                processParentAnswer(answerNode, task);
+                                break;
+                            default:
+                                LOGGER.warn("Unknown answer type: {}", type);
+                                break;
+                        }
                     }
-
                 }
 
                 task.setStatus(Status.DONE);
@@ -91,5 +103,54 @@ public class AlchemerAnswerRetriever {
             }
         }
         LOGGER.info("Alchemer Answer Retriever task finished.");
+    }
+
+    private void processParentAnswer(JsonNode answerNode, Task task) {
+        if (answerNode.has("options")) {
+            Iterator<Map.Entry<String, JsonNode>> options = answerNode.path("options").fields();
+            while (options.hasNext()) {
+                Map.Entry<String, JsonNode> optionEntry = options.next();
+                JsonNode optionNode = optionEntry.getValue();
+                if (optionNode.path("shown").asBoolean(true)) { // Assume shown if not present
+                    AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+                    alchemerAnswer.setId(optionNode.path("id").asLong());
+                    alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
+                    alchemerAnswer.setQuestion(answerNode.path("question").asText());
+                    alchemerAnswer.setAnswer(optionNode.path("answer").asText());
+                    alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+                    alchemerAnswer.setShown(true);
+                    alchemerAnswer.setSurveyId(task.getSurveyId());
+                    alchemerAnswer.setResponseId(task.getResponseId());
+                    alchemerAnswerRepository.save(alchemerAnswer);
+                    LOGGER.info("Saved answer for parent question ID: {}, option ID: {}", answerNode.path("id").asLong(), alchemerAnswer.getId());
+                }
+            }
+        }
+
+        if (answerNode.has("subquestions")) {
+            Iterator<Map.Entry<String, JsonNode>> subquestions = answerNode.path("subquestions").fields();
+            while (subquestions.hasNext()) {
+                Map.Entry<String, JsonNode> subquestionEntry = subquestions.next();
+                JsonNode subquestionNode = subquestionEntry.getValue();
+                Iterator<Map.Entry<String, JsonNode>> answers = subquestionNode.fields();
+                while(answers.hasNext()){
+                    Map.Entry<String, JsonNode> answerEntry = answers.next();
+                    JsonNode answer = answerEntry.getValue();
+                    if (answer.path("shown").asBoolean(true)) { // Assume shown if not present
+                        AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+                        alchemerAnswer.setId(answer.path("id").asLong());
+                        alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
+                        alchemerAnswer.setQuestion(answer.path("question").asText());
+                        alchemerAnswer.setAnswer(answer.path("answer").asText());
+                        alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+                        alchemerAnswer.setShown(true);
+                        alchemerAnswer.setSurveyId(task.getSurveyId());
+                        alchemerAnswer.setResponseId(task.getResponseId());
+                        alchemerAnswerRepository.save(alchemerAnswer);
+                        LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}", answerNode.path("id").asLong(), alchemerAnswer.getId());
+                    }
+                }
+            }
+        }
     }
 }
