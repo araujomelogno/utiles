@@ -28,4 +28,13 @@ public class Test extends AbstractEntity {
         this.ci = ci;
     }
 
+    private String SurveyToGoId;
+
+    public String getSurveyToGoId() {
+        return SurveyToGoId;
+    }
+
+    public void setSurveyToGoId(String surveyToGoId) {
+        SurveyToGoId = surveyToGoId;
+    }
 }

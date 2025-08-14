@@ -48,11 +48,13 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private TextField firstName;
     private TextField lastName;
     private TextField ci;
+    private TextField SurveyToGoId;
 
     private Button addButton;
     private TextField firstNameFilter;
     private TextField lastNameFilter;
     private TextField ciFilter;
+    private TextField surveyToGoIdFilter;
 
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
@@ -99,6 +101,12 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         ciFilter.setClearButtonVisible(true);
         ciFilter.setWidth("100%");
         ciFilter.addValueChangeListener(e -> refreshGrid());
+
+        surveyToGoIdFilter = new TextField();
+        surveyToGoIdFilter.setPlaceholder("Survey To Go Id...");
+        surveyToGoIdFilter.setClearButtonVisible(true);
+        surveyToGoIdFilter.setWidth("100%");
+        surveyToGoIdFilter.addValueChangeListener(e -> refreshGrid());
  
         setupButtonListeners(); // Call to new method
  
@@ -111,11 +119,13 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         grid.addColumn("firstName").setHeader("Nombre").setAutoWidth(true);
         grid.addColumn("lastName").setHeader("Apellido").setAutoWidth(true);
         grid.addColumn("ci").setHeader("CI").setAutoWidth(true);
+        grid.addColumn("SurveyToGoId").setHeader("Survey To Go Id").setAutoWidth(true);
 
         grid.setItems(query -> {
             String fnameFilter = firstNameFilter.getValue() != null ? firstNameFilter.getValue().trim().toLowerCase() : "";
             String lnameFilter = lastNameFilter.getValue() != null ? lastNameFilter.getValue().trim().toLowerCase() : "";
             String ciValFilter = ciFilter.getValue() != null ? ciFilter.getValue().trim().toLowerCase() : "";
+            String surveyToGoIdValFilter = surveyToGoIdFilter.getValue() != null ? surveyToGoIdFilter.getValue().trim().toLowerCase() : "";
 
             // Obtener el stream del servicio
             java.util.stream.Stream<Test> stream = encuestadorService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
@@ -129,6 +139,9 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
             }
             if (!ciValFilter.isEmpty()) {
                 stream = stream.filter(enc -> enc.getCi() != null && enc.getCi().toLowerCase().contains(ciValFilter));
+            }
+            if (!surveyToGoIdValFilter.isEmpty()) {
+                stream = stream.filter(enc -> enc.getSurveyToGoId() != null && enc.getSurveyToGoId().toLowerCase().contains(surveyToGoIdValFilter));
             }
             return stream;
         });
@@ -247,7 +260,8 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         firstName = new TextField("First Name");
         lastName = new TextField("Last Name");
         ci = new TextField("Ci");
-        formLayout.add(firstName, lastName, ci);
+        SurveyToGoId = new TextField("Survey To Go Id");
+        formLayout.add(firstName, lastName, ci, SurveyToGoId);
 
         editorDiv.add(formLayout);
         createButtonLayout(this.editorLayoutDiv);
@@ -280,7 +294,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         // Filter Layout
         HorizontalLayout filterLayout = new HorizontalLayout();
         filterLayout.setWidthFull();
-        filterLayout.add(firstNameFilter, lastNameFilter, ciFilter);
+        filterLayout.add(firstNameFilter, lastNameFilter, ciFilter, surveyToGoIdFilter);
 
         wrapper.add(titleLayout);
         wrapper.add(filterLayout);
