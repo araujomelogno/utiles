@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import uy.com.bay.utiles.data.Test;
+import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.SurveyorRepository;
 
 @Service
@@ -19,11 +19,11 @@ public class SurveyorService {
         this.repository = repository;
     }
 
-    public Optional<Test> get(Long id) {
+    public Optional<Surveyor> get(Long id) {
         return repository.findById(id);
     }
 
-    public Test save(Test entity) {
+    public Surveyor save(Surveyor entity) {
         return repository.save(entity);
     }
 
@@ -31,11 +31,11 @@ public class SurveyorService {
         repository.deleteById(id);
     }
 
-    public Page<Test> list(Pageable pageable) {
+    public Page<Surveyor> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
-    public Page<Test> list(Pageable pageable, Specification<Test> filter) {
+    public Page<Surveyor> list(Pageable pageable, Specification<Surveyor> filter) {
         return repository.findAll(filter, pageable);
     }
 
@@ -43,7 +43,7 @@ public class SurveyorService {
         return (int) repository.count();
     }
 
-    public List<Test> findAll() {
+    public List<Surveyor> findAll() {
         return repository.findAll();
     }
 }

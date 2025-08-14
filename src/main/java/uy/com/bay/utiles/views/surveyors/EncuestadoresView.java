@@ -3,6 +3,7 @@ package uy.com.bay.utiles.views.surveyors;
 import java.util.Optional;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -28,10 +29,9 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 import jakarta.annotation.security.PermitAll;
-import uy.com.bay.utiles.data.Test;
+import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.SurveyorService;
 
 @PageTitle("Encuestadores")
@@ -43,31 +43,35 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private final String ENCUESTADOR_ID = "encuestadorID";
     private final String ENCUESTADOR_EDIT_ROUTE_TEMPLATE = "surveyors/%s/edit";
 
-    private final Grid<Test> grid = new Grid<>(Test.class, false);
+    private final Grid<Surveyor> grid = new Grid<>(Surveyor.class, false);
 
     private TextField firstName;
     private TextField lastName;
     private TextField ci;
+    private TextField SurveyToGoId;
+
 
     private Button addButton;
     private TextField firstNameFilter;
     private TextField lastNameFilter;
     private TextField ciFilter;
+    private TextField surveyToGoIdFilter;
 
+    
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
     private Button deleteButton; // Added deleteButton declaration
 
-    private final BeanValidationBinder<Test> binder;
+    private final BeanValidationBinder<Surveyor> binder;
 
-    private Test encuestador;
+    private Surveyor encuestador;
     private Div editorLayoutDiv; // Added field declaration
 
     private final SurveyorService encuestadorService;
 
     public EncuestadoresView(SurveyorService encuestadorService) {
         this.encuestadorService = encuestadorService;
-        this.binder = new BeanValidationBinder<>(Test.class); // Moved initialization here
+        this.binder = new BeanValidationBinder<>(Surveyor.class); // Moved initialization here
         addClassNames("encuestadores-view");
 
         // Create UI
@@ -99,6 +103,13 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         ciFilter.setClearButtonVisible(true);
         ciFilter.setWidth("100%");
         ciFilter.addValueChangeListener(e -> refreshGrid());
+        
+        surveyToGoIdFilter = new TextField();
+        surveyToGoIdFilter.setPlaceholder("Survey To Go Id...");
+        surveyToGoIdFilter.setClearButtonVisible(true);
+        surveyToGoIdFilter.setWidth("100%");
+        surveyToGoIdFilter.addValueChangeListener(e -> refreshGrid());
+ 
  
         setupButtonListeners(); // Call to new method
  
@@ -111,14 +122,16 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         grid.addColumn("firstName").setHeader("Nombre").setAutoWidth(true);
         grid.addColumn("lastName").setHeader("Apellido").setAutoWidth(true);
         grid.addColumn("ci").setHeader("CI").setAutoWidth(true);
+        grid.addColumn("SurveyToGoId").setHeader("Survey To Go Id").setAutoWidth(true);
 
         grid.setItems(query -> {
             String fnameFilter = firstNameFilter.getValue() != null ? firstNameFilter.getValue().trim().toLowerCase() : "";
             String lnameFilter = lastNameFilter.getValue() != null ? lastNameFilter.getValue().trim().toLowerCase() : "";
             String ciValFilter = ciFilter.getValue() != null ? ciFilter.getValue().trim().toLowerCase() : "";
+            String surveyToGoIdValFilter = surveyToGoIdFilter.getValue() != null ? surveyToGoIdFilter.getValue().trim().toLowerCase() : "";
 
             // Obtener el stream del servicio
-            java.util.stream.Stream<Test> stream = encuestadorService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
+            java.util.stream.Stream<Surveyor> stream = encuestadorService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
 
             // Aplicar filtros si hay texto en los campos de filtro
             if (!fnameFilter.isEmpty()) {
@@ -129,6 +142,9 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
             }
             if (!ciValFilter.isEmpty()) {
                 stream = stream.filter(enc -> enc.getCi() != null && enc.getCi().toLowerCase().contains(ciValFilter));
+            }
+            if (!surveyToGoIdValFilter.isEmpty()) {
+                stream = stream.filter(enc -> enc.getSurveyToGoId() != null && enc.getSurveyToGoId().toLowerCase().contains(surveyToGoIdValFilter));
             }
             return stream;
         });
@@ -155,7 +171,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private void setupButtonListeners() {
         addButton.addClickListener(e -> {
             clearForm();
-            this.encuestador = new Test();
+            this.encuestador = new Surveyor();
             binder.readBean(this.encuestador);
             if (this.editorLayoutDiv != null) {
                  this.editorLayoutDiv.setVisible(true);
@@ -197,7 +213,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         save.addClickListener(e -> {
             try {
                 if (this.encuestador == null) {
-                    this.encuestador = new Test();
+                    this.encuestador = new Surveyor();
                 }
                 binder.writeBean(this.encuestador);
                 encuestadorService.save(this.encuestador);
@@ -220,7 +236,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<Long> encuestadorId = event.getRouteParameters().get(ENCUESTADOR_ID).map(Long::parseLong);
         if (encuestadorId.isPresent()) {
-            Optional<Test> encuestadorFromBackend = encuestadorService.get(encuestadorId.get());
+            Optional<Surveyor> encuestadorFromBackend = encuestadorService.get(encuestadorId.get());
             if (encuestadorFromBackend.isPresent()) {
                 populateForm(encuestadorFromBackend.get());
             } else {
@@ -247,7 +263,8 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         firstName = new TextField("First Name");
         lastName = new TextField("Last Name");
         ci = new TextField("Ci");
-        formLayout.add(firstName, lastName, ci);
+        SurveyToGoId = new TextField("Survey To Go Id");
+        formLayout.add(firstName, lastName, ci, SurveyToGoId);
 
         editorDiv.add(formLayout);
         createButtonLayout(this.editorLayoutDiv);
@@ -280,7 +297,8 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         // Filter Layout
         HorizontalLayout filterLayout = new HorizontalLayout();
         filterLayout.setWidthFull();
-        filterLayout.add(firstNameFilter, lastNameFilter, ciFilter);
+        filterLayout.add(firstNameFilter, lastNameFilter, ciFilter, surveyToGoIdFilter);
+
 
         wrapper.add(titleLayout);
         wrapper.add(filterLayout);
@@ -297,7 +315,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(Test value) {
+    private void populateForm(Surveyor value) {
         this.encuestador = value;
         binder.readBean(this.encuestador);
         if (this.editorLayoutDiv != null) {

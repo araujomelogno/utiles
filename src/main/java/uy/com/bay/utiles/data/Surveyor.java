@@ -1,0 +1,45 @@
+package uy.com.bay.utiles.data;
+
+import jakarta.persistence.Entity;
+
+@Entity
+public class Surveyor extends AbstractEntity {
+
+	private String firstName;
+	private String lastName;
+	private String ci;
+	private String SurveyToGoId;
+
+	public String getSurveyToGoId() {
+		return SurveyToGoId;
+	}
+
+	public void setSurveyToGoId(String surveyToGoId) {
+		SurveyToGoId = surveyToGoId;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getCi() {
+		return ci;
+	}
+
+	public void setCi(String ci) {
+		this.ci = ci;
+	}
+
+}
