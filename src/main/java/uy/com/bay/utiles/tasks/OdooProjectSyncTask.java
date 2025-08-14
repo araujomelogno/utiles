@@ -3,9 +3,9 @@ package uy.com.bay.utiles.tasks;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import uy.com.bay.utiles.data.Proyecto;
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.OdooService;
-import uy.com.bay.utiles.services.ProyectoService;
+import uy.com.bay.utiles.services.StudyService;
 
 import java.util.List;
 import java.util.Map;
@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 public class OdooProjectSyncTask {
 
     private final OdooService odooService;
-    private final ProyectoService proyectoService;
+    private final StudyService proyectoService;
 
-    public OdooProjectSyncTask(OdooService odooService, ProyectoService proyectoService) {
+    public OdooProjectSyncTask(OdooService odooService, StudyService proyectoService) {
         this.odooService = odooService;
         this.proyectoService = proyectoService;
     }
@@ -35,9 +35,9 @@ public class OdooProjectSyncTask {
             return;
         }
 
-        List<Proyecto> existingProyectos = proyectoService.findAll();
+        List<Study> existingProyectos = proyectoService.findAll();
         Set<String> existingOdooIds = existingProyectos.stream()
-                                                     .map(Proyecto::getOdooId)
+                                                     .map(Study::getOdooId)
                                                      .filter(id -> id != null && !id.isEmpty())
                                                      .collect(Collectors.toSet());
 
@@ -57,7 +57,7 @@ public class OdooProjectSyncTask {
             }
 
             if (!existingOdooIds.contains(odooId)) {
-                Proyecto newProyecto = new Proyecto();
+                Study newProyecto = new Study();
                 newProyecto.setOdooId(odooId);
 
                 Object nameObj = odooProjectMap.get("name");

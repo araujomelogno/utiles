@@ -1,5 +1,10 @@
 package uy.com.bay.utiles.views.proyectos;
 
+import java.util.Optional;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.vaadin.lineawesome.LineAwesomeIconUrl;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -25,15 +30,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import jakarta.annotation.security.PermitAll;
-import java.util.Optional;
-import java.util.stream.Stream;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-import uy.com.bay.utiles.data.Proyecto;
+import jakarta.annotation.security.PermitAll;
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
-import uy.com.bay.utiles.services.ProyectoService;
+import uy.com.bay.utiles.services.StudyService;
 
 @PageTitle("Proyectos")
 @Route("/:proyectoID?/:action?(edit)")
@@ -45,7 +46,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private final String PROYECTO_ID = "proyectoID";
     private final String PROYECTO_EDIT_ROUTE_TEMPLATE = "/%s/edit";
 
-    private final Grid<Proyecto> grid = new Grid<>(Proyecto.class, false);
+    private final Grid<Study> grid = new Grid<>(Study.class, false);
 
     private TextField name;
     private TextField alchemerId;
@@ -65,18 +66,18 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private final Button save = new Button("Save");
     private Button deleteButton; // Added deleteButton declaration
 
-    private final BeanValidationBinder<Proyecto> binder;
+    private final BeanValidationBinder<Study> binder;
 
-    private Proyecto proyecto;
+    private Study proyecto;
     private Div editorLayoutDiv; // Added field declaration
 
-    private final ProyectoService proyectoService;
+    private final StudyService proyectoService;
     private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 
-    public ProyectosView(ProyectoService proyectoService, AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
+    public ProyectosView(StudyService proyectoService, AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
         this.proyectoService = proyectoService;
         this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
-        this.binder = new BeanValidationBinder<>(Proyecto.class); // Moved initialization here
+        this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
         addClassNames("proyectos-view");
 
         // Create UI
@@ -141,7 +142,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
             String odooVal = odooIdFilter.getValue() != null ? odooIdFilter.getValue().trim().toLowerCase() : "";
             String obsVal = obsFilter.getValue() != null ? obsFilter.getValue().trim().toLowerCase() : "";
 
-            java.util.stream.Stream<Proyecto> stream = proyectoService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
+            java.util.stream.Stream<Study> stream = proyectoService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
 
             if (!nameVal.isEmpty()) {
                 stream = stream.filter(p -> p.getName() != null && p.getName().toLowerCase().contains(nameVal));
@@ -183,7 +184,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private void setupButtonListeners() {
         addButton.addClickListener(e -> {
             clearForm();
-            this.proyecto = new Proyecto();
+            this.proyecto = new Study();
             binder.readBean(this.proyecto);
             if (this.editorLayoutDiv != null) {
                  this.editorLayoutDiv.setVisible(true);
@@ -225,7 +226,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
         save.addClickListener(e -> {
             try {
                 if (this.proyecto == null) {
-                    this.proyecto = new Proyecto();
+                    this.proyecto = new Study();
                 }
                 binder.writeBean(this.proyecto);
                 proyectoService.save(this.proyecto);
@@ -248,7 +249,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<Long> proyectoId = event.getRouteParameters().get(PROYECTO_ID).map(Long::parseLong);
         if (proyectoId.isPresent()) {
-            Optional<Proyecto> proyectoFromBackend = proyectoService.get(proyectoId.get());
+            Optional<Study> proyectoFromBackend = proyectoService.get(proyectoId.get());
             if (proyectoFromBackend.isPresent()) {
                 populateForm(proyectoFromBackend.get());
             } else {
@@ -329,7 +330,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     }  
 
  
-    private void populateForm(Proyecto value) {
+    private void populateForm(Study value) {
         this.proyecto = value;
         binder.readBean(this.proyecto);
         if (value != null && value.getAlchemerId() != null) {

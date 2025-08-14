@@ -3,7 +3,7 @@ package uy.com.bay.utiles.data;
 import jakarta.persistence.Entity;
 
 @Entity
-public class Proyecto extends AbstractEntity {
+public class Study extends AbstractEntity {
 
     private String name;
     private String alchemerId;

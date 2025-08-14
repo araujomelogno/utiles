@@ -19,7 +19,7 @@ public class AlchemerSurveyResponse extends AbstractEntity {
     private AlchemerSurveyResponseData data;
 
     @ManyToOne
-    private Proyecto proyecto;
+    private Study proyecto;
 
     public String getWebhookName() {
         return webhookName;
@@ -40,11 +40,11 @@ public class AlchemerSurveyResponse extends AbstractEntity {
         this.data = data;
     }
 
-    public Proyecto getProyecto() {
+    public Study getProyecto() {
         return proyecto;
     }
 
-    public void setProyecto(Proyecto proyecto) {
+    public void setProyecto(Study proyecto) {
         this.proyecto = proyecto;
     }
 }

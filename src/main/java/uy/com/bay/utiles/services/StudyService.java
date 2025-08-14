@@ -7,23 +7,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import uy.com.bay.utiles.data.Encuestador;
-import uy.com.bay.utiles.data.EncuestadorRepository;
+import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.StudyRepository;
 
 @Service
-public class EncuestadorService {
+public class StudyService {
 
-    private final EncuestadorRepository repository;
+    private final StudyRepository repository;
 
-    public EncuestadorService(EncuestadorRepository repository) {
+    public StudyService(StudyRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<Encuestador> get(Long id) {
+    public Optional<Study> get(Long id) {
         return repository.findById(id);
     }
 
-    public Encuestador save(Encuestador entity) {
+    public Study save(Study entity) {
         return repository.save(entity);
     }
 
@@ -31,11 +31,11 @@ public class EncuestadorService {
         repository.deleteById(id);
     }
 
-    public Page<Encuestador> list(Pageable pageable) {
+    public Page<Study> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
-    public Page<Encuestador> list(Pageable pageable, Specification<Encuestador> filter) {
+    public Page<Study> list(Pageable pageable, Specification<Study> filter) {
         return repository.findAll(filter, pageable);
     }
 
@@ -43,7 +43,7 @@ public class EncuestadorService {
         return (int) repository.count();
     }
 
-    public List<Encuestador> findAll() {
+    public List<Study> findAll() {
         return repository.findAll();
     }
 }

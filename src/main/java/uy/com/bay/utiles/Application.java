@@ -23,7 +23,6 @@ import com.vaadin.flow.theme.Theme;
  * extends SpringBootServletInitializer 
  *
  */
-@PWA(name = "Utiles", shortName = "Utiles")
 @SpringBootApplication
 @Theme(value = "Utiles")
 @EnableScheduling

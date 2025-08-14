@@ -1,4 +1,4 @@
-package uy.com.bay.utiles.views.encuestadores;
+package uy.com.bay.utiles.views.surveyors;
 
 import java.util.Optional;
 
@@ -31,8 +31,8 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
 import jakarta.annotation.security.PermitAll;
-import uy.com.bay.utiles.data.Encuestador;
-import uy.com.bay.utiles.services.EncuestadorService;
+import uy.com.bay.utiles.data.Test;
+import uy.com.bay.utiles.services.SurveyorService;
 
 @PageTitle("Encuestadores")
 @Route("surveyors/:encuestadorID?/:action?(edit)")
@@ -43,7 +43,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private final String ENCUESTADOR_ID = "encuestadorID";
     private final String ENCUESTADOR_EDIT_ROUTE_TEMPLATE = "surveyors/%s/edit";
 
-    private final Grid<Encuestador> grid = new Grid<>(Encuestador.class, false);
+    private final Grid<Test> grid = new Grid<>(Test.class, false);
 
     private TextField firstName;
     private TextField lastName;
@@ -58,16 +58,16 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private final Button save = new Button("Save");
     private Button deleteButton; // Added deleteButton declaration
 
-    private final BeanValidationBinder<Encuestador> binder;
+    private final BeanValidationBinder<Test> binder;
 
-    private Encuestador encuestador;
+    private Test encuestador;
     private Div editorLayoutDiv; // Added field declaration
 
-    private final EncuestadorService encuestadorService;
+    private final SurveyorService encuestadorService;
 
-    public EncuestadoresView(EncuestadorService encuestadorService) {
+    public EncuestadoresView(SurveyorService encuestadorService) {
         this.encuestadorService = encuestadorService;
-        this.binder = new BeanValidationBinder<>(Encuestador.class); // Moved initialization here
+        this.binder = new BeanValidationBinder<>(Test.class); // Moved initialization here
         addClassNames("encuestadores-view");
 
         // Create UI
@@ -118,7 +118,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
             String ciValFilter = ciFilter.getValue() != null ? ciFilter.getValue().trim().toLowerCase() : "";
 
             // Obtener el stream del servicio
-            java.util.stream.Stream<Encuestador> stream = encuestadorService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
+            java.util.stream.Stream<Test> stream = encuestadorService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
 
             // Aplicar filtros si hay texto en los campos de filtro
             if (!fnameFilter.isEmpty()) {
@@ -155,7 +155,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private void setupButtonListeners() {
         addButton.addClickListener(e -> {
             clearForm();
-            this.encuestador = new Encuestador();
+            this.encuestador = new Test();
             binder.readBean(this.encuestador);
             if (this.editorLayoutDiv != null) {
                  this.editorLayoutDiv.setVisible(true);
@@ -197,7 +197,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         save.addClickListener(e -> {
             try {
                 if (this.encuestador == null) {
-                    this.encuestador = new Encuestador();
+                    this.encuestador = new Test();
                 }
                 binder.writeBean(this.encuestador);
                 encuestadorService.save(this.encuestador);
@@ -220,7 +220,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<Long> encuestadorId = event.getRouteParameters().get(ENCUESTADOR_ID).map(Long::parseLong);
         if (encuestadorId.isPresent()) {
-            Optional<Encuestador> encuestadorFromBackend = encuestadorService.get(encuestadorId.get());
+            Optional<Test> encuestadorFromBackend = encuestadorService.get(encuestadorId.get());
             if (encuestadorFromBackend.isPresent()) {
                 populateForm(encuestadorFromBackend.get());
             } else {
@@ -297,7 +297,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(Encuestador value) {
+    private void populateForm(Test value) {
         this.encuestador = value;
         binder.readBean(this.encuestador);
         if (this.editorLayoutDiv != null) {

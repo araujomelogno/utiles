@@ -3,7 +3,7 @@ package uy.com.bay.utiles.data;
 import jakarta.persistence.Entity;
 
 @Entity
-public class Encuestador extends AbstractEntity {
+public class Test extends AbstractEntity {
 
     private String firstName;
     private String lastName;

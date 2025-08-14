@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
 import uy.com.bay.utiles.data.JobType;
-import uy.com.bay.utiles.data.Proyecto;
-import uy.com.bay.utiles.data.ProyectoRepository;
+import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.StudyRepository;
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.Task;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
@@ -43,7 +43,7 @@ public class AlchemerController {
 	private AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 
 	@Autowired
-	private ProyectoRepository proyectoRepository;
+	private StudyRepository proyectoRepository;
 
 	@Autowired
 	private TaskRepository taskRepository;
@@ -123,7 +123,7 @@ public class AlchemerController {
 		}
 
 		log.info("Processing new Alchemer survey response.");
-		Optional<Proyecto> optionalProyecto = proyectoRepository
+		Optional<Study> optionalProyecto = proyectoRepository
 				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
 		optionalProyecto.ifPresent(response::setProyecto);
 

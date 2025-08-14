@@ -7,23 +7,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import uy.com.bay.utiles.data.Proyecto;
-import uy.com.bay.utiles.data.ProyectoRepository;
+import uy.com.bay.utiles.data.Test;
+import uy.com.bay.utiles.data.SurveyorRepository;
 
 @Service
-public class ProyectoService {
+public class SurveyorService {
 
-    private final ProyectoRepository repository;
+    private final SurveyorRepository repository;
 
-    public ProyectoService(ProyectoRepository repository) {
+    public SurveyorService(SurveyorRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<Proyecto> get(Long id) {
+    public Optional<Test> get(Long id) {
         return repository.findById(id);
     }
 
-    public Proyecto save(Proyecto entity) {
+    public Test save(Test entity) {
         return repository.save(entity);
     }
 
@@ -31,11 +31,11 @@ public class ProyectoService {
         repository.deleteById(id);
     }
 
-    public Page<Proyecto> list(Pageable pageable) {
+    public Page<Test> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
-    public Page<Proyecto> list(Pageable pageable, Specification<Proyecto> filter) {
+    public Page<Test> list(Pageable pageable, Specification<Test> filter) {
         return repository.findAll(filter, pageable);
     }
 
@@ -43,7 +43,7 @@ public class ProyectoService {
         return (int) repository.count();
     }
 
-    public List<Proyecto> findAll() {
+    public List<Test> findAll() {
         return repository.findAll();
     }
 }
