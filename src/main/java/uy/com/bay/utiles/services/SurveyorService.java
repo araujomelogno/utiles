@@ -46,4 +46,7 @@ public class SurveyorService {
     public List<Surveyor> findAll() {
         return repository.findAll();
     }
+    public Optional<Surveyor> findBySurveyToGoId(String surveyToGoId) {
+        return repository.findBySurveyToGoId(surveyToGoId);
+    }
 }

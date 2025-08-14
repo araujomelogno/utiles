@@ -15,7 +15,7 @@ public class Surveyor extends AbstractEntity {
 	}
 
 	public void setSurveyToGoId(String surveyToGoId) {
-		surveyToGoId = surveyToGoId;
+		this.surveyToGoId = surveyToGoId;
 	}
 
 	public String getFirstName() {
