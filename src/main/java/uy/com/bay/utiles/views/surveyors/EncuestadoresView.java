@@ -122,7 +122,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         grid.addColumn("firstName").setHeader("Nombre").setAutoWidth(true);
         grid.addColumn("lastName").setHeader("Apellido").setAutoWidth(true);
         grid.addColumn("ci").setHeader("CI").setAutoWidth(true);
-        grid.addColumn("SurveyToGoId").setHeader("Survey To Go Id").setAutoWidth(true);
+        grid.addColumn("surveyToGoId").setHeader("Survey To Go Id").setAutoWidth(true);
 
         grid.setItems(query -> {
             String fnameFilter = firstNameFilter.getValue() != null ? firstNameFilter.getValue().trim().toLowerCase() : "";

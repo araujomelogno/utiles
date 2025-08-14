@@ -8,14 +8,14 @@ public class Surveyor extends AbstractEntity {
 	private String firstName;
 	private String lastName;
 	private String ci;
-	private String SurveyToGoId;
-
+	private String surveyToGoId;
+	
 	public String getSurveyToGoId() {
-		return SurveyToGoId;
+		return surveyToGoId;
 	}
 
 	public void setSurveyToGoId(String surveyToGoId) {
-		SurveyToGoId = surveyToGoId;
+		surveyToGoId = surveyToGoId;
 	}
 
 	public String getFirstName() {
