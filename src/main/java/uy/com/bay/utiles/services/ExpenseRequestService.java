@@ -4,10 +4,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.repository.ExpenseRequestRepository;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseRequestService {
@@ -46,4 +51,12 @@ public class ExpenseRequestService {
         return (int) repository.count(filter);
     }
 
+    public List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable) {
+        return repository.findAllByExpenseStatus(expenseStatus, pageable);
+    }
+
+    @Transactional
+    public void approveRequests(List<Long> ids) {
+        repository.approveRequests(ids, ExpenseStatus.APROBADO, new Date());
+    }
 }
