@@ -27,6 +27,16 @@ public class ExpenseRequest extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     private ExpenseStatus expenseStatus;
 
+    private String obs;
+
+    public String getObs() {
+        return obs;
+    }
+
+    public void setObs(String obs) {
+        this.obs = obs;
+    }
+
     public Study getStudy() {
         return study;
     }

@@ -66,10 +66,12 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	private DatePicker transferDate;
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
+	private com.vaadin.flow.component.textfield.TextArea obs;
 
 	private final Button cancel = new Button("Cancelar");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
+	private final Button approve = new Button("Aprobar");
 
 	private final BeanValidationBinder<ExpenseRequest> binder;
 	private ExpenseRequest expenseRequest;
@@ -107,11 +109,20 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 						? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName()
 						: "")
 				.setHeader("Encuestador").setAutoWidth(true).setSortable(true).setSortProperty("surveyor.firstName");
-		Grid.Column<ExpenseRequest> requestDateColumn = grid.addColumn(ExpenseRequest::getRequestDate)
+		Grid.Column<ExpenseRequest> requestDateColumn = grid
+				.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> er.getRequestDate() != null
+						? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate())
+						: ""))
 				.setHeader("Solicitado:").setAutoWidth(true).setSortable(true).setSortProperty("requestDate");
-		Grid.Column<ExpenseRequest> aprovalDateColumn = grid.addColumn(ExpenseRequest::getAprovalDate)
+		Grid.Column<ExpenseRequest> aprovalDateColumn = grid
+				.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> er.getAprovalDate() != null
+						? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getAprovalDate())
+						: ""))
 				.setHeader("Aprobado:").setAutoWidth(true).setSortable(true).setSortProperty("aprovalDate");
-		Grid.Column<ExpenseRequest> transferDateColumn = grid.addColumn(ExpenseRequest::getTransferDate)
+		Grid.Column<ExpenseRequest> transferDateColumn = grid
+				.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> er.getTransferDate() != null
+						? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getTransferDate())
+						: ""))
 				.setHeader("Transferido").setAutoWidth(true).setSortable(true).setSortProperty("transferDate");
 		Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto")
 				.setAutoWidth(true).setSortable(true).setSortProperty("amount");
@@ -219,10 +230,12 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 			if (event.getValue() != null) {
 				editorLayoutDiv.setVisible(true);
 				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+				approve.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.INGRESADO);
 			} else {
 				editorLayoutDiv.setVisible(false);
 				clearForm();
 				UI.getCurrent().navigate(ExpensesView.class);
+				approve.setEnabled(false);
 			}
 		});
 
@@ -254,6 +267,34 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				clearForm();
 				refreshGrid();
 				Notification.show("ExpenseRequest details stored.");
+				editorLayoutDiv.setVisible(false);
+				UI.getCurrent().navigate(ExpensesView.class);
+			} catch (ObjectOptimisticLockingFailureException exception) {
+				Notification n = Notification.show(
+						"Error updating the data. Somebody else has updated the record while you were making changes.");
+				n.setPosition(Notification.Position.MIDDLE);
+				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} catch (ValidationException validationException) {
+				Notification.show("Failed to update the data. Check again that all values are valid");
+			}
+		});
+
+		approve.addClickListener(e -> {
+			try {
+				if (this.expenseRequest == null) {
+					Notification.show("No expense request selected.");
+					return;
+				}
+
+				binder.writeBean(this.expenseRequest);
+
+				this.expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
+				this.expenseRequest.setAprovalDate(new Date());
+
+				expenseRequestService.update(this.expenseRequest);
+				clearForm();
+				refreshGrid();
+				Notification.show("ExpenseRequest approved.");
 				editorLayoutDiv.setVisible(false);
 				UI.getCurrent().navigate(ExpensesView.class);
 			} catch (ObjectOptimisticLockingFailureException exception) {
@@ -346,7 +387,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ExpenseRequestType::getConcept);
-		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept);
+		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
+		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
@@ -359,7 +401,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		buttonLayout.add(save, cancel, delete);
+		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		buttonLayout.add(save, approve, cancel, delete);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
