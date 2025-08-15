@@ -91,6 +91,13 @@ public class MainLayout extends AppLayout {
 		answersItem.setPrefixComponent(new Icon("vaadin", "comment-ellipsis-o"));
 		nav.addItem(answersItem);
 
+		SideNavItem gastosItem = new SideNavItem("Gastos");
+		gastosItem.setPrefixComponent(new Icon("vaadin", "money"));
+		SideNavItem conceptosItem = new SideNavItem("Conceptos", "conceptos");
+		conceptosItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
+		gastosItem.addItem(conceptosItem);
+		nav.addItem(gastosItem);
+
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
 		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
