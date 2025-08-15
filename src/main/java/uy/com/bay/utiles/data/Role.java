@@ -1,5 +1,5 @@
 package uy.com.bay.utiles.data;
 
 public enum Role {
-    USER, ADMIN, ALCHEMER, PROYECTOS, ENCUESTADORES, GRUPOS;
+    USER, ADMIN, ALCHEMER, PROYECTOS, ENCUESTADORES, GRUPOS, GASTOS;
 }
