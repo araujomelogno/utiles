@@ -29,7 +29,6 @@ import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.PermitAll;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportFile;
@@ -122,7 +121,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
         grid.setDataProvider(new CallbackDataProvider<>(
                 query -> expenseReportService.list(
-                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSort(query)),
+                        VaadinSpringDataHelpers.toSpringPageRequest(query),
                         createFilterSpecification()).stream(),
                 query -> (int) expenseReportService.count(createFilterSpecification())
         ));
