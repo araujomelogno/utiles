@@ -42,6 +42,10 @@ public class ExpenseReportService {
         return repository.findAll(filter, pageable);
     }
 
+    public long count(Specification<ExpenseReport> filter) {
+        return repository.count(filter);
+    }
+
     public int count() {
         return (int) repository.count();
     }

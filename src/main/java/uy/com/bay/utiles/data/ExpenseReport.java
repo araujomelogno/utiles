@@ -1,13 +1,15 @@
 package uy.com.bay.utiles.data;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class ExpenseReport extends AbstractEntity {
@@ -27,8 +29,8 @@ public class ExpenseReport extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     private ExpenseStatus expenseStatus;
 
-    @ElementCollection
-    private List<String> files;
+    @OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExpenseReportFile> files = new ArrayList<>();
 
     public Study getStudy() {
         return study;
@@ -78,11 +80,11 @@ public class ExpenseReport extends AbstractEntity {
         this.expenseStatus = expenseStatus;
     }
 
-    public List<String> getFiles() {
+    public List<ExpenseReportFile> getFiles() {
         return files;
     }
 
-    public void setFiles(List<String> files) {
+    public void setFiles(List<ExpenseReportFile> files) {
         this.files = files;
     }
 }
