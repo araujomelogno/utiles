@@ -2,6 +2,7 @@ package uy.com.bay.utiles.services;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.repository.ExpenseRequestRepository;
@@ -33,8 +34,16 @@ public class ExpenseRequestService {
         return repository.findAll(pageable);
     }
 
+    public Page<ExpenseRequest> list(Pageable pageable, Specification<ExpenseRequest> filter) {
+        return repository.findAll(filter, pageable);
+    }
+
     public int count() {
         return (int) repository.count();
+    }
+
+    public int count(Specification<ExpenseRequest> filter) {
+        return (int) repository.count(filter);
     }
 
 }
