@@ -390,6 +390,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
 		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);
+		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		editorDiv.add(approve);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
 		editorLayoutDiv.setVisible(false);
@@ -401,8 +403,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		buttonLayout.add(save, approve, cancel, delete);
+		
+		buttonLayout.add(save, cancel, delete);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
