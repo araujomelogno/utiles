@@ -102,7 +102,7 @@ public class MainLayout extends AppLayout {
 		SideNavItem aprobarSolicitudesItem = new SideNavItem("Aprobar solicitudes", "expenses-approval");
 		aprobarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
 		gastosItem.addItem(aprobarSolicitudesItem);
-		SideNavItem rendicionesItem = new SideNavItem("Rendiciones", "rendiciones");
+		SideNavItem rendicionesItem = new SideNavItem("Rendiciones", "expense-reports");
 		rendicionesItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
 		gastosItem.addItem(rendicionesItem);
 		nav.addItem(gastosItem);
