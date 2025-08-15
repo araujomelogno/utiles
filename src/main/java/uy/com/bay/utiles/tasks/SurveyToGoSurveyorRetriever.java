@@ -33,7 +33,7 @@ public class SurveyToGoSurveyorRetriever {
         this.restTemplate = new RestTemplate();
     }
 
-    @Scheduled(cron = "0 0 * * * ?") // Runs every hour
+    @Scheduled(cron = "0 * * * * ?") // Runs every hour
     public void retrieveAndSaveSurveyors() {
         System.out.println("Starting SurveyToGo Surveyor Retriever Task...");
 
