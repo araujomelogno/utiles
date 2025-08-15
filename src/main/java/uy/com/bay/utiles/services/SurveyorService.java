@@ -43,6 +43,10 @@ public class SurveyorService {
         return (int) repository.count();
     }
 
+    public List<Surveyor> listAll() {
+        return repository.findAll();
+    }
+
     public List<Surveyor> findAll() {
         return repository.findAll();
     }

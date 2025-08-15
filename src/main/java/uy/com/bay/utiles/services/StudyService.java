@@ -43,6 +43,10 @@ public class StudyService {
         return (int) repository.count();
     }
 
+    public List<Study> listAll() {
+        return repository.findAll();
+    }
+
     public List<Study> findAll() {
         return repository.findAll();
     }
