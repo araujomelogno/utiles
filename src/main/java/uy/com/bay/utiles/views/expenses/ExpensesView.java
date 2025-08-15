@@ -1,5 +1,14 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -27,406 +36,435 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.PermitAll;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import uy.com.bay.utiles.data.*;
+import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.ExpenseRequestType;
+import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
+import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
-import uy.com.bay.utiles.services.ExpenseRequestTypeService;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @PageTitle("Solicitudes de Gastos")
 @Route("expenses/:expenseID?/:action?(edit)")
 @PermitAll
 public class ExpensesView extends Div implements BeforeEnterObserver {
 
-    private final String EXPENSE_ID = "expenseID";
-    private final String EXPENSE_EDIT_ROUTE_TEMPLATE = "expenses/%s/edit";
+	private final String EXPENSE_ID = "expenseID";
+	private final String EXPENSE_EDIT_ROUTE_TEMPLATE = "expenses/%s/edit";
 
-    private final Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
+	private final Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
 
-    private ComboBox<Study> study;
-    private ComboBox<Surveyor> surveyor;
-    private DatePicker requestDate;
-    private DatePicker aprovalDate;
-    private DatePicker transferDate;
-    private NumberField amount;
-    private ComboBox<ExpenseRequestType> concept;
+	private ComboBox<Study> study;
+	private ComboBox<Surveyor> surveyor;
+	private DatePicker requestDate;
+	private DatePicker aprovalDate;
+	private DatePicker transferDate;
+	private NumberField amount;
+	private ComboBox<ExpenseRequestType> concept;
 
-    private final Button cancel = new Button("Cancel");
-    private final Button save = new Button("Save");
-    private final Button delete = new Button("Delete");
+	private final Button cancel = new Button("Cancelar");
+	private final Button save = new Button("Guardar");
+	private final Button delete = new Button("Borrar");
 
-    private final BeanValidationBinder<ExpenseRequest> binder;
-    private ExpenseRequest expenseRequest;
-    private final ExpenseRequestService expenseRequestService;
-    private final StudyService studyService;
-    private final SurveyorService surveyorService;
-    private final ExpenseRequestTypeService expenseRequestTypeService;
-    private Div editorLayoutDiv;
+	private final BeanValidationBinder<ExpenseRequest> binder;
+	private ExpenseRequest expenseRequest;
+	private final ExpenseRequestService expenseRequestService;
+	private final StudyService studyService;
+	private final SurveyorService surveyorService;
+	private final ExpenseRequestTypeService expenseRequestTypeService;
+	private Div editorLayoutDiv;
 
-    private final Filters filters;
+	private final Filters filters;
 
-    public ExpensesView(ExpenseRequestService expenseRequestService, StudyService studyService,
-                        SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService) {
-        this.expenseRequestService = expenseRequestService;
-        this.studyService = studyService;
-        this.surveyorService = surveyorService;
-        this.expenseRequestTypeService = expenseRequestTypeService;
-        addClassNames("expenses-view");
+	public ExpensesView(ExpenseRequestService expenseRequestService, StudyService studyService,
+			SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService) {
+		this.expenseRequestService = expenseRequestService;
+		this.studyService = studyService;
+		this.surveyorService = surveyorService;
+		this.expenseRequestTypeService = expenseRequestTypeService;
+		addClassNames("expenses-view");
 
-        filters = new Filters();
+		filters = new Filters();
 
-        SplitLayout splitLayout = new SplitLayout();
-        splitLayout.setSplitterPosition(80);
+		SplitLayout splitLayout = new SplitLayout();
+		splitLayout.setSplitterPosition(80);
 
-        createEditorLayout(splitLayout);
-        createGridLayout(splitLayout);
+		createEditorLayout(splitLayout);
+		createGridLayout(splitLayout);
 
-        add(splitLayout);
+		add(splitLayout);
 
-        Grid.Column<ExpenseRequest> studyColumn = grid.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio").setAutoWidth(true).setSortable(true).setSortProperty("study.name");
-        Grid.Column<ExpenseRequest> surveyorColumn = grid.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName() : "").setHeader("Encuestador").setAutoWidth(true).setSortable(true).setSortProperty("surveyor.firstName");
-        Grid.Column<ExpenseRequest> requestDateColumn = grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Solicitado:").setAutoWidth(true).setSortable(true).setSortProperty("requestDate");
-        Grid.Column<ExpenseRequest> aprovalDateColumn = grid.addColumn(ExpenseRequest::getAprovalDate).setHeader("Aprobado:").setAutoWidth(true).setSortable(true).setSortProperty("aprovalDate");
-        Grid.Column<ExpenseRequest> transferDateColumn = grid.addColumn(ExpenseRequest::getTransferDate).setHeader("Transferido").setAutoWidth(true).setSortable(true).setSortProperty("transferDate");
-        Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setAutoWidth(true).setSortable(true).setSortProperty("amount");
-        Grid.Column<ExpenseRequest> conceptColumn = grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto").setAutoWidth(true).setSortable(true).setSortProperty("concept.concept");
-        Grid.Column<ExpenseRequest> statusColumn = grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado").setAutoWidth(true).setSortable(true).setSortProperty("expenseStatus");
+		Grid.Column<ExpenseRequest> studyColumn = grid
+				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
+				.setAutoWidth(true).setSortable(true).setSortProperty("study.name");
+		Grid.Column<ExpenseRequest> surveyorColumn = grid
+				.addColumn(er -> er.getSurveyor() != null
+						? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName()
+						: "")
+				.setHeader("Encuestador").setAutoWidth(true).setSortable(true).setSortProperty("surveyor.firstName");
+		Grid.Column<ExpenseRequest> requestDateColumn = grid.addColumn(ExpenseRequest::getRequestDate)
+				.setHeader("Solicitado:").setAutoWidth(true).setSortable(true).setSortProperty("requestDate");
+		Grid.Column<ExpenseRequest> aprovalDateColumn = grid.addColumn(ExpenseRequest::getAprovalDate)
+				.setHeader("Aprobado:").setAutoWidth(true).setSortable(true).setSortProperty("aprovalDate");
+		Grid.Column<ExpenseRequest> transferDateColumn = grid.addColumn(ExpenseRequest::getTransferDate)
+				.setHeader("Transferido").setAutoWidth(true).setSortable(true).setSortProperty("transferDate");
+		Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto")
+				.setAutoWidth(true).setSortable(true).setSortProperty("amount");
+		Grid.Column<ExpenseRequest> conceptColumn = grid
+				.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto")
+				.setAutoWidth(true).setSortable(true).setSortProperty("concept.concept");
+		Grid.Column<ExpenseRequest> statusColumn = grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado")
+				.setAutoWidth(true).setSortable(true).setSortProperty("expenseStatus");
 
-        grid.sort(List.of(new GridSortOrder<>(requestDateColumn, SortDirection.DESCENDING)));
+		grid.sort(List.of(new GridSortOrder<>(requestDateColumn, SortDirection.DESCENDING)));
 
-        grid.setDataProvider(DataProvider.fromFilteringCallbacks(
-                query -> {
-                    Specification<ExpenseRequest> spec = createSpecification(filters);
-                    return expenseRequestService.list(com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query), spec).stream();
-                },
-                query -> {
-                    Specification<ExpenseRequest> spec = createSpecification(filters);
-                    return expenseRequestService.count(spec);
-                }
-        ));
+		grid.setDataProvider(DataProvider.fromFilteringCallbacks(query -> {
+			Specification<ExpenseRequest> spec = createSpecification(filters);
+			return expenseRequestService
+					.list(com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query), spec)
+					.stream();
+		}, query -> {
+			Specification<ExpenseRequest> spec = createSpecification(filters);
+			return expenseRequestService.count(spec);
+		}));
 
-        HeaderRow headerRow = grid.appendHeaderRow();
+		HeaderRow headerRow = grid.appendHeaderRow();
 
-        TextField studyFilter = new TextField();
-        studyFilter.setPlaceholder("Filter");
-        studyFilter.setClearButtonVisible(true);
-        studyFilter.setValueChangeMode(ValueChangeMode.LAZY);
-        studyFilter.addValueChangeListener(e -> {
-            filters.setStudyName(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(studyColumn).setComponent(studyFilter);
+		TextField studyFilter = new TextField();
+		studyFilter.setPlaceholder("Filter");
+		studyFilter.setClearButtonVisible(true);
+		studyFilter.setValueChangeMode(ValueChangeMode.LAZY);
+		studyFilter.addValueChangeListener(e -> {
+			filters.setStudyName(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(studyColumn).setComponent(studyFilter);
 
-        TextField surveyorFilter = new TextField();
-        surveyorFilter.setPlaceholder("Filter");
-        surveyorFilter.setClearButtonVisible(true);
-        surveyorFilter.setValueChangeMode(ValueChangeMode.LAZY);
-        surveyorFilter.addValueChangeListener(e -> {
-            filters.setSurveyorName(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(surveyorColumn).setComponent(surveyorFilter);
+		TextField surveyorFilter = new TextField();
+		surveyorFilter.setPlaceholder("Filter");
+		surveyorFilter.setClearButtonVisible(true);
+		surveyorFilter.setValueChangeMode(ValueChangeMode.LAZY);
+		surveyorFilter.addValueChangeListener(e -> {
+			filters.setSurveyorName(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
-        DatePicker requestDateFilter = new DatePicker();
-        requestDateFilter.setPlaceholder("Filter");
-        requestDateFilter.setClearButtonVisible(true);
-        requestDateFilter.addValueChangeListener(e -> {
-            filters.setRequestDate(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(requestDateColumn).setComponent(requestDateFilter);
+		DatePicker requestDateFilter = new DatePicker();
+		requestDateFilter.setPlaceholder("Filter");
+		requestDateFilter.setClearButtonVisible(true);
+		requestDateFilter.addValueChangeListener(e -> {
+			filters.setRequestDate(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(requestDateColumn).setComponent(requestDateFilter);
 
-        DatePicker aprovalDateFilter = new DatePicker();
-        aprovalDateFilter.setPlaceholder("Filter");
-        aprovalDateFilter.setClearButtonVisible(true);
-        aprovalDateFilter.addValueChangeListener(e -> {
-            filters.setAprovalDate(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(aprovalDateColumn).setComponent(aprovalDateFilter);
+		DatePicker aprovalDateFilter = new DatePicker();
+		aprovalDateFilter.setPlaceholder("Filter");
+		aprovalDateFilter.setClearButtonVisible(true);
+		aprovalDateFilter.addValueChangeListener(e -> {
+			filters.setAprovalDate(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(aprovalDateColumn).setComponent(aprovalDateFilter);
 
-        DatePicker transferDateFilter = new DatePicker();
-        transferDateFilter.setPlaceholder("Filter");
-        transferDateFilter.setClearButtonVisible(true);
-        transferDateFilter.addValueChangeListener(e -> {
-            filters.setTransferDate(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(transferDateColumn).setComponent(transferDateFilter);
+		DatePicker transferDateFilter = new DatePicker();
+		transferDateFilter.setPlaceholder("Filter");
+		transferDateFilter.setClearButtonVisible(true);
+		transferDateFilter.addValueChangeListener(e -> {
+			filters.setTransferDate(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(transferDateColumn).setComponent(transferDateFilter);
 
-        NumberField amountFilter = new NumberField();
-        amountFilter.setPlaceholder("Filter");
-        amountFilter.setClearButtonVisible(true);
-        amountFilter.setValueChangeMode(ValueChangeMode.LAZY);
-        amountFilter.addValueChangeListener(e -> {
-            filters.setAmount(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(amountColumn).setComponent(amountFilter);
+		NumberField amountFilter = new NumberField();
+		amountFilter.setPlaceholder("Filter");
+		amountFilter.setClearButtonVisible(true);
+		amountFilter.setValueChangeMode(ValueChangeMode.LAZY);
+		amountFilter.addValueChangeListener(e -> {
+			filters.setAmount(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(amountColumn).setComponent(amountFilter);
 
-        ComboBox<ExpenseRequestType> conceptFilter = new ComboBox<>();
-        conceptFilter.setItems(expenseRequestTypeService.findAll());
-        conceptFilter.setItemLabelGenerator(ExpenseRequestType::getConcept);
-        conceptFilter.setPlaceholder("Filter");
-        conceptFilter.setClearButtonVisible(true);
-        conceptFilter.addValueChangeListener(e -> {
-            filters.setConcept(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(conceptColumn).setComponent(conceptFilter);
+		ComboBox<ExpenseRequestType> conceptFilter = new ComboBox<>();
+		conceptFilter.setItems(expenseRequestTypeService.findAll());
+		conceptFilter.setItemLabelGenerator(ExpenseRequestType::getConcept);
+		conceptFilter.setPlaceholder("Filter");
+		conceptFilter.setClearButtonVisible(true);
+		conceptFilter.addValueChangeListener(e -> {
+			filters.setConcept(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(conceptColumn).setComponent(conceptFilter);
 
-        ComboBox<ExpenseStatus> statusFilter = new ComboBox<>();
-        statusFilter.setItems(ExpenseStatus.values());
-        statusFilter.setPlaceholder("Filter");
-        statusFilter.setClearButtonVisible(true);
-        statusFilter.addValueChangeListener(e -> {
-            filters.setExpenseStatus(e.getValue());
-            grid.getDataProvider().refreshAll();
-        });
-        headerRow.getCell(statusColumn).setComponent(statusFilter);
+		ComboBox<ExpenseStatus> statusFilter = new ComboBox<>();
+		statusFilter.setItems(ExpenseStatus.values());
+		statusFilter.setPlaceholder("Filter");
+		statusFilter.setClearButtonVisible(true);
+		statusFilter.addValueChangeListener(e -> {
+			filters.setExpenseStatus(e.getValue());
+			grid.getDataProvider().refreshAll();
+		});
+		headerRow.getCell(statusColumn).setComponent(statusFilter);
 
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
-        grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                editorLayoutDiv.setVisible(true);
-                UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
-            } else {
-                editorLayoutDiv.setVisible(false);
-                clearForm();
-                UI.getCurrent().navigate(ExpensesView.class);
-            }
-        });
+		grid.asSingleSelect().addValueChangeListener(event -> {
+			if (event.getValue() != null) {
+				editorLayoutDiv.setVisible(true);
+				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+			} else {
+				editorLayoutDiv.setVisible(false);
+				clearForm();
+				UI.getCurrent().navigate(ExpensesView.class);
+			}
+		});
 
-        binder = new BeanValidationBinder<>(ExpenseRequest.class);
-        binder.bindInstanceFields(this);
+		binder = new BeanValidationBinder<>(ExpenseRequest.class);
+		binder.bindInstanceFields(this);
 
-        cancel.addClickListener(e -> {
-            clearForm();
-            refreshGrid();
-            editorLayoutDiv.setVisible(false);
-        });
+		cancel.addClickListener(e -> {
+			clearForm();
+			refreshGrid();
+			editorLayoutDiv.setVisible(false);
+		});
 
-        save.addClickListener(e -> {
-            try {
-                if (this.expenseRequest == null) {
-                    this.expenseRequest = new ExpenseRequest();
-                }
-                binder.writeBean(this.expenseRequest);
-                expenseRequestService.update(this.expenseRequest);
-                clearForm();
-                refreshGrid();
-                Notification.show("ExpenseRequest details stored.");
-                UI.getCurrent().navigate(ExpensesView.class);
-            } catch (ObjectOptimisticLockingFailureException exception) {
-                Notification n = Notification.show("Error updating the data. Somebody else has updated the record while you were making changes.");
-                n.setPosition(Notification.Position.MIDDLE);
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } catch (ValidationException validationException) {
-                Notification.show("Failed to update the data. Check again that all values are valid");
-            }
-        });
-    }
+		save.addClickListener(e -> {
+			try {
+				if (this.expenseRequest == null) {
+					this.expenseRequest = new ExpenseRequest();
+				}
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Long> expenseId = event.getRouteParameters().get(EXPENSE_ID).map(Long::parseLong);
-        if (expenseId.isPresent()) {
-            Optional<ExpenseRequest> expenseRequestFromBackend = expenseRequestService.get(expenseId.get());
-            if (expenseRequestFromBackend.isPresent()) {
-                populateForm(expenseRequestFromBackend.get());
-                editorLayoutDiv.setVisible(true);
-            } else {
-                Notification.show(String.format("The requested expense request was not found, ID = %d", expenseId.get()), 3000, Notification.Position.BOTTOM_START);
-                refreshGrid();
-                event.forwardTo(ExpensesView.class);
-            }
-        }
-    }
+				binder.writeBean(this.expenseRequest);
 
-    private Specification<ExpenseRequest> createSpecification(Filters filters) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            if (filters.getStudyName() != null && !filters.getStudyName().isEmpty()) {
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("study").get("name")), "%" + filters.getStudyName().toLowerCase() + "%"));
-            }
-            if (filters.getSurveyorName() != null && !filters.getSurveyorName().isEmpty()) {
-                Predicate surveyorFirstName = criteriaBuilder.like(criteriaBuilder.lower(root.get("surveyor").get("firstName")), "%" + filters.getSurveyorName().toLowerCase() + "%");
-                Predicate surveyorLastName = criteriaBuilder.like(criteriaBuilder.lower(root.get("surveyor").get("lastName")), "%" + filters.getSurveyorName().toLowerCase() + "%");
-                predicates.add(criteriaBuilder.or(surveyorFirstName, surveyorLastName));
-            }
-            if (filters.getRequestDate() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("requestDate"), filters.getRequestDate()));
-            }
-            if (filters.getAprovalDate() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("aprovalDate"), filters.getAprovalDate()));
-            }
-            if (filters.getTransferDate() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("transferDate"), filters.getTransferDate()));
-            }
-            if (filters.getAmount() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("amount"), filters.getAmount()));
-            }
-            if (filters.getConcept() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("concept"), filters.getConcept()));
-            }
-            if (filters.getExpenseStatus() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("expenseStatus"), filters.getExpenseStatus()));
-            }
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-    }
+				if (this.expenseRequest.getRequestDate() == null) {
+					this.expenseRequest.setRequestDate(new Date());
+				}
+				if (this.expenseRequest.getExpenseStatus() == null) {
 
-    private void createEditorLayout(SplitLayout splitLayout) {
-        editorLayoutDiv = new Div();
-        editorLayoutDiv.setClassName("editor-layout");
-        Div editorDiv = new Div();
-        editorDiv.setClassName("editor");
-        editorLayoutDiv.add(editorDiv);
-        FormLayout formLayout = new FormLayout();
-        study = new ComboBox<>("Estudio");
-        study.setItems(studyService.listAll());
-        study.setItemLabelGenerator(Study::getName);
-        surveyor = new ComboBox<>("Encuestador");
-        surveyor.setItems(surveyorService.listAll());
-        surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
-        requestDate = new DatePicker("Fecha solicitud");
-        requestDate.setReadOnly(true);
-        aprovalDate = new DatePicker("Fecha aprobación");
-        aprovalDate.setReadOnly(true);
-        transferDate = new DatePicker("Fecha transferencia");
-        transferDate.setReadOnly(true);
-        amount = new NumberField("Monto");
-        concept = new ComboBox<>("Concepto");
-        concept.setItems(expenseRequestTypeService.findAll());
-        concept.setItemLabelGenerator(ExpenseRequestType::getConcept);
-        formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept);
-        editorDiv.add(formLayout);
-        createButtonLayout(editorLayoutDiv);
-        splitLayout.addToSecondary(editorLayoutDiv);
-        editorLayoutDiv.setVisible(false);
-    }
+					this.expenseRequest.setExpenseStatus(ExpenseStatus.INGRESADO);
+				}
+				expenseRequestService.update(this.expenseRequest);
+				clearForm();
+				refreshGrid();
+				Notification.show("ExpenseRequest details stored.");
+				editorLayoutDiv.setVisible(false);
+				UI.getCurrent().navigate(ExpensesView.class);
+			} catch (ObjectOptimisticLockingFailureException exception) {
+				Notification n = Notification.show(
+						"Error updating the data. Somebody else has updated the record while you were making changes.");
+				n.setPosition(Notification.Position.MIDDLE);
+				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} catch (ValidationException validationException) {
+				Notification.show("Failed to update the data. Check again that all values are valid");
+			}
+		});
+	}
 
-    private void createButtonLayout(Div editorLayoutDiv) {
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setClassName("button-layout");
-        cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        buttonLayout.add(save, cancel, delete);
-        editorLayoutDiv.add(buttonLayout);
-    }
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		Optional<Long> expenseId = event.getRouteParameters().get(EXPENSE_ID).map(Long::parseLong);
+		if (expenseId.isPresent()) {
+			Optional<ExpenseRequest> expenseRequestFromBackend = expenseRequestService.get(expenseId.get());
+			if (expenseRequestFromBackend.isPresent()) {
+				populateForm(expenseRequestFromBackend.get());
+				editorLayoutDiv.setVisible(true);
+			} else {
+				Notification.show(
+						String.format("The requested expense request was not found, ID = %d", expenseId.get()), 3000,
+						Notification.Position.BOTTOM_START);
+				refreshGrid();
+				event.forwardTo(ExpensesView.class);
+			}
+		}
+	}
 
-    private void createGridLayout(SplitLayout splitLayout) {
-        Div wrapper = new Div();
-        wrapper.setClassName("grid-wrapper");
-        Button createButton = new Button("Crear solicitud", e -> {
-            grid.asSingleSelect().clear();
-            populateForm(new ExpenseRequest());
-            editorLayoutDiv.setVisible(true);
-        });
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        HorizontalLayout topLayout = new HorizontalLayout(createButton);
-        topLayout.setWidth("100%");
-        topLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-        splitLayout.addToPrimary(wrapper);
-        wrapper.add(topLayout, grid);
-    }
+	private Specification<ExpenseRequest> createSpecification(Filters filters) {
+		return (root, query, criteriaBuilder) -> {
+			List<Predicate> predicates = new ArrayList<>();
+			if (filters.getStudyName() != null && !filters.getStudyName().isEmpty()) {
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("study").get("name")),
+						"%" + filters.getStudyName().toLowerCase() + "%"));
+			}
+			if (filters.getSurveyorName() != null && !filters.getSurveyorName().isEmpty()) {
+				Predicate surveyorFirstName = criteriaBuilder.like(
+						criteriaBuilder.lower(root.get("surveyor").get("firstName")),
+						"%" + filters.getSurveyorName().toLowerCase() + "%");
+				Predicate surveyorLastName = criteriaBuilder.like(
+						criteriaBuilder.lower(root.get("surveyor").get("lastName")),
+						"%" + filters.getSurveyorName().toLowerCase() + "%");
+				predicates.add(criteriaBuilder.or(surveyorFirstName, surveyorLastName));
+			}
+			if (filters.getRequestDate() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("requestDate"), filters.getRequestDate()));
+			}
+			if (filters.getAprovalDate() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("aprovalDate"), filters.getAprovalDate()));
+			}
+			if (filters.getTransferDate() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("transferDate"), filters.getTransferDate()));
+			}
+			if (filters.getAmount() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("amount"), filters.getAmount()));
+			}
+			if (filters.getConcept() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("concept"), filters.getConcept()));
+			}
+			if (filters.getExpenseStatus() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("expenseStatus"), filters.getExpenseStatus()));
+			}
+			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+		};
+	}
 
-    private void refreshGrid() {
-        grid.select(null);
-        grid.getDataProvider().refreshAll();
-    }
+	private void createEditorLayout(SplitLayout splitLayout) {
+		editorLayoutDiv = new Div();
+		editorLayoutDiv.setClassName("editor-layout");
+		Div editorDiv = new Div();
+		editorDiv.setClassName("editor");
+		editorLayoutDiv.add(editorDiv);
+		FormLayout formLayout = new FormLayout();
+		study = new ComboBox<>("Estudio");
+		study.setItems(studyService.listAll());
+		study.setItemLabelGenerator(Study::getName);
+		surveyor = new ComboBox<>("Encuestador");
+		surveyor.setItems(surveyorService.listAll());
+		surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
+		requestDate = new DatePicker("Fecha solicitud");
+		requestDate.setReadOnly(true);
+		aprovalDate = new DatePicker("Fecha aprobación");
+		aprovalDate.setReadOnly(true);
+		transferDate = new DatePicker("Fecha transferencia");
+		transferDate.setReadOnly(true);
+		amount = new NumberField("Monto");
+		concept = new ComboBox<>("Concepto");
+		concept.setItems(expenseRequestTypeService.findAll());
+		concept.setItemLabelGenerator(ExpenseRequestType::getConcept);
+		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept);
+		editorDiv.add(formLayout);
+		createButtonLayout(editorLayoutDiv);
+		splitLayout.addToSecondary(editorLayoutDiv);
+		editorLayoutDiv.setVisible(false);
+	}
 
-    private void clearForm() {
-        populateForm(null);
-    }
+	private void createButtonLayout(Div editorLayoutDiv) {
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setClassName("button-layout");
+		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		buttonLayout.add(save, cancel, delete);
+		editorLayoutDiv.add(buttonLayout);
+	}
 
-    private void populateForm(ExpenseRequest value) {
-        this.expenseRequest = value;
-        binder.readBean(this.expenseRequest);
-    }
+	private void createGridLayout(SplitLayout splitLayout) {
+		Div wrapper = new Div();
+		wrapper.setClassName("grid-wrapper");
+		Button createButton = new Button("Crear solicitud", e -> {
+			grid.asSingleSelect().clear();
+			populateForm(new ExpenseRequest());
+			editorLayoutDiv.setVisible(true);
+		});
+		createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		HorizontalLayout topLayout = new HorizontalLayout(createButton);
+		topLayout.setWidth("100%");
+		topLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+		splitLayout.addToPrimary(wrapper);
+		wrapper.add(topLayout, grid);
+	}
 
-    private static class Filters {
-        private String studyName;
-        private String surveyorName;
-        private LocalDate requestDate;
-        private LocalDate aprovalDate;
-        private LocalDate transferDate;
-        private Double amount;
-        private ExpenseRequestType concept;
-        private ExpenseStatus expenseStatus;
+	private void refreshGrid() {
+		grid.select(null);
+		grid.getDataProvider().refreshAll();
+	}
 
-        public String getStudyName() {
-            return studyName;
-        }
+	private void clearForm() {
+		populateForm(null);
+	}
 
-        public void setStudyName(String studyName) {
-            this.studyName = studyName;
-        }
+	private void populateForm(ExpenseRequest value) {
+		this.expenseRequest = value;
+		binder.readBean(this.expenseRequest);
+	}
 
-        public String getSurveyorName() {
-            return surveyorName;
-        }
+	private static class Filters {
+		private String studyName;
+		private String surveyorName;
+		private LocalDate requestDate;
+		private LocalDate aprovalDate;
+		private LocalDate transferDate;
+		private Double amount;
+		private ExpenseRequestType concept;
+		private ExpenseStatus expenseStatus;
 
-        public void setSurveyorName(String surveyorName) {
-            this.surveyorName = surveyorName;
-        }
+		public String getStudyName() {
+			return studyName;
+		}
 
-        public LocalDate getRequestDate() {
-            return requestDate;
-        }
+		public void setStudyName(String studyName) {
+			this.studyName = studyName;
+		}
 
-        public void setRequestDate(LocalDate requestDate) {
-            this.requestDate = requestDate;
-        }
+		public String getSurveyorName() {
+			return surveyorName;
+		}
 
-        public LocalDate getAprovalDate() {
-            return aprovalDate;
-        }
+		public void setSurveyorName(String surveyorName) {
+			this.surveyorName = surveyorName;
+		}
 
-        public void setAprovalDate(LocalDate aprovalDate) {
-            this.aprovalDate = aprovalDate;
-        }
+		public LocalDate getRequestDate() {
+			return requestDate;
+		}
 
-        public LocalDate getTransferDate() {
-            return transferDate;
-        }
+		public void setRequestDate(LocalDate requestDate) {
+			this.requestDate = requestDate;
+		}
 
-        public void setTransferDate(LocalDate transferDate) {
-            this.transferDate = transferDate;
-        }
+		public LocalDate getAprovalDate() {
+			return aprovalDate;
+		}
 
-        public Double getAmount() {
-            return amount;
-        }
+		public void setAprovalDate(LocalDate aprovalDate) {
+			this.aprovalDate = aprovalDate;
+		}
 
-        public void setAmount(Double amount) {
-            this.amount = amount;
-        }
+		public LocalDate getTransferDate() {
+			return transferDate;
+		}
 
-        public ExpenseRequestType getConcept() {
-            return concept;
-        }
+		public void setTransferDate(LocalDate transferDate) {
+			this.transferDate = transferDate;
+		}
 
-        public void setConcept(ExpenseRequestType concept) {
-            this.concept = concept;
-        }
+		public Double getAmount() {
+			return amount;
+		}
 
-        public ExpenseStatus getExpenseStatus() {
-            return expenseStatus;
-        }
+		public void setAmount(Double amount) {
+			this.amount = amount;
+		}
 
-        public void setExpenseStatus(ExpenseStatus expenseStatus) {
-            this.expenseStatus = expenseStatus;
-        }
-    }
+		public ExpenseRequestType getConcept() {
+			return concept;
+		}
+
+		public void setConcept(ExpenseRequestType concept) {
+			this.concept = concept;
+		}
+
+		public ExpenseStatus getExpenseStatus() {
+			return expenseStatus;
+		}
+
+		public void setExpenseStatus(ExpenseStatus expenseStatus) {
+			this.expenseStatus = expenseStatus;
+		}
+	}
 }
