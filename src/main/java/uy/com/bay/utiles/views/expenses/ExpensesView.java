@@ -13,6 +13,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -248,6 +249,29 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 			editorLayoutDiv.setVisible(false);
 		});
 
+		delete.addClickListener(e -> {
+			if (this.expenseRequest != null && this.expenseRequest.getId() != null) {
+				ConfirmDialog dialog = new ConfirmDialog();
+				dialog.setHeader("Confirmar borrado");
+				dialog.setText("¿Está seguro de que desea borrar esta solicitud? Esta acción no se puede deshacer.");
+				dialog.setCancelable(true);
+				dialog.setConfirmText("Borrar");
+				dialog.setConfirmButtonTheme("error primary");
+				dialog.addConfirmListener(event -> {
+					try {
+						expenseRequestService.delete(this.expenseRequest.getId());
+						clearForm();
+						refreshGrid();
+						Notification.show("Solicitud de gasto borrada exitosamente.", 3000,
+								Notification.Position.BOTTOM_START);
+					} catch (Exception ex) {
+						Notification.show("Error al borrar el concepto: " + ex.getMessage(), 5000,
+								Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+					}
+				});
+				dialog.open();
+			}
+		});
 		save.addClickListener(e -> {
 			try {
 				if (this.expenseRequest == null) {
@@ -403,7 +427,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		
+
 		buttonLayout.add(save, cancel, delete);
 		editorLayoutDiv.add(buttonLayout);
 	}
@@ -435,7 +459,12 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(ExpenseRequest value) {
 		this.expenseRequest = value;
+		approve.setEnabled(isAttached());
 		binder.readBean(this.expenseRequest);
+		if (value != null) {
+			approve.setEnabled(
+					value.getId() != null && value.getId() != 0 && value.getExpenseStatus() == ExpenseStatus.INGRESADO);
+		}
 	}
 
 	private static class Filters {
