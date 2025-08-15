@@ -96,6 +96,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem conceptosItem = new SideNavItem("Conceptos", "conceptos");
 		conceptosItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
 		gastosItem.addItem(conceptosItem);
+		SideNavItem solicitudesItem = new SideNavItem("Solicitudes", "expenses");
+		solicitudesItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
+		gastosItem.addItem(solicitudesItem);
 		nav.addItem(gastosItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");

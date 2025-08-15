@@ -40,4 +40,8 @@ public class ExpenseRequestTypeService {
     public int count() {
         return (int) repository.count();
     }
+
+    public java.util.List<ExpenseRequestType> findAll() {
+        return repository.findAll();
+    }
 }
