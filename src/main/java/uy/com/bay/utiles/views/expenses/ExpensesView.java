@@ -48,8 +48,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
     private DatePicker aprovalDate;
     private DatePicker transferDate;
     private NumberField amount;
-    private ComboBox<ExpenseRequestType> concept;
-    private ComboBox<ExpenseStatus> expenseStatus;
+    private ComboBox<ExpenseRequestType> concept; 
 
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
@@ -83,14 +82,14 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn(er -> er.getStudy().getName()).setHeader("Study").setAutoWidth(true);
-        grid.addColumn(er -> er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName()).setHeader("Surveyor").setAutoWidth(true);
-        grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Request Date").setAutoWidth(true);
-        grid.addColumn(ExpenseRequest::getAprovalDate).setHeader("Approval Date").setAutoWidth(true);
-        grid.addColumn(ExpenseRequest::getTransferDate).setHeader("Transfer Date").setAutoWidth(true);
-        grid.addColumn(ExpenseRequest::getAmount).setHeader("Amount").setAutoWidth(true);
-        grid.addColumn(er -> er.getConcept().getConcept()).setHeader("Concept").setAutoWidth(true);
-        grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Status").setAutoWidth(true);
+        grid.addColumn(er -> er.getStudy().getName()).setHeader("Estudio").setAutoWidth(true);
+        grid.addColumn(er -> er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName()).setHeader("Encuestador").setAutoWidth(true);
+        grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Solicitado:").setAutoWidth(true);
+        grid.addColumn(ExpenseRequest::getAprovalDate).setHeader("Aprobado:").setAutoWidth(true);
+        grid.addColumn(ExpenseRequest::getTransferDate).setHeader("Transferido").setAutoWidth(true);
+        grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setAutoWidth(true);
+        grid.addColumn(er -> er.getConcept().getConcept()).setHeader("Concepto").setAutoWidth(true);
+        grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado").setAutoWidth(true);
 
         grid.setItems(query -> expenseRequestService.list(
                 com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
@@ -163,25 +162,23 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
         editorLayoutDiv.add(editorDiv);
 
         FormLayout formLayout = new FormLayout();
-        study = new ComboBox<>("Study");
+        study = new ComboBox<>("Estudio");
         study.setItems(studyService.listAll());
         study.setItemLabelGenerator(Study::getName);
-        surveyor = new ComboBox<>("Surveyor");
+        surveyor = new ComboBox<>("Encuestador");
         surveyor.setItems(surveyorService.listAll());
         surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
-        requestDate = new DatePicker("Request Date");
+        requestDate = new DatePicker("Fecha solicitud");
         requestDate.setReadOnly(true);
-        aprovalDate = new DatePicker("Approval Date");
+        aprovalDate = new DatePicker("Fecha aprobación");
         aprovalDate.setReadOnly(true);
-        transferDate = new DatePicker("Transfer Date");
+        transferDate = new DatePicker("Fecha transferencia");
         transferDate.setReadOnly(true);
-        amount = new NumberField("Amount");
-        concept = new ComboBox<>("Concept");
+        amount = new NumberField("Monto");
+        concept = new ComboBox<>("Concepto");
         concept.setItems(expenseRequestTypeService.findAll());
         concept.setItemLabelGenerator(ExpenseRequestType::getConcept);
-        expenseStatus = new ComboBox<>("Status");
-        expenseStatus.setItems(ExpenseStatus.values());
-        formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, expenseStatus);
+        formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept);
 
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
