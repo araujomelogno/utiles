@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views.expenserequesttype;
 
+import java.util.Optional;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -15,6 +19,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -22,9 +27,8 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.PermitAll;
-import java.util.Optional;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 
@@ -39,7 +43,7 @@ public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
     private final Grid<ExpenseRequestType> grid = new Grid<>(ExpenseRequestType.class, false);
 
     private TextField concept;
-    private TextField description;
+    private TextArea description;
 
     private final Button cancel = new Button("Cancelar");
     private final Button save = new Button("Guardar");
@@ -173,7 +177,7 @@ public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
 
         FormLayout formLayout = new FormLayout();
         concept = new TextField("Concepto");
-        description = new TextField("Descripción");
+        description = new TextArea("Descripción");
         formLayout.add(concept, description);
 
         editorDiv.add(formLayout);
