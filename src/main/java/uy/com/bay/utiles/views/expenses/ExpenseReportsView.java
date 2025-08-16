@@ -174,6 +174,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				if (this.expenseReport == null) {
 					this.expenseReport = new ExpenseReport();
 				}
+				if (this.expenseReport.getExpenseStatus() == null) {
+					this.expenseReport.setExpenseStatus(ExpenseStatus.INGRESADO);
+				}
 				binder.writeBean(this.expenseReport);
 				expenseReportService.save(this.expenseReport);
 				clearForm();
