@@ -75,7 +75,7 @@ public class ExpenseReportApprovalView extends Div {
         Grid.Column<ExpenseReport> studyColumn = grid.addColumn(report -> report.getStudy().getName()).setHeader("Study").setSortable(true);
         Grid.Column<ExpenseReport> amountColumn = grid.addColumn(ExpenseReport::getAmount).setHeader("Amount").setSortable(true);
         Grid.Column<ExpenseReport> conceptColumn = grid.addColumn(report -> report.getConcept().getName()).setHeader("Concept").setSortable(true);
-        Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getStatus).setHeader("Status").setSortable(true);
+        Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Status").setSortable(true);
 
         // Fetch and set data
         List<ExpenseReport> reports = expenseReportService.findAllByStatus(ExpenseReportStatus.INGRESADO);
@@ -125,7 +125,7 @@ public class ExpenseReportApprovalView extends Div {
         TextField statusFilter = new TextField();
         statusFilter.setPlaceholder("Filter by status...");
         statusFilter.addValueChangeListener(event -> dataProvider.addFilter(
-            report -> report.getStatus().toString().toLowerCase().contains(event.getValue().toLowerCase())));
+            report -> report.getExpenseStatus().toString().toLowerCase().contains(event.getValue().toLowerCase())));
         filterRow.getCell(statusColumn).setComponent(statusFilter);
 
     }
