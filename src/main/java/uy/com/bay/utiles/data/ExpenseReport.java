@@ -15,77 +15,77 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class ExpenseReport extends AbstractEntity {
 
-    @ManyToOne
-    private Study study;
+	@ManyToOne
+	private Study study;
 
-    @ManyToOne
-    private Surveyor surveyor;
+	@ManyToOne
+	private Surveyor surveyor;
 
-    private Date date;
-    private Double amount;
+	private Date date;
+	private Double amount;
 
-    @ManyToOne
-    private ExpenseRequestType concept;
+	@ManyToOne
+	private ExpenseRequestType concept;
 
-    @Enumerated(EnumType.STRING)
-    private ExpenseStatus expenseStatus;
+	@Enumerated(EnumType.STRING)
+	private ExpenseReportStatus status;
 
-    @OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<ExpenseReportFile> files = new ArrayList<>();
+	@OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+	private List<ExpenseReportFile> files = new ArrayList<>();
 
-    public Study getStudy() {
-        return study;
-    }
+	public Study getStudy() {
+		return study;
+	}
 
-    public void setStudy(Study study) {
-        this.study = study;
-    }
+	public void setStudy(Study study) {
+		this.study = study;
+	}
 
-    public Surveyor getSurveyor() {
-        return surveyor;
-    }
+	public Surveyor getSurveyor() {
+		return surveyor;
+	}
 
-    public void setSurveyor(Surveyor surveyor) {
-        this.surveyor = surveyor;
-    }
+	public void setSurveyor(Surveyor surveyor) {
+		this.surveyor = surveyor;
+	}
 
-    public Date getDate() {
-        return date;
-    }
+	public Date getDate() {
+		return date;
+	}
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
+	public void setDate(Date date) {
+		this.date = date;
+	}
 
-    public Double getAmount() {
-        return amount;
-    }
+	public Double getAmount() {
+		return amount;
+	}
 
-    public void setAmount(Double amount) {
-        this.amount = amount;
-    }
+	public void setAmount(Double amount) {
+		this.amount = amount;
+	}
 
-    public ExpenseRequestType getConcept() {
-        return concept;
-    }
+	public ExpenseRequestType getConcept() {
+		return concept;
+	}
 
-    public void setConcept(ExpenseRequestType concept) {
-        this.concept = concept;
-    }
+	public void setConcept(ExpenseRequestType concept) {
+		this.concept = concept;
+	}
 
-    public ExpenseStatus getExpenseStatus() {
-        return expenseStatus;
-    }
+	public ExpenseReportStatus getExpenseStatus() {
+		return status;
+	}
 
-    public void setExpenseStatus(ExpenseStatus expenseStatus) {
-        this.expenseStatus = expenseStatus;
-    }
+	public void setExpenseReportStatus(ExpenseReportStatus expenseReportStatus) {
+		this.status = expenseReportStatus;
+	}
 
-    public List<ExpenseReportFile> getFiles() {
-        return files;
-    }
+	public List<ExpenseReportFile> getFiles() {
+		return files;
+	}
 
-    public void setFiles(List<ExpenseReportFile> files) {
-        this.files = files;
-    }
+	public void setFiles(List<ExpenseReportFile> files) {
+		this.files = files;
+	}
 }

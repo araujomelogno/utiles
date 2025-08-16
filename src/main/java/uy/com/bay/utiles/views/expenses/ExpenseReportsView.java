@@ -47,6 +47,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportFile;
+import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Study;
@@ -175,7 +176,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 					this.expenseReport = new ExpenseReport();
 				}
 				if (this.expenseReport.getExpenseStatus() == null) {
-					this.expenseReport.setExpenseStatus(ExpenseStatus.INGRESADO);
+					this.expenseReport.setExpenseReportStatus(ExpenseReportStatus.INGRESADO);
 				}
 				binder.writeBean(this.expenseReport);
 				expenseReportService.save(this.expenseReport);
