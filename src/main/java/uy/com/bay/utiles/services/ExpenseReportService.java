@@ -4,10 +4,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 import uy.com.bay.utiles.data.ExpenseReport;
+import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.repository.ExpenseReportRepository;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class ExpenseReportService {
@@ -40,6 +49,18 @@ public class ExpenseReportService {
 
     public Page<ExpenseReport> list(Pageable pageable, Specification<ExpenseReport> filter) {
         return repository.findAll(filter, pageable);
+    }
+
+    public List<ExpenseReport> findAllByStatus(ExpenseReportStatus status) {
+        return repository.findAllByStatus(status);
+    }
+
+    public void approveReports(Collection<ExpenseReport> reports) {
+        reports.forEach(report -> {
+            report.setStatus(ExpenseReportStatus.APROBADO);
+            report.setApprovalDate(new Date());
+            repository.save(report);
+        });
     }
 
     public long count(Specification<ExpenseReport> filter) {

@@ -30,8 +30,18 @@ public class ExpenseReport extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private ExpenseReportStatus status;
 
+	private Date approvalDate;
+
 	@OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	private List<ExpenseReportFile> files = new ArrayList<>();
+
+	public Date getApprovalDate() {
+		return approvalDate;
+	}
+
+	public void setApprovalDate(Date approvalDate) {
+		this.approvalDate = approvalDate;
+	}
 
 	public Study getStudy() {
 		return study;
@@ -73,11 +83,11 @@ public class ExpenseReport extends AbstractEntity {
 		this.concept = concept;
 	}
 
-	public ExpenseReportStatus getExpenseStatus() {
+	public ExpenseReportStatus getStatus() {
 		return status;
 	}
 
-	public void setExpenseReportStatus(ExpenseReportStatus expenseReportStatus) {
+	public void setStatus(ExpenseReportStatus expenseReportStatus) {
 		this.status = expenseReportStatus;
 	}
 
