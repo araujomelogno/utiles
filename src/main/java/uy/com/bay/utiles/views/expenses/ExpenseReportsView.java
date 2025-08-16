@@ -112,12 +112,12 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
         add(splitLayout);
 
-        grid.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio").setSortable(true).setKey("study");
-        grid.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName() : "").setHeader("Encuestador").setSortable(true).setKey("surveyor");
-        grid.addColumn(er -> er.getDate() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getDate()) : "").setHeader("Fecha").setSortable(true).setKey("date");
-        grid.addColumn(ExpenseReport::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
-        grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto").setSortable(true).setKey("concept");
-        grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Estado").setSortable(true).setKey("expenseStatus");
+        grid.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio").setSortProperty("study.name").setKey("study");
+        grid.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName() : "").setHeader("Encuestador").setSortProperty("surveyor.firstName").setKey("surveyor");
+        grid.addColumn(er -> er.getDate() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getDate()) : "").setHeader("Fecha").setSortProperty("date").setKey("date");
+        grid.addColumn(ExpenseReport::getAmount).setHeader("Monto").setSortProperty("amount").setKey("amount");
+        grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto").setSortProperty("concept.concept").setKey("concept");
+        grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Estado").setSortProperty("expenseStatus").setKey("expenseStatus");
 
         grid.setDataProvider(new CallbackDataProvider<>(
                 query -> expenseReportService.list(
