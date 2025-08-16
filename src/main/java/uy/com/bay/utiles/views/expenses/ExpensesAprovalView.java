@@ -85,8 +85,8 @@ public class ExpensesAprovalView extends Div {
 		Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto")
 				.setAutoWidth(true).setSortable(true).setSortProperty("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
-				.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto")
-				.setAutoWidth(true).setSortable(true).setSortProperty("concept.concept");
+				.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
+				.setAutoWidth(true).setSortable(true).setSortProperty("concept.name");
 
 		grid.asMultiSelect().addValueChangeListener(event -> {
 			selectedRequests.clear();
@@ -147,7 +147,7 @@ public class ExpensesAprovalView extends Div {
 
 		ComboBox<ExpenseRequestType> conceptFilter = new ComboBox<>();
 		conceptFilter.setItems(expenseRequestTypeService.findAll());
-		conceptFilter.setItemLabelGenerator(ExpenseRequestType::getConcept);
+		conceptFilter.setItemLabelGenerator(ExpenseRequestType::getName);
 		conceptFilter.setPlaceholder("Filtrar");
 		conceptFilter.setClearButtonVisible(true);
 		conceptFilter.addValueChangeListener(e -> {

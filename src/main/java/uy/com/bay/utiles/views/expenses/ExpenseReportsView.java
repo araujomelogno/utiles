@@ -75,14 +75,14 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private NumberField amountFromFilter;
 	private NumberField amountToFilter;
 	private TextField conceptFilter;
-	private ComboBox<ExpenseStatus> statusFilter;
+	private ComboBox<ExpenseReportStatus> statusFilter;
 
 	private ComboBox<Study> study;
 	private ComboBox<Surveyor> surveyor;
 	private DatePicker date;
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
-	private ComboBox<ExpenseStatus> expenseStatus;
+	private ComboBox<ExpenseReportStatus> expenseStatus;
 	private Upload files;
 
 	private final Button cancel = new Button("Cancelar");
@@ -129,8 +129,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				er -> er.getDate() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getDate()) : "")
 				.setHeader("Fecha").setSortProperty("date").setKey("date");
 		grid.addColumn(ExpenseReport::getAmount).setHeader("Monto").setSortProperty("amount").setKey("amount");
-		grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto")
-				.setSortProperty("concept.concept").setKey("concept");
+		grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
+				.setSortProperty("concept.name").setKey("concept");
 		grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Estado").setSortProperty("expenseStatus")
 				.setKey("expenseStatus");
 
@@ -176,7 +176,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 					this.expenseReport = new ExpenseReport();
 				}
 				if (this.expenseReport.getExpenseStatus() == null) {
-					this.expenseReport.setExpenseReportStatus(ExpenseReportStatus.INGRESADO);
+					this.expenseReport.setExpenseStatus(ExpenseReportStatus.INGRESADO);
 				}
 				binder.writeBean(this.expenseReport);
 				expenseReportService.save(this.expenseReport);
@@ -226,9 +226,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
-		concept.setItemLabelGenerator(ExpenseRequestType::getConcept);
+		concept.setItemLabelGenerator(ExpenseRequestType::getName);
 		expenseStatus = new ComboBox<>("Estado");
-		expenseStatus.setItems(ExpenseStatus.values());
+		expenseStatus.setItems(ExpenseReportStatus.values());
 
 		files = new Upload();
 		// files.setMaxFileSize(20480);
@@ -325,7 +325,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 		statusFilter = new ComboBox<>();
 		statusFilter.setPlaceholder("Estado...");
-		statusFilter.setItems(ExpenseStatus.values());
+		statusFilter.setItems(ExpenseReportStatus.values());
 		statusFilter.setClearButtonVisible(true);
 		statusFilter.addValueChangeListener(e -> refreshGrid());
 
@@ -370,7 +370,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("amount"), amountToFilter.getValue()));
 			}
 			if (conceptFilter.getValue() != null && !conceptFilter.getValue().isEmpty()) {
-				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("concept").get("concept")),
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("concept").get("name")),
 						"%" + conceptFilter.getValue().toLowerCase() + "%"));
 			}
 			if (statusFilter.getValue() != null) {

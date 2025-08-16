@@ -28,7 +28,7 @@ public class ExpenseReport extends AbstractEntity {
 	private ExpenseRequestType concept;
 
 	@Enumerated(EnumType.STRING)
-	private ExpenseReportStatus status;
+	private ExpenseReportStatus expenseStatus;
 
 	private Date approvalDate;
 
@@ -83,12 +83,12 @@ public class ExpenseReport extends AbstractEntity {
 		this.concept = concept;
 	}
 
-	public ExpenseReportStatus getStatus() {
-		return status;
+	public ExpenseReportStatus getExpenseStatus() {
+		return expenseStatus;
 	}
 
-	public void setStatus(ExpenseReportStatus expenseReportStatus) {
-		this.status = expenseReportStatus;
+	public void setExpenseStatus(ExpenseReportStatus expenseStatus) {
+		this.expenseStatus = expenseStatus;
 	}
 
 	public List<ExpenseReportFile> getFiles() {

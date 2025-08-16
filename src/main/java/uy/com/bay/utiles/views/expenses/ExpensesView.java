@@ -128,8 +128,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto")
 				.setAutoWidth(true).setSortable(true).setSortProperty("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
-				.addColumn(er -> er.getConcept() != null ? er.getConcept().getConcept() : "").setHeader("Concepto")
-				.setAutoWidth(true).setSortable(true).setSortProperty("concept.concept");
+				.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
+				.setAutoWidth(true).setSortable(true).setSortProperty("concept.name");
 		Grid.Column<ExpenseRequest> statusColumn = grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado")
 				.setAutoWidth(true).setSortable(true).setSortProperty("expenseStatus");
 
@@ -206,7 +206,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 		ComboBox<ExpenseRequestType> conceptFilter = new ComboBox<>();
 		conceptFilter.setItems(expenseRequestTypeService.findAll());
-		conceptFilter.setItemLabelGenerator(ExpenseRequestType::getConcept);
+		conceptFilter.setItemLabelGenerator(ExpenseRequestType::getName);
 		conceptFilter.setPlaceholder("Filter");
 		conceptFilter.setClearButtonVisible(true);
 		conceptFilter.addValueChangeListener(e -> {
@@ -410,7 +410,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
-		concept.setItemLabelGenerator(ExpenseRequestType::getConcept);
+		concept.setItemLabelGenerator(ExpenseRequestType::getName);
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
 		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);

@@ -5,15 +5,15 @@ import jakarta.persistence.Entity;
 @Entity
 public class ExpenseRequestType extends AbstractEntity {
 
-    private String concept;
+    private String name;
     private String description;
 
-    public String getConcept() {
-        return concept;
+    public String getName() {
+        return name;
     }
 
-    public void setConcept(String concept) {
-        this.concept = concept;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {

@@ -57,7 +57,7 @@ public class ExpenseReportService {
 
     public void approveReports(Collection<ExpenseReport> reports) {
         reports.forEach(report -> {
-            report.setStatus(ExpenseReportStatus.APROBADO);
+            report.setExpenseStatus(ExpenseReportStatus.APROBADO);
             report.setApprovalDate(new Date());
             repository.save(report);
         });
