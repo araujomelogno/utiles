@@ -78,7 +78,7 @@ public class ExpenseReportApprovalView extends Div {
         Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Status").setSortable(true);
 
         // Fetch and set data
-        List<ExpenseReport> reports = expenseReportService.findAllByStatus(ExpenseReportStatus.INGRESADO);
+        List<ExpenseReport> reports = expenseReportService.findAllByExpenseStatus(ExpenseReportStatus.INGRESADO);
         reports.sort(Comparator.comparing(ExpenseReport::getDate).reversed());
         dataProvider = new ListDataProvider<>(reports);
         grid.setDataProvider(dataProvider);
