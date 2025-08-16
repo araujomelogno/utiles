@@ -227,7 +227,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		expenseStatus.setItems(ExpenseStatus.values());
 
 		files = new Upload();
-		//files.setMaxFileSize(20480);
+		// files.setMaxFileSize(20480);
 		files.setAcceptedFileTypes("image/jpeg", "image/png", "application/pdf");
 
 		Map<String, ByteArrayOutputStream> fileBuffers = new HashMap<>();
@@ -259,7 +259,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			comprobantes.setEnabled(true);
 		});
 
-		formLayout.add(study, surveyor, date, amount, concept, expenseStatus, new Label("Subir comprobantes"), files, comprobantes);
+		formLayout.add(study, surveyor, date, amount, concept, expenseStatus, new Label("Subir comprobantes"), files,
+				comprobantes);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
@@ -395,7 +396,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private void openComprobantesDialog() {
 		Dialog dialog = new Dialog();
 		dialog.setHeaderTitle("Comprobantes");
-        dialog.setWidth("80%");
+		dialog.setWidth("80%");
 		Grid<ExpenseReportFile> filesGrid = new Grid<>(ExpenseReportFile.class, false);
 		filesGrid.addColumn(ExpenseReportFile::getName).setHeader("Nombre");
 		filesGrid.addColumn(file -> new java.text.SimpleDateFormat("dd/MM/yyyy").format(file.getCreated()))
@@ -409,25 +410,25 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			downloadLink.getElement().setAttribute("download", true);
 			downloadLink.add(downloadButton);
 			return downloadLink;
-		}).setHeader("Acción");
+		}).setHeader("Acciones");
 
 		filesGrid.addComponentColumn(file -> {
 			Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
 			deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 			deleteButton.addClickListener(e -> {
-				ConfirmDialog dialog = new ConfirmDialog();
-				dialog.setHeader("Confirmar borrado");
-				dialog.setText("¿Está seguro de que desea borrar el archivo?");
-				dialog.setCancelable(true);
-				dialog.setConfirmText("Borrar");
-				dialog.setConfirmButtonTheme("error primary");
-				dialog.addConfirmListener(event -> {
+				ConfirmDialog cdialog = new ConfirmDialog();
+				cdialog.setHeader("Confirmar borrado");
+				cdialog.setText("¿Está seguro de que desea borrar el archivo?");
+				cdialog.setCancelable(true);
+				cdialog.setConfirmText("Borrar");
+				cdialog.setConfirmButtonTheme("error primary");
+				cdialog.addConfirmListener(event -> {
 					expenseReportFileService.delete(file.getId());
 					this.expenseReport.getFiles().remove(file);
 					filesGrid.setItems(this.expenseReport.getFiles());
 					Notification.show("Archivo borrado.");
 				});
-				dialog.open();
+				cdialog.open();
 			});
 			return deleteButton;
 		}).setHeader("");
