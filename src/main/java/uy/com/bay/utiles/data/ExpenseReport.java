@@ -8,6 +8,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
@@ -29,7 +30,7 @@ public class ExpenseReport extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     private ExpenseStatus expenseStatus;
 
-    @OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ExpenseReportFile> files = new ArrayList<>();
 
     public Study getStudy() {
