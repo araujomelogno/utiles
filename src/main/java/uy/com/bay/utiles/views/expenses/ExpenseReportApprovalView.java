@@ -1,5 +1,8 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.util.Comparator;
+import java.util.List;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -13,17 +16,13 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
-import java.util.Comparator;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.services.ExpenseReportService;
 import uy.com.bay.utiles.views.MainLayout;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @PageTitle("Aprobar Rendiciones")
 @Route(value = "expense-reports-approval", layout = MainLayout.class)
