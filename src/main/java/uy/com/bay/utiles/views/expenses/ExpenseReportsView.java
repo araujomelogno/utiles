@@ -15,6 +15,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -23,6 +24,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
@@ -407,6 +410,27 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			downloadLink.add(downloadButton);
 			return downloadLink;
 		}).setHeader("Acción");
+
+		filesGrid.addComponentColumn(file -> {
+			Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
+			deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+			deleteButton.addClickListener(e -> {
+				ConfirmDialog dialog = new ConfirmDialog();
+				dialog.setHeader("Confirmar borrado");
+				dialog.setText("¿Está seguro de que desea borrar el archivo?");
+				dialog.setCancelable(true);
+				dialog.setConfirmText("Borrar");
+				dialog.setConfirmButtonTheme("error primary");
+				dialog.addConfirmListener(event -> {
+					expenseReportFileService.delete(file.getId());
+					this.expenseReport.getFiles().remove(file);
+					filesGrid.setItems(this.expenseReport.getFiles());
+					Notification.show("Archivo borrado.");
+				});
+				dialog.open();
+			});
+			return deleteButton;
+		}).setHeader("");
 
 		if (this.expenseReport != null) {
 			filesGrid.setItems(this.expenseReport.getFiles());
