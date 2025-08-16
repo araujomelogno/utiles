@@ -1,22 +1,18 @@
 package uy.com.bay.utiles.services;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
+
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.repository.ExpenseReportRepository;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class ExpenseReportService {
