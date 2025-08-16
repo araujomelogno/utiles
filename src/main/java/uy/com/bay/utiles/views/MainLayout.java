@@ -104,7 +104,7 @@ public class MainLayout extends AppLayout {
 		gastosItem.addItem(aprobarSolicitudesItem);
 		SideNavItem rendicionesItem = new SideNavItem("Rendiciones", "expense-reports");
 		rendicionesItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
-		gastosItem.addItem(rendicionesItem);
+ 		gastosItem.addItem(rendicionesItem);
 		nav.addItem(gastosItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
