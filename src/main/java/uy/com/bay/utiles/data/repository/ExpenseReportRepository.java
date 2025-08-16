@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface ExpenseReportRepository extends JpaRepository<ExpenseReport, Long>, JpaSpecificationExecutor<ExpenseReport> {
 
-    List<ExpenseReport> findAllByStatus(ExpenseReportStatus status);
+    List<ExpenseReport> findAllByExpenseStatus(ExpenseReportStatus status);
 }

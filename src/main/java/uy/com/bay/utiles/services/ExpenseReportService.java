@@ -47,8 +47,8 @@ public class ExpenseReportService {
         return repository.findAll(filter, pageable);
     }
 
-    public List<ExpenseReport> findAllByStatus(ExpenseReportStatus status) {
-        return repository.findAllByStatus(status);
+    public List<ExpenseReport> findAllByExpenseStatus(ExpenseReportStatus status) {
+        return repository.findAllByExpenseStatus(status);
     }
 
     public void approveReports(Collection<ExpenseReport> reports) {
