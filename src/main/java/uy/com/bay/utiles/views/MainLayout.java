@@ -96,8 +96,14 @@ public class MainLayout extends AppLayout {
 		SideNavItem conceptosItem = new SideNavItem("Conceptos", "conceptos");
 		conceptosItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
 		gastosItem.addItem(conceptosItem);
-		SideNavItem solicitudesItem = new SideNavItem("Solicitudes", "expenses");
+		SideNavItem solicitudesItem = new SideNavItem("Solicitudes");
 		solicitudesItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
+		SideNavItem verSolicitudesItem = new SideNavItem("Ver Solicitudes", "expenses");
+		verSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
+		solicitudesItem.addItem(verSolicitudesItem);
+		SideNavItem transferirSolicitudesItem = new SideNavItem("Transferir Solicitudes", "expense-transfer");
+		transferirSolicitudesItem.setPrefixComponent(new Icon("vaadin", "exchange"));
+		solicitudesItem.addItem(transferirSolicitudesItem);
 		gastosItem.addItem(solicitudesItem);
 		SideNavItem aprobarSolicitudesItem = new SideNavItem("Aprobar solicitudes", "expenses-approval");
 		aprobarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
