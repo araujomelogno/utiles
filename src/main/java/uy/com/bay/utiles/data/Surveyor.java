@@ -42,4 +42,8 @@ public class Surveyor extends AbstractEntity {
 		this.ci = ci;
 	}
 
+	@jakarta.persistence.Transient
+	public String getName() {
+		return (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+	}
 }
