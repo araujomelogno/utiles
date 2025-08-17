@@ -42,7 +42,7 @@ public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
 
     private final Grid<ExpenseRequestType> grid = new Grid<>(ExpenseRequestType.class, false);
 
-    private TextField concept;
+    private TextField name;
     private TextArea description;
 
     private final Button cancel = new Button("Cancelar");
@@ -71,7 +71,7 @@ public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn("concept").setAutoWidth(true).setHeader("Concepto");
+        grid.addColumn("name").setAutoWidth(true).setHeader("Concepto");
         grid.addColumn("description").setAutoWidth(true).setHeader("Descripción");
         grid.setItems(query -> expenseRequestTypeService.list(
                 com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
@@ -176,9 +176,9 @@ public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
         editorLayoutDiv.add(editorDiv);
 
         FormLayout formLayout = new FormLayout();
-        concept = new TextField("Concepto");
+        name = new TextField("Concepto");
         description = new TextArea("Descripción");
-        formLayout.add(concept, description);
+        formLayout.add(name, description);
 
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);

@@ -206,7 +206,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 		ComboBox<ExpenseRequestType> conceptFilter = new ComboBox<>();
 		conceptFilter.setItems(expenseRequestTypeService.findAll());
-		conceptFilter.setItemLabelGenerator(ExpenseRequestType::getName);
+		conceptFilter.setItemLabelGenerator(ert -> ert.getName() != null ? ert.getName() : "");
 		conceptFilter.setPlaceholder("Filter");
 		conceptFilter.setClearButtonVisible(true);
 		conceptFilter.addValueChangeListener(e -> {
@@ -397,10 +397,10 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		FormLayout formLayout = new FormLayout();
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
-		study.setItemLabelGenerator(Study::getName);
+		study.setItemLabelGenerator(s -> s.getName() != null ? s.getName() : "");
 		surveyor = new ComboBox<>("Encuestador");
 		surveyor.setItems(surveyorService.listAll());
-		surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
+		surveyor.setItemLabelGenerator(Surveyor::getName);
 		requestDate = new DatePicker("Fecha solicitud");
 		requestDate.setReadOnly(true);
 		aprovalDate = new DatePicker("Fecha aprobación");
@@ -410,7 +410,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
-		concept.setItemLabelGenerator(ExpenseRequestType::getName);
+		concept.setItemLabelGenerator(ert -> ert.getName() != null ? ert.getName() : "");
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
 		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);
