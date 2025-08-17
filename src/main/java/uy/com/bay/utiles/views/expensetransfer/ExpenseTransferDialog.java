@@ -54,7 +54,9 @@ public class ExpenseTransferDialog extends Dialog {
 
         amount = new NumberField("Monto");
         amount.setReadOnly(true);
-        double totalAmount = selectedRequests.stream().mapToDouble(ExpenseRequest::getAmount).sum();
+        double totalAmount = selectedRequests.stream()
+                .mapToDouble(er -> er.getAmount() != null ? er.getAmount() : 0)
+                .sum();
         amount.setValue(totalAmount);
 
         buffer = new MultiFileMemoryBuffer();
