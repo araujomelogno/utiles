@@ -1,7 +1,11 @@
 package uy.com.bay.utiles.views.expensetransfer;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.data.ExpenseTransferFile;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -25,8 +29,31 @@ public class ExpenseTransferViewDialog extends Dialog {
         amount.setValue(expenseTransfer.getAmount());
         amount.setReadOnly(true);
 
-        formLayout.add(transferDate, amount);
+        TextField surveyor = new TextField("Encuestador");
+        surveyor.setValue(expenseTransfer.getSurveyor().getName());
+        surveyor.setReadOnly(true);
+
+        formLayout.add(transferDate, amount, surveyor);
         add(formLayout);
+
+        List<ExpenseRequest> expenseRequests = expenseTransfer.getExpenseRequests();
+        if (expenseRequests != null && !expenseRequests.isEmpty()) {
+            VerticalLayout expenseRequestsLayout = new VerticalLayout();
+            expenseRequestsLayout.setSpacing(false);
+            expenseRequestsLayout.setPadding(false);
+
+            com.vaadin.flow.component.html.H4 expenseRequestsHeader = new com.vaadin.flow.component.html.H4("Solicitudes de Gasto");
+            expenseRequestsLayout.add(expenseRequestsHeader);
+
+            Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
+            grid.setItems(expenseRequests);
+            grid.addColumn(er -> er.getStudy().getName()).setHeader("Estudio");
+            grid.addColumn(er -> er.getConcept().getName()).setHeader("Concepto");
+            grid.addColumn(er -> new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate())).setHeader("Fecha Solicitud");
+            grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto");
+            expenseRequestsLayout.add(grid);
+            add(expenseRequestsLayout);
+        }
 
         List<ExpenseTransferFile> files = expenseTransfer.getFiles();
         if (files != null && !files.isEmpty()) {
@@ -45,6 +72,9 @@ public class ExpenseTransferViewDialog extends Dialog {
             }
             add(filesLayout);
         }
+
+        Button closeButton = new Button("Cerrar", e -> close());
+        getFooter().add(closeButton);
 
         setCloseOnEsc(true);
         setCloseOnOutsideClick(true);
