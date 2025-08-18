@@ -23,6 +23,7 @@ import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.views.MainLayout;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -124,24 +125,22 @@ public class ExpenseTransferView extends VerticalLayout {
 
     private void saveTransfer(ExpenseTransferDialog.SaveEvent event) {
         ExpenseTransfer expenseTransfer = event.getExpenseTransfer();
+        List<ExpenseRequest> requestsToUpdate = new ArrayList<>(expenseTransfer.getExpenseRequests());
         Date now = new Date();
+
         expenseTransfer.setTransferDate(now);
+        expenseTransfer.setExpenseRequests(new ArrayList<>());
+        expenseTransfer = expenseTransferService.save(expenseTransfer);
 
-        // 1. Save ExpenseTransfer with files
-        expenseTransferService.save(expenseTransfer);
-
-        // 2. Update ExpenseRequests
-        List<ExpenseRequest> requestsToUpdate = expenseTransfer.getExpenseRequests();
         for (ExpenseRequest request : requestsToUpdate) {
             request.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
             request.setTransferDate(now);
+            request.setExpenseTransfer(expenseTransfer);
             expenseRequestService.update(request);
         }
 
-        // 3. Refresh grid
         refreshGrid();
 
-        // 4. Show notification
         Notification.show("Transferencia creada exitosamente.", 3000, Notification.Position.BOTTOM_START);
     }
 
