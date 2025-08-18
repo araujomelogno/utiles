@@ -5,6 +5,7 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
@@ -20,7 +21,7 @@ public class ExpenseTransfer extends AbstractEntity {
     @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL)
     private List<ExpenseRequest> expenseRequests;
 
-    @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ExpenseTransferFile> files;
 
     public Date getTransferDate() {
