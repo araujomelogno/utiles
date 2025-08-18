@@ -18,7 +18,7 @@ public class ExpenseTransfer extends AbstractEntity {
     @ManyToOne
     private Surveyor surveyor;
 
-    @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL)
     private List<ExpenseRequest> expenseRequests;
 
     @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

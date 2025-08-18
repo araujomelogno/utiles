@@ -352,7 +352,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	public void beforeEnter(BeforeEnterEvent event) {
 		Optional<Long> expenseId = event.getRouteParameters().get(EXPENSE_ID).map(Long::parseLong);
 		if (expenseId.isPresent()) {
-			Optional<ExpenseRequest> expenseRequestFromBackend = expenseRequestService.get(expenseId.get());
+			Optional<ExpenseRequest> expenseRequestFromBackend = expenseRequestService
+					.getWithFullExpenseTransfer(expenseId.get());
 			if (expenseRequestFromBackend.isPresent()) {
 				populateForm(expenseRequestFromBackend.get());
 				editorLayoutDiv.setVisible(true);
