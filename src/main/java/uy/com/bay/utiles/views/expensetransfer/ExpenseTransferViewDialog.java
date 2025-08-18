@@ -1,24 +1,39 @@
 package uy.com.bay.utiles.views.expensetransfer;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.data.ExpenseTransferFile;
+import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.textfield.NumberField;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ExpenseTransferViewDialog extends Dialog {
 
-	public ExpenseTransferViewDialog(ExpenseTransfer expenseTransfer) {
-		
+	private final ExpenseTransferFileService expenseTransferFileService;
+	private final ExpenseTransfer expenseTransfer;
+	private Grid<ExpenseTransferFile> filesGrid;
+	private List<ExpenseTransferFile> files;
+
+	public ExpenseTransferViewDialog(ExpenseTransfer expenseTransfer,
+			ExpenseTransferFileService expenseTransferFileService) {
+		this.expenseTransferFileService = expenseTransferFileService;
+		this.expenseTransfer = expenseTransfer;
+		this.files = new ArrayList<>(expenseTransfer.getFiles());
+
 		setHeaderTitle("Detalles de la Transferencia");
 
 		FormLayout formLayout = new FormLayout();
@@ -58,7 +73,6 @@ public class ExpenseTransferViewDialog extends Dialog {
 			add(expenseRequestsLayout);
 		}
 
-		List<ExpenseTransferFile> files = expenseTransfer.getFiles();
 		if (files != null && !files.isEmpty()) {
 			VerticalLayout filesLayout = new VerticalLayout();
 			filesLayout.setSpacing(false);
@@ -67,12 +81,18 @@ public class ExpenseTransferViewDialog extends Dialog {
 			com.vaadin.flow.component.html.H4 filesHeader = new com.vaadin.flow.component.html.H4("Archivos adjuntos");
 			filesLayout.add(filesHeader);
 
-			for (ExpenseTransferFile file : files) {
+			filesGrid = new Grid<>(ExpenseTransferFile.class, false);
+			filesGrid.setItems(files);
+			filesGrid.addColumn(ExpenseTransferFile::getName).setHeader("Nombre");
+			filesGrid.addComponentColumn(file -> {
 				String downloadUrl = "/api/files/" + file.getId();
-				Anchor downloadLink = new Anchor(downloadUrl, file.getName());
+				Anchor downloadLink = new Anchor(downloadUrl, "Descargar");
 				downloadLink.setTarget("_blank");
-				filesLayout.add(downloadLink);
-			}
+				return downloadLink;
+			}).setHeader("Descargar");
+			filesGrid.addComponentColumn(this::createDeleteButton).setHeader("Eliminar");
+
+			filesLayout.add(filesGrid);
 			add(filesLayout);
 		}
 
@@ -81,5 +101,25 @@ public class ExpenseTransferViewDialog extends Dialog {
 
 		setCloseOnEsc(true);
 		setCloseOnOutsideClick(true);
+	}
+
+	private Button createDeleteButton(ExpenseTransferFile file) {
+		Button deleteButton = new Button(new Icon(VaadinIcon.TRASH), click -> {
+			ConfirmDialog dialog = new ConfirmDialog();
+			dialog.setHeader("Confirmar eliminación");
+			dialog.setText("¿Está seguro de que desea eliminar el archivo '" + file.getName() + "'?");
+			dialog.setCancelable(true);
+			dialog.setConfirmText("Eliminar");
+			dialog.setConfirmButtonTheme("error primary");
+			dialog.addConfirmListener(event -> {
+				expenseTransferFileService.delete(file.getId());
+				files.remove(file);
+				expenseTransfer.setFiles(files);
+				filesGrid.getDataProvider().refreshAll();
+			});
+			dialog.open();
+		});
+		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		return deleteButton;
 	}
 }

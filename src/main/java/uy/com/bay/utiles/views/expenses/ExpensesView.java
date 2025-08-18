@@ -47,6 +47,7 @@ import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
+import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.services.ExpenseTransferService;
@@ -84,18 +85,20 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	private final SurveyorService surveyorService;
 	private final ExpenseRequestTypeService expenseRequestTypeService;
 	private final ExpenseTransferService expenseTransferService;
+	private final ExpenseTransferFileService expenseTransferFileService;
 	private Div editorLayoutDiv;
 
 	private final Filters filters;
 
 	public ExpensesView(ExpenseRequestService expenseRequestService, StudyService studyService,
 			SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService,
-			ExpenseTransferService expenseTransferService) {
+			ExpenseTransferService expenseTransferService, ExpenseTransferFileService expenseTransferFileService) {
 		this.expenseRequestService = expenseRequestService;
 		this.studyService = studyService;
 		this.surveyorService = surveyorService;
 		this.expenseRequestTypeService = expenseRequestTypeService;
 		this.expenseTransferService = expenseTransferService;
+		this.expenseTransferFileService = expenseTransferFileService;
 		addClassNames("expenses-view");
 
 		filters = new Filters();
@@ -345,7 +348,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 			if (this.expenseRequest != null && this.expenseRequest.getExpenseTransfer() != null) {
 				uy.com.bay.utiles.data.ExpenseTransfer initializedTransfer = expenseTransferService
 						.findByIdAndInitialize(this.expenseRequest.getExpenseTransfer().getId());
-				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer);
+				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer,
+						expenseTransferFileService);
 				dialog.open();
 			} else {
 				Notification.show("No hay una transferencia asociada a esta solicitud.", 3000,
