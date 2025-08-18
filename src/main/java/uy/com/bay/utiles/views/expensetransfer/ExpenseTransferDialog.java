@@ -29,110 +29,110 @@ import java.util.Set;
 
 public class ExpenseTransferDialog extends Dialog {
 
-    private DatePicker transferDate;
-    private NumberField amount;
-    private Upload upload;
-    protected MultiFileMemoryBuffer buffer;
+	private DatePicker transferDate;
+	private NumberField amount;
+	private Upload upload;
+	protected MultiFileMemoryBuffer buffer;
 
-    private Button saveButton;
-    private Button cancelButton;
+	private Button saveButton;
+	private Button cancelButton;
 
-    private BeanValidationBinder<ExpenseTransfer> binder;
+	private BeanValidationBinder<ExpenseTransfer> binder;
 
-    protected ExpenseTransfer expenseTransfer;
-    protected Set<ExpenseRequest> selectedRequests;
+	protected ExpenseTransfer expenseTransfer;
+	protected Set<ExpenseRequest> selectedRequests;
 
-    public ExpenseTransferDialog(Set<ExpenseRequest> selectedRequests) {
-        this.selectedRequests = selectedRequests;
-        this.expenseTransfer = new ExpenseTransfer();
+	public ExpenseTransferDialog(Set<ExpenseRequest> selectedRequests) {
+		this.selectedRequests = selectedRequests;
+		this.expenseTransfer = new ExpenseTransfer();
 
-        setHeaderTitle("Crear Transferencia");
+		setHeaderTitle("Crear Transferencia");
 
-        FormLayout formLayout = new FormLayout();
-        transferDate = new DatePicker("Fecha de Transferencia");
-        transferDate.setValue(LocalDate.now());
+		FormLayout formLayout = new FormLayout();
+		transferDate = new DatePicker("Fecha de Transferencia");
+		transferDate.setValue(LocalDate.now());
 
-        amount = new NumberField("Monto");
-        amount.setReadOnly(true);
-        double totalAmount = selectedRequests.stream()
-                .mapToDouble(er -> er.getAmount() != null ? er.getAmount() : 0)
-                .sum();
-        amount.setValue(totalAmount);
+		amount = new NumberField("Monto");
 
-        buffer = new MultiFileMemoryBuffer();
-        upload = new Upload(buffer);
-        upload.setAcceptedFileTypes("image/jpeg", "image/png", "application/pdf", ".doc", ".docx", ".xls", ".xlsx");
-        upload.setMaxFiles(5);
-        upload.setMaxFileSize(10 * 1024 * 1024); // 10MB
+		double totalAmount = selectedRequests.stream().mapToDouble(er -> er.getAmount() != null ? er.getAmount() : 0)
+				.sum();
+		amount.setValue(totalAmount);
 
-        formLayout.add(transferDate, amount, upload);
-        add(formLayout);
+		buffer = new MultiFileMemoryBuffer();
+		upload = new Upload(buffer);
+		upload.setAcceptedFileTypes("image/jpeg", "image/png", "application/pdf", ".doc", ".docx", ".xls", ".xlsx");
+		upload.setMaxFiles(5);
+		upload.setMaxFileSize(20 * 1024 * 1024); // 20MB
 
-        createButtons();
-        getFooter().add(new HorizontalLayout(saveButton, cancelButton));
+		formLayout.add(transferDate, amount, upload);
+		add(formLayout);
 
-        binder = new BeanValidationBinder<>(ExpenseTransfer.class);
-        binder.bind(amount, "amount");
+		createButtons();
+		getFooter().add(new HorizontalLayout(saveButton, cancelButton));
 
-        binder.readBean(expenseTransfer);
-        expenseTransfer.setAmount(totalAmount);
-    }
+		binder = new BeanValidationBinder<>(ExpenseTransfer.class);
+		binder.bind(amount, "amount");
 
-    private void createButtons() {
-        saveButton = new Button("Guardar", e -> save());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		expenseTransfer.setAmount(totalAmount);
+		binder.readBean(expenseTransfer);
 
-        cancelButton = new Button("Cancelar", e -> close());
-    }
+	}
 
-    private void save() {
-        try {
-            if (binder.writeBeanIfValid(expenseTransfer)) {
-                List<ExpenseTransferFile> files = new ArrayList<>();
-                for (String fileName : buffer.getFiles()) {
-                    InputStream inputStream = buffer.getInputStream(fileName);
-                    byte[] content = inputStream.readAllBytes();
+	private void createButtons() {
+		saveButton = new Button("Guardar", e -> save());
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-                    ExpenseTransferFile file = new ExpenseTransferFile();
-                    file.setName(fileName);
-                    file.setCreated(new Date());
-                    file.setContent(content);
-                    file.setExpenseTransfer(expenseTransfer); // Link file to transfer
-                    files.add(file);
-                }
-                expenseTransfer.setFiles(files);
-                expenseTransfer.setExpenseRequests(new ArrayList<>(selectedRequests));
+		cancelButton = new Button("Cancelar", e -> close());
+	}
 
-                fireEvent(new SaveEvent(this, expenseTransfer));
-                close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+	private void save() {
+		try {
+			if (binder.writeBeanIfValid(expenseTransfer)) {
+				List<ExpenseTransferFile> files = new ArrayList<>();
+				for (String fileName : buffer.getFiles()) {
+					InputStream inputStream = buffer.getInputStream(fileName);
+					byte[] content = inputStream.readAllBytes();
 
-    // Events
-    public static abstract class ExpenseTransferDialogEvent extends ComponentEvent<ExpenseTransferDialog> {
-        private final ExpenseTransfer expenseTransfer;
+					ExpenseTransferFile file = new ExpenseTransferFile();
+					file.setName(fileName);
+					file.setCreated(new Date());
+					file.setContent(content);
+					file.setExpenseTransfer(expenseTransfer); // Link file to transfer
+					files.add(file);
+				}
+				expenseTransfer.setFiles(files);
+				expenseTransfer.setExpenseRequests(new ArrayList<>(selectedRequests));
 
-        protected ExpenseTransferDialogEvent(ExpenseTransferDialog source, ExpenseTransfer expenseTransfer) {
-            super(source, false);
-            this.expenseTransfer = expenseTransfer;
-        }
+				fireEvent(new SaveEvent(this, expenseTransfer));
+				close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-        public ExpenseTransfer getExpenseTransfer() {
-            return expenseTransfer;
-        }
-    }
+	// Events
+	public static abstract class ExpenseTransferDialogEvent extends ComponentEvent<ExpenseTransferDialog> {
+		private final ExpenseTransfer expenseTransfer;
 
-    public static class SaveEvent extends ExpenseTransferDialogEvent {
-        SaveEvent(ExpenseTransferDialog source, ExpenseTransfer expenseTransfer) {
-            super(source, expenseTransfer);
-        }
-    }
+		protected ExpenseTransferDialogEvent(ExpenseTransferDialog source, ExpenseTransfer expenseTransfer) {
+			super(source, false);
+			this.expenseTransfer = expenseTransfer;
+		}
 
-    public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
-                                                                  ComponentEventListener<T> listener) {
-        return getEventBus().addListener(eventType, listener);
-    }
+		public ExpenseTransfer getExpenseTransfer() {
+			return expenseTransfer;
+		}
+	}
+
+	public static class SaveEvent extends ExpenseTransferDialogEvent {
+		SaveEvent(ExpenseTransferDialog source, ExpenseTransfer expenseTransfer) {
+			super(source, expenseTransfer);
+		}
+	}
+
+	public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
+			ComponentEventListener<T> listener) {
+		return getEventBus().addListener(eventType, listener);
+	}
 }

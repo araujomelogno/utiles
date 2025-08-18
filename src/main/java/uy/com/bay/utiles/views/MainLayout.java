@@ -21,7 +21,6 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Layout;
-import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -105,16 +104,23 @@ public class MainLayout extends AppLayout {
 		transferirSolicitudesItem.setPrefixComponent(new Icon("vaadin", "exchange"));
 		solicitudesItem.addItem(transferirSolicitudesItem);
 		gastosItem.addItem(solicitudesItem);
+		nav.addItem(gastosItem);
 		SideNavItem aprobarSolicitudesItem = new SideNavItem("Aprobar solicitudes", "expenses-approval");
 		aprobarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
-		gastosItem.addItem(aprobarSolicitudesItem);
-		SideNavItem rendicionesItem = new SideNavItem("Rendiciones", "expense-reports");
+		solicitudesItem.addItem(aprobarSolicitudesItem);
+
+		SideNavItem rendicionesItem = new SideNavItem("Rendiciones");
 		rendicionesItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
+
+		SideNavItem verRendicionesItems = new SideNavItem("Ver Rendiciones", "expense-reports");
+		verRendicionesItems.setPrefixComponent(new Icon("vaadin", "list"));
+		rendicionesItem.addItem(verRendicionesItems);
+
 		SideNavItem aprobarRendicionesItem = new SideNavItem("Aprobar rendiciones", "expense-reports-approval");
 		aprobarRendicionesItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
 		rendicionesItem.addItem(aprobarRendicionesItem);
- 		gastosItem.addItem(rendicionesItem);
-		nav.addItem(gastosItem);
+
+		gastosItem.addItem(rendicionesItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
