@@ -93,10 +93,10 @@ public class MainLayout extends AppLayout {
 		SideNavItem gastosItem = new SideNavItem("Gastos");
 		gastosItem.setPrefixComponent(new Icon("vaadin", "money"));
 		SideNavItem conceptosItem = new SideNavItem("Conceptos", "conceptos");
-		conceptosItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
+		conceptosItem.setPrefixComponent(new Icon("vaadin", "book-dollar"));
 		gastosItem.addItem(conceptosItem);
 		SideNavItem solicitudesItem = new SideNavItem("Solicitudes");
-		solicitudesItem.setPrefixComponent(new Icon("vaadin", "file-text-o"));
+		solicitudesItem.setPrefixComponent(new Icon("vaadin", "cash"));
 		SideNavItem verSolicitudesItem = new SideNavItem("Ver Solicitudes", "expenses");
 		verSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
 		solicitudesItem.addItem(verSolicitudesItem);
