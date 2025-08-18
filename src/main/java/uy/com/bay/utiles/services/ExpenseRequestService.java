@@ -27,11 +27,6 @@ public class ExpenseRequestService {
         return repository.findById(id);
     }
 
-    @Transactional(readOnly = true)
-    public Optional<ExpenseRequest> getWithFullExpenseTransfer(Long id) {
-        return repository.findByIdWithFullExpenseTransfer(id);
-    }
-
     public ExpenseRequest update(ExpenseRequest entity) {
         return repository.save(entity);
     }
