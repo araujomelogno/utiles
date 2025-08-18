@@ -11,10 +11,14 @@ import uy.com.bay.utiles.data.ExpenseStatus;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, Long>, JpaSpecificationExecutor<ExpenseRequest> {
 
     List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable);
+
+    @Query("select er from ExpenseRequest er left join fetch er.expenseTransfer et left join fetch et.expenseRequests where er.id = :id")
+    Optional<ExpenseRequest> findByIdWithFullExpenseTransfer(@Param("id") Long id);
 
     @Modifying
     @Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
