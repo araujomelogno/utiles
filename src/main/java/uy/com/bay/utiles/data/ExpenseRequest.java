@@ -29,6 +29,9 @@ public class ExpenseRequest extends AbstractEntity {
 
     private String obs;
 
+    @ManyToOne
+    private ExpenseTransfer expenseTransfer;
+
     public String getObs() {
         return obs;
     }
@@ -99,5 +102,13 @@ public class ExpenseRequest extends AbstractEntity {
 
     public void setExpenseStatus(ExpenseStatus expenseStatus) {
         this.expenseStatus = expenseStatus;
+    }
+
+    public ExpenseTransfer getExpenseTransfer() {
+        return expenseTransfer;
+    }
+
+    public void setExpenseTransfer(ExpenseTransfer expenseTransfer) {
+        this.expenseTransfer = expenseTransfer;
     }
 }

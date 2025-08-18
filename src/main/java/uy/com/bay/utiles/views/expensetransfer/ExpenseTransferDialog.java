@@ -6,13 +6,14 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseTransfer;
-
+import uy.com.bay.utiles.data.Surveyor;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.shared.Registration;
@@ -87,7 +88,26 @@ public class ExpenseTransferDialog extends Dialog {
 
 	private void save() {
 		try {
+			if (selectedRequests.isEmpty()) {
+				Notification.show("No hay solicitudes de gastos seleccionadas.");
+				return;
+			}
+			Surveyor firstSurveyor = selectedRequests.iterator().next().getSurveyor();
+			for (ExpenseRequest request : selectedRequests) {
+				if (!request.getSurveyor().equals(firstSurveyor)) {
+					Notification.show("Solo se pueden crear transferencias vinculando a un mismo encuestador");
+					return;
+				}
+			}
+
 			if (binder.writeBeanIfValid(expenseTransfer)) {
+				expenseTransfer.setSurveyor(firstSurveyor);
+				LocalDate localDate = transferDate.getValue();
+				if (localDate != null) {
+					Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+					expenseTransfer.setTransferDate(date);
+				}
+
 				List<ExpenseTransferFile> files = new ArrayList<>();
 				for (String fileName : buffer.getFiles()) {
 					InputStream inputStream = buffer.getInputStream(fileName);
@@ -97,17 +117,24 @@ public class ExpenseTransferDialog extends Dialog {
 					file.setName(fileName);
 					file.setCreated(new Date());
 					file.setContent(content);
-					file.setExpenseTransfer(expenseTransfer); // Link file to transfer
+					file.setExpenseTransfer(expenseTransfer);
 					files.add(file);
 				}
 				expenseTransfer.setFiles(files);
-				expenseTransfer.setExpenseRequests(new ArrayList<>(selectedRequests));
+
+				List<ExpenseRequest> requestList = new ArrayList<>(selectedRequests);
+				expenseTransfer.setExpenseRequests(requestList);
+
+				for (ExpenseRequest request : requestList) {
+					request.setExpenseTransfer(expenseTransfer);
+				}
 
 				fireEvent(new SaveEvent(this, expenseTransfer));
 				close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			Notification.show("Error al guardar el archivo.");
 		}
 	}
 

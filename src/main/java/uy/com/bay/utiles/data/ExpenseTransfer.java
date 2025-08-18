@@ -5,6 +5,7 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -13,7 +14,10 @@ public class ExpenseTransfer extends AbstractEntity {
     private Date transferDate;
     private Double amount;
 
-    @OneToMany
+    @ManyToOne
+    private Surveyor surveyor;
+
+    @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL)
     private List<ExpenseRequest> expenseRequests;
 
     @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL)
@@ -49,5 +53,13 @@ public class ExpenseTransfer extends AbstractEntity {
 
     public void setFiles(List<ExpenseTransferFile> files) {
         this.files = files;
+    }
+
+    public Surveyor getSurveyor() {
+        return surveyor;
+    }
+
+    public void setSurveyor(Surveyor surveyor) {
+        this.surveyor = surveyor;
     }
 }
