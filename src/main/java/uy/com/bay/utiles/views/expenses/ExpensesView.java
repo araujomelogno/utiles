@@ -49,6 +49,7 @@ import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
+import uy.com.bay.utiles.services.ExpenseTransferService;
 import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
 @PageTitle("Solicitudes de Gastos")
@@ -82,16 +83,19 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	private final StudyService studyService;
 	private final SurveyorService surveyorService;
 	private final ExpenseRequestTypeService expenseRequestTypeService;
+	private final ExpenseTransferService expenseTransferService;
 	private Div editorLayoutDiv;
 
 	private final Filters filters;
 
 	public ExpensesView(ExpenseRequestService expenseRequestService, StudyService studyService,
-			SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService) {
+			SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService,
+			ExpenseTransferService expenseTransferService) {
 		this.expenseRequestService = expenseRequestService;
 		this.studyService = studyService;
 		this.surveyorService = surveyorService;
 		this.expenseRequestTypeService = expenseRequestTypeService;
+		this.expenseTransferService = expenseTransferService;
 		addClassNames("expenses-view");
 
 		filters = new Filters();
@@ -339,7 +343,9 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 		viewTransferButton.addClickListener(e -> {
 			if (this.expenseRequest != null && this.expenseRequest.getExpenseTransfer() != null) {
-				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(this.expenseRequest.getExpenseTransfer());
+				uy.com.bay.utiles.data.ExpenseTransfer initializedTransfer = expenseTransferService
+						.findByIdAndInitialize(this.expenseRequest.getExpenseTransfer().getId());
+				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer);
 				dialog.open();
 			} else {
 				Notification.show("No hay una transferencia asociada a esta solicitud.", 3000,
@@ -352,8 +358,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	public void beforeEnter(BeforeEnterEvent event) {
 		Optional<Long> expenseId = event.getRouteParameters().get(EXPENSE_ID).map(Long::parseLong);
 		if (expenseId.isPresent()) {
-			Optional<ExpenseRequest> expenseRequestFromBackend = expenseRequestService
-					.getWithFullExpenseTransfer(expenseId.get());
+			Optional<ExpenseRequest> expenseRequestFromBackend = expenseRequestService.get(expenseId.get());
 			if (expenseRequestFromBackend.isPresent()) {
 				populateForm(expenseRequestFromBackend.get());
 				editorLayoutDiv.setVisible(true);

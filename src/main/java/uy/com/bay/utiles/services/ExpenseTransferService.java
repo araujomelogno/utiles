@@ -1,8 +1,10 @@
 package uy.com.bay.utiles.services;
 
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.data.repository.ExpenseTransferRepository;
 
@@ -19,6 +21,15 @@ public class ExpenseTransferService {
 
     public Optional<ExpenseTransfer> get(Long id) {
         return repository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public ExpenseTransfer findByIdAndInitialize(Long id) {
+        ExpenseTransfer et = repository.findById(id).orElse(null);
+        if (et != null) {
+            Hibernate.initialize(et.getExpenseRequests());
+        }
+        return et;
     }
 
     public ExpenseTransfer update(ExpenseTransfer entity) {
