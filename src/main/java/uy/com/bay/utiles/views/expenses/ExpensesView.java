@@ -49,6 +49,7 @@ import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
+import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
 @PageTitle("Solicitudes de Gastos")
 @Route("expenses/:expenseID?/:action?(edit)")
@@ -73,6 +74,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
 	private final Button approve = new Button("Aprobar");
+	private final Button viewTransferButton = new Button("Ver Transferencia");
 
 	private final BeanValidationBinder<ExpenseRequest> binder;
 	private ExpenseRequest expenseRequest;
@@ -232,11 +234,15 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				editorLayoutDiv.setVisible(true);
 				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
 				approve.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.INGRESADO);
+				viewTransferButton
+						.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.TRANSFERIDO
+								|| event.getValue().getExpenseStatus() == ExpenseStatus.RENDIDO);
 			} else {
 				editorLayoutDiv.setVisible(false);
 				clearForm();
 				UI.getCurrent().navigate(ExpensesView.class);
 				approve.setEnabled(false);
+				viewTransferButton.setEnabled(false);
 			}
 		});
 
@@ -330,6 +336,16 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				Notification.show("Failed to update the data. Check again that all values are valid");
 			}
 		});
+
+		viewTransferButton.addClickListener(e -> {
+			if (this.expenseRequest != null && this.expenseRequest.getExpenseTransfer() != null) {
+				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(this.expenseRequest.getExpenseTransfer());
+				dialog.open();
+			} else {
+				Notification.show("No hay una transferencia asociada a esta solicitud.", 3000,
+						Notification.Position.BOTTOM_START);
+			}
+		});
 	}
 
 	@Override
@@ -415,7 +431,9 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);
 		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		editorDiv.add(approve);
+		viewTransferButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		HorizontalLayout buttons = new HorizontalLayout(approve, viewTransferButton);
+		editorDiv.add(buttons);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
 		editorLayoutDiv.setVisible(false);
@@ -459,11 +477,16 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(ExpenseRequest value) {
 		this.expenseRequest = value;
-		approve.setEnabled(isAttached());
 		binder.readBean(this.expenseRequest);
 		if (value != null) {
 			approve.setEnabled(
 					value.getId() != null && value.getId() != 0 && value.getExpenseStatus() == ExpenseStatus.INGRESADO);
+			viewTransferButton.setEnabled(value.getId() != null && value.getId() != 0
+					&& (value.getExpenseStatus() == ExpenseStatus.TRANSFERIDO
+							|| value.getExpenseStatus() == ExpenseStatus.RENDIDO));
+		} else {
+			approve.setEnabled(false);
+			viewTransferButton.setEnabled(false);
 		}
 	}
 
