@@ -105,12 +105,12 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		this.expenseRequestTypeService = expenseRequestTypeService;
 		this.expenseReportFileService = expenseReportFileService;
 		addClassNames("expense-reports-view");
-
+		setSizeFull();
 		comprobantes.addClickListener(e -> openComprobantesDialog());
 
 		SplitLayout splitLayout = new SplitLayout();
 		splitLayout.setSplitterPosition(80);
-
+		splitLayout.setSizeFull();
 		createEditorLayout(splitLayout);
 		createGridLayout(splitLayout);
 
@@ -278,7 +278,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private void createGridLayout(SplitLayout splitLayout) {
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
-
+		wrapper.setSizeFull();
+		grid.setSizeFull();
 		HorizontalLayout filterLayout = new HorizontalLayout();
 		filterLayout.setWidthFull();
 

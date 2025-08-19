@@ -475,8 +475,9 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		reject.addThemeVariants(ButtonVariant.LUMO_ERROR);
 		viewTransferButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		HorizontalLayout buttons = new HorizontalLayout(approve, reject, viewTransferButton);
+		HorizontalLayout buttons = new HorizontalLayout(approve, reject);
 		editorDiv.add(buttons);
+		editorDiv.add(viewTransferButton);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
 		editorLayoutDiv.setVisible(false);
