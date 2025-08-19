@@ -79,7 +79,7 @@ public class ExpenseReportApprovalView extends Div {
 
         // Fetch and set data
         List<ExpenseReport> reports = expenseReportService.findAllByExpenseStatus(ExpenseReportStatus.INGRESADO);
-        reports.sort(Comparator.comparing(ExpenseReport::getDate).reversed());
+        reports.sort(Comparator.comparing(ExpenseReport::getDate, Comparator.nullsFirst(Comparator.naturalOrder())).reversed());
         dataProvider = new ListDataProvider<>(reports);
         grid.setDataProvider(dataProvider);
 
