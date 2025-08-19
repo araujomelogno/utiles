@@ -77,6 +77,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
 	private final Button approve = new Button("Aprobar");
+	private final Button reject = new Button("Rechazar");
 	private final Button viewTransferButton = new Button("Ver Transferencia");
 
 	private final BeanValidationBinder<ExpenseRequest> binder;
@@ -243,6 +244,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				editorLayoutDiv.setVisible(true);
 				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
 				approve.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.INGRESADO);
+				reject.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.INGRESADO);
 				viewTransferButton.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.TRANSFERIDO
 						|| event.getValue().getExpenseStatus() == ExpenseStatus.RENDIDO);
 			} else {
@@ -250,6 +252,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				clearForm();
 				UI.getCurrent().navigate(ExpensesView.class);
 				approve.setEnabled(false);
+				reject.setEnabled(false);
 				viewTransferButton.setEnabled(false);
 			}
 		});
@@ -305,6 +308,33 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				clearForm();
 				refreshGrid();
 				Notification.show("ExpenseRequest details stored.");
+				editorLayoutDiv.setVisible(false);
+				UI.getCurrent().navigate(ExpensesView.class);
+			} catch (ObjectOptimisticLockingFailureException exception) {
+				Notification n = Notification.show(
+						"Error updating the data. Somebody else has updated the record while you were making changes.");
+				n.setPosition(Notification.Position.MIDDLE);
+				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} catch (ValidationException validationException) {
+				Notification.show("Failed to update the data. Check again that all values are valid");
+			}
+		});
+
+		reject.addClickListener(e -> {
+			try {
+				if (this.expenseRequest == null) {
+					Notification.show("No expense request selected.");
+					return;
+				}
+
+				binder.writeBean(this.expenseRequest);
+
+				this.expenseRequest.setExpenseStatus(ExpenseStatus.RECHAZADO);
+
+				expenseRequestService.update(this.expenseRequest);
+				clearForm();
+				refreshGrid();
+				Notification.show("Solicitud de gasto rechazada.");
 				editorLayoutDiv.setVisible(false);
 				UI.getCurrent().navigate(ExpensesView.class);
 			} catch (ObjectOptimisticLockingFailureException exception) {
@@ -443,8 +473,9 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		formLayout.add(study, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);
 		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		reject.addThemeVariants(ButtonVariant.LUMO_ERROR);
 		viewTransferButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		HorizontalLayout buttons = new HorizontalLayout(approve, viewTransferButton);
+		HorizontalLayout buttons = new HorizontalLayout(approve, reject, viewTransferButton);
 		editorDiv.add(buttons);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
@@ -497,11 +528,14 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		if (value != null) {
 			approve.setEnabled(
 					value.getId() != null && value.getId() != 0 && value.getExpenseStatus() == ExpenseStatus.INGRESADO);
+			reject.setEnabled(
+					value.getId() != null && value.getId() != 0 && value.getExpenseStatus() == ExpenseStatus.INGRESADO);
 			viewTransferButton.setEnabled(value.getId() != null && value.getId() != 0
 					&& (value.getExpenseStatus() == ExpenseStatus.TRANSFERIDO
 							|| value.getExpenseStatus() == ExpenseStatus.RENDIDO));
 		} else {
 			approve.setEnabled(false);
+			reject.setEnabled(false);
 			viewTransferButton.setEnabled(false);
 		}
 	}
