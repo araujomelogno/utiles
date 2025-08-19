@@ -377,26 +377,25 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(ExpenseReport value) {
 		this.expenseReport = value;
-		study.setItems(studies);
-		surveyor.setItems(surveyors);
-		concept.setItems(expenseRequestTypes);
-		if (value != null) {
-			if (value.getStudy() != null && !studies.contains(value.getStudy())) {
-				List<Study> items = new ArrayList<>(this.studies);
-				items.add(value.getStudy());
-				study.setItems(items);
-			}
-			if (value.getSurveyor() != null && !surveyors.contains(value.getSurveyor())) {
-				List<Surveyor> items = new ArrayList<>(this.surveyors);
-				items.add(value.getSurveyor());
-				surveyor.setItems(items);
-			}
-			if (value.getConcept() != null && !expenseRequestTypes.contains(value.getConcept())) {
-				List<ExpenseRequestType> items = new ArrayList<>(this.expenseRequestTypes);
-				items.add(value.getConcept());
-				concept.setItems(items);
-			}
+
+		List<Study> studyItems = new ArrayList<>(this.studies);
+		if (value != null && value.getStudy() != null && !studyItems.contains(value.getStudy())) {
+			studyItems.add(value.getStudy());
 		}
+		study.setItems(studyItems);
+
+		List<Surveyor> surveyorItems = new ArrayList<>(this.surveyors);
+		if (value != null && value.getSurveyor() != null && !surveyorItems.contains(value.getSurveyor())) {
+			surveyorItems.add(value.getSurveyor());
+		}
+		surveyor.setItems(surveyorItems);
+
+		List<ExpenseRequestType> conceptItems = new ArrayList<>(this.expenseRequestTypes);
+		if (value != null && value.getConcept() != null && !conceptItems.contains(value.getConcept())) {
+			conceptItems.add(value.getConcept());
+		}
+		concept.setItems(conceptItems);
+
 		binder.readBean(this.expenseReport);
 		comprobantes.setEnabled(value != null && value.getFiles() != null && !value.getFiles().isEmpty());
 	}
