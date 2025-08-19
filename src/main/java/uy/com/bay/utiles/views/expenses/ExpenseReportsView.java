@@ -85,6 +85,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private final Button cancel = new Button("Cancelar");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
+	private final Button approve = new Button("Aprobar");
+	private final Button reject = new Button("Rechazar");
 	private final Button comprobantes = new Button("Ver comprobantes");
 
 	private final BeanValidationBinder<ExpenseReport> binder;
@@ -186,6 +188,30 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				Notification.show("Error al guardar la rendición.");
 			}
 		});
+
+		reject.addClickListener(e -> {
+			if (this.expenseReport != null) {
+				this.expenseReport.setExpenseStatus(ExpenseReportStatus.RECHAZADO);
+				expenseReportService.save(this.expenseReport);
+				clearForm();
+				refreshGrid();
+				Notification.show("Rendición rechazada.");
+				editorLayoutDiv.setVisible(false);
+				UI.getCurrent().navigate(ExpenseReportsView.class);
+			}
+		});
+
+		approve.addClickListener(e -> {
+			if (this.expenseReport != null) {
+				this.expenseReport.setExpenseStatus(ExpenseReportStatus.APROBADO);
+				expenseReportService.save(this.expenseReport);
+				clearForm();
+				refreshGrid();
+				Notification.show("Rendición aprobada.");
+				editorLayoutDiv.setVisible(false);
+				UI.getCurrent().navigate(ExpenseReportsView.class);
+			}
+		});
 	}
 
 	@Override
@@ -271,7 +297,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		buttonLayout.add(save, cancel, delete);
+		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		reject.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		buttonLayout.add(save, approve, reject, cancel, delete);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
@@ -374,6 +402,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		this.expenseReport = value;
 		binder.readBean(this.expenseReport);
 		comprobantes.setEnabled(value != null && value.getFiles() != null && !value.getFiles().isEmpty());
+		approve.setEnabled(
+				value != null && this.expenseReport.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
+		reject.setEnabled(value != null && this.expenseReport.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
 	}
 
 	private void openComprobantesDialog() {
