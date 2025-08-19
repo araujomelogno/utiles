@@ -74,7 +74,9 @@ public class ExpenseReportApprovalView extends Div {
         Grid.Column<ExpenseReport> surveyorColumn = grid.addColumn(report -> report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName()).setHeader("Surveyor").setSortable(true);
         Grid.Column<ExpenseReport> studyColumn = grid.addColumn(report -> report.getStudy().getName()).setHeader("Study").setSortable(true);
         Grid.Column<ExpenseReport> amountColumn = grid.addColumn(ExpenseReport::getAmount).setHeader("Amount").setSortable(true);
-        Grid.Column<ExpenseReport> conceptColumn = grid.addColumn(report -> report.getConcept().getName()).setHeader("Concept").setSortable(true);
+        Grid.Column<ExpenseReport> conceptColumn = grid
+				.addColumn(report -> report.getConcept() != null ? report.getConcept().getName() : "").setHeader("Concept")
+				.setSortable(true);
         Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Status").setSortable(true);
 
         // Fetch and set data
@@ -117,8 +119,12 @@ public class ExpenseReportApprovalView extends Div {
         // Concept filter
         TextField conceptFilter = new TextField();
         conceptFilter.setPlaceholder("Filter by concept...");
-        conceptFilter.addValueChangeListener(event -> dataProvider.addFilter(
-            report -> report.getConcept().getName().toLowerCase().contains(event.getValue().toLowerCase())));
+		conceptFilter.addValueChangeListener(event -> dataProvider.addFilter(report -> {
+			if (report.getConcept() == null) {
+				return event.getValue().isEmpty();
+			}
+			return report.getConcept().getName().toLowerCase().contains(event.getValue().toLowerCase());
+		}));
         filterRow.getCell(conceptColumn).setComponent(conceptFilter);
 
         // Status filter
