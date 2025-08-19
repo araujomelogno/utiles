@@ -1,25 +1,28 @@
 package uy.com.bay.utiles.views.expensetransfer;
 
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.StreamResource;
+
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.data.ExpenseTransferFile;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
-import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.textfield.NumberField;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ExpenseTransferViewDialog extends Dialog {
 
@@ -68,6 +71,8 @@ public class ExpenseTransferViewDialog extends Dialog {
 			grid.addColumn(er -> er.getConcept().getName()).setHeader("Concepto");
 			grid.addColumn(er -> new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate()))
 					.setHeader("Fecha Solicitud");
+			grid.setAllRowsVisible(true);
+
 			grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto");
 			expenseRequestsLayout.add(grid);
 			add(expenseRequestsLayout);
@@ -84,14 +89,18 @@ public class ExpenseTransferViewDialog extends Dialog {
 			filesGrid = new Grid<>(ExpenseTransferFile.class, false);
 			filesGrid.setItems(files);
 			filesGrid.addColumn(ExpenseTransferFile::getName).setHeader("Nombre");
-			filesGrid.addComponentColumn(file -> {
-				String downloadUrl = "/api/files/" + file.getId();
-				Anchor downloadLink = new Anchor(downloadUrl, "Descargar");
-				downloadLink.setTarget("_blank");
-				return downloadLink;
-			}).setHeader("Descargar");
-			filesGrid.addComponentColumn(this::createDeleteButton).setHeader("Eliminar");
 
+			filesGrid.addComponentColumn(file -> {
+				Button downloadButton = new Button("Descargar");
+				StreamResource resource = new StreamResource(file.getName(),
+						() -> new ByteArrayInputStream(file.getContent()));
+				Anchor downloadLink = new Anchor(resource, "");
+				downloadLink.getElement().setAttribute("download", true);
+				downloadLink.add(downloadButton);
+				return downloadLink;
+			}).setHeader("Acciones");
+			filesGrid.addComponentColumn(this::createDeleteButton).setHeader("Eliminar");
+			filesGrid.setAllRowsVisible(true);
 			filesLayout.add(filesGrid);
 			add(filesLayout);
 		}

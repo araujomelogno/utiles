@@ -70,10 +70,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 	private TextField studyFilter;
 	private TextField surveyorFilter;
-	private DatePicker dateFromFilter;
-	private DatePicker dateToFilter;
-	private NumberField amountFromFilter;
-	private NumberField amountToFilter;
+	private DatePicker dateFilter;
+	private NumberField amountFilter;
 	private TextField conceptFilter;
 	private ComboBox<ExpenseReportStatus> statusFilter;
 
@@ -175,10 +173,10 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				if (this.expenseReport == null) {
 					this.expenseReport = new ExpenseReport();
 				}
+				binder.writeBean(this.expenseReport);
 				if (this.expenseReport.getExpenseStatus() == null) {
 					this.expenseReport.setExpenseStatus(ExpenseReportStatus.INGRESADO);
 				}
-				binder.writeBean(this.expenseReport);
 				expenseReportService.save(this.expenseReport);
 				clearForm();
 				refreshGrid();
@@ -222,13 +220,10 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		surveyor.setItems(surveyorService.listAll());
 		surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
 		date = new DatePicker("Fecha");
-		date.setReadOnly(true);
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ExpenseRequestType::getName);
-		expenseStatus = new ComboBox<>("Estado");
-		expenseStatus.setItems(ExpenseReportStatus.values());
 
 		files = new Upload();
 		// files.setMaxFileSize(20480);
@@ -263,8 +258,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			comprobantes.setEnabled(true);
 		});
 
-		formLayout.add(study, surveyor, date, amount, concept, expenseStatus, new Label("Subir comprobantes"), files,
-				comprobantes);
+		formLayout.add(study, surveyor, date, amount, concept, new Label("Subir comprobantes"), files, comprobantes);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
@@ -298,25 +292,15 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		surveyorFilter.setClearButtonVisible(true);
 		surveyorFilter.addValueChangeListener(e -> refreshGrid());
 
-		dateFromFilter = new DatePicker();
-		dateFromFilter.setPlaceholder("Desde...");
-		dateFromFilter.setClearButtonVisible(true);
-		dateFromFilter.addValueChangeListener(e -> refreshGrid());
+		dateFilter = new DatePicker();
+		dateFilter.setPlaceholder("Fecha..");
+		dateFilter.setClearButtonVisible(true);
+		dateFilter.addValueChangeListener(e -> refreshGrid());
 
-		dateToFilter = new DatePicker();
-		dateToFilter.setPlaceholder("Hasta...");
-		dateToFilter.setClearButtonVisible(true);
-		dateToFilter.addValueChangeListener(e -> refreshGrid());
-
-		amountFromFilter = new NumberField();
-		amountFromFilter.setPlaceholder("Monto desde...");
-		amountFromFilter.setClearButtonVisible(true);
-		amountFromFilter.addValueChangeListener(e -> refreshGrid());
-
-		amountToFilter = new NumberField();
-		amountToFilter.setPlaceholder("Monto hasta...");
-		amountToFilter.setClearButtonVisible(true);
-		amountToFilter.addValueChangeListener(e -> refreshGrid());
+		amountFilter = new NumberField();
+		amountFilter.setPlaceholder("Monto..");
+		amountFilter.setClearButtonVisible(true);
+		amountFilter.addValueChangeListener(e -> refreshGrid());
 
 		conceptFilter = new TextField();
 		conceptFilter.setPlaceholder("Concepto...");
@@ -329,8 +313,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		statusFilter.setClearButtonVisible(true);
 		statusFilter.addValueChangeListener(e -> refreshGrid());
 
-		filterLayout.add(studyFilter, surveyorFilter, dateFromFilter, dateToFilter, amountFromFilter, amountToFilter,
-				conceptFilter, statusFilter);
+		filterLayout.add(studyFilter, surveyorFilter, dateFilter, amountFilter, conceptFilter, statusFilter);
 
 		Button createButton = new Button("Crear Rendición", e -> {
 			grid.asSingleSelect().clear();
@@ -357,17 +340,12 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("surveyor").get("firstName")),
 						"%" + surveyorFilter.getValue().toLowerCase() + "%"));
 			}
-			if (dateFromFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), dateFromFilter.getValue()));
+			if (dateFilter.getValue() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("date"), dateFilter.getValue()));
 			}
-			if (dateToFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("date"), dateToFilter.getValue()));
-			}
-			if (amountFromFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("amount"), amountFromFilter.getValue()));
-			}
-			if (amountToFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("amount"), amountToFilter.getValue()));
+
+			if (amountFilter.getValue() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("amount"), dateFilter.getValue()));
 			}
 			if (conceptFilter.getValue() != null && !conceptFilter.getValue().isEmpty()) {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("concept").get("name")),

@@ -7,6 +7,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
@@ -95,7 +96,9 @@ public class ExpenseTransferDialog extends Dialog {
 			Surveyor firstSurveyor = selectedRequests.iterator().next().getSurveyor();
 			for (ExpenseRequest request : selectedRequests) {
 				if (!request.getSurveyor().equals(firstSurveyor)) {
-					Notification.show("Solo se pueden crear transferencias vinculando a un mismo encuestador");
+					Notification.show("Solo se pueden crear transferencias vinculando a un mismo encuestador", 3000,
+							Position.MIDDLE);
+
 					return;
 				}
 			}
