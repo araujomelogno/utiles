@@ -43,9 +43,11 @@ public class ExpenseReportApprovalView extends Div {
 
 	private HorizontalLayout createToolbar() {
 		Button approveButton = new Button("Aprobar rendiciones", event -> approveSelectedReports());
+		Button revokeButton = new Button("Rechazar rendiciones", event -> revokeSelectedReports());
 		approveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		revokeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		HorizontalLayout toolbar = new HorizontalLayout(approveButton);
+		HorizontalLayout toolbar = new HorizontalLayout(approveButton, revokeButton);
 		toolbar.setWidthFull();
 		toolbar.setAlignItems(FlexComponent.Alignment.BASELINE);
 		return toolbar;
@@ -131,6 +133,12 @@ public class ExpenseReportApprovalView extends Div {
 
 	private void approveSelectedReports() {
 		expenseReportService.approveReports(grid.getSelectedItems());
+		grid.getSelectionModel().deselectAll();
+		UI.getCurrent().getPage().reload();
+	}
+
+	private void revokeSelectedReports() {
+		expenseReportService.revokeReports(grid.getSelectedItems());
 		grid.getSelectionModel().deselectAll();
 		UI.getCurrent().getPage().reload();
 	}

@@ -178,7 +178,6 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 		DatePicker requestDateFilter = new DatePicker();
 		requestDateFilter.setPlaceholder("Filter");
-		requestDateFilter.setClearButtonVisible(true);
 		requestDateFilter.addValueChangeListener(e -> {
 			filters.setRequestDate(e.getValue());
 			grid.getDataProvider().refreshAll();
@@ -241,9 +240,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				editorLayoutDiv.setVisible(true);
 				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
 				approve.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.INGRESADO);
-				viewTransferButton
-						.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.TRANSFERIDO
-								|| event.getValue().getExpenseStatus() == ExpenseStatus.RENDIDO);
+				viewTransferButton.setEnabled(event.getValue().getExpenseStatus() == ExpenseStatus.TRANSFERIDO
+						|| event.getValue().getExpenseStatus() == ExpenseStatus.RENDIDO);
 			} else {
 				editorLayoutDiv.setVisible(false);
 				clearForm();

@@ -90,26 +90,22 @@ public class ExpenseTransferView extends VerticalLayout {
 		HeaderRow filterRow = grid.appendHeaderRow();
 
 		surveyorFilter = new TextField();
-		surveyorFilter.setPlaceholder("Filtrar");
-		surveyorFilter.setClearButtonVisible(true);
+		surveyorFilter.setPlaceholder("Filtrar por encuestador...");
 		surveyorFilter.addValueChangeListener(e -> refreshGrid());
 		filterRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
 		studyFilter = new TextField();
-		studyFilter.setPlaceholder("Filtrar");
-		studyFilter.setClearButtonVisible(true);
+		studyFilter.setPlaceholder("Filtrar por proyecto...");
 		studyFilter.addValueChangeListener(e -> refreshGrid());
 		filterRow.getCell(studyColumn).setComponent(studyFilter);
 
 		conceptFilter = new TextField();
-		conceptFilter.setPlaceholder("Filtrar");
-		conceptFilter.setClearButtonVisible(true);
+		conceptFilter.setPlaceholder("Filtrar por concepto...");
 		conceptFilter.addValueChangeListener(e -> refreshGrid());
 		filterRow.getCell(conceptColumn).setComponent(conceptFilter);
 
 		obsFilter = new TextField();
-		obsFilter.setPlaceholder("Filtrar");
-		obsFilter.setClearButtonVisible(true);
+		obsFilter.setPlaceholder("Filtrar por observaciones...");
 		obsFilter.addValueChangeListener(e -> refreshGrid());
 		filterRow.getCell(obsColumn).setComponent(obsFilter);
 

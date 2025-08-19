@@ -19,4 +19,8 @@ public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, 
     @Modifying
     @Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
     void approveRequests(@Param("ids") List<Long> ids, @Param("status") ExpenseStatus status, @Param("aprovalDate") Date aprovalDate);
+    
+    @Modifying
+    @Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
+    void revokeRequests(@Param("ids") List<Long> ids, @Param("status") ExpenseStatus status, @Param("aprovalDate") Date aprovalDate);
 }

@@ -1,39 +1,38 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.jpa.domain.Specification;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
-import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.PermitAll;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Route(value = "expenses-approval")
 @PageTitle("Aprobar Solicitudes de Gasto")
@@ -56,21 +55,24 @@ public class ExpensesAprovalView extends Div {
 		addClassName("expenses-aproval-view");
 		setSizeFull();
 
-		VerticalLayout layout = new VerticalLayout();
 		Button approveButton = new Button("Aprobar solicitudes", event -> approveSelected());
+		Button revokeButton = new Button("Rechazar solicitudes", event -> revokeSelected());
 		approveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		layout.add(approveButton);
+		revokeButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
+		HorizontalLayout toolbar = new HorizontalLayout(approveButton, revokeButton);
+		toolbar.setWidthFull();
+		toolbar.setAlignItems(FlexComponent.Alignment.BASELINE);
+
+		add(toolbar);
 		setupGrid();
-		layout.add(grid);
+		add(grid);
 
-		add(layout);
 	}
 
 	private void setupGrid() {
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
 		grid.setSelectionMode(Grid.SelectionMode.MULTI);
-
 
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
@@ -206,6 +208,23 @@ public class ExpensesAprovalView extends Div {
 		expenseRequestService.approveRequests(ids);
 
 		Notification.show("Solicitudes aprobadas exitosamente.");
+		grid.getDataProvider().refreshAll();
+		grid.asMultiSelect().clear();
+	}
+
+	private void revokeSelected() {
+		if (selectedRequests.isEmpty()) {
+			Notification.show("No hay solicitudes seleccionadas.");
+			return;
+		}
+
+		List<Long> ids = new ArrayList<>();
+		for (ExpenseRequest request : selectedRequests) {
+			ids.add(request.getId());
+		}
+		expenseRequestService.revokeRequests(ids);
+
+		Notification.show("Solicitudes rechazads.");
 		grid.getDataProvider().refreshAll();
 		grid.asMultiSelect().clear();
 	}

@@ -17,46 +17,51 @@ import java.util.stream.Collectors;
 @Service
 public class ExpenseRequestService {
 
-    private final ExpenseRequestRepository repository;
+	private final ExpenseRequestRepository repository;
 
-    public ExpenseRequestService(ExpenseRequestRepository repository) {
-        this.repository = repository;
-    }
+	public ExpenseRequestService(ExpenseRequestRepository repository) {
+		this.repository = repository;
+	}
 
-    public Optional<ExpenseRequest> get(Long id) {
-        return repository.findById(id);
-    }
+	public Optional<ExpenseRequest> get(Long id) {
+		return repository.findById(id);
+	}
 
-    public ExpenseRequest update(ExpenseRequest entity) {
-        return repository.save(entity);
-    }
+	public ExpenseRequest update(ExpenseRequest entity) {
+		return repository.save(entity);
+	}
 
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
+	public void delete(Long id) {
+		repository.deleteById(id);
+	}
 
-    public Page<ExpenseRequest> list(Pageable pageable) {
-        return repository.findAll(pageable);
-    }
+	public Page<ExpenseRequest> list(Pageable pageable) {
+		return repository.findAll(pageable);
+	}
 
-    public Page<ExpenseRequest> list(Pageable pageable, Specification<ExpenseRequest> filter) {
-        return repository.findAll(filter, pageable);
-    }
+	public Page<ExpenseRequest> list(Pageable pageable, Specification<ExpenseRequest> filter) {
+		return repository.findAll(filter, pageable);
+	}
 
-    public int count() {
-        return (int) repository.count();
-    }
+	public int count() {
+		return (int) repository.count();
+	}
 
-    public int count(Specification<ExpenseRequest> filter) {
-        return (int) repository.count(filter);
-    }
+	public int count(Specification<ExpenseRequest> filter) {
+		return (int) repository.count(filter);
+	}
 
-    public List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable) {
-        return repository.findAllByExpenseStatus(expenseStatus, pageable);
-    }
+	public List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable) {
+		return repository.findAllByExpenseStatus(expenseStatus, pageable);
+	}
 
-    @Transactional
-    public void approveRequests(List<Long> ids) {
-        repository.approveRequests(ids, ExpenseStatus.APROBADO, new Date());
-    }
+	@Transactional
+	public void approveRequests(List<Long> ids) {
+		repository.approveRequests(ids, ExpenseStatus.APROBADO, new Date());
+	}
+
+	@Transactional
+	public void revokeRequests(List<Long> ids) {
+		repository.revokeRequests(ids, ExpenseStatus.RECHAZADO, new Date());
+	}
 }
