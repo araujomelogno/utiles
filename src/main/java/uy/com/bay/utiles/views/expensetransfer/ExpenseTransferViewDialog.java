@@ -16,6 +16,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.StreamResource;
 
@@ -54,6 +55,14 @@ public class ExpenseTransferViewDialog extends Dialog {
 
 		formLayout.add(transferDate, amount, surveyor);
 		add(formLayout);
+
+		if (expenseTransfer.getObs() != null && !expenseTransfer.getObs().isEmpty()) {
+			TextArea obs = new TextArea("Observaciones");
+			obs.setValue(expenseTransfer.getObs());
+			obs.setReadOnly(true);
+			obs.setWidthFull();
+			add(obs);
+		}
 
 		List<ExpenseRequest> expenseRequests = expenseTransfer.getExpenseRequests();
 		if (expenseRequests != null && !expenseRequests.isEmpty()) {

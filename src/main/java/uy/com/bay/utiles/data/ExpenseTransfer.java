@@ -24,6 +24,16 @@ public class ExpenseTransfer extends AbstractEntity {
     @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ExpenseTransferFile> files;
 
+    private String obs;
+
+    public String getObs() {
+        return obs;
+    }
+
+    public void setObs(String obs) {
+        this.obs = obs;
+    }
+
     public Date getTransferDate() {
         return transferDate;
     }
