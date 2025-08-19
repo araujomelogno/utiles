@@ -1,6 +1,7 @@
 package uy.com.bay.utiles.views.expenses;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -425,13 +426,25 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				predicates.add(criteriaBuilder.or(surveyorFirstName, surveyorLastName));
 			}
 			if (filters.getRequestDate() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("requestDate"), filters.getRequestDate()));
+				LocalDate date = filters.getRequestDate();
+				Date startDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+				Date endDate = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("requestDate"), startDate));
+				predicates.add(criteriaBuilder.lessThan(root.get("requestDate"), endDate));
 			}
 			if (filters.getAprovalDate() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("aprovalDate"), filters.getAprovalDate()));
+				LocalDate date = filters.getAprovalDate();
+				Date startDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+				Date endDate = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("aprovalDate"), startDate));
+				predicates.add(criteriaBuilder.lessThan(root.get("aprovalDate"), endDate));
 			}
 			if (filters.getTransferDate() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("transferDate"), filters.getTransferDate()));
+				LocalDate date = filters.getTransferDate();
+				Date startDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+				Date endDate = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("transferDate"), startDate));
+				predicates.add(criteriaBuilder.lessThan(root.get("transferDate"), endDate));
 			}
 			if (filters.getAmount() != null) {
 				predicates.add(criteriaBuilder.equal(root.get("amount"), filters.getAmount()));
