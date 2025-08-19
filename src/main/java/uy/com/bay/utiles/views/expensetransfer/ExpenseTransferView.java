@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.Specification;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel.SelectAllCheckboxVisibility;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.notification.Notification;

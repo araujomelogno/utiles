@@ -13,6 +13,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel.SelectAllCheckboxVisibility;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
@@ -73,6 +75,8 @@ public class ExpensesAprovalView extends Div {
 	private void setupGrid() {
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
 		grid.setSelectionMode(Grid.SelectionMode.MULTI);
+		((GridMultiSelectionModel<ExpenseRequest>) grid.getSelectionModel())
+				.setSelectAllCheckboxVisibility(SelectAllCheckboxVisibility.VISIBLE);
 
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
