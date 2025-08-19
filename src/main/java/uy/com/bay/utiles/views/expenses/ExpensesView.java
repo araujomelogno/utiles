@@ -25,6 +25,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -100,10 +101,12 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		this.expenseTransferService = expenseTransferService;
 		this.expenseTransferFileService = expenseTransferFileService;
 		addClassNames("expenses-view");
+		setHeight("100%");
 
 		filters = new Filters();
 
 		SplitLayout splitLayout = new SplitLayout();
+		splitLayout.setSizeFull();
 		splitLayout.setSplitterPosition(80);
 
 		createEditorLayout(splitLayout);
@@ -460,8 +463,11 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	}
 
 	private void createGridLayout(SplitLayout splitLayout) {
-		Div wrapper = new Div();
+		VerticalLayout wrapper = new VerticalLayout();
 		wrapper.setClassName("grid-wrapper");
+		wrapper.setSizeFull();
+		wrapper.setPadding(false);
+		wrapper.setSpacing(false);
 		Button createButton = new Button("Crear solicitud", e -> {
 			grid.asSingleSelect().clear();
 			populateForm(new ExpenseRequest());
@@ -471,8 +477,9 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		HorizontalLayout topLayout = new HorizontalLayout(createButton);
 		topLayout.setWidth("100%");
 		topLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
-		splitLayout.addToPrimary(wrapper);
 		wrapper.add(topLayout, grid);
+		wrapper.setFlexGrow(1, grid);
+		splitLayout.addToPrimary(wrapper);
 	}
 
 	private void refreshGrid() {
