@@ -3,6 +3,7 @@ package uy.com.bay.utiles.views.expensetransfer;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -35,144 +36,159 @@ import uy.com.bay.utiles.services.ExpenseTransferService;
 @PermitAll
 public class ExpenseTransferView extends VerticalLayout {
 
-    private final ExpenseRequestService expenseRequestService;
-    private final ExpenseTransferService expenseTransferService;
-    private final ExpenseTransferFileService expenseTransferFileService;
+	private final ExpenseRequestService expenseRequestService;
+	private final ExpenseTransferService expenseTransferService;
+	private final ExpenseTransferFileService expenseTransferFileService;
 
-    private Grid<ExpenseRequest> grid;
-    private Button transferButton;
+	private Grid<ExpenseRequest> grid;
+	private Button transferButton;
 
-    private TextField surveyorFilter;
-    private TextField studyFilter;
-    private TextField conceptFilter;
-    private TextField obsFilter;
+	private TextField surveyorFilter;
+	private TextField studyFilter;
+	private TextField conceptFilter;
+	private TextField obsFilter;
 
-    public ExpenseTransferView(ExpenseRequestService expenseRequestService,
-                               ExpenseTransferService expenseTransferService,
-                               ExpenseTransferFileService expenseTransferFileService) {
-        this.expenseRequestService = expenseRequestService;
-        this.expenseTransferService = expenseTransferService;
-        this.expenseTransferFileService = expenseTransferFileService;
-        addClassName("expensetransfer-view");
-        setSizeFull();
+	public ExpenseTransferView(ExpenseRequestService expenseRequestService,
+			ExpenseTransferService expenseTransferService, ExpenseTransferFileService expenseTransferFileService) {
+		this.expenseRequestService = expenseRequestService;
+		this.expenseTransferService = expenseTransferService;
+		this.expenseTransferFileService = expenseTransferFileService;
+		addClassName("expensetransfer-view");
+		setSizeFull();
 
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setWidthFull();
-        createTransferButton();
-        buttonLayout.add(transferButton);
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setWidthFull();
+		createTransferButton();
+		buttonLayout.add(transferButton);
 
-        createGrid();
+		createGrid();
 
-        add(buttonLayout, grid);
-        refreshGrid();
-    }
+		add(buttonLayout, grid);
+		refreshGrid();
+	}
 
-    private void createGrid() {
-        grid = new Grid<>(ExpenseRequest.class, false);
-        grid.setSelectionMode(SelectionMode.MULTI);
+	private void createGrid() {
+		grid = new Grid<>(ExpenseRequest.class, false);
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
 
-        Grid.Column<ExpenseRequest> surveyorColumn = grid.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getName() : "").setHeader("Encuestador").setSortable(true).setKey("surveyor.lastName");
-        Grid.Column<ExpenseRequest> studyColumn = grid.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Proyecto").setSortable(true).setKey("study.name");
-        grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Fecha Solicitud").setSortable(true).setKey("requestDate");
-        grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
-        Grid.Column<ExpenseRequest> conceptColumn = grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getDescription() : "").setHeader("Concepto").setSortable(true).setKey("concept.description");
-        Grid.Column<ExpenseRequest> obsColumn = grid.addColumn(ExpenseRequest::getObs).setHeader("Observaciones");
+		grid.setSelectionMode(Grid.SelectionMode.MULTI);
 
-        HeaderRow filterRow = grid.appendHeaderRow();
+		Grid.Column<ExpenseRequest> surveyorColumn = grid
+				.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getName() : "").setHeader("Encuestador")
+				.setSortable(true).setKey("surveyor.lastName");
+		Grid.Column<ExpenseRequest> studyColumn = grid
+				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Proyecto")
+				.setSortable(true).setKey("study.name");
+		grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Fecha Solicitud").setSortable(true)
+				.setKey("requestDate");
+		grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
+		Grid.Column<ExpenseRequest> conceptColumn = grid
+				.addColumn(er -> er.getConcept() != null ? er.getConcept().getDescription() : "").setHeader("Concepto")
+				.setSortable(true).setKey("concept.description");
+		Grid.Column<ExpenseRequest> obsColumn = grid.addColumn(ExpenseRequest::getObs).setHeader("Observaciones");
 
-        surveyorFilter = new TextField();
-        surveyorFilter.setPlaceholder("Filtrar");
-        surveyorFilter.setClearButtonVisible(true);
-        surveyorFilter.addValueChangeListener(e -> refreshGrid());
-        filterRow.getCell(surveyorColumn).setComponent(surveyorFilter);
+		HeaderRow filterRow = grid.appendHeaderRow();
 
-        studyFilter = new TextField();
-        studyFilter.setPlaceholder("Filtrar");
-        studyFilter.setClearButtonVisible(true);
-        studyFilter.addValueChangeListener(e -> refreshGrid());
-        filterRow.getCell(studyColumn).setComponent(studyFilter);
+		surveyorFilter = new TextField();
+		surveyorFilter.setPlaceholder("Filtrar");
+		surveyorFilter.setClearButtonVisible(true);
+		surveyorFilter.addValueChangeListener(e -> refreshGrid());
+		filterRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
-        conceptFilter = new TextField();
-        conceptFilter.setPlaceholder("Filtrar");
-        conceptFilter.setClearButtonVisible(true);
-        conceptFilter.addValueChangeListener(e -> refreshGrid());
-        filterRow.getCell(conceptColumn).setComponent(conceptFilter);
+		studyFilter = new TextField();
+		studyFilter.setPlaceholder("Filtrar");
+		studyFilter.setClearButtonVisible(true);
+		studyFilter.addValueChangeListener(e -> refreshGrid());
+		filterRow.getCell(studyColumn).setComponent(studyFilter);
 
-        obsFilter = new TextField();
-        obsFilter.setPlaceholder("Filtrar");
-        obsFilter.setClearButtonVisible(true);
-        obsFilter.addValueChangeListener(e -> refreshGrid());
-        filterRow.getCell(obsColumn).setComponent(obsFilter);
+		conceptFilter = new TextField();
+		conceptFilter.setPlaceholder("Filtrar");
+		conceptFilter.setClearButtonVisible(true);
+		conceptFilter.addValueChangeListener(e -> refreshGrid());
+		filterRow.getCell(conceptColumn).setComponent(conceptFilter);
 
-        grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER);
-        grid.asMultiSelect().addValueChangeListener(event -> {
-            transferButton.setEnabled(!event.getValue().isEmpty());
-        });
-    }
+		obsFilter = new TextField();
+		obsFilter.setPlaceholder("Filtrar");
+		obsFilter.setClearButtonVisible(true);
+		obsFilter.addValueChangeListener(e -> refreshGrid());
+		filterRow.getCell(obsColumn).setComponent(obsFilter);
 
-    private void createTransferButton() {
-        transferButton = new Button("Transferir solicitudes");
-        transferButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        transferButton.setEnabled(false);
-        transferButton.addClickListener(e -> {
-            if (!grid.getSelectedItems().isEmpty()) {
-                ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems());
-                dialog.addListener(ExpenseTransferDialog.SaveEvent.class, this::saveTransfer);
-                dialog.open();
-            }
-        });
-    }
+		grid.addThemeVariants(com.vaadin.flow.component.grid.GridVariant.LUMO_NO_BORDER);
+		grid.asMultiSelect().addValueChangeListener(event -> {
+			transferButton.setEnabled(!event.getValue().isEmpty());
+		});
+	}
 
-    private void saveTransfer(ExpenseTransferDialog.SaveEvent event) {
-        ExpenseTransfer expenseTransfer = event.getExpenseTransfer();
-        List<ExpenseRequest> requestsToUpdate = new ArrayList<>(expenseTransfer.getExpenseRequests());
-        Date now = new Date();
+	private void createTransferButton() {
+		transferButton = new Button("Transferir solicitudes");
+		transferButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		transferButton.setEnabled(false);
+		transferButton.addClickListener(e -> {
+			if (!grid.getSelectedItems().isEmpty()) {
+				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems());
+				dialog.addListener(ExpenseTransferDialog.SaveEvent.class, this::saveTransfer);
+				dialog.open();
+			}
+		});
+	}
 
-        expenseTransfer.setTransferDate(now);
-        expenseTransfer.setExpenseRequests(new ArrayList<>());
-        expenseTransfer = expenseTransferService.save(expenseTransfer);
+	private void saveTransfer(ExpenseTransferDialog.SaveEvent event) {
+		ExpenseTransfer expenseTransfer = event.getExpenseTransfer();
+		List<ExpenseRequest> requestsToUpdate = new ArrayList<>(expenseTransfer.getExpenseRequests());
+		Date now = new Date();
 
-        for (ExpenseRequest request : requestsToUpdate) {
-            request.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
-            request.setTransferDate(now);
-            request.setExpenseTransfer(expenseTransfer);
-            expenseRequestService.update(request);
-        }
+		expenseTransfer.setTransferDate(now);
+		expenseTransfer.setExpenseRequests(new ArrayList<>());
+		expenseTransfer = expenseTransferService.save(expenseTransfer);
 
-        refreshGrid();
+		for (ExpenseRequest request : requestsToUpdate) {
+			request.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
+			request.setTransferDate(now);
+			request.setExpenseTransfer(expenseTransfer);
+			expenseRequestService.update(request);
+		}
 
-        Notification.show("Transferencia creada exitosamente.", 3000, Notification.Position.BOTTOM_START);
-    }
+		refreshGrid();
 
-    private void refreshGrid() {
-        grid.setItems(query -> {
-            List<QuerySortOrder> sortOrders = query.getSortOrders();
-            Sort sort;
-            if (sortOrders.isEmpty()) {
-                sort = Sort.by(Sort.Direction.DESC, "requestDate");
-            } else {
-                QuerySortOrder order = sortOrders.get(0);
-                sort = Sort.by(order.getDirection() == SortDirection.ASCENDING ? Sort.Direction.ASC : Sort.Direction.DESC, order.getSorted());
-            }
+		Notification.show("Transferencia creada exitosamente.", 3000, Notification.Position.BOTTOM_START);
+	}
 
-            PageRequest pageRequest = PageRequest.of(query.getPage(), query.getPageSize(), sort);
+	private void refreshGrid() {
+		grid.setItems(query -> {
+			List<QuerySortOrder> sortOrders = query.getSortOrders();
+			Sort sort;
+			if (sortOrders.isEmpty()) {
+				sort = Sort.by(Sort.Direction.DESC, "requestDate");
+			} else {
+				QuerySortOrder order = sortOrders.get(0);
+				sort = Sort.by(
+						order.getDirection() == SortDirection.ASCENDING ? Sort.Direction.ASC : Sort.Direction.DESC,
+						order.getSorted());
+			}
 
-            Specification<ExpenseRequest> spec = (root, q, cb) -> cb.equal(root.get("expenseStatus"), ExpenseStatus.APROBADO);
+			PageRequest pageRequest = PageRequest.of(query.getPage(), query.getPageSize(), sort);
 
-            if (surveyorFilter != null && !surveyorFilter.isEmpty()) {
-                spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("surveyor").get("lastName")), "%" + surveyorFilter.getValue().toLowerCase() + "%"));
-            }
-            if (studyFilter != null && !studyFilter.isEmpty()) {
-                spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")), "%" + studyFilter.getValue().toLowerCase() + "%"));
-            }
-            if (conceptFilter != null && !conceptFilter.isEmpty()) {
-                spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")), "%" + conceptFilter.getValue().toLowerCase() + "%"));
-            }
-            if (obsFilter != null && !obsFilter.isEmpty()) {
-                spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsFilter.getValue().toLowerCase() + "%"));
-            }
+			Specification<ExpenseRequest> spec = (root, q, cb) -> cb.equal(root.get("expenseStatus"),
+					ExpenseStatus.APROBADO);
 
-            return expenseRequestService.list(pageRequest, spec).stream();
-        });
-    }
+			if (surveyorFilter != null && !surveyorFilter.isEmpty()) {
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("surveyor").get("lastName")),
+						"%" + surveyorFilter.getValue().toLowerCase() + "%"));
+			}
+			if (studyFilter != null && !studyFilter.isEmpty()) {
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
+						"%" + studyFilter.getValue().toLowerCase() + "%"));
+			}
+			if (conceptFilter != null && !conceptFilter.isEmpty()) {
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
+						"%" + conceptFilter.getValue().toLowerCase() + "%"));
+			}
+			if (obsFilter != null && !obsFilter.isEmpty()) {
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("obs")),
+						"%" + obsFilter.getValue().toLowerCase() + "%"));
+			}
+
+			return expenseRequestService.list(pageRequest, spec).stream();
+		});
+	}
 }

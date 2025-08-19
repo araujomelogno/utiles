@@ -58,7 +58,7 @@ import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
 
-@PageTitle("Expense Reports")
+@PageTitle("Ver Rendiciones")
 @Route("expense-reports/:expenseReportID?/:action?(edit)")
 @PermitAll
 public class ExpenseReportsView extends Div implements BeforeEnterObserver {
@@ -80,7 +80,6 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private DatePicker date;
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
-	private ComboBox<ExpenseReportStatus> expenseStatus;
 	private Upload files;
 
 	private final Button cancel = new Button("Cancelar");
@@ -96,9 +95,6 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private final ExpenseRequestTypeService expenseRequestTypeService;
 	private final ExpenseReportFileService expenseReportFileService;
 	private Div editorLayoutDiv;
-	private List<Study> studies;
-	private List<Surveyor> surveyors;
-	private List<ExpenseRequestType> expenseRequestTypes;
 
 	public ExpenseReportsView(ExpenseReportService expenseReportService, StudyService studyService,
 			SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService,
@@ -176,14 +172,15 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				if (this.expenseReport == null) {
 					this.expenseReport = new ExpenseReport();
 				}
-				binder.writeBean(this.expenseReport);
 				if (this.expenseReport.getExpenseStatus() == null) {
 					this.expenseReport.setExpenseStatus(ExpenseReportStatus.INGRESADO);
 				}
+				binder.writeBean(this.expenseReport);
 				expenseReportService.save(this.expenseReport);
 				clearForm();
 				refreshGrid();
 				Notification.show("Rendición guardada.");
+				editorLayoutDiv.setVisible(false);
 				UI.getCurrent().navigate(ExpenseReportsView.class);
 			} catch (ValidationException validationException) {
 				Notification.show("Error al guardar la rendición.");
@@ -217,21 +214,16 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		editorLayoutDiv.add(editorDiv);
 		FormLayout formLayout = new FormLayout();
 		study = new ComboBox<>("Estudio");
-		this.studies = studyService.listAll();
-		study.setItems(this.studies);
+		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(Study::getName);
 		surveyor = new ComboBox<>("Encuestador");
-		this.surveyors = surveyorService.listAll();
-		surveyor.setItems(this.surveyors);
+		surveyor.setItems(surveyorService.listAll());
 		surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
 		date = new DatePicker("Fecha");
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
-		this.expenseRequestTypes = expenseRequestTypeService.findAll();
-		concept.setItems(this.expenseRequestTypes);
+		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ExpenseRequestType::getName);
-		expenseStatus = new ComboBox<>("Estado");
-		expenseStatus.setItems(ExpenseReportStatus.values());
 
 		files = new Upload();
 		// files.setMaxFileSize(20480);
@@ -266,8 +258,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			comprobantes.setEnabled(true);
 		});
 
-		formLayout.add(study, surveyor, date, amount, concept, expenseStatus, new Label("Subir comprobantes"), files,
-				comprobantes);
+		formLayout.add(study, surveyor, date, amount, concept, new Label("Subir comprobantes"), files, comprobantes);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
@@ -380,25 +371,6 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(ExpenseReport value) {
 		this.expenseReport = value;
-
-		List<Study> studyItems = new ArrayList<>(this.studies);
-		if (value != null && value.getStudy() != null && !studyItems.contains(value.getStudy())) {
-			studyItems.add(value.getStudy());
-		}
-		study.setItems(studyItems);
-
-		List<Surveyor> surveyorItems = new ArrayList<>(this.surveyors);
-		if (value != null && value.getSurveyor() != null && !surveyorItems.contains(value.getSurveyor())) {
-			surveyorItems.add(value.getSurveyor());
-		}
-		surveyor.setItems(surveyorItems);
-
-		List<ExpenseRequestType> conceptItems = new ArrayList<>(this.expenseRequestTypes);
-		if (value != null && value.getConcept() != null && !conceptItems.contains(value.getConcept())) {
-			conceptItems.add(value.getConcept());
-		}
-		concept.setItems(conceptItems);
-
 		binder.readBean(this.expenseReport);
 		comprobantes.setEnabled(value != null && value.getFiles() != null && !value.getFiles().isEmpty());
 	}
