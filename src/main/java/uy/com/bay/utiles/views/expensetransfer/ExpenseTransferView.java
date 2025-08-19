@@ -66,6 +66,7 @@ public class ExpenseTransferView extends VerticalLayout {
 		createGrid();
 
 		add(buttonLayout, grid);
+		
 		refreshGrid();
 	}
 
