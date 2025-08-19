@@ -230,6 +230,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		this.expenseRequestTypes = expenseRequestTypeService.findAll();
 		concept.setItems(this.expenseRequestTypes);
 		concept.setItemLabelGenerator(ExpenseRequestType::getName);
+		expenseStatus = new ComboBox<>("Estado");
+		expenseStatus.setItems(ExpenseReportStatus.values());
 
 		files = new Upload();
 		// files.setMaxFileSize(20480);
@@ -264,7 +266,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			comprobantes.setEnabled(true);
 		});
 
-		formLayout.add(study, surveyor, date, amount, concept, new Label("Subir comprobantes"), files, comprobantes);
+		formLayout.add(study, surveyor, date, amount, concept, expenseStatus, new Label("Subir comprobantes"), files,
+				comprobantes);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
