@@ -9,6 +9,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -33,6 +34,7 @@ public class ExpenseTransferDialog extends Dialog {
 
 	private DatePicker transferDate;
 	private NumberField amount;
+	private TextArea obs;
 	private Upload upload;
 	protected MultiFileMemoryBuffer buffer;
 
@@ -60,13 +62,15 @@ public class ExpenseTransferDialog extends Dialog {
 				.sum();
 		amount.setValue(totalAmount);
 
+		obs = new TextArea("Observaciones");
+
 		buffer = new MultiFileMemoryBuffer();
 		upload = new Upload(buffer);
 		upload.setAcceptedFileTypes("image/jpeg", "image/png", "application/pdf", ".doc", ".docx", ".xls", ".xlsx");
 		upload.setMaxFiles(5);
 		upload.setMaxFileSize(20 * 1024 * 1024); // 20MB
 
-		formLayout.add(transferDate, amount, upload);
+		formLayout.add(transferDate, amount, obs, upload);
 		add(formLayout);
 
 		createButtons();
@@ -74,6 +78,7 @@ public class ExpenseTransferDialog extends Dialog {
 
 		binder = new BeanValidationBinder<>(ExpenseTransfer.class);
 		binder.bind(amount, "amount");
+		binder.bind(obs, "obs");
 
 		expenseTransfer.setAmount(totalAmount);
 		binder.readBean(expenseTransfer);
