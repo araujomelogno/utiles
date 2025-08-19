@@ -96,6 +96,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private final ExpenseRequestTypeService expenseRequestTypeService;
 	private final ExpenseReportFileService expenseReportFileService;
 	private Div editorLayoutDiv;
+	private List<Study> studies;
+	private List<Surveyor> surveyors;
+	private List<ExpenseRequestType> expenseRequestTypes;
 
 	public ExpenseReportsView(ExpenseReportService expenseReportService, StudyService studyService,
 			SurveyorService surveyorService, ExpenseRequestTypeService expenseRequestTypeService,
@@ -214,15 +217,18 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		editorLayoutDiv.add(editorDiv);
 		FormLayout formLayout = new FormLayout();
 		study = new ComboBox<>("Estudio");
-		study.setItems(studyService.listAll());
+		this.studies = studyService.listAll();
+		study.setItems(this.studies);
 		study.setItemLabelGenerator(Study::getName);
 		surveyor = new ComboBox<>("Encuestador");
-		surveyor.setItems(surveyorService.listAll());
+		this.surveyors = surveyorService.listAll();
+		surveyor.setItems(this.surveyors);
 		surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
 		date = new DatePicker("Fecha");
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
-		concept.setItems(expenseRequestTypeService.findAll());
+		this.expenseRequestTypes = expenseRequestTypeService.findAll();
+		concept.setItems(this.expenseRequestTypes);
 		concept.setItemLabelGenerator(ExpenseRequestType::getName);
 
 		files = new Upload();
@@ -371,6 +377,26 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(ExpenseReport value) {
 		this.expenseReport = value;
+		study.setItems(studies);
+		surveyor.setItems(surveyors);
+		concept.setItems(expenseRequestTypes);
+		if (value != null) {
+			if (value.getStudy() != null && !studies.contains(value.getStudy())) {
+				List<Study> items = new ArrayList<>(this.studies);
+				items.add(value.getStudy());
+				study.setItems(items);
+			}
+			if (value.getSurveyor() != null && !surveyors.contains(value.getSurveyor())) {
+				List<Surveyor> items = new ArrayList<>(this.surveyors);
+				items.add(value.getSurveyor());
+				surveyor.setItems(items);
+			}
+			if (value.getConcept() != null && !expenseRequestTypes.contains(value.getConcept())) {
+				List<ExpenseRequestType> items = new ArrayList<>(this.expenseRequestTypes);
+				items.add(value.getConcept());
+				concept.setItems(items);
+			}
+		}
 		binder.readBean(this.expenseReport);
 		comprobantes.setEnabled(value != null && value.getFiles() != null && !value.getFiles().isEmpty());
 	}
