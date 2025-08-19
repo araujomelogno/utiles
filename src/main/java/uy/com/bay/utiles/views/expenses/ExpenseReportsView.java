@@ -299,7 +299,11 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
 		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		reject.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		buttonLayout.add(save, approve, reject, cancel, delete);
+		buttonLayout.add(save, cancel, delete);
+		HorizontalLayout buttonLayout2 = new HorizontalLayout();
+		buttonLayout2.setClassName("button-layout");
+		buttonLayout2.add(approve, reject);
+		editorLayoutDiv.add(buttonLayout2);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
@@ -402,8 +406,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		this.expenseReport = value;
 		binder.readBean(this.expenseReport);
 		comprobantes.setEnabled(value != null && value.getFiles() != null && !value.getFiles().isEmpty());
-		approve.setEnabled(
-				value != null && this.expenseReport.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
+		approve.setEnabled(value != null && this.expenseReport.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
 		reject.setEnabled(value != null && this.expenseReport.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
 	}
 
