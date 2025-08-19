@@ -77,7 +77,7 @@ public class ExpenseTransferViewDialog extends Dialog {
 			Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
 			grid.setItems(expenseRequests);
 			grid.addColumn(er -> er.getStudy().getName()).setHeader("Estudio");
-			grid.addColumn(er -> er.getConcept().getName()).setHeader("Concepto");
+			grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto");
 			grid.addColumn(er -> new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate()))
 					.setHeader("Fecha Solicitud");
 			grid.setAllRowsVisible(true);
