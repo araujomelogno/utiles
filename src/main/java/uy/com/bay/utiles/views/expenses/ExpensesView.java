@@ -354,7 +354,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 						Notification.Position.BOTTOM_START);
 			}
 		});
-		setSizeFull();
+
 	}
 
 	@Override
