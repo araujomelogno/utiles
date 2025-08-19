@@ -13,6 +13,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import org.springframework.data.domain.Pageable;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.ExpenseTransfer;
@@ -157,7 +158,8 @@ public class ExpenseTransferView extends VerticalLayout {
 		Notification.show("Transferencia creada exitosamente.", 3000, Notification.Position.BOTTOM_START);
 	}
 	private void refreshGrid() {
-		List<ExpenseRequest> requests = expenseRequestService.findAllByExpenseStatus(ExpenseStatus.APROBADO).stream()
+		List<ExpenseRequest> requests = expenseRequestService
+				.findAllByExpenseStatus(ExpenseStatus.APROBADO, Pageable.unpaged()).getContent().stream()
 				.sorted(Comparator.comparing(ExpenseRequest::getRequestDate).reversed()).collect(Collectors.toList());
 		dataProvider = new ListDataProvider<>(requests);
 		grid.setDataProvider(dataProvider);
