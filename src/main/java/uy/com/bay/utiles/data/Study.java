@@ -12,8 +12,15 @@ public class Study extends AbstractEntity {
     private String obs;
     private double debt;
     private double totalCost;
+    private boolean showSurveyor;
 
-    public double getDebt() {
+    public boolean isShowSurveyor() {
+		return showSurveyor;
+	}
+	public void setShowSurveyor(boolean showSurveyor) {
+		this.showSurveyor = showSurveyor;
+	}
+	public double getDebt() {
 		return debt;
 	}
 	public void setDebt(double debt) {

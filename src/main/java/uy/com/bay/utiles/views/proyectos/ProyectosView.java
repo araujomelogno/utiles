@@ -8,6 +8,7 @@ import org.vaadin.lineawesome.LineAwesomeIconUrl;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog; // Added import
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -54,6 +55,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private TextField odooId;
     private TextField obs;
     private TextField casosCompletos;
+    private Checkbox showSurveyor;
+    private TextField totalCost;
+    private TextField debt;
 
     private Button addButton;
     private TextField nameFilter;
@@ -279,7 +283,12 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
         obs = new TextField("Obs");
         casosCompletos = new TextField("Casos completos");
         casosCompletos.setReadOnly(true);
-        formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos);
+        showSurveyor = new Checkbox("Mostrar encuestador");
+        totalCost = new TextField("Costo total");
+        totalCost.setReadOnly(true);
+        debt = new TextField("Deuda");
+        debt.setReadOnly(true);
+        formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalCost, debt);
 
         editorDiv.add(formLayout);
         createButtonLayout(this.editorLayoutDiv);
@@ -333,6 +342,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
     private void populateForm(Study value) {
         this.proyecto = value;
         binder.readBean(this.proyecto);
+        if (value != null) {
+		totalCost.setValue(String.valueOf(value.getTotalCost()));
+		debt.setValue(String.valueOf(value.getDebt()));
+        } else {
+		totalCost.setValue("");
+		debt.setValue("");
+        }
         if (value != null && value.getAlchemerId() != null) {
             try {
                 long count = alchemerSurveyResponseDataRepository.countBySurveyId(Integer.parseInt(value.getAlchemerId()));
