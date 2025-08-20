@@ -349,11 +349,18 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 			Dialog dialog = new Dialog();
 			dialog.setCloseOnEsc(true);
 			dialog.setCloseOnOutsideClick(true);
+			dialog.setWidth("80%");
+			dialog.setHeaderTitle("Movimientos de Gasto");
 
 			JournalEntryGrid grid = new JournalEntryGrid();
 			grid.setJournalEntries(journalEntryService.findBySurveyor(this.encuestador));
 
 			dialog.add(grid);
+
+			Button closeButton = new Button("Cerrar", e -> dialog.close());
+			closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+			dialog.getFooter().add(closeButton);
+
 			dialog.open();
 		}
 	}
