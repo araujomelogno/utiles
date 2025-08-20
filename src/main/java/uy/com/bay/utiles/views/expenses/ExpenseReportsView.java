@@ -49,7 +49,6 @@ import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportFile;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.ExpenseRequestType;
-import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
@@ -203,8 +202,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 		approve.addClickListener(e -> {
 			if (this.expenseReport != null) {
-				this.expenseReport.setExpenseStatus(ExpenseReportStatus.APROBADO);
-				expenseReportService.save(this.expenseReport);
+
+				expenseReportService.approveReport(this.expenseReport);
 				clearForm();
 				refreshGrid();
 				Notification.show("Rendición aprobada.");

@@ -53,10 +53,15 @@ public class ExpenseReportService {
 
 	public void approveReports(Collection<ExpenseReport> reports) {
 		reports.forEach(report -> {
-			report.setExpenseStatus(ExpenseReportStatus.APROBADO);
-			report.setApprovalDate(new Date());
-			repository.save(report);
+			this.approveReport(report);
 		});
+	}
+
+	public void approveReport(ExpenseReport report) {
+		report.setExpenseStatus(ExpenseReportStatus.APROBADO);
+		report.setApprovalDate(new Date());
+		repository.save(report);
+
 	}
 
 	public void revokeReports(Collection<ExpenseReport> reports) {
