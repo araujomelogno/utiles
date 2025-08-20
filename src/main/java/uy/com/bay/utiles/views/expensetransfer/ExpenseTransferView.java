@@ -28,9 +28,16 @@ import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.ExpenseTransfer;
+import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.Operation;
+import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.ExpenseTransferService;
+import uy.com.bay.utiles.services.JournalEntryService;
+import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Transferir Solicitudes")
@@ -41,6 +48,9 @@ public class ExpenseTransferView extends VerticalLayout {
 	private final ExpenseRequestService expenseRequestService;
 	private final ExpenseTransferService expenseTransferService;
 	private final ExpenseTransferFileService expenseTransferFileService;
+	private final JournalEntryService journalEntryService;
+	private final SurveyorService surveyorService;
+	private final StudyService studyService;
 
 	private Grid<ExpenseRequest> grid;
 	private Button transferButton;
@@ -51,10 +61,14 @@ public class ExpenseTransferView extends VerticalLayout {
 	private TextField obsFilter;
 
 	public ExpenseTransferView(ExpenseRequestService expenseRequestService,
-			ExpenseTransferService expenseTransferService, ExpenseTransferFileService expenseTransferFileService) {
+			ExpenseTransferService expenseTransferService, ExpenseTransferFileService expenseTransferFileService,
+			JournalEntryService journalEntryService, SurveyorService surveyorService, StudyService studyService) {
 		this.expenseRequestService = expenseRequestService;
 		this.expenseTransferService = expenseTransferService;
 		this.expenseTransferFileService = expenseTransferFileService;
+		this.journalEntryService = journalEntryService;
+		this.surveyorService = surveyorService;
+		this.studyService = studyService;
 		addClassName("expensetransfer-view");
 		setSizeFull();
 
@@ -145,6 +159,22 @@ public class ExpenseTransferView extends VerticalLayout {
 			request.setTransferDate(now);
 			request.setExpenseTransfer(expenseTransfer);
 			expenseRequestService.update(request);
+			JournalEntry journalEntry = new JournalEntry();
+			journalEntry.setDetail(
+					"transferencia realizada a encuestador por concepto " + request.getConcept().getDescription());
+			journalEntry.setDate(new Date());
+			journalEntry.setOperation(Operation.CREDITO);
+			journalEntry.setAmount(request.getAmount());
+			journalEntry.setSurveyor(request.getSurveyor());
+			journalEntry.setStudy(request.getStudy());
+			journalEntryService.save(journalEntry);
+			Surveyor surveyor = request.getSurveyor();
+			surveyor.setBalance(surveyor.getBalance() + request.getAmount());
+			surveyorService.save(surveyor);
+			Study study = request.getStudy();
+			study.setDebt(study.getDebt() + request.getAmount());
+			study.setTotalCost(study.getTotalCost() + request.getAmount());
+			studyService.save(study);
 		}
 
 		refreshGrid();
