@@ -10,8 +10,22 @@ public class Study extends AbstractEntity {
     private String doobloId;
     private String odooId;
     private String obs;
+    private double debt;
+    private double totalCost;
 
-    public String getName() {
+    public double getDebt() {
+		return debt;
+	}
+	public void setDebt(double debt) {
+		this.debt = debt;
+	}
+	public double getTotalCost() {
+		return totalCost;
+	}
+	public void setTotalCost(double totalCost) {
+		this.totalCost = totalCost;
+	}
+	public String getName() {
         return name;
     }
     public void setName(String name) {
