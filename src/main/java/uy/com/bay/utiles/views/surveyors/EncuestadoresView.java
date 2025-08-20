@@ -49,6 +49,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private TextField lastName;
     private TextField ci;
     private TextField SurveyToGoId;
+    private TextField balance;
 
 
     private Button addButton;
@@ -264,7 +265,9 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         lastName = new TextField("Last Name");
         ci = new TextField("Ci");
         SurveyToGoId = new TextField("Survey To Go Id");
-        formLayout.add(firstName, lastName, ci, SurveyToGoId);
+        balance = new TextField("Balance");
+        balance.setReadOnly(true);
+        formLayout.add(firstName, lastName, ci, SurveyToGoId, balance);
 
         editorDiv.add(formLayout);
         createButtonLayout(this.editorLayoutDiv);
