@@ -9,7 +9,16 @@ public class Surveyor extends AbstractEntity {
 	private String lastName;
 	private String ci;
 	private String surveyToGoId;
-	
+	private double balance;
+
+	public double getBalance() {
+		return balance;
+	}
+
+	public void setBalance(double balance) {
+		this.balance = balance;
+	}
+
 	public String getSurveyToGoId() {
 		return surveyToGoId;
 	}
