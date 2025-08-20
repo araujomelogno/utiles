@@ -8,7 +8,8 @@ import org.vaadin.lineawesome.LineAwesomeIconUrl;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.confirmdialog.ConfirmDialog; // Added import
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -32,6 +33,7 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.SurveyorService;
 
 @PageTitle("Encuestadores")
@@ -62,6 +64,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
     private Button deleteButton; // Added deleteButton declaration
+	private final Button viewMovements = new Button("Ver movimientos de gastos");
 
     private final BeanValidationBinder<Surveyor> binder;
 
@@ -69,9 +72,11 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private Div editorLayoutDiv; // Added field declaration
 
     private final SurveyorService encuestadorService;
+	private final JournalEntryService journalEntryService;
 
-    public EncuestadoresView(SurveyorService encuestadorService) {
+    public EncuestadoresView(SurveyorService encuestadorService, JournalEntryService journalEntryService) {
         this.encuestadorService = encuestadorService;
+		this.journalEntryService = journalEntryService;
         this.binder = new BeanValidationBinder<>(Surveyor.class); // Moved initialization here
         addClassNames("encuestadores-view");
 
@@ -281,7 +286,9 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
         buttonLayout.setClassName("button-layout");
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		buttonLayout.add(save, deleteButton, cancel);
+        viewMovements.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        viewMovements.addClickListener(e -> showJournalEntriesDialog());
+        buttonLayout.add(save, deleteButton, cancel, viewMovements);
         editorLayoutDiv.add(buttonLayout);
     }
 
@@ -321,6 +328,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
     private void populateForm(Surveyor value) {
         this.encuestador = value;
         binder.readBean(this.encuestador);
+		this.viewMovements.setEnabled(value != null && value.getId() != null);
         if (this.editorLayoutDiv != null) {
             this.editorLayoutDiv.setVisible(value != null);
         }
@@ -328,4 +336,18 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
             this.deleteButton.setEnabled(value != null && value.getId() != null);
         }
     }
+
+	private void showJournalEntriesDialog() {
+		if (this.encuestador != null) {
+			Dialog dialog = new Dialog();
+			dialog.setCloseOnEsc(true);
+			dialog.setCloseOnOutsideClick(true);
+
+			JournalEntryGrid grid = new JournalEntryGrid();
+			grid.setJournalEntries(journalEntryService.findBySurveyor(this.encuestador));
+
+			dialog.add(grid);
+			dialog.open();
+		}
+	}
 }
