@@ -202,7 +202,6 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 		approve.addClickListener(e -> {
 			if (this.expenseReport != null) {
-
 				expenseReportService.approveReport(this.expenseReport);
 				clearForm();
 				refreshGrid();

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.JournalEntry;
-import uy.com.bay.utiles.data.JournalEntryRepository;
+import uy.com.bay.utiles.data.repository.JournalEntryRepository;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.StudyRepository;
