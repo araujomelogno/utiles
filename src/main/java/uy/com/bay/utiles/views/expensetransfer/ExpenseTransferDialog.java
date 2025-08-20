@@ -60,8 +60,9 @@ public class ExpenseTransferDialog extends Dialog {
 
 		double totalAmount = selectedRequests.stream().mapToDouble(er -> er.getAmount() != null ? er.getAmount() : 0)
 				.sum();
+		
 		amount.setValue(totalAmount);
-
+		amount.setReadOnly(true);
 		obs = new TextArea("Observaciones");
 
 		buffer = new MultiFileMemoryBuffer();
