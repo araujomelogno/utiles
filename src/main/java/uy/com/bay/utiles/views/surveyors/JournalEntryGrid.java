@@ -25,7 +25,7 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 		addColumn(JournalEntry::getAmount).setHeader("Amount");
 		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Study");
 		addColumn(JournalEntry::getOperation).setHeader("Operation");
-		addColumn(entry -> "").setHeader("Saldo").setId("saldoColumn");
+		addColumn(entry -> "").setHeader("Saldo").setKey("saldoColumn");
 	}
 
 	public void setJournalEntries(Collection<JournalEntry> items) {
