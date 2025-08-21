@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.repository.JournalEntryRepository;
 
@@ -23,5 +24,9 @@ public class JournalEntryService {
 
 	public List<JournalEntry> findBySurveyor(Surveyor surveyor) {
 		return repository.findAllBySurveyorOrderByDateAsc(surveyor);
+	}
+
+	public List<JournalEntry> findAllByStudy(Study study) {
+		return repository.findAllByStudyOrderByDateAsc(study);
 	}
 }

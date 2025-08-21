@@ -35,6 +35,7 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
+import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
 
 @PageTitle("Proyectos")
@@ -69,6 +70,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final Button cancel = new Button("Cancel");
 	private final Button save = new Button("Save");
 	private Button deleteButton; // Added deleteButton declaration
+	private Button viewMovementsButton;
 
 	private final BeanValidationBinder<Study> binder;
 
@@ -76,11 +78,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private Div editorLayoutDiv; // Added field declaration
 
 	private final StudyService proyectoService;
+	private final JournalEntryService journalEntryService;
 	private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 
-	public ProyectosView(StudyService proyectoService,
+	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
 		this.proyectoService = proyectoService;
+		this.journalEntryService = journalEntryService;
 		this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
@@ -94,6 +98,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		deleteButton = new Button("Borrar");
 		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 		deleteButton.setEnabled(false);
+
+		viewMovementsButton = new Button("Ver movimientos de gastos");
+		viewMovementsButton.setEnabled(false);
 
 		nameFilter = new TextField();
 		nameFilter.setPlaceholder("Nombre...");
@@ -251,6 +258,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 				Notification.show("Failed to update the data. Check again that all values are valid");
 			}
 		});
+
+		viewMovementsButton.addClickListener(e -> {
+			if (this.proyecto != null) {
+				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService);
+				dialog.open();
+			}
+		});
 	}
 
 	@Override
@@ -306,7 +320,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		buttonLayout.setClassName("button-layout");
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		buttonLayout.add(save, deleteButton, cancel);
+		buttonLayout.add(save, deleteButton, cancel, viewMovementsButton);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
@@ -368,6 +382,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		}
 		if (this.deleteButton != null) {
 			this.deleteButton.setEnabled(value != null && value.getId() != null);
+		}
+		if (this.viewMovementsButton != null) {
+			this.viewMovementsButton.setEnabled(value != null && value.getId() != null);
 		}
 	}
 }
