@@ -6,9 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 
-public interface JournalEntryRepository extends JpaRepository<JournalEntry, Long>, JpaSpecificationExecutor<JournalEntry> {
+public interface JournalEntryRepository
+		extends JpaRepository<JournalEntry, Long>, JpaSpecificationExecutor<JournalEntry> {
 
 	List<JournalEntry> findAllBySurveyorOrderByDateAsc(Surveyor surveyor);
+
+	List<JournalEntry> findAllByStudyOrderByDateAsc(Study study);
 }
