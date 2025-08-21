@@ -44,326 +44,330 @@ import uy.com.bay.utiles.services.StudyService;
 @PermitAll
 public class ProyectosView extends Div implements BeforeEnterObserver {
 
-    private final String PROYECTO_ID = "proyectoID";
-    private final String PROYECTO_EDIT_ROUTE_TEMPLATE = "/%s/edit";
+	private final String PROYECTO_ID = "proyectoID";
+	private final String PROYECTO_EDIT_ROUTE_TEMPLATE = "/%s/edit";
 
-    private final Grid<Study> grid = new Grid<>(Study.class, false);
+	private final Grid<Study> grid = new Grid<>(Study.class, false);
 
-    private TextField name;
-    private TextField alchemerId;
-    private TextField doobloId;
-    private TextField odooId;
-    private TextField obs;
-    private TextField casosCompletos;
-    private Checkbox showSurveyor;
-    private TextField totalCost;
-    private TextField debt;
+	private TextField name;
+	private TextField alchemerId;
+	private TextField doobloId;
+	private TextField odooId;
+	private TextField obs;
+	private TextField casosCompletos;
+	private Checkbox showSurveyor;
+	private TextField totalCost;
+	private TextField debt;
 
-    private Button addButton;
-    private TextField nameFilter;
-    private TextField alchemerIdFilter;
-    private TextField doobloIdFilter;
-    private TextField odooIdFilter;
-    private TextField obsFilter;
+	private Button addButton;
+	private TextField nameFilter;
+	private TextField alchemerIdFilter;
+	private TextField doobloIdFilter;
+	private TextField odooIdFilter;
+	private TextField obsFilter;
 
-    private final Button cancel = new Button("Cancel");
-    private final Button save = new Button("Save");
-    private Button deleteButton; // Added deleteButton declaration
+	private final Button cancel = new Button("Cancel");
+	private final Button save = new Button("Save");
+	private Button deleteButton; // Added deleteButton declaration
 
-    private final BeanValidationBinder<Study> binder;
+	private final BeanValidationBinder<Study> binder;
 
-    private Study proyecto;
-    private Div editorLayoutDiv; // Added field declaration
+	private Study proyecto;
+	private Div editorLayoutDiv; // Added field declaration
 
-    private final StudyService proyectoService;
-    private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
+	private final StudyService proyectoService;
+	private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 
-    public ProyectosView(StudyService proyectoService, AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
-        this.proyectoService = proyectoService;
-        this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
-        this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
-        addClassNames("proyectos-view");
+	public ProyectosView(StudyService proyectoService,
+			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
+		this.proyectoService = proyectoService;
+		this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
+		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
+		addClassNames("proyectos-view");
 
-        // Create UI
-        SplitLayout splitLayout = new SplitLayout();
+		// Create UI
+		SplitLayout splitLayout = new SplitLayout();
 
-        addButton = new Button("Agregar Proyecto");
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY); // Optional: Add theme for consistency
+		addButton = new Button("Agregar Proyecto");
+		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY); // Optional: Add theme for consistency
 
-        deleteButton = new Button("Borrar");
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        deleteButton.setEnabled(false);
- 
+		deleteButton = new Button("Borrar");
+		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		deleteButton.setEnabled(false);
 
-        nameFilter = new TextField();
-        nameFilter.setPlaceholder("Nombre...");
-        nameFilter.setClearButtonVisible(true);
-        nameFilter.setWidth("100%");
-        nameFilter.addValueChangeListener(e -> refreshGrid());
+		nameFilter = new TextField();
+		nameFilter.setPlaceholder("Nombre...");
+		nameFilter.setClearButtonVisible(true);
+		nameFilter.setWidth("100%");
+		nameFilter.addValueChangeListener(e -> refreshGrid());
 
-        alchemerIdFilter = new TextField();
-        alchemerIdFilter.setPlaceholder("Alchemer ID...");
-        alchemerIdFilter.setClearButtonVisible(true);
-        alchemerIdFilter.setWidth("100%");
-        alchemerIdFilter.addValueChangeListener(e -> refreshGrid());
+		alchemerIdFilter = new TextField();
+		alchemerIdFilter.setPlaceholder("Alchemer ID...");
+		alchemerIdFilter.setClearButtonVisible(true);
+		alchemerIdFilter.setWidth("100%");
+		alchemerIdFilter.addValueChangeListener(e -> refreshGrid());
 
-        doobloIdFilter = new TextField();
-        doobloIdFilter.setPlaceholder("Dooblo ID...");
-        doobloIdFilter.setClearButtonVisible(true);
-        doobloIdFilter.setWidth("100%");
-        doobloIdFilter.addValueChangeListener(e -> refreshGrid());
+		doobloIdFilter = new TextField();
+		doobloIdFilter.setPlaceholder("Dooblo ID...");
+		doobloIdFilter.setClearButtonVisible(true);
+		doobloIdFilter.setWidth("100%");
+		doobloIdFilter.addValueChangeListener(e -> refreshGrid());
 
-        odooIdFilter = new TextField();
-        odooIdFilter.setPlaceholder("Odoo ID...");
-        odooIdFilter.setClearButtonVisible(true);
-        odooIdFilter.setWidth("100%");
-        odooIdFilter.addValueChangeListener(e -> refreshGrid());
+		odooIdFilter = new TextField();
+		odooIdFilter.setPlaceholder("Odoo ID...");
+		odooIdFilter.setClearButtonVisible(true);
+		odooIdFilter.setWidth("100%");
+		odooIdFilter.addValueChangeListener(e -> refreshGrid());
 
-        obsFilter = new TextField();
-        obsFilter.setPlaceholder("Obs...");
-        obsFilter.setClearButtonVisible(true);
-        obsFilter.setWidth("100%");
-        obsFilter.addValueChangeListener(e -> refreshGrid());
- 
-        setupButtonListeners(); // Call to new method
- 
-        createGridLayout(splitLayout);
-        createEditorLayout(splitLayout);
+		obsFilter = new TextField();
+		obsFilter.setPlaceholder("Obs...");
+		obsFilter.setClearButtonVisible(true);
+		obsFilter.setWidth("100%");
+		obsFilter.addValueChangeListener(e -> refreshGrid());
 
-        add(splitLayout);
+		setupButtonListeners(); // Call to new method
 
-        // Configure Grid
-        grid.addColumn("name").setHeader("Nombre").setAutoWidth(true);
-        grid.addColumn("alchemerId").setHeader("Alchemer ID").setAutoWidth(true);
-        grid.addColumn("doobloId").setHeader("Dooblo ID").setAutoWidth(true);
-        grid.addColumn("odooId").setHeader("Odoo ID").setAutoWidth(true);
-        grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
+		createGridLayout(splitLayout);
+		createEditorLayout(splitLayout);
 
-        grid.setItems(query -> {
-            String nameVal = nameFilter.getValue() != null ? nameFilter.getValue().trim().toLowerCase() : "";
-            String alchemerVal = alchemerIdFilter.getValue() != null ? alchemerIdFilter.getValue().trim().toLowerCase() : "";
-            String doobloVal = doobloIdFilter.getValue() != null ? doobloIdFilter.getValue().trim().toLowerCase() : "";
-            String odooVal = odooIdFilter.getValue() != null ? odooIdFilter.getValue().trim().toLowerCase() : "";
-            String obsVal = obsFilter.getValue() != null ? obsFilter.getValue().trim().toLowerCase() : "";
+		add(splitLayout);
 
-            java.util.stream.Stream<Study> stream = proyectoService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
+		// Configure Grid
+		grid.addColumn("name").setHeader("Nombre").setAutoWidth(true);
+		grid.addColumn("alchemerId").setHeader("Alchemer ID").setAutoWidth(true);
+		grid.addColumn("doobloId").setHeader("Dooblo ID").setAutoWidth(true);
+		grid.addColumn("odooId").setHeader("Odoo ID").setAutoWidth(true);
+		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 
-            if (!nameVal.isEmpty()) {
-                stream = stream.filter(p -> p.getName() != null && p.getName().toLowerCase().contains(nameVal));
-            }
-            if (!alchemerVal.isEmpty()) {
-                stream = stream.filter(p -> p.getAlchemerId() != null && p.getAlchemerId().toLowerCase().contains(alchemerVal));
-            }
-            if (!doobloVal.isEmpty()) {
-                stream = stream.filter(p -> p.getDoobloId() != null && p.getDoobloId().toLowerCase().contains(doobloVal));
-            }
-            if (!odooVal.isEmpty()) {
-                stream = stream.filter(p -> p.getOdooId() != null && p.getOdooId().toLowerCase().contains(odooVal));
-            }
-            if (!obsVal.isEmpty()) {
-                stream = stream.filter(p -> p.getObs() != null && p.getObs().toLowerCase().contains(obsVal));
-            }
-            return stream;
-        });
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+		grid.setItems(query -> {
+			String nameVal = nameFilter.getValue() != null ? nameFilter.getValue().trim().toLowerCase() : "";
+			String alchemerVal = alchemerIdFilter.getValue() != null ? alchemerIdFilter.getValue().trim().toLowerCase()
+					: "";
+			String doobloVal = doobloIdFilter.getValue() != null ? doobloIdFilter.getValue().trim().toLowerCase() : "";
+			String odooVal = odooIdFilter.getValue() != null ? odooIdFilter.getValue().trim().toLowerCase() : "";
+			String obsVal = obsFilter.getValue() != null ? obsFilter.getValue().trim().toLowerCase() : "";
 
-        // when a row is selected or deselected, populate form
-        grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(PROYECTO_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
-            } else {
-                clearForm();
-                UI.getCurrent().navigate(ProyectosView.class);
-            }
-        });
+			java.util.stream.Stream<Study> stream = proyectoService
+					.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
 
-        // Configure Form
-        // binder = new BeanValidationBinder<>(Proyecto.class); // Removed from here
+			if (!nameVal.isEmpty()) {
+				stream = stream.filter(p -> p.getName() != null && p.getName().toLowerCase().contains(nameVal));
+			}
+			if (!alchemerVal.isEmpty()) {
+				stream = stream.filter(
+						p -> p.getAlchemerId() != null && p.getAlchemerId().toLowerCase().contains(alchemerVal));
+			}
+			if (!doobloVal.isEmpty()) {
+				stream = stream
+						.filter(p -> p.getDoobloId() != null && p.getDoobloId().toLowerCase().contains(doobloVal));
+			}
+			if (!odooVal.isEmpty()) {
+				stream = stream.filter(p -> p.getOdooId() != null && p.getOdooId().toLowerCase().contains(odooVal));
+			}
+			if (!obsVal.isEmpty()) {
+				stream = stream.filter(p -> p.getObs() != null && p.getObs().toLowerCase().contains(obsVal));
+			}
+			return stream;
+		});
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
-        // Bind fields. This is where you'd define e.g. validation rules
+		// when a row is selected or deselected, populate form
+		grid.asSingleSelect().addValueChangeListener(event -> {
+			if (event.getValue() != null) {
+				UI.getCurrent().navigate(String.format(PROYECTO_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+			} else {
+				clearForm();
+				UI.getCurrent().navigate(ProyectosView.class);
+			}
+		});
 
-        binder.bindInstanceFields(this);
-    }
+		// Configure Form
+		// binder = new BeanValidationBinder<>(Proyecto.class); // Removed from here
 
-    private void setupButtonListeners() {
-        addButton.addClickListener(e -> {
-            clearForm();
-            this.proyecto = new Study();
-            binder.readBean(this.proyecto);
-            if (this.editorLayoutDiv != null) {
-                 this.editorLayoutDiv.setVisible(true);
-            }
-            if (this.deleteButton != null) {
-                this.deleteButton.setEnabled(false);
-            }
-        });
+		// Bind fields. This is where you'd define e.g. validation rules
 
-        deleteButton.addClickListener(e -> {
-            if (this.proyecto != null && this.proyecto.getId() != null) {
-                ConfirmDialog dialog = new ConfirmDialog();
-                dialog.setHeader("Confirmar Borrado");
-                dialog.setText("¿Estás seguro de que quieres borrar este proyecto? Esta acción no se puede deshacer.");
-                dialog.setCancelable(true);
-                dialog.setConfirmText("Borrar");
-                dialog.setConfirmButtonTheme("error primary");
+		binder.bindInstanceFields(this);
+	}
 
-                dialog.addConfirmListener(event -> {
-                    try {
-                        proyectoService.delete(this.proyecto.getId());
-                        clearForm();
-                        refreshGrid();
-                        Notification.show("Proyecto borrado exitosamente.", 3000, Notification.Position.BOTTOM_START);
-                    } catch (Exception ex) {
-                        Notification.show("Error al borrar el proyecto: " + ex.getMessage(), 5000, Notification.Position.MIDDLE)
-                                .addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                });
-                dialog.open();
-            }
-        });
+	private void setupButtonListeners() {
+		addButton.addClickListener(e -> {
+			clearForm();
+			this.proyecto = new Study();
+			binder.readBean(this.proyecto);
+			if (this.editorLayoutDiv != null) {
+				this.editorLayoutDiv.setVisible(true);
+			}
+			if (this.deleteButton != null) {
+				this.deleteButton.setEnabled(false);
+			}
+		});
 
-        cancel.addClickListener(e -> {
-            clearForm();
-            refreshGrid();
-        });
+		deleteButton.addClickListener(e -> {
+			if (this.proyecto != null && this.proyecto.getId() != null) {
+				ConfirmDialog dialog = new ConfirmDialog();
+				dialog.setHeader("Confirmar Borrado");
+				dialog.setText("¿Estás seguro de que quieres borrar este proyecto? Esta acción no se puede deshacer.");
+				dialog.setCancelable(true);
+				dialog.setConfirmText("Borrar");
+				dialog.setConfirmButtonTheme("error primary");
 
-        save.addClickListener(e -> {
-            try {
-                if (this.proyecto == null) {
-                    this.proyecto = new Study();
-                }
-                binder.writeBean(this.proyecto);
-                proyectoService.save(this.proyecto);
-                clearForm();
-                refreshGrid();
-                Notification.show("Data updated");
-                UI.getCurrent().navigate(ProyectosView.class);
-            } catch (ObjectOptimisticLockingFailureException exception) {
-                Notification n = Notification.show(
-                        "Error updating the data. Somebody else has updated the record while you were making changes.");
-                n.setPosition(Position.MIDDLE);
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } catch (ValidationException validationException) {
-                Notification.show("Failed to update the data. Check again that all values are valid");
-            }
-        });
-    }
+				dialog.addConfirmListener(event -> {
+					try {
+						proyectoService.delete(this.proyecto.getId());
+						clearForm();
+						refreshGrid();
+						Notification.show("Proyecto borrado exitosamente.", 3000, Notification.Position.BOTTOM_START);
+					} catch (Exception ex) {
+						Notification.show("Error al borrar el proyecto: " + ex.getMessage(), 5000,
+								Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+					}
+				});
+				dialog.open();
+			}
+		});
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Long> proyectoId = event.getRouteParameters().get(PROYECTO_ID).map(Long::parseLong);
-        if (proyectoId.isPresent()) {
-            Optional<Study> proyectoFromBackend = proyectoService.get(proyectoId.get());
-            if (proyectoFromBackend.isPresent()) {
-                populateForm(proyectoFromBackend.get());
-            } else {
-                Notification.show(String.format("The requested proyecto was not found, ID = %s", proyectoId.get()),
-                        3000, Notification.Position.BOTTOM_START);
-                // when a row is selected but the data is no longer available,
-                // refresh grid
-                refreshGrid();
-                event.forwardTo(ProyectosView.class);
-            }
-        }
-    }
+		cancel.addClickListener(e -> {
+			clearForm();
+			refreshGrid();
+		});
 
-    private void createEditorLayout(SplitLayout splitLayout) {
-        this.editorLayoutDiv = new Div(); // Changed to use the class field
-        this.editorLayoutDiv.setClassName("editor-layout");
+		save.addClickListener(e -> {
+			try {
+				if (this.proyecto == null) {
+					this.proyecto = new Study();
+				}
+				binder.writeBean(this.proyecto);
+				proyectoService.save(this.proyecto);
+				clearForm();
+				refreshGrid();
+				Notification.show("Data updated");
+				UI.getCurrent().navigate(ProyectosView.class);
+			} catch (ObjectOptimisticLockingFailureException exception) {
+				Notification n = Notification.show(
+						"Error updating the data. Somebody else has updated the record while you were making changes.");
+				n.setPosition(Position.MIDDLE);
+				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} catch (ValidationException validationException) {
+				Notification.show("Failed to update the data. Check again that all values are valid");
+			}
+		});
+	}
 
-        Div editorDiv = new Div();
-        editorDiv.setClassName("editor");
-        editorLayoutDiv.add(editorDiv);
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		Optional<Long> proyectoId = event.getRouteParameters().get(PROYECTO_ID).map(Long::parseLong);
+		if (proyectoId.isPresent()) {
+			Optional<Study> proyectoFromBackend = proyectoService.get(proyectoId.get());
+			if (proyectoFromBackend.isPresent()) {
+				populateForm(proyectoFromBackend.get());
+			} else {
+				Notification.show(String.format("The requested proyecto was not found, ID = %s", proyectoId.get()),
+						3000, Notification.Position.BOTTOM_START);
+				// when a row is selected but the data is no longer available,
+				// refresh grid
+				refreshGrid();
+				event.forwardTo(ProyectosView.class);
+			}
+		}
+	}
 
-        FormLayout formLayout = new FormLayout();
-        name = new TextField("Name");
-        alchemerId = new TextField("Alchemer Id");
-        doobloId = new TextField("Dooblo Id");
-        odooId = new TextField("Odoo Id");
-        obs = new TextField("Obs");
-        casosCompletos = new TextField("Casos completos");
-        casosCompletos.setReadOnly(true);
-        showSurveyor = new Checkbox("Mostrar encuestador");
-        totalCost = new TextField("Costo total");
-        totalCost.setReadOnly(true);
-        debt = new TextField("Deuda");
-        debt.setReadOnly(true);
-        formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalCost, debt);
+	private void createEditorLayout(SplitLayout splitLayout) {
+		this.editorLayoutDiv = new Div(); // Changed to use the class field
+		this.editorLayoutDiv.setClassName("editor-layout");
 
-        editorDiv.add(formLayout);
-        createButtonLayout(this.editorLayoutDiv);
+		Div editorDiv = new Div();
+		editorDiv.setClassName("editor");
+		editorLayoutDiv.add(editorDiv);
 
-        splitLayout.addToSecondary(this.editorLayoutDiv);
-        this.editorLayoutDiv.setVisible(false); // Set initial visibility
-    }
+		FormLayout formLayout = new FormLayout();
+		name = new TextField("Name");
+		alchemerId = new TextField("Alchemer Id");
+		doobloId = new TextField("Dooblo Id");
+		odooId = new TextField("Odoo Id");
+		obs = new TextField("Obs");
+		casosCompletos = new TextField("Casos completos");
+		casosCompletos.setReadOnly(true);
+		showSurveyor = new Checkbox("Mostrar encuestador");
+		totalCost = new TextField("Total de gastos");
+		totalCost.setReadOnly(true);
+		debt = new TextField("Deuda de gastos");
+		debt.setReadOnly(true);
+		formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalCost, debt);
 
-    private void createButtonLayout(Div editorLayoutDiv) {
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setClassName("button-layout");
-        cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		editorDiv.add(formLayout);
+		createButtonLayout(this.editorLayoutDiv);
+
+		splitLayout.addToSecondary(this.editorLayoutDiv);
+		this.editorLayoutDiv.setVisible(false); // Set initial visibility
+	}
+
+	private void createButtonLayout(Div editorLayoutDiv) {
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setClassName("button-layout");
+		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		buttonLayout.add(save, deleteButton, cancel);
-        editorLayoutDiv.add(buttonLayout);
-    }
+		editorLayoutDiv.add(buttonLayout);
+	}
 
-    private void createGridLayout(SplitLayout splitLayout) {
-        Div wrapper = new Div();
-        wrapper.setClassName("grid-wrapper");
-        wrapper.setWidthFull(); // Ensure wrapper takes full width
+	private void createGridLayout(SplitLayout splitLayout) {
+		Div wrapper = new Div();
+		wrapper.setClassName("grid-wrapper");
+		wrapper.setWidthFull(); // Ensure wrapper takes full width
 
-        // Title Layout
-        H2 title = new H2("Proyectos");
-        HorizontalLayout titleLayout = new HorizontalLayout(title, addButton);
-        titleLayout.setWidthFull();
-        titleLayout.setAlignItems(Alignment.BASELINE); // Align items nicely
-        titleLayout.setFlexGrow(1, title); // Title takes available space
+		// Title Layout
+		H2 title = new H2("Proyectos");
+		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton);
+		titleLayout.setWidthFull();
+		titleLayout.setAlignItems(Alignment.BASELINE); // Align items nicely
+		titleLayout.setFlexGrow(1, title); // Title takes available space
 
-        // Filter Layout
-        HorizontalLayout filterLayout = new HorizontalLayout();
-        filterLayout.setWidthFull();
-        filterLayout.add(nameFilter, alchemerIdFilter, doobloIdFilter, odooIdFilter, obsFilter);
+		// Filter Layout
+		HorizontalLayout filterLayout = new HorizontalLayout();
+		filterLayout.setWidthFull();
+		filterLayout.add(nameFilter, alchemerIdFilter, doobloIdFilter, odooIdFilter, obsFilter);
 
-        wrapper.add(titleLayout);
-        wrapper.add(filterLayout);
-        wrapper.add(grid);
-        splitLayout.addToPrimary(wrapper);
-    }
+		wrapper.add(titleLayout);
+		wrapper.add(filterLayout);
+		wrapper.add(grid);
+		splitLayout.addToPrimary(wrapper);
+	}
 
-    private void refreshGrid() {
-        grid.select(null);
-        grid.getDataProvider().refreshAll();
-    }
+	private void refreshGrid() {
+		grid.select(null);
+		grid.getDataProvider().refreshAll();
+	}
 
-    private void clearForm() {
-        populateForm(null);
-    }  
+	private void clearForm() {
+		populateForm(null);
+	}
 
- 
-    private void populateForm(Study value) {
-        this.proyecto = value;
-        binder.readBean(this.proyecto);
-        if (value != null) {
-		totalCost.setValue(String.valueOf(value.getTotalCost()));
-		debt.setValue(String.valueOf(value.getDebt()));
-        } else {
-		totalCost.setValue("");
-		debt.setValue("");
-        }
-        if (value != null && value.getAlchemerId() != null) {
-            try {
-                long count = alchemerSurveyResponseDataRepository.countBySurveyId(Integer.parseInt(value.getAlchemerId()));
-                casosCompletos.setValue(String.valueOf(count));
-            } catch (NumberFormatException e) {
-                casosCompletos.setValue("Invalid Alchemer ID");
-            }
-        } else {
-            casosCompletos.setValue("");
-        }
-        if (this.editorLayoutDiv != null) {
-            this.editorLayoutDiv.setVisible(value != null);
-        }
-        if (this.deleteButton != null) {
-            this.deleteButton.setEnabled(value != null && value.getId() != null);
-        }
-    }
+	private void populateForm(Study value) {
+		this.proyecto = value;
+		binder.readBean(this.proyecto);
+		if (value != null) {
+			totalCost.setValue(String.valueOf(value.getTotalCost()));
+			debt.setValue(String.valueOf(value.getDebt()));
+		} else {
+			totalCost.setValue("");
+			debt.setValue("");
+		}
+		if (value != null && value.getAlchemerId() != null) {
+			try {
+				long count = alchemerSurveyResponseDataRepository
+						.countBySurveyId(Integer.parseInt(value.getAlchemerId()));
+				casosCompletos.setValue(String.valueOf(count));
+			} catch (NumberFormatException e) {
+				casosCompletos.setValue("Invalid Alchemer ID");
+			}
+		} else {
+			casosCompletos.setValue("");
+		}
+		if (this.editorLayoutDiv != null) {
+			this.editorLayoutDiv.setVisible(value != null);
+		}
+		if (this.deleteButton != null) {
+			this.deleteButton.setEnabled(value != null && value.getId() != null);
+		}
+	}
 }

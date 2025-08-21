@@ -128,6 +128,7 @@ public class AlchemerController {
 		optionalProyecto.ifPresent(response::setProyecto);
 
 		response.getData().setSurveyResponse(response);
+		
 		alchemerSurveyResponseRepository.save(response);
 		log.info("Saved new AlchemerSurveyResponse with id: {}", response.getId());
 
