@@ -32,9 +32,13 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.PermitAll;
+import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.SurveyorService;
+
+import java.util.Date;
 
 @PageTitle("Encuestadores")
 @Route("surveyors/:encuestadorID?/:action?(edit)")
@@ -63,6 +67,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 	private final Button save = new Button("Save");
 	private Button deleteButton; // Added deleteButton declaration
 	private final Button viewMovements = new Button("Ver movimientos de gastos");
+	private final Button liquidarDeudas = new Button("Liquidar deudas");
 
 	private final BeanValidationBinder<Surveyor> binder;
 
@@ -283,7 +288,10 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		editorDiv.add(formLayout);
 		viewMovements.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		viewMovements.addClickListener(e -> showJournalEntriesDialog());
-		editorDiv.add(viewMovements);
+		liquidarDeudas.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+		liquidarDeudas.addClickListener(e -> showLiquidationDialog());
+		HorizontalLayout buttons = new HorizontalLayout(viewMovements, liquidarDeudas);
+		editorDiv.add(buttons);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -336,6 +344,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		this.encuestador = value;
 		binder.readBean(this.encuestador);
 		this.viewMovements.setEnabled(value != null && value.getId() != null);
+		this.liquidarDeudas.setEnabled(value != null && value.getId() != null);
 		if (this.editorLayoutDiv != null) {
 			this.editorLayoutDiv.setVisible(value != null);
 		}
@@ -363,5 +372,76 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 			dialog.open();
 		}
+	}
+
+	private void showLiquidationDialog() {
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("Liquidar Deudas");
+
+		TextField amountField = new TextField("Monto de liquidación parcial");
+
+		Button liquidatePartialButton = new Button("Liquidar parcial");
+		Button liquidateTotalButton = new Button("Liquidar Total");
+
+		liquidateTotalButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+		liquidatePartialButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+		liquidateTotalButton.addClickListener(e -> {
+			JournalEntry entry = new JournalEntry();
+			entry.setDetail("Liquidación total de gastos del encuestador");
+			entry.setDate(new Date());
+			entry.setOperation(Operation.DEBITO);
+			entry.setAmount(encuestador.getBalance());
+			entry.setSurveyor(encuestador);
+			journalEntryService.save(entry);
+
+			encuestador.setBalance(0);
+			encuestadorService.save(encuestador);
+
+			Notification.show("Liquidación total realizada con éxito.", 3000, Notification.Position.BOTTOM_START);
+			dialog.close();
+			refreshGrid();
+			populateForm(encuestador);
+		});
+
+		liquidatePartialButton.addClickListener(e -> {
+			try {
+				double amount = Double.parseDouble(amountField.getValue());
+				if (amount <= 0) {
+					Notification.show("El monto debe ser un número positivo.", 3000, Notification.Position.MIDDLE)
+							.addThemeVariants(NotificationVariant.LUMO_ERROR);
+					return;
+				}
+				if (amount > encuestador.getBalance()) {
+					Notification.show("El monto no puede ser mayor al balance del encuestador.", 3000,
+							Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+					return;
+				}
+
+				JournalEntry entry = new JournalEntry();
+				entry.setDetail("Liquidación parcial de gastos del encuestador");
+				entry.setDate(new Date());
+				entry.setOperation(Operation.DEBITO);
+				entry.setAmount(amount);
+				entry.setSurveyor(encuestador);
+				journalEntryService.save(entry);
+
+				encuestador.setBalance(encuestador.getBalance() - amount);
+				encuestadorService.save(encuestador);
+
+				Notification.show("Liquidación parcial realizada con éxito.", 3000, Notification.Position.BOTTOM_START);
+				dialog.close();
+				refreshGrid();
+				populateForm(encuestador);
+			} catch (NumberFormatException ex) {
+				Notification.show("Por favor, ingrese un monto válido.", 3000, Notification.Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			}
+		});
+
+		dialog.add(amountField);
+		dialog.getFooter().add(liquidatePartialButton, liquidateTotalButton);
+
+		dialog.open();
 	}
 }
