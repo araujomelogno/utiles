@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface SurveyorRepository extends JpaRepository<Surveyor, Long>, JpaSpecificationExecutor<Surveyor> {
     Optional<Surveyor> findBySurveyToGoId(String surveyToGoId);
+    Optional<Surveyor> findByFirstName(String firstName);
 }
