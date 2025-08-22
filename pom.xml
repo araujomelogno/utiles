@@ -158,32 +158,36 @@
     <finalName>utiles</finalName>
     <plugins>
 
-<plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-resources-plugin</artifactId>
-  <executions>
-    <execution>
-      <id>copy-vaadin-theme</id>
-      <phase>process-resources</phase>
-      <goals>
-        <goal>copy-resources</goal>
-      </goals>
-      <configuration>
-        <outputDirectory>${project.build.outputDirectory}/META-INF/resources/frontend/themes</outputDirectory>
-        <resources>
-          <resource>
-            <directory>src/main/webaap/META-INF/themes</directory>
-            <filtering>false</filtering>
-          </resource>
-        </resources>
-      </configuration>
-    </execution>
-  </executions>
-</plugin>
-      <!-- Spring Boot plugin deshabilitado para WAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-vaadin-theme</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/META-INF/resources/frontend/themes</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/webaap/META-INF/themes</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Spring Boot plugin -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <jvmArguments>--patch-module java.xml=${xmlrpc.jars.path}</jvmArguments>
+        </configuration>
         <executions>
           <execution>
             <id>repackage</id>
@@ -214,7 +218,7 @@
         </configuration>
       </plugin>
 
-      <!-- Copiar dependencias a carpeta lib/ -->
+      <!-- Copiar dependencias y preparar classpath para patch-module -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -231,9 +235,22 @@
               <includeScope>runtime</includeScope>
             </configuration>
           </execution>
+          <execution>
+            <id>build-classpath-for-patch-module</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>build-classpath</goal>
+            </goals>
+            <configuration>
+              <includeArtifactIds>xmlrpc-client,xmlrpc-common</includeArtifactIds>
+              <outputProperty>xmlrpc.jars.path</outputProperty>
+              <pathSeparator>:</pathSeparator>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
+      <!-- Compiler plugin con patch-module portable -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -241,8 +258,17 @@
         <configuration>
           <compilerArgs>
             <arg>--patch-module</arg>
-            <arg>java.xml=${settings.localRepository}/org/apache/xmlrpc/xmlrpc-client/3.1.3/xmlrpc-client-3.1.3.jar:${settings.localRepository}/org/apache/xmlrpc/xmlrpc-common/3.1.3/xmlrpc-common-3.1.3.jar</arg>
+            <arg>java.xml=${xmlrpc.jars.path}</arg>
           </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- Surefire plugin para tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>--patch-module java.xml=${xmlrpc.jars.path}</argLine>
         </configuration>
       </plugin>
 

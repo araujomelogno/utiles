@@ -6,9 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+ 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
