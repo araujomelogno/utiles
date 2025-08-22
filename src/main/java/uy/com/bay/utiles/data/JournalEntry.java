@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 
 @Entity
 public class JournalEntry extends AbstractEntity {
@@ -23,6 +24,14 @@ public class JournalEntry extends AbstractEntity {
 	@ManyToOne
     @JoinColumn(name = "study_id")
 	private Study study;
+	@Enumerated(EnumType.STRING)
+	private Source source;
+	@OneToOne
+	@JoinColumn(name = "transfer_id")
+	private ExpenseTransfer transfer;
+	@OneToOne
+	@JoinColumn(name = "expense_report_id")
+	private ExpenseReport expenseReport;
 
 	public String getDetail() {
 		return detail;
@@ -78,6 +87,30 @@ public class JournalEntry extends AbstractEntity {
 
 	public void setStudy(Study study) {
 		this.study = study;
+	}
+
+	public Source getSource() {
+		return source;
+	}
+
+	public void setSource(Source source) {
+		this.source = source;
+	}
+
+	public ExpenseTransfer getTransfer() {
+		return transfer;
+	}
+
+	public void setTransfer(ExpenseTransfer transfer) {
+		this.transfer = transfer;
+	}
+
+	public ExpenseReport getExpenseReport() {
+		return expenseReport;
+	}
+
+	public void setExpenseReport(ExpenseReport expenseReport) {
+		this.expenseReport = expenseReport;
 	}
 
 }
