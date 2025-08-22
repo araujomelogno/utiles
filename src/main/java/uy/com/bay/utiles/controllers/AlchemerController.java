@@ -75,6 +75,7 @@ public class AlchemerController {
 		ObjectMapper mapper = new ObjectMapper();
 
 		AlchemerSurveyResponse response;
+		
 		try {
 			response = mapper.readValue(preview, AlchemerSurveyResponse.class);
 			return this.process(response);
