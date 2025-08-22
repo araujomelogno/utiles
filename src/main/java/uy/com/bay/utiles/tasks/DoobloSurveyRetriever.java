@@ -1,7 +1,15 @@
 package uy.com.bay.utiles.tasks;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,22 +20,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import uy.com.bay.utiles.data.StudyRepository;
-import uy.com.bay.utiles.data.SurveyorRepository;
-import uy.com.bay.utiles.data.DoobloResponse;
-import uy.com.bay.utiles.data.Study;
-import uy.com.bay.utiles.data.Surveyor;
-import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Optional;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import uy.com.bay.utiles.data.DoobloResponse;
+import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.StudyRepository;
+import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.data.SurveyorRepository;
+import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
 
 @Component
 public class DoobloSurveyRetriever {
