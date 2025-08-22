@@ -288,10 +288,11 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		editorDiv.add(formLayout);
 		viewMovements.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		viewMovements.addClickListener(e -> showJournalEntriesDialog());
-		liquidarDeudas.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+		liquidarDeudas.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		liquidarDeudas.addClickListener(e -> showLiquidationDialog());
-		HorizontalLayout buttons = new HorizontalLayout(viewMovements, liquidarDeudas);
-		editorDiv.add(buttons);
+
+		editorDiv.add(viewMovements);
+		editorDiv.add(liquidarDeudas);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -377,6 +378,8 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 	private void showLiquidationDialog() {
 		Dialog dialog = new Dialog();
 		dialog.setHeaderTitle("Liquidar Deudas");
+
+		dialog.setWidth("20%");
 
 		TextField amountField = new TextField("Monto de liquidación parcial");
 
