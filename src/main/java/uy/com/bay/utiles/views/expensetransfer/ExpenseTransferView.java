@@ -30,6 +30,7 @@ import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
+import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
@@ -80,7 +81,7 @@ public class ExpenseTransferView extends VerticalLayout {
 		createGrid();
 
 		add(buttonLayout, grid);
-		
+
 		refreshGrid();
 	}
 
@@ -160,6 +161,8 @@ public class ExpenseTransferView extends VerticalLayout {
 			request.setExpenseTransfer(expenseTransfer);
 			expenseRequestService.update(request);
 			JournalEntry journalEntry = new JournalEntry();
+			journalEntry.setSource(Source.TRANSFERENCIA);
+			journalEntry.setTransfer(expenseTransfer);
 			journalEntry.setDetail(
 					"transferencia realizada a encuestador por concepto " + request.getConcept().getDescription());
 			journalEntry.setDate(new Date());

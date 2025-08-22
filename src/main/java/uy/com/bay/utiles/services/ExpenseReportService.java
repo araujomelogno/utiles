@@ -15,6 +15,7 @@ import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.repository.JournalEntryRepository;
 import uy.com.bay.utiles.data.Operation;
+import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.StudyRepository;
 import uy.com.bay.utiles.data.Surveyor;
@@ -82,6 +83,9 @@ public class ExpenseReportService {
 		journalEntry.setAmount(report.getAmount());
 		journalEntry.setSurveyor(report.getSurveyor());
 		journalEntry.setStudy(report.getStudy());
+		journalEntry.setSource(Source.RENDICION);
+
+		journalEntry.setExpenseReport(report);
 		journalEntryRepository.save(journalEntry);
 		Surveyor surveyor = report.getSurveyor();
 		surveyor.setBalance(surveyor.getBalance() - report.getAmount());

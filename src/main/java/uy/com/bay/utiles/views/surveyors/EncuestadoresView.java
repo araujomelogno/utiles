@@ -34,6 +34,7 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
+import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.SurveyorService;
@@ -396,6 +397,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 			entry.setOperation(Operation.DEBITO);
 			entry.setAmount(encuestador.getBalance());
 			entry.setSurveyor(encuestador);
+			entry.setSource(Source.LIQUIDACION);
 			journalEntryService.save(entry);
 
 			encuestador.setBalance(0);
