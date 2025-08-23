@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 public class ExpenseReportFile extends AbstractEntity {
 
     private String name;
+    private String type;
     private Date created;
 
     @Lob
@@ -27,6 +28,14 @@ public class ExpenseReportFile extends AbstractEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Date getCreated() {

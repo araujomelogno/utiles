@@ -53,4 +53,8 @@ public class SurveyorService {
     public Optional<Surveyor> findBySurveyToGoId(String surveyToGoId) {
         return repository.findBySurveyToGoId(surveyToGoId);
     }
+
+    public Optional<Surveyor> findByName(String name) {
+        return repository.findByName(name);
+    }
 }

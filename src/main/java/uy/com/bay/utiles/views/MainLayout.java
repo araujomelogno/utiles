@@ -123,6 +123,14 @@ public class MainLayout extends AppLayout {
 
 		gastosItem.addItem(rendicionesItem);
 
+		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
+		surveyorPortalItem.setPrefixComponent(new Icon("vaadin", "user-card"));
+		SideNavItem rendirGastoItem = new SideNavItem("Rendir gasto", "surveyor-expense-report");
+		rendirGastoItem.setPrefixComponent(new Icon("vaadin", "file-add"));
+		surveyorPortalItem.addItem(rendirGastoItem);
+		nav.addItem(surveyorPortalItem);
+
+
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
 		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
