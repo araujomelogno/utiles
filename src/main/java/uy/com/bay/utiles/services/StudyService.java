@@ -50,4 +50,8 @@ public class StudyService {
     public List<Study> findAll() {
         return repository.findAll();
     }
+
+    public List<Study> findAllByShowSurveyor(boolean showSurveyor) {
+        return repository.findAllByShowSurveyor(showSurveyor);
+    }
 }

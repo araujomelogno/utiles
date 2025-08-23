@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface StudyRepository extends JpaRepository<Study, Long>, JpaSpecificationExecutor<Study> {
@@ -12,5 +13,7 @@ public interface StudyRepository extends JpaRepository<Study, Long>, JpaSpecific
     Optional<Study> findByAlchemerId(String alchemerId);
 
     Optional<Study> findByDoobloId(String doobloId);
+
+    List<Study> findAllByShowSurveyor(boolean showSurveyor);
 
 }
