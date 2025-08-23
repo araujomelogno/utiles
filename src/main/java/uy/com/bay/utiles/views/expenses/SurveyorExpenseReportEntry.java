@@ -5,7 +5,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadinf.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -14,6 +14,7 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.Route;
+import elemental.json.Json;
 import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportFile;
@@ -136,6 +137,6 @@ public class SurveyorExpenseReportEntry extends Div {
         uploadedFiles.clear();
         // To properly clear the upload component, we need to replace it with a new one.
         // This is a simplified approach.
-        comprobantes.getElement().setPropertyJson("files", "[]");
+        comprobantes.getElement().setPropertyJson("files", Json.createArray());
     }
 }
