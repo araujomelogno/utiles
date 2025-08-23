@@ -30,6 +30,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.Upload;
@@ -80,7 +81,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
 	private Upload files;
-	private TextField obs;
+	private TextArea obs;
 
 	private final Button cancel = new Button("Cancelar");
 	private final Button save = new Button("Guardar");
@@ -249,7 +250,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ExpenseRequestType::getName);
-		obs = new TextField("Obs");
+		obs = new TextArea("Observaciones");
 
 		files = new Upload();
 		// files.setMaxFileSize(20480);

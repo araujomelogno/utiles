@@ -309,6 +309,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalCost, debt);
 
 		editorDiv.add(formLayout);
+		editorDiv.add(viewMovementsButton);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -320,7 +321,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		buttonLayout.setClassName("button-layout");
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		buttonLayout.add(save, deleteButton, cancel, viewMovementsButton);
+		buttonLayout.add(save, deleteButton, cancel);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
