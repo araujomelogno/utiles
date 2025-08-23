@@ -35,6 +35,16 @@ public class ExpenseReport extends AbstractEntity {
 	@OneToMany(mappedBy = "expenseReport", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	private List<ExpenseReportFile> files = new ArrayList<>();
 
+	private String obs;
+
+	public String getObs() {
+		return obs;
+	}
+
+	public void setObs(String obs) {
+		this.obs = obs;
+	}
+
 	public Date getApprovalDate() {
 		return approvalDate;
 	}
