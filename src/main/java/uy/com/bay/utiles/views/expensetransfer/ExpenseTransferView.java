@@ -151,7 +151,7 @@ public class ExpenseTransferView extends VerticalLayout {
 
 		expenseTransfer.setTransferDate(now);
 		expenseTransfer.setExpenseRequests(new ArrayList<>());
-		expenseTransfer = expenseTransferService.save(expenseTransfer);
+		final ExpenseTransfer savedExpenseTransfer = expenseTransferService.save(expenseTransfer);
 
 		double totalAmount = 0;
 		Surveyor surveyor = null;
@@ -160,7 +160,7 @@ public class ExpenseTransferView extends VerticalLayout {
 			expenseRequestService.get(request.getId()).ifPresent(requestToUpdate -> {
 				requestToUpdate.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
 				requestToUpdate.setTransferDate(now);
-				requestToUpdate.setExpenseTransfer(expenseTransfer);
+				requestToUpdate.setExpenseTransfer(savedExpenseTransfer);
 				expenseRequestService.update(requestToUpdate);
 
 				Surveyor requestSurveyor = requestToUpdate.getSurveyor();
@@ -192,7 +192,7 @@ public class ExpenseTransferView extends VerticalLayout {
 		if (!requestsToUpdate.isEmpty()) {
 			JournalEntry journalEntry = new JournalEntry();
 			journalEntry.setSource(Source.TRANSFERENCIA);
-			journalEntry.setTransfer(expenseTransfer);
+			journalEntry.setTransfer(savedExpenseTransfer);
 			journalEntry.setDetail("transferencia realizada a encuestador por multiples conceptos");
 			journalEntry.setDate(new Date());
 			journalEntry.setOperation(Operation.CREDITO);
