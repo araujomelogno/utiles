@@ -11,8 +11,6 @@ import org.springframework.data.jpa.domain.Specification;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridMultiSelectionModel;
-import com.vaadin.flow.component.grid.GridMultiSelectionModel.SelectAllCheckboxVisibility;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.notification.Notification;
@@ -155,29 +153,41 @@ public class ExpenseTransferView extends VerticalLayout {
 		expenseTransfer.setExpenseRequests(new ArrayList<>());
 		expenseTransfer = expenseTransferService.save(expenseTransfer);
 
+		double totalAmount = 0;
+		Surveyor surveyor = null;
+		Study study = null;
 		for (ExpenseRequest request : requestsToUpdate) {
 			request.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
 			request.setTransferDate(now);
 			request.setExpenseTransfer(expenseTransfer);
 			expenseRequestService.update(request);
+			totalAmount += request.getAmount();
+			if (surveyor == null) {
+				surveyor = request.getSurveyor();
+			}
+			if (study == null) {
+				study = request.getStudy();
+			}
+			Surveyor requestSurveyor = request.getSurveyor();
+			requestSurveyor.setBalance(requestSurveyor.getBalance() + request.getAmount());
+			surveyorService.save(requestSurveyor);
+			Study requestStudy = request.getStudy();
+			requestStudy.setDebt(requestStudy.getDebt() + request.getAmount());
+			requestStudy.setTotalCost(requestStudy.getTotalCost() + request.getAmount());
+			studyService.save(requestStudy);
+		}
+
+		if (!requestsToUpdate.isEmpty()) {
 			JournalEntry journalEntry = new JournalEntry();
 			journalEntry.setSource(Source.TRANSFERENCIA);
 			journalEntry.setTransfer(expenseTransfer);
-			journalEntry.setDetail(
-					"transferencia realizada a encuestador por concepto " + request.getConcept().getDescription());
+			journalEntry.setDetail("transferencia realizada a encuestador por multiples conceptos");
 			journalEntry.setDate(new Date());
 			journalEntry.setOperation(Operation.CREDITO);
-			journalEntry.setAmount(request.getAmount());
-			journalEntry.setSurveyor(request.getSurveyor());
-			journalEntry.setStudy(request.getStudy());
+			journalEntry.setAmount(totalAmount);
+			journalEntry.setSurveyor(surveyor);
+			journalEntry.setStudy(study);
 			journalEntryService.save(journalEntry);
-			Surveyor surveyor = request.getSurveyor();
-			surveyor.setBalance(surveyor.getBalance() + request.getAmount());
-			surveyorService.save(surveyor);
-			Study study = request.getStudy();
-			study.setDebt(study.getDebt() + request.getAmount());
-			study.setTotalCost(study.getTotalCost() + request.getAmount());
-			studyService.save(study);
 		}
 
 		refreshGrid();
