@@ -157,10 +157,29 @@ public class ExpenseTransferView extends VerticalLayout {
 		Surveyor surveyor = null;
 		Study study = null;
 		for (ExpenseRequest request : requestsToUpdate) {
-			request.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
-			request.setTransferDate(now);
-			request.setExpenseTransfer(expenseTransfer);
-			expenseRequestService.update(request);
+			expenseRequestService.get(request.getId()).ifPresent(requestToUpdate -> {
+				requestToUpdate.setExpenseStatus(ExpenseStatus.TRANSFERIDO);
+				requestToUpdate.setTransferDate(now);
+				requestToUpdate.setExpenseTransfer(expenseTransfer);
+				expenseRequestService.update(requestToUpdate);
+
+				Surveyor requestSurveyor = requestToUpdate.getSurveyor();
+				if (requestSurveyor != null) {
+					surveyorService.get(requestSurveyor.getId()).ifPresent(s -> {
+						s.setBalance(s.getBalance() + requestToUpdate.getAmount());
+						surveyorService.save(s);
+					});
+				}
+
+				Study requestStudy = requestToUpdate.getStudy();
+				if (requestStudy != null) {
+					studyService.get(requestStudy.getId()).ifPresent(s -> {
+						s.setDebt(s.getDebt() + requestToUpdate.getAmount());
+						s.setTotalCost(s.getTotalCost() + requestToUpdate.getAmount());
+						studyService.save(s);
+					});
+				}
+			});
 			totalAmount += request.getAmount();
 			if (surveyor == null) {
 				surveyor = request.getSurveyor();
@@ -168,13 +187,6 @@ public class ExpenseTransferView extends VerticalLayout {
 			if (study == null) {
 				study = request.getStudy();
 			}
-			Surveyor requestSurveyor = request.getSurveyor();
-			requestSurveyor.setBalance(requestSurveyor.getBalance() + request.getAmount());
-			surveyorService.save(requestSurveyor);
-			Study requestStudy = request.getStudy();
-			requestStudy.setDebt(requestStudy.getDebt() + request.getAmount());
-			requestStudy.setTotalCost(requestStudy.getTotalCost() + request.getAmount());
-			studyService.save(requestStudy);
 		}
 
 		if (!requestsToUpdate.isEmpty()) {
