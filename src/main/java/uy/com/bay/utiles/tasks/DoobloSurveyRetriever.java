@@ -1,12 +1,10 @@
 package uy.com.bay.utiles.tasks;
 
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
- 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import uy.com.bay.utiles.data.DoobloResponse;
 import uy.com.bay.utiles.data.Study;
@@ -127,13 +124,11 @@ public class DoobloSurveyRetriever {
 
     private void processAndSaveSurveyData(String xmlData, String surveyId, String interviewId) {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(new InputSource(new StringReader(xmlData)));
-            doc.getDocumentElement().normalize();
+            XmlMapper xmlMapper = new XmlMapper();
+            JsonNode rootNode = xmlMapper.readTree(xmlData.getBytes(StandardCharsets.UTF_8));
 
-            String surveyorName = doc.getElementsByTagName("SurveyorName").item(0).getTextContent();
-            String dateStr = doc.getElementsByTagName("Date").item(0).getTextContent();
+            String surveyorName = rootNode.path("SurveyorName").asText();
+            String dateStr = rootNode.path("Date").asText();
             Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateStr);
 
             Optional<Surveyor> surveyorOpt = surveyorRepository.findByFirstName(surveyorName);
