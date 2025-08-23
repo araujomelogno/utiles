@@ -36,6 +36,8 @@ import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.services.ExpenseReportFileService;
+import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.SurveyorService;
 
@@ -77,10 +79,16 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 	private final SurveyorService encuestadorService;
 	private final JournalEntryService journalEntryService;
+	private final ExpenseTransferFileService expenseTransferFileService;
+	private final ExpenseReportFileService expenseReportFileService;
 
-	public EncuestadoresView(SurveyorService encuestadorService, JournalEntryService journalEntryService) {
+	public EncuestadoresView(SurveyorService encuestadorService, JournalEntryService journalEntryService,
+			ExpenseTransferFileService expenseTransferFileService,
+			ExpenseReportFileService expenseReportFileService) {
 		this.encuestadorService = encuestadorService;
 		this.journalEntryService = journalEntryService;
+		this.expenseTransferFileService = expenseTransferFileService;
+		this.expenseReportFileService = expenseReportFileService;
 		this.binder = new BeanValidationBinder<>(Surveyor.class); // Moved initialization here
 		addClassNames("encuestadores-view");
 
@@ -363,7 +371,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 			dialog.setWidth("80%");
 			dialog.setHeaderTitle("Movimientos de Gasto");
 
-			JournalEntryGrid grid = new JournalEntryGrid();
+			JournalEntryGrid grid = new JournalEntryGrid(expenseTransferFileService, expenseReportFileService);
 			grid.setJournalEntries(journalEntryService.findBySurveyor(this.encuestador));
 
 			dialog.add(grid);
