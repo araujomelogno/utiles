@@ -77,7 +77,11 @@ public class ExpenseReportService {
 		report.setApprovalDate(new Date());
 		repository.save(report);
 		JournalEntry journalEntry = new JournalEntry();
-		journalEntry.setDetail("rendicion aprobada por el concepto " + report.getConcept().getName());
+		if (report.getConcept() != null) {
+			journalEntry.setDetail("rendicion aprobada por el concepto " + report.getConcept().getName());
+		} else {
+			journalEntry.setDetail("rendicion aprobada sin concepto");
+		}
 		journalEntry.setDate(new Date());
 		journalEntry.setOperation(Operation.DEBITO);
 		journalEntry.setAmount(report.getAmount());
