@@ -80,6 +80,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
 	private Upload files;
+	private TextField obs;
 
 	private final Button cancel = new Button("Cancelar");
 	private final Button save = new Button("Guardar");
@@ -248,6 +249,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ExpenseRequestType::getName);
+		obs = new TextField("Obs");
 
 		files = new Upload();
 		// files.setMaxFileSize(20480);
@@ -282,7 +284,8 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 			comprobantes.setEnabled(true);
 		});
 
-		formLayout.add(study, surveyor, date, amount, concept, new Label("Subir comprobantes"), files, comprobantes);
+		formLayout.add(study, surveyor, date, amount, concept, obs, new Label("Subir comprobantes"), files,
+				comprobantes);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
