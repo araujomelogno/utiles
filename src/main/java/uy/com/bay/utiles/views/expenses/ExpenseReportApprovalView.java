@@ -60,9 +60,12 @@ public class ExpenseReportApprovalView extends Div {
 
 		Grid.Column<ExpenseReport> dateColumn = grid.addColumn(ExpenseReport::getDate).setHeader("Date")
 				.setSortable(true);
-		Grid.Column<ExpenseReport> surveyorColumn = grid
-				.addColumn(report -> report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName())
-				.setHeader("Surveyor").setSortable(true);
+		Grid.Column<ExpenseReport> surveyorColumn = grid.addColumn(report -> {
+			if (report.getSurveyor() == null) {
+				return "";
+			}
+			return report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
+		}).setHeader("Surveyor").setSortable(true);
 		Grid.Column<ExpenseReport> studyColumn = grid.addColumn(report -> report.getStudy().getName())
 				.setHeader("Study").setSortable(true);
 		Grid.Column<ExpenseReport> amountColumn = grid.addColumn(ExpenseReport::getAmount).setHeader("Amount")
@@ -93,9 +96,13 @@ public class ExpenseReportApprovalView extends Div {
 		// Surveyor filter
 		TextField surveyorFilter = new TextField();
 		surveyorFilter.setPlaceholder("Filter by surveyor...");
-		surveyorFilter.addValueChangeListener(event -> dataProvider
-				.addFilter(report -> (report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName())
-						.toLowerCase().contains(event.getValue().toLowerCase())));
+		surveyorFilter.addValueChangeListener(event -> dataProvider.addFilter(report -> {
+			if (report.getSurveyor() == null) {
+				return event.getValue().isEmpty();
+			}
+			String fullName = report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
+			return fullName.toLowerCase().contains(event.getValue().toLowerCase());
+		}));
 		filterRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
 		// Study filter
