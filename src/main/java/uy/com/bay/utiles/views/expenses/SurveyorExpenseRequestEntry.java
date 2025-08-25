@@ -28,80 +28,80 @@ import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.MainLayout;
 
 @Route(value = "surveyor-expense-request", layout = MainLayout.class)
-@RolesAllowed({"ADMIN", "USER", "ENCUESTADOR"})
+@RolesAllowed({ "ADMIN", "ENCUESTADOR" })
 public class SurveyorExpenseRequestEntry extends Div {
 
-    private ComboBox<Study> study;
-    private NumberField amount;
-    private ComboBox<ExpenseRequestType> concept;
-    private TextArea obs;
-    private BeanValidationBinder<ExpenseRequest> binder;
+	private ComboBox<Study> study;
+	private NumberField amount;
+	private ComboBox<ExpenseRequestType> concept;
+	private TextArea obs;
+	private BeanValidationBinder<ExpenseRequest> binder;
 
-    private final StudyService studyService;
-    private final ExpenseRequestTypeService expenseRequestTypeService;
-    private final ExpenseRequestService expenseRequestService;
-    private final AuthenticatedUser authenticatedUser;
-    private final SurveyorService surveyorService;
+	private final StudyService studyService;
+	private final ExpenseRequestTypeService expenseRequestTypeService;
+	private final ExpenseRequestService expenseRequestService;
+	private final AuthenticatedUser authenticatedUser;
+	private final SurveyorService surveyorService;
 
-    public SurveyorExpenseRequestEntry(StudyService studyService, ExpenseRequestTypeService expenseRequestTypeService,
-                                       ExpenseRequestService expenseRequestService, AuthenticatedUser authenticatedUser,
-                                       SurveyorService surveyorService) {
-        this.studyService = studyService;
-        this.expenseRequestTypeService = expenseRequestTypeService;
-        this.expenseRequestService = expenseRequestService;
-        this.authenticatedUser = authenticatedUser;
-        this.surveyorService = surveyorService;
+	public SurveyorExpenseRequestEntry(StudyService studyService, ExpenseRequestTypeService expenseRequestTypeService,
+			ExpenseRequestService expenseRequestService, AuthenticatedUser authenticatedUser,
+			SurveyorService surveyorService) {
+		this.studyService = studyService;
+		this.expenseRequestTypeService = expenseRequestTypeService;
+		this.expenseRequestService = expenseRequestService;
+		this.authenticatedUser = authenticatedUser;
+		this.surveyorService = surveyorService;
 
-        addClassName("surveyor-expense-request-entry-view");
+		addClassName("surveyor-expense-request-entry-view");
 
-        FormLayout formLayout = new FormLayout();
-        study = new ComboBox<>("Estudio");
-        study.setItems(studyService.findAllByShowSurveyor(true));
-        study.setItemLabelGenerator(Study::getName);
-        study.setRequired(true);
+		FormLayout formLayout = new FormLayout();
+		study = new ComboBox<>("Estudio");
+		study.setItems(studyService.findAllByShowSurveyor(true));
+		study.setItemLabelGenerator(Study::getName);
+		study.setRequired(true);
 
-        amount = new NumberField("Monto");
-        amount.setRequiredIndicatorVisible(true);
+		amount = new NumberField("Monto");
+		amount.setRequiredIndicatorVisible(true);
 
-        concept = new ComboBox<>("Concepto");
-        concept.setItems(expenseRequestTypeService.findAll());
-        concept.setItemLabelGenerator(ExpenseRequestType::getName);
-        concept.setRequired(true);
+		concept = new ComboBox<>("Concepto");
+		concept.setItems(expenseRequestTypeService.findAll());
+		concept.setItemLabelGenerator(ExpenseRequestType::getName);
+		concept.setRequired(true);
 
-        obs = new TextArea("Observaciones");
+		obs = new TextArea("Observaciones");
 
-        Button saveButton = new Button("Guardar");
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		Button saveButton = new Button("Guardar");
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        formLayout.add(study, amount, concept, obs, saveButton);
-        add(formLayout);
+		formLayout.add(study, amount, concept, obs, saveButton);
+		add(formLayout);
 
-        binder = new BeanValidationBinder<>(ExpenseRequest.class);
-        binder.bindInstanceFields(this);
+		binder = new BeanValidationBinder<>(ExpenseRequest.class);
+		binder.bindInstanceFields(this);
 
-        saveButton.addClickListener(event -> {
-            try {
-                ExpenseRequest expenseRequest = new ExpenseRequest();
-                binder.writeBean(expenseRequest);
-                authenticatedUser.get().ifPresent(user -> {
-                    surveyorService.findByName(user.getUsername()).ifPresent(expenseRequest::setSurveyor);
-                });
-                expenseRequest.setRequestDate(new Date());
-                expenseRequest.setExpenseStatus(ExpenseStatus.INGRESADO);
+		saveButton.addClickListener(event -> {
+			try {
+				ExpenseRequest expenseRequest = new ExpenseRequest();
+				binder.writeBean(expenseRequest);
+				authenticatedUser.get().ifPresent(user -> {
+					surveyorService.findByName(user.getUsername()).ifPresent(expenseRequest::setSurveyor);
+				});
+				expenseRequest.setRequestDate(new Date());
+				expenseRequest.setExpenseStatus(ExpenseStatus.INGRESADO);
 
-                expenseRequestService.update(expenseRequest);
+				expenseRequestService.update(expenseRequest);
 
-                Notification.show("Solicitud enviada exitosamente", 3000, Notification.Position.BOTTOM_START);
-                clearForm();
-            } catch (ValidationException e) {
-                Notification.show("Por favor, complete todos los campos requeridos.", 3000, Notification.Position.BOTTOM_START)
-                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-        });
-    }
+				Notification.show("Solicitud enviada exitosamente", 3000, Notification.Position.BOTTOM_START);
+				clearForm();
+			} catch (ValidationException e) {
+				Notification.show("Por favor, complete todos los campos requeridos.", 3000,
+						Notification.Position.BOTTOM_START).addThemeVariants(NotificationVariant.LUMO_ERROR);
+			}
+		});
+	}
 
-    private void clearForm() {
-        binder.readBean(new ExpenseRequest());
-        obs.clear();
-    }
+	private void clearForm() {
+		binder.readBean(new ExpenseRequest());
+		obs.clear();
+	}
 }
