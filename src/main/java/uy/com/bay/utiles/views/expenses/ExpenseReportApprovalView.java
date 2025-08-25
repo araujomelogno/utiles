@@ -19,6 +19,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.services.ExpenseReportService;
@@ -26,7 +27,7 @@ import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Aprobar Rendiciones")
 @Route(value = "expense-reports-approval", layout = MainLayout.class)
-@PermitAll
+@RolesAllowed("GASTOS")
 public class ExpenseReportApprovalView extends Div {
 
 	private final ExpenseReportService expenseReportService;

@@ -32,6 +32,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
@@ -46,7 +47,7 @@ import java.util.Date;
 @PageTitle("Encuestadores")
 @Route("surveyors/:encuestadorID?/:action?(edit)")
 @Menu(order = 1, icon = LineAwesomeIconUrl.USER_ALT_SOLID)
-@PermitAll
+@RolesAllowed("ADMIN")
 public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 	private final String ENCUESTADOR_ID = "encuestadorID";

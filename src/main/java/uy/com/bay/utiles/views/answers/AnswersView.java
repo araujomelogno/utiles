@@ -12,13 +12,14 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.AlchemerAnswer;
 import uy.com.bay.utiles.services.AlchemerAnswerService;
 import uy.com.bay.utiles.views.MainLayout;
-
+//ALCHEMER
 @PageTitle("Respuestas Alchemer")
 @Route(value = "answers", layout = MainLayout.class)
-@PermitAll
+@RolesAllowed("ALCHEMER")
 public class AnswersView extends Div {
 
 	private Grid<AlchemerAnswer> grid;

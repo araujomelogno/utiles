@@ -33,6 +33,7 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.services.JournalEntryService;
@@ -42,7 +43,7 @@ import uy.com.bay.utiles.services.StudyService;
 @Route("/:proyectoID?/:action?(edit)")
 @Menu(order = 0, icon = LineAwesomeIconUrl.BRIEFCASE_SOLID)
 @RouteAlias("")
-@PermitAll
+@RolesAllowed("ADMIN")
 public class ProyectosView extends Div implements BeforeEnterObserver {
 
 	private final String PROYECTO_ID = "proyectoID";

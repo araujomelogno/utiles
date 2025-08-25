@@ -29,6 +29,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
@@ -38,7 +39,7 @@ import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 
 @Route(value = "expenses-approval")
 @PageTitle("Aprobar Solicitudes de Gasto")
-@PermitAll
+@RolesAllowed("GASTOS")
 public class ExpensesAprovalView extends Div {
 
 	private final ExpenseRequestService expenseRequestService;

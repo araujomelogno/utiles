@@ -23,6 +23,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.ExpenseTransfer;
@@ -41,7 +42,7 @@ import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Transferir Solicitudes")
 @Route(value = "expense-transfer", layout = MainLayout.class)
-@PermitAll
+@RolesAllowed("GASTOS")
 public class ExpenseTransferView extends VerticalLayout {
 
 	private final ExpenseRequestService expenseRequestService;

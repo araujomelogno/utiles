@@ -29,12 +29,13 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
-
+//GASTOS
 @PageTitle("Conceptos")
 @Route("conceptos/:expenseRequestTypeID?/:action?(edit)")
-@PermitAll
+@RolesAllowed("GASTOS")
 public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
 
     private final String EXPENSEREQUESTTYPE_ID = "expenseRequestTypeID";

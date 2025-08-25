@@ -41,6 +41,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
@@ -57,7 +58,7 @@ import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
 @PageTitle("Solicitudes de Gastos")
 @Route("expenses/:expenseID?/:action?(edit)")
-@PermitAll
+@RolesAllowed("GASTOS")
 public class ExpensesView extends Div implements BeforeEnterObserver {
 
 	private final String EXPENSE_ID = "expenseID";

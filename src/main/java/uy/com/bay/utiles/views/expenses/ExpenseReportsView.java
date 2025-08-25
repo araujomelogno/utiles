@@ -45,6 +45,7 @@ import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportFile;
@@ -60,7 +61,7 @@ import uy.com.bay.utiles.services.SurveyorService;
 
 @PageTitle("Ver Rendiciones")
 @Route("expense-reports/:expenseReportID?/:action?(edit)")
-@PermitAll
+@RolesAllowed("GASTOS")
 public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 	private final String EXPENSE_REPORT_ID = "expenseReportID";

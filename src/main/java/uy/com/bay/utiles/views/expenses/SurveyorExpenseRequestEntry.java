@@ -1,5 +1,7 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.util.Date;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -12,7 +14,8 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.PermitAll;
+
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
@@ -24,10 +27,8 @@ import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.MainLayout;
 
-import java.util.Date;
-
 @Route(value = "surveyor-expense-request", layout = MainLayout.class)
-@PermitAll
+@RolesAllowed({"ADMIN", "USER", "ENCUESTADOR"})
 public class SurveyorExpenseRequestEntry extends Div {
 
     private ComboBox<Study> study;

@@ -30,15 +30,19 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 		this.expenseTransferFileService = expenseTransferFileService;
 		this.expenseReportFileService = expenseReportFileService;
 		setColumns();
+		this.getColumns().forEach(col -> {
+			col.setAutoWidth(true); // Ajusta según contenido
+			col.setFlexGrow(0); // No se expande más allá de lo necesario
+		});
 	}
 
 	private void setColumns() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		addColumn(entry -> sdf.format(entry.getDate())).setHeader("Date");
-		addComponentColumn(this::createDetailLink).setHeader("Detail");
-		addColumn(JournalEntry::getAmount).setHeader("Amount");
-		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Study");
-		addColumn(JournalEntry::getOperation).setHeader("Operation");
+		addColumn(entry -> sdf.format(entry.getDate())).setHeader("Fecha");
+		addComponentColumn(this::createDetailLink).setHeader("Detalle");
+		addColumn(JournalEntry::getAmount).setHeader("Monto");
+		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Estudio");
+		addColumn(JournalEntry::getOperation).setHeader("Movimiento");
 		addColumn(entry -> "").setHeader("Saldo").setKey("saldoColumn");
 	}
 
