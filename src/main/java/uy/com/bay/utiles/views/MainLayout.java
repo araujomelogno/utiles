@@ -30,6 +30,9 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import uy.com.bay.utiles.data.User;
 import uy.com.bay.utiles.security.AuthenticatedUser;
+import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.services.SurveyorService;
+import uy.com.bay.utiles.views.expenses.ReportesDialog;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -43,10 +46,14 @@ public class MainLayout extends AppLayout {
 
 	private AuthenticatedUser authenticatedUser;
 	private AccessAnnotationChecker accessChecker;
+	private final SurveyorService surveyorService;
+	private final StudyService studyService;
 
-	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
+	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, SurveyorService surveyorService, StudyService studyService) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
+		this.surveyorService = surveyorService;
+		this.studyService = studyService;
 
 		setPrimarySection(Section.DRAWER);
 		addDrawerContent();
@@ -122,6 +129,14 @@ public class MainLayout extends AppLayout {
 		rendicionesItem.addItem(aprobarRendicionesItem);
 
 		gastosItem.addItem(rendicionesItem);
+
+		SideNavItem reportesNavItem = new SideNavItem("Reportes");
+		reportesNavItem.setPrefixComponent(new Icon("vaadin", "file-chart"));
+		reportesNavItem.getElement().addEventListener("click", e -> {
+			ReportesDialog dialog = new ReportesDialog(surveyorService, studyService);
+			dialog.open();
+		});
+		gastosItem.addItem(reportesNavItem);
 
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
 		surveyorPortalItem.setPrefixComponent(new Icon("vaadin", "user-card"));
