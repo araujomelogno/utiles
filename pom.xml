@@ -108,20 +108,16 @@
       <groupId>org.apache.xmlrpc</groupId>
       <artifactId>xmlrpc-client</artifactId>
       <version>3.1.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.ws.commons.util</groupId>
-          <artifactId>ws-commons-util</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
-        </exclusion>
-      </exclusions>
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>xml-apis</groupId>-->
+<!--          <artifactId>xml-apis</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>commons-httpclient</groupId>-->
+<!--          <artifactId>commons-httpclient</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
     </dependency>
     <dependency>
       <groupId>org.apache.xmlrpc</groupId>
@@ -133,14 +129,15 @@
           <artifactId>xml-apis</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.ws.commons.util</groupId>
-          <artifactId>ws-commons-util</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>commons-httpclient</groupId>
           <artifactId>commons-httpclient</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ws.commons.util</groupId>
+      <artifactId>ws-commons-util</artifactId>
+      <version>1.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

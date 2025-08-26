@@ -18,26 +18,29 @@ import uy.com.bay.utiles.data.User;
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final AuthenticatedUser authenticatedUser;
-    private final AuthenticationSuccessHandler defaultSuccessHandler = new SavedRequestAwareAuthenticationSuccessHandler();
+	private final AuthenticatedUser authenticatedUser;
+	private final AuthenticationSuccessHandler defaultSuccessHandler = new SavedRequestAwareAuthenticationSuccessHandler();
 
-    public CustomAuthenticationSuccessHandler(@Lazy AuthenticatedUser authenticatedUser) {
-        this.authenticatedUser = authenticatedUser;
-    }
+	public CustomAuthenticationSuccessHandler(@Lazy AuthenticatedUser authenticatedUser) {
+		this.authenticatedUser = authenticatedUser;
+	}
 
-    @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-            Authentication authentication) throws IOException, ServletException {
+	@Override
+	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+			Authentication authentication) throws IOException, ServletException {
 
-        User user = authenticatedUser.get().orElse(null);
+		User user = authenticatedUser.get().orElse(null);
 
-        if (user != null) {
-            Set<Role> roles = user.getRoles();
-            if (roles.contains(Role.ENCUESTADORES)) {
-                response.sendRedirect("/surveyor-expense-request");
-                return;
-            }
-        }
-        defaultSuccessHandler.onAuthenticationSuccess(request, response, authentication);
-    }
+		if (user != null) {
+			Set<Role> roles = user.getRoles();
+			if (roles.contains(Role.ENCUESTADORES)) {
+				response.sendRedirect("/utiles/surveyor-expense-request");
+				return;
+			}else {
+				response.sendRedirect("/utiles/surveyors");
+				return;
+			}
+		}
+		defaultSuccessHandler.onAuthenticationSuccess(request, response, authentication);
+	}
 }
