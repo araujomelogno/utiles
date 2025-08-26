@@ -30,6 +30,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import uy.com.bay.utiles.data.User;
 import uy.com.bay.utiles.security.AuthenticatedUser;
+import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.expenses.ReportesDialog;
@@ -48,12 +49,15 @@ public class MainLayout extends AppLayout {
 	private AccessAnnotationChecker accessChecker;
 	private final SurveyorService surveyorService;
 	private final StudyService studyService;
+	private final JournalEntryService journalEntryService;
 
-	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, SurveyorService surveyorService, StudyService studyService) {
+	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
+			SurveyorService surveyorService, StudyService studyService, JournalEntryService journalEntryService) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
 		this.surveyorService = surveyorService;
 		this.studyService = studyService;
+		this.journalEntryService = journalEntryService;
 
 		setPrimarySection(Section.DRAWER);
 		addDrawerContent();
@@ -133,7 +137,7 @@ public class MainLayout extends AppLayout {
 		SideNavItem reportesNavItem = new SideNavItem("Reportes");
 		reportesNavItem.setPrefixComponent(new Icon("vaadin", "file-chart"));
 		reportesNavItem.getElement().addEventListener("click", e -> {
-			ReportesDialog dialog = new ReportesDialog(surveyorService, studyService);
+			ReportesDialog dialog = new ReportesDialog(surveyorService, studyService, journalEntryService);
 			dialog.open();
 		});
 		gastosItem.addItem(reportesNavItem);
