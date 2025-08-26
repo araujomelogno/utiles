@@ -6,10 +6,23 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.server.StreamResource;
+
+import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.services.ExcelReportGenerator;
+import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+import org.springframework.data.jpa.domain.Specification;
 
 public class ReportesDialog extends Dialog {
 
@@ -23,10 +36,13 @@ public class ReportesDialog extends Dialog {
 
     private final SurveyorService surveyorService;
     private final StudyService studyService;
+	private final JournalEntryService journalEntryService;
 
-    public ReportesDialog(SurveyorService surveyorService, StudyService studyService) {
+    public ReportesDialog(SurveyorService surveyorService, StudyService studyService,
+			JournalEntryService journalEntryService) {
         this.surveyorService = surveyorService;
         this.studyService = studyService;
+		this.journalEntryService = journalEntryService;
 
         setHeaderTitle("Generar Reporte de Gastos");
 
@@ -53,22 +69,29 @@ public class ReportesDialog extends Dialog {
     }
 
     private void downloadReport() {
-        String url = "/api/files/report?";
-        StringBuilder params = new StringBuilder();
+        Specification<JournalEntry> spec = journalEntryService.createFilterSpecification(fechaDesde.getValue(),
+                fechaHasta.getValue(), encuestadores.getValue(), estudios.getValue());
+        List<JournalEntry> journalEntries = journalEntryService.list(spec);
 
-        if (fechaDesde.getValue() != null) {
-            params.append("fechaDesde=").append(fechaDesde.getValue()).append("&");
-        }
-        if (fechaHasta.getValue() != null) {
-            params.append("fechaHasta=").append(fechaHasta.getValue()).append("&");
-        }
-        if (!encuestadores.getValue().isEmpty()) {
-            encuestadores.getValue().forEach(s -> params.append("surveyorIds=").append(s.getId()).append("&"));
-        }
-        if (!estudios.getValue().isEmpty()) {
-            estudios.getValue().forEach(s -> params.append("studyIds=").append(s.getId()).append("&"));
+        if (journalEntries.isEmpty()) {
+            Notification.show("No hay datos para generar el reporte con los filtros seleccionados.");
+            return;
         }
 
-        com.vaadin.flow.component.UI.getCurrent().getPage().open(url + params.toString(), "_blank");
+        try {
+            ByteArrayOutputStream excelStream = ExcelReportGenerator.generateExcel(journalEntries);
+            StreamResource resource = new StreamResource("reporte.xlsx",
+                    () -> new ByteArrayInputStream(excelStream.toByteArray()));
+
+            final Anchor downloadLink = new Anchor(resource, "");
+            downloadLink.getElement().setAttribute("download", true);
+            downloadLink.getElement().getStyle().set("display", "none");
+            add(downloadLink);
+            downloadLink.getElement().callJsFunction("click");
+            Notification.show("Reporte generado con éxito.");
+        } catch (IOException e) {
+            Notification.show("Error al generar el reporte: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
