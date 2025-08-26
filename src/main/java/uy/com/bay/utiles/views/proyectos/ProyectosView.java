@@ -36,6 +36,8 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
+import uy.com.bay.utiles.services.ExpenseReportFileService;
+import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
 
@@ -81,12 +83,17 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final StudyService proyectoService;
 	private final JournalEntryService journalEntryService;
 	private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
+	private final ExpenseReportFileService expenseReportFileService;
+	private final ExpenseTransferFileService expenseTransferFileService;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
-			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository) {
+			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
+			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService) {
 		this.proyectoService = proyectoService;
 		this.journalEntryService = journalEntryService;
 		this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
+		this.expenseReportFileService = expenseReportFileService;
+		this.expenseTransferFileService = expenseTransferFileService;
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
 
@@ -262,7 +269,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		viewMovementsButton.addClickListener(e -> {
 			if (this.proyecto != null) {
-				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService);
+				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService,
+						expenseReportFileService, expenseTransferFileService);
 				dialog.open();
 			}
 		});
