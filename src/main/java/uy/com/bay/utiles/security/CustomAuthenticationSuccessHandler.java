@@ -3,6 +3,7 @@ package uy.com.bay.utiles.security;
 import java.io.IOException;
 import java.util.Set;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -20,7 +21,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     private final AuthenticatedUser authenticatedUser;
     private final AuthenticationSuccessHandler defaultSuccessHandler = new SavedRequestAwareAuthenticationSuccessHandler();
 
-    public CustomAuthenticationSuccessHandler(AuthenticatedUser authenticatedUser) {
+    public CustomAuthenticationSuccessHandler(@Lazy AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser;
     }
 
