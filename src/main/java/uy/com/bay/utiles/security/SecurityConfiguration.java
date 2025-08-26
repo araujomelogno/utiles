@@ -24,6 +24,12 @@ import uy.com.bay.utiles.views.login.LoginView;
 @Configuration
 public class SecurityConfiguration extends VaadinWebSecurity {
 
+    private final CustomAuthenticationSuccessHandler successHandler;
+
+    public SecurityConfiguration(CustomAuthenticationSuccessHandler successHandler) {
+        this.successHandler = successHandler;
+    }
+
     // Recomendado en prod (usa {bcrypt}, {noop}, etc.)
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,5 +64,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
       // (si querés, dejá estáticos en permitAll)
       super.configure(http);
       setLoginView(http, LoginView.class);
+      http.formLogin(form -> form.successHandler(successHandler));
     }
   }
