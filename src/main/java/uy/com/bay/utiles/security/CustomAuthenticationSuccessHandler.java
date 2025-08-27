@@ -36,9 +36,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 			if (roles.contains(Role.ENCUESTADORES)) {
 				response.sendRedirect("/utiles/surveyor-expense-request");
 				return;
-			}else {
-				response.sendRedirect("/utiles/surveyors");
-				return;
 			}
 		}
 		defaultSuccessHandler.onAuthenticationSuccess(request, response, authentication);

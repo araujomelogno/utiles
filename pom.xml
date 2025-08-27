@@ -57,10 +57,6 @@
       <artifactId>vaadin-spring-boot-starter</artifactId>
     </dependency>
 
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-spring</artifactId> <!-- 👈 explícito -->
-</dependency>
     <!-- Tomcat como WAR (no embebido) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -188,7 +184,7 @@
               <outputDirectory>${project.build.outputDirectory}/META-INF/resources/frontend/themes</outputDirectory>
               <resources>
                 <resource>
-                  <directory>src/main/webaap/META-INF/themes</directory>
+                  <directory>src/main/webapp/META-INF/themes</directory>
                   <filtering>false</filtering>
                 </resource>
               </resources>
