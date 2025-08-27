@@ -79,7 +79,7 @@ public class UserAdminView extends Div implements BeforeEnterObserver {
 
 		roles = new MultiSelectComboBox<>("Role");
 		roles.setItems(Role.values());
-		roles.setItemLabelGenerator(Role::name);
+		roles.setItemLabelGenerator(r -> r == null ? "" : r.name());
 
 		addButton = new Button("Agregar");
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
