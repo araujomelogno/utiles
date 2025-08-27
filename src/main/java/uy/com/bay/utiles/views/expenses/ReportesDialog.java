@@ -52,9 +52,9 @@ public class ReportesDialog extends Dialog {
 
         // Poblar ComboBoxes
         encuestadores.setItems(surveyorService.listAll());
-        encuestadores.setItemLabelGenerator(Surveyor::getFirstName);
+        encuestadores.setItemLabelGenerator(s -> s == null ? "" : s.getName());
         estudios.setItems(studyService.listAll());
-        estudios.setItemLabelGenerator(Study::getName);
+        estudios.setItemLabelGenerator(s -> s == null ? "" : s.getName());
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(fechaDesde, fechaHasta, encuestadores, estudios);

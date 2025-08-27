@@ -242,15 +242,15 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		FormLayout formLayout = new FormLayout();
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
-		study.setItemLabelGenerator(Study::getName);
+		study.setItemLabelGenerator(study -> study == null ? "" : study.getName());
 		surveyor = new ComboBox<>("Encuestador");
 		surveyor.setItems(surveyorService.listAll());
-		surveyor.setItemLabelGenerator(s -> s.getFirstName() + " " + s.getLastName());
+		surveyor.setItemLabelGenerator(Surveyor::getName);
 		date = new DatePicker("Fecha");
 		amount = new NumberField("Monto");
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
-		concept.setItemLabelGenerator(ExpenseRequestType::getName);
+		concept.setItemLabelGenerator(concept -> concept == null ? "" : concept.getName());
 		obs = new TextArea("Observaciones");
 
 		files = new Upload();

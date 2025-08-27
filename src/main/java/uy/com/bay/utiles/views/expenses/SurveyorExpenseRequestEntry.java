@@ -57,7 +57,7 @@ public class SurveyorExpenseRequestEntry extends Div {
 		FormLayout formLayout = new FormLayout();
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.findAllByShowSurveyor(true));
-		study.setItemLabelGenerator(Study::getName);
+		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
 		study.setRequired(true);
 
 		amount = new NumberField("Monto");
@@ -65,7 +65,7 @@ public class SurveyorExpenseRequestEntry extends Div {
 
 		concept = new ComboBox<>("Concepto");
 		concept.setItems(expenseRequestTypeService.findAll());
-		concept.setItemLabelGenerator(ExpenseRequestType::getName);
+		concept.setItemLabelGenerator(c -> c == null ? "" : c.getName());
 		concept.setRequired(true);
 
 		obs = new TextArea("Observaciones");
