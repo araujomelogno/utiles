@@ -101,8 +101,13 @@ public class ExpenseTransferDialog extends Dialog {
 				return;
 			}
 			Surveyor firstSurveyor = selectedRequests.iterator().next().getSurveyor();
+			if (firstSurveyor == null) {
+				Notification.show("La solicitud de gasto seleccionada no tiene un encuestador asignado.", 3000,
+						Position.MIDDLE);
+				return;
+			}
 			for (ExpenseRequest request : selectedRequests) {
-				if (!request.getSurveyor().equals(firstSurveyor)) {
+				if (!firstSurveyor.equals(request.getSurveyor())) {
 					Notification.show("Solo se pueden crear transferencias vinculando a un mismo encuestador", 3000,
 							Position.MIDDLE);
 
