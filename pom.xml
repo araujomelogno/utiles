@@ -141,6 +141,13 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- Force latest version of commons-io to resolve NoClassDefFoundError -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+
     <!-- Apache POI for Excel generation -->
     <dependency>
         <groupId>org.apache.poi</groupId>
