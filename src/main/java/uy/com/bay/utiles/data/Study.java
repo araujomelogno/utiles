@@ -10,8 +10,8 @@ public class Study extends AbstractEntity {
 	private String doobloId;
 	private String odooId;
 	private String obs;
-	private double debt;
-	private double totalCost;
+	private double totalReportedCost;
+	private double totalTransfered;
 	private boolean showSurveyor;
 
 	public boolean isShowSurveyor() {
@@ -22,20 +22,20 @@ public class Study extends AbstractEntity {
 		this.showSurveyor = showSurveyor;
 	}
 
-	public double getDebt() {
-		return debt;
+	public double getTotalReportedCost() {
+		return totalReportedCost;
 	}
 
-	public void setDebt(double debt) {
-		this.debt = debt;
+	public void setTotalReportedCost(double debt) {
+		this.totalReportedCost = debt;
 	}
 
-	public double getTotalCost() {
-		return totalCost;
+	public double getTotalTransfered() {
+		return totalTransfered;
 	}
 
-	public void setTotalCost(double totalCost) {
-		this.totalCost = totalCost;
+	public void setTotalTransfered(double totalCost) {
+		this.totalTransfered = totalCost;
 	}
 
 	public String getName() {

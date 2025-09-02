@@ -173,9 +173,8 @@ public class ExpenseTransferView extends VerticalLayout {
 
 				Study requestStudy = requestToUpdate.getStudy();
 				if (requestStudy != null) {
-					studyService.get(requestStudy.getId()).ifPresent(s -> {
-						s.setDebt(s.getDebt() + requestToUpdate.getAmount());
-						s.setTotalCost(s.getTotalCost() + requestToUpdate.getAmount());
+					studyService.get(requestStudy.getId()).ifPresent(s -> { 
+						s.setTotalTransfered(s.getTotalTransfered() + requestToUpdate.getAmount());
 						studyService.save(s);
 					});
 				}

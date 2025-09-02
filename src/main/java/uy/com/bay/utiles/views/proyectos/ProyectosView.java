@@ -32,7 +32,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
@@ -60,8 +59,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private TextField obs;
 	private TextField casosCompletos;
 	private Checkbox showSurveyor;
-	private TextField totalCost;
-	private TextField debt;
+	private TextField totalTransfered;
+	private TextField totalReportedCost;
 
 	private Button addButton;
 	private TextField nameFilter;
@@ -311,11 +310,12 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		casosCompletos = new TextField("Casos completos");
 		casosCompletos.setReadOnly(true);
 		showSurveyor = new Checkbox("Mostrar encuestador");
-		totalCost = new TextField("Total de gastos");
-		totalCost.setReadOnly(true);
-		debt = new TextField("Deuda de gastos");
-		debt.setReadOnly(true);
-		formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalCost, debt);
+		totalTransfered = new TextField("Total de gastos transferidos");
+		totalTransfered.setReadOnly(true);
+		totalReportedCost = new TextField("Total de gastos rendidos");
+		totalReportedCost.setReadOnly(true);
+		formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalTransfered,
+				totalReportedCost);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
@@ -370,11 +370,11 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.proyecto = value;
 		binder.readBean(this.proyecto);
 		if (value != null) {
-			totalCost.setValue(String.valueOf(value.getTotalCost()));
-			debt.setValue(String.valueOf(value.getDebt()));
+			totalTransfered.setValue(String.valueOf(value.getTotalTransfered()));
+			totalReportedCost.setValue(String.valueOf(value.getTotalReportedCost()));
 		} else {
-			totalCost.setValue("");
-			debt.setValue("");
+			totalTransfered.setValue("");
+			totalReportedCost.setValue("");
 		}
 		if (value != null && value.getAlchemerId() != null) {
 			try {

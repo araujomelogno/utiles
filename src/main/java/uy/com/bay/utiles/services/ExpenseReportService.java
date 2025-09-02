@@ -91,7 +91,7 @@ public class ExpenseReportService {
 		surveyor.setBalance(surveyor.getBalance() - report.getAmount());
 		surveyorRepository.save(surveyor);
 		Study study = report.getStudy();
-		study.setDebt(study.getDebt() - report.getAmount());
+		study.setTotalReportedCost(study.getTotalReportedCost() + report.getAmount());
 		studyRepository.save(study);
 	}
 
