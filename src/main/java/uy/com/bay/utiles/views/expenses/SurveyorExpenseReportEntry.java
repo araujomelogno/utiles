@@ -41,7 +41,7 @@ import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.MainLayout;
 
 @Route(value = "surveyor-expense-report", layout = MainLayout.class)
-@RolesAllowed({ "ADMIN", "ENCUESTADOR" })
+@RolesAllowed({ "ADMIN", "ENCUESTADORES" })
 public class SurveyorExpenseReportEntry extends Div {
 
 	private ComboBox<Study> study;

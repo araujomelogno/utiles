@@ -34,7 +34,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 		if (user != null) {
 			Set<Role> roles = user.getRoles();
 			if (roles.contains(Role.ENCUESTADORES)) {
-				response.sendRedirect("/apps/utiles/surveyor-expense-request");
+				response.sendRedirect(request.getContextPath() + "/surveyor-expense-request");
+
 				return;
 			}
 		}

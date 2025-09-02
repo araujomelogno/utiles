@@ -11,6 +11,6 @@ import java.util.Optional;
 public interface SurveyorRepository extends JpaRepository<Surveyor, Long>, JpaSpecificationExecutor<Surveyor> {
     Optional<Surveyor> findBySurveyToGoId(String surveyToGoId);
     Optional<Surveyor> findByFirstName(String firstName);
-    @Query("SELECT s FROM Surveyor s WHERE s.firstName || ' ' || s.lastName = :name")
+    @Query("SELECT s FROM Surveyor s WHERE s.firstName = :name")
     Optional<Surveyor> findByName(@Param("name") String name);
 }
