@@ -154,6 +154,13 @@ public class MainLayout extends AppLayout {
 		
 		nav.addItem(surveyorPortalItem);
 
+		SideNavItem solicitudesCampoItem = new SideNavItem("Solicitudes de campo");
+		solicitudesCampoItem.setPrefixComponent(new Icon("vaadin", "clipboard-text"));
+		SideNavItem listarSolicitudesItem = new SideNavItem("Listar Solicitudes", "fieldworks");
+		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
+		solicitudesCampoItem.addItem(listarSolicitudesItem);
+		nav.addItem(solicitudesCampoItem);
+
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
