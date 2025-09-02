@@ -47,6 +47,12 @@
   </dependencyManagement>
 
   <dependencies>
+  <!-- Gantt -->
+  <dependency>
+   <groupId>org.vaadin.addons.tltv.gantt</groupId>
+   <artifactId>gantt-flow-addon</artifactId>
+   <version>24.0.1</version>
+</dependency>
     <!-- Vaadin y Spring Boot -->
     <dependency>
       <groupId>com.vaadin</groupId>
