@@ -6,8 +6,6 @@ import jakarta.persistence.Entity;
 public class Study extends AbstractEntity {
 
 	private String name;
-	private String alchemerId;
-	private String doobloId;
 	private String odooId;
 	private String obs;
 	private double totalReportedCost;
@@ -47,22 +45,6 @@ public class Study extends AbstractEntity {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getAlchemerId() {
-		return alchemerId;
-	}
-
-	public void setAlchemerId(String alchemerId) {
-		this.alchemerId = alchemerId;
-	}
-
-	public String getDoobloId() {
-		return doobloId;
-	}
-
-	public void setDoobloId(String doobloId) {
-		this.doobloId = doobloId;
 	}
 
 	public String getOdooId() {

@@ -31,6 +31,25 @@ public class Fieldwork extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private Area area;
 
+	private String doobloId;
+	private String alchemerId;
+
+	public String getDoobloId() {
+		return doobloId;
+	}
+
+	public void setDoobloId(String doobloId) {
+		this.doobloId = doobloId;
+	}
+
+	public String getAlchemerId() {
+		return alchemerId;
+	}
+
+	public void setAlchemerId(String alchemerId) {
+		this.alchemerId = alchemerId;
+	}
+
 	public Area getArea() {
 		return area;
 	}
