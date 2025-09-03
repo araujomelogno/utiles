@@ -1,10 +1,15 @@
 package uy.com.bay.utiles.data;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import java.util.List;
 
 @Entity
 public class Study extends AbstractEntity {
 
+	@OneToMany(mappedBy = "study", cascade = CascadeType.ALL)
+	private List<Fieldwork> fieldworks;
 	private String name;
 	private String odooId;
 	private String obs;
@@ -63,4 +68,11 @@ public class Study extends AbstractEntity {
 		this.obs = obs;
 	}
 
+	public List<Fieldwork> getFieldworks() {
+		return fieldworks;
+	}
+
+	public void setFieldworks(List<Fieldwork> fieldworks) {
+		this.fieldworks = fieldworks;
+	}
 }

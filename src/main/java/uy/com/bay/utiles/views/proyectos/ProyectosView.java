@@ -37,6 +37,7 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
+import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
@@ -70,6 +71,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final Button save = new Button("Save");
 	private Button deleteButton; // Added deleteButton declaration
 	private Button viewMovementsButton;
+	private Button viewFieldworksButton;
 
 	private final BeanValidationBinder<Study> binder;
 
@@ -81,12 +83,15 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 	private final ExpenseReportFileService expenseReportFileService;
 	private final ExpenseTransferFileService expenseTransferFileService;
+	private final FieldworkService fieldworkService;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
-			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService) {
+			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService,
+			FieldworkService fieldworkService) {
 		this.proyectoService = proyectoService;
 		this.journalEntryService = journalEntryService;
+		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
 		this.expenseReportFileService = expenseReportFileService;
 		this.expenseTransferFileService = expenseTransferFileService;
@@ -105,6 +110,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		viewMovementsButton = new Button("Ver movimientos de gastos");
 		viewMovementsButton.setEnabled(false);
+
+		viewFieldworksButton = new Button("Ver solicitudes de campo");
+		viewFieldworksButton.setEnabled(false);
 
 		nameFilter = new TextField();
 		nameFilter.setPlaceholder("Nombre...");
@@ -245,6 +253,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 				dialog.open();
 			}
 		});
+
+		viewFieldworksButton.addClickListener(e -> {
+			if (this.proyecto != null) {
+				FieldworkDialog dialog = new FieldworkDialog(this.proyecto, fieldworkService);
+				dialog.open();
+			}
+		});
 	}
 
 	@Override
@@ -289,6 +304,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
+		editorDiv.add(viewFieldworksButton);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -354,6 +370,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		}
 		if (this.viewMovementsButton != null) {
 			this.viewMovementsButton.setEnabled(value != null && value.getId() != null);
+		}
+		if (this.viewFieldworksButton != null) {
+			this.viewFieldworksButton.setEnabled(value != null && value.getId() != null);
 		}
 	}
 }
