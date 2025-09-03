@@ -22,12 +22,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
 import uy.com.bay.utiles.data.JobType;
+import uy.com.bay.utiles.data.Fieldwork;
+import uy.com.bay.utiles.data.JobType;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.StudyRepository;
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.Task;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseRepository;
+import uy.com.bay.utiles.data.repository.FieldworkRepository;
 import uy.com.bay.utiles.data.repository.TaskRepository;
 
 @RestController
@@ -44,6 +47,9 @@ public class AlchemerController {
 
 	@Autowired
 	private StudyRepository proyectoRepository;
+
+	@Autowired
+	private FieldworkRepository fieldworkRepository;
 
 	@Autowired
 	private TaskRepository taskRepository;
@@ -124,9 +130,9 @@ public class AlchemerController {
 		}
 
 		log.info("Processing new Alchemer survey response.");
-//		Optional<Study> optionalProyecto = proyectoRepository
-//				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
-//		optionalProyecto.ifPresent(response::setProyecto);
+		Optional<Fieldwork> optionalFieldwork = fieldworkRepository
+				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
+		optionalFieldwork.ifPresent(response::setFieldwork);
 
 		response.getData().setSurveyResponse(response);
 

@@ -8,7 +8,7 @@ import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 
 public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, JpaSpecificationExecutor<Fieldwork> {
-	Optional<Study> findByAlchemerId(String alchemerId);
+	Optional<Fieldwork> findByAlchemerId(String alchemerId);
 
-	Optional<Study> findByDoobloId(String doobloId);
+	Optional<Fieldwork> findByDoobloId(String doobloId);
 }

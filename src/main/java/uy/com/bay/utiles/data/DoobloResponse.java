@@ -15,8 +15,8 @@ public class DoobloResponse extends AbstractEntity {
     private Surveyor surveyor;
 
     @ManyToOne
-    @JoinColumn(name = "study_id")
-    private Study study;
+    @JoinColumn(name = "fieldwork_id")
+    private Fieldwork fieldwork;
 
     private Date date;
 
@@ -36,12 +36,12 @@ public class DoobloResponse extends AbstractEntity {
         this.surveyor = surveyor;
     }
 
-    public Study getStudy() {
-        return study;
+    public Fieldwork getFieldwork() {
+        return fieldwork;
     }
 
-    public void setStudy(Study study) {
-        this.study = study;
+    public void setFieldwork(Fieldwork fieldwork) {
+        this.fieldwork = fieldwork;
     }
 
     public Date getDate() {
