@@ -54,8 +54,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final Grid<Study> grid = new Grid<>(Study.class, false);
 
 	private TextField name;
-	private TextField alchemerId;
-	private TextField doobloId;
 	private TextField odooId;
 	private TextArea obs;
 	private TextField casosCompletos;
@@ -65,8 +63,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 	private Button addButton;
 	private TextField nameFilter;
-	private TextField alchemerIdFilter;
-	private TextField doobloIdFilter;
 	private TextField odooIdFilter;
 	private TextField obsFilter;
 
@@ -116,18 +112,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		nameFilter.setWidth("100%");
 		nameFilter.addValueChangeListener(e -> refreshGrid());
 
-		alchemerIdFilter = new TextField();
-		alchemerIdFilter.setPlaceholder("Alchemer ID...");
-		alchemerIdFilter.setClearButtonVisible(true);
-		alchemerIdFilter.setWidth("100%");
-		alchemerIdFilter.addValueChangeListener(e -> refreshGrid());
-
-		doobloIdFilter = new TextField();
-		doobloIdFilter.setPlaceholder("Dooblo ID...");
-		doobloIdFilter.setClearButtonVisible(true);
-		doobloIdFilter.setWidth("100%");
-		doobloIdFilter.addValueChangeListener(e -> refreshGrid());
-
 		odooIdFilter = new TextField();
 		odooIdFilter.setPlaceholder("Odoo ID...");
 		odooIdFilter.setClearButtonVisible(true);
@@ -149,16 +133,11 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		// Configure Grid
 		grid.addColumn("name").setHeader("Nombre").setAutoWidth(true);
-		grid.addColumn("alchemerId").setHeader("Alchemer ID").setAutoWidth(true);
-		grid.addColumn("doobloId").setHeader("Dooblo ID").setAutoWidth(true);
 		grid.addColumn("odooId").setHeader("Odoo ID").setAutoWidth(true);
 		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 
 		grid.setItems(query -> {
 			String nameVal = nameFilter.getValue() != null ? nameFilter.getValue().trim().toLowerCase() : "";
-			String alchemerVal = alchemerIdFilter.getValue() != null ? alchemerIdFilter.getValue().trim().toLowerCase()
-					: "";
-			String doobloVal = doobloIdFilter.getValue() != null ? doobloIdFilter.getValue().trim().toLowerCase() : "";
 			String odooVal = odooIdFilter.getValue() != null ? odooIdFilter.getValue().trim().toLowerCase() : "";
 			String obsVal = obsFilter.getValue() != null ? obsFilter.getValue().trim().toLowerCase() : "";
 
@@ -167,14 +146,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 			if (!nameVal.isEmpty()) {
 				stream = stream.filter(p -> p.getName() != null && p.getName().toLowerCase().contains(nameVal));
-			}
-			if (!alchemerVal.isEmpty()) {
-				stream = stream.filter(
-						p -> p.getAlchemerId() != null && p.getAlchemerId().toLowerCase().contains(alchemerVal));
-			}
-			if (!doobloVal.isEmpty()) {
-				stream = stream
-						.filter(p -> p.getDoobloId() != null && p.getDoobloId().toLowerCase().contains(doobloVal));
 			}
 			if (!odooVal.isEmpty()) {
 				stream = stream.filter(p -> p.getOdooId() != null && p.getOdooId().toLowerCase().contains(odooVal));
@@ -304,8 +275,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		FormLayout formLayout = new FormLayout();
 		name = new TextField("Name");
-		alchemerId = new TextField("Alchemer Id");
-		doobloId = new TextField("Dooblo Id");
 		odooId = new TextField("Odoo Id");
 		obs = new TextArea("Observaciones");
 		casosCompletos = new TextField("Casos completos");
@@ -315,7 +284,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		totalTransfered.setReadOnly(true);
 		totalReportedCost = new TextField("Total de gastos rendidos");
 		totalReportedCost.setReadOnly(true);
-		formLayout.add(name, alchemerId, doobloId, odooId, obs, casosCompletos, showSurveyor, totalTransfered,
+		formLayout.add(name, odooId, obs, casosCompletos, showSurveyor, totalTransfered,
 				totalReportedCost);
 
 		editorDiv.add(formLayout);
@@ -350,7 +319,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		// Filter Layout
 		HorizontalLayout filterLayout = new HorizontalLayout();
 		filterLayout.setWidthFull();
-		filterLayout.add(nameFilter, alchemerIdFilter, doobloIdFilter, odooIdFilter, obsFilter);
+		filterLayout.add(nameFilter, odooIdFilter, obsFilter);
 
 		wrapper.add(titleLayout);
 		wrapper.add(filterLayout);
@@ -376,17 +345,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");
-		}
-		if (value != null && value.getAlchemerId() != null) {
-			try {
-				long count = alchemerSurveyResponseDataRepository
-						.countBySurveyId(Integer.parseInt(value.getAlchemerId()));
-				casosCompletos.setValue(String.valueOf(count));
-			} catch (NumberFormatException e) {
-				casosCompletos.setValue("Invalid Alchemer ID");
-			}
-		} else {
-			casosCompletos.setValue("");
 		}
 		if (this.editorLayoutDiv != null) {
 			this.editorLayoutDiv.setVisible(value != null);

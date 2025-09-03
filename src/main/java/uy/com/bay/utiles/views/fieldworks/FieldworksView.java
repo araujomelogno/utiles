@@ -45,6 +45,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private final Grid<Fieldwork> grid = new Grid<>(Fieldwork.class, false);
 
+	private TextField doobloId;
+	private TextField alchemerId;
 	private ComboBox<Study> study;
 	private DatePicker initPlannedDate;
 	private DatePicker endPlannedDate;
@@ -128,6 +130,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 		// Configure Form
 		binder = new BeanValidationBinder<>(Fieldwork.class);
+		binder.forField(doobloId).bind(Fieldwork::getDoobloId, Fieldwork::setDoobloId);
+		binder.forField(alchemerId).bind(Fieldwork::getAlchemerId, Fieldwork::setAlchemerId);
 		binder.bindInstanceFields(this);
 
 		cancel.addClickListener(e -> {
@@ -188,6 +192,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		this.editorLayoutDiv.add(editorDiv);
 
 		FormLayout formLayout = new FormLayout();
+		doobloId = new TextField("Dooblo Id");
+		alchemerId = new TextField("Alchemer Id");
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(Study::getName);
@@ -204,8 +210,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		type.setItems(FieldworkType.values());
 		area = new ComboBox<>("Area");
 		area.setItems(Area.values());
-		formLayout.add(study, initPlannedDate, endPlannedDate, initDate, endDate, goalQuantity, completed, obs, status,
-				type, area);
+		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed, obs,
+				status, type, area);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);
