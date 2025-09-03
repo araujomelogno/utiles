@@ -28,6 +28,17 @@ public class Fieldwork extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private FieldworkType type;
 
+	@Enumerated(EnumType.STRING)
+	private Area area;
+
+	public Area getArea() {
+		return area;
+	}
+
+	public void setArea(Area area) {
+		this.area = area;
+	}
+
 	public Study getStudy() {
 		return study;
 	}
