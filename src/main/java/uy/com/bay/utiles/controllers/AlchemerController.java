@@ -75,7 +75,7 @@ public class AlchemerController {
 		ObjectMapper mapper = new ObjectMapper();
 
 		AlchemerSurveyResponse response;
-		
+
 		try {
 			response = mapper.readValue(preview, AlchemerSurveyResponse.class);
 			return this.process(response);
@@ -124,12 +124,12 @@ public class AlchemerController {
 		}
 
 		log.info("Processing new Alchemer survey response.");
-		Optional<Study> optionalProyecto = proyectoRepository
-				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
-		optionalProyecto.ifPresent(response::setProyecto);
+//		Optional<Study> optionalProyecto = proyectoRepository
+//				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
+//		optionalProyecto.ifPresent(response::setProyecto);
 
 		response.getData().setSurveyResponse(response);
-		
+
 		alchemerSurveyResponseRepository.save(response);
 		log.info("Saved new AlchemerSurveyResponse with id: {}", response.getId());
 
