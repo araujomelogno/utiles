@@ -1,8 +1,6 @@
 package uy.com.bay.utiles.views.expenses;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,9 +18,9 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import elemental.json.Json;
@@ -40,6 +38,7 @@ import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.MainLayout;
 
+@PageTitle("Rendir gasto")
 @Route(value = "surveyor-expense-report", layout = MainLayout.class)
 @RolesAllowed({ "ADMIN", "ENCUESTADORES" })
 public class SurveyorExpenseReportEntry extends Div {
@@ -86,8 +85,16 @@ public class SurveyorExpenseReportEntry extends Div {
 
 		obs = new TextArea("Observaciones");
 		comprobantes = new Upload();
+
+		// Creamos un botón nuevo con el texto que queramos
+		Button uploadButton = new Button("Subir comprobantes");
+
+		// Se lo asignamos al upload
+		comprobantes.setUploadButton(uploadButton);
+
 		comprobantes.setAcceptedFileTypes("image/*", ".pdf");
 
+		comprobantes.setDropAllowed(false);
 		Button saveButton = new Button("Guardar");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 

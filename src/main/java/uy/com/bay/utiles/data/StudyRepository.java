@@ -10,9 +10,7 @@ import java.util.Optional;
 
 public interface StudyRepository extends JpaRepository<Study, Long>, JpaSpecificationExecutor<Study> {
 
-    Optional<Study> findByAlchemerId(String alchemerId);
 
-    Optional<Study> findByDoobloId(String doobloId);
 
     List<Study> findAllByShowSurveyor(boolean showSurveyor);
 

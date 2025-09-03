@@ -13,6 +13,7 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -27,6 +28,7 @@ import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
 import uy.com.bay.utiles.views.MainLayout;
 
+@PageTitle("Solicitar gasto")
 @Route(value = "surveyor-expense-request", layout = MainLayout.class)
 @RolesAllowed({ "ADMIN", "ENCUESTADORES" })
 public class SurveyorExpenseRequestEntry extends Div {
