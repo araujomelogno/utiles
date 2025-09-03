@@ -22,11 +22,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import uy.com.bay.utiles.data.DoobloResponse;
+import uy.com.bay.utiles.data.DoobloResponse;
+import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.StudyRepository;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.SurveyorRepository;
 import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
+import uy.com.bay.utiles.data.repository.FieldworkRepository;
 
 @Component
 public class DoobloSurveyRetriever {
@@ -36,6 +39,7 @@ public class DoobloSurveyRetriever {
 	private final DoobloResponseRepository doobloResponseRepository;
 	private final StudyRepository studyRepository;
 	private final SurveyorRepository surveyorRepository;
+	private final FieldworkRepository fieldworkRepository;
 	private final RestTemplate restTemplate;
 
 	@Value("${surveyToGo.username}")
@@ -48,10 +52,11 @@ public class DoobloSurveyRetriever {
 	private int activeSurveyDaysBack;
 
 	public DoobloSurveyRetriever(DoobloResponseRepository doobloResponseRepository, StudyRepository studyRepository,
-			SurveyorRepository surveyorRepository) {
+			SurveyorRepository surveyorRepository, FieldworkRepository fieldworkRepository) {
 		this.doobloResponseRepository = doobloResponseRepository;
 		this.studyRepository = studyRepository;
 		this.surveyorRepository = surveyorRepository;
+		this.fieldworkRepository = fieldworkRepository;
 		this.restTemplate = new RestTemplate();
 	}
 
@@ -140,11 +145,11 @@ public class DoobloSurveyRetriever {
 			Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateStr);
 
 			Optional<Surveyor> surveyorOpt = surveyorRepository.findByFirstName(surveyorName);
-//			Optional<Study> studyOpt = studyRepository.findByDoobloId(surveyId);
+			Optional<Fieldwork> fieldworkOpt = fieldworkRepository.findByDoobloId(surveyId);
 
 			DoobloResponse doobloResponse = new DoobloResponse();
 			doobloResponse.setSurveyor(surveyorOpt.get());
-//			doobloResponse.setStudy(studyOpt.get());
+			doobloResponse.setFieldwork(fieldworkOpt.get());
 			doobloResponse.setInterviewId(interviewId);
 			doobloResponse.setDate(date);
 
