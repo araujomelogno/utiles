@@ -1,6 +1,9 @@
 package uy.com.bay.utiles.services;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -42,10 +45,12 @@ public class JournalEntryService {
 		return (root, query, criteriaBuilder) -> {
 			java.util.ArrayList<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
 			if (fechaDesde != null) {
-				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), fechaDesde));
+				Date desde = Date.from(fechaDesde.atStartOfDay(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), desde));
 			}
 			if (fechaHasta != null) {
-				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("date"), fechaHasta));
+				Date hasta = Date.from(fechaHasta.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("date"), hasta));
 			}
 			if (surveyors != null && !surveyors.isEmpty()) {
 				predicates.add(root.get("surveyor").in(surveyors));
