@@ -34,240 +34,243 @@ import uy.com.bay.utiles.services.StudyService;
 
 import java.util.Optional;
 import java.util.stream.Stream;
+
 @Route("fieldworks/:fieldworkID?/:action?(edit)")
 @RolesAllowed("ADMIN")
 public class FieldworksView extends Div implements BeforeEnterObserver {
 
-    private final String FIELDWORK_ID = "fieldworkID";
-    private final String FIELDWORK_EDIT_ROUTE_TEMPLATE = "fieldworks/%s/edit";
+	private final String FIELDWORK_ID = "fieldworkID";
+	private final String FIELDWORK_EDIT_ROUTE_TEMPLATE = "fieldworks/%s/edit";
 
-    private final Grid<Fieldwork> grid = new Grid<>(Fieldwork.class, false);
+	private final Grid<Fieldwork> grid = new Grid<>(Fieldwork.class, false);
 
-    private ComboBox<Study> study;
-    private DatePicker initPlannedDate;
-    private DatePicker endPlannedDate;
-    private DatePicker initDate;
-    private DatePicker endDate;
-    private IntegerField goalQuantity;
-    private IntegerField completed;
-    private TextField obse;
-    private ComboBox<FieldworkStatus> status;
-    private ComboBox<FieldworkType> type;
+	private ComboBox<Study> study;
+	private DatePicker initPlannedDate;
+	private DatePicker endPlannedDate;
+	private DatePicker initDate;
+	private DatePicker endDate;
+	private IntegerField goalQuantity;
+	private IntegerField completed;
+	private TextField obs;
+	private ComboBox<FieldworkStatus> status;
+	private ComboBox<FieldworkType> type;
 
-    private ComboBox<Study> studyFilter;
-    private ComboBox<FieldworkStatus> statusFilter;
-    private ComboBox<FieldworkType> typeFilter;
+	private ComboBox<Study> studyFilter;
+	private ComboBox<FieldworkStatus> statusFilter;
+	private ComboBox<FieldworkType> typeFilter;
 
-    private final Button cancel = new Button("Cancelar");
-    private final Button save = new Button("Guardar");
-    private final Button delete = new Button("Eliminar");
+	private final Button cancel = new Button("Cancelar");
+	private final Button save = new Button("Guardar");
+	private final Button delete = new Button("Eliminar");
 
-    private final BeanValidationBinder<Fieldwork> binder;
+	private final BeanValidationBinder<Fieldwork> binder;
 
-    private Fieldwork fieldwork;
-    private Div editorLayoutDiv;
+	private Fieldwork fieldwork;
+	private Div editorLayoutDiv;
 
-    private final FieldworkService fieldworkService;
-    private final StudyService studyService;
+	private final FieldworkService fieldworkService;
+	private final StudyService studyService;
 
-    public FieldworksView(FieldworkService fieldworkService, StudyService studyService) {
-        this.fieldworkService = fieldworkService;
-        this.studyService = studyService;
-        addClassNames("fieldworks-view");
+	public FieldworksView(FieldworkService fieldworkService, StudyService studyService) {
+		this.fieldworkService = fieldworkService;
+		this.studyService = studyService;
+		addClassNames("fieldworks-view");
 
-        // Create UI
-        SplitLayout splitLayout = new SplitLayout();
+		// Create UI
+		SplitLayout splitLayout = new SplitLayout();
 
-        createGridLayout(splitLayout);
-        createEditorLayout(splitLayout);
+		createGridLayout(splitLayout);
+		createEditorLayout(splitLayout);
 
-        add(splitLayout);
+		add(splitLayout);
 
-        // Configure Grid
-        grid.addColumn(fieldwork -> fieldwork.getStudy() != null ? fieldwork.getStudy().getName() : "").setHeader("Estudio").setAutoWidth(true);
-        grid.addColumn("initPlannedDate").setHeader("Fecha Planificada Inicio").setAutoWidth(true);
-        grid.addColumn("endPlannedDate").setHeader("Fecha Planificada Fin").setAutoWidth(true);
-        grid.addColumn("initDate").setHeader("Fecha Inicio").setAutoWidth(true);
-        grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
-        grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
-        grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
-        grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
-        grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
+		// Configure Grid
+		grid.addColumn(fieldwork -> fieldwork.getStudy() != null ? fieldwork.getStudy().getName() : "")
+				.setHeader("Estudio").setAutoWidth(true);
+		grid.addColumn("initPlannedDate").setHeader("Fecha Planificada Inicio").setAutoWidth(true);
+		grid.addColumn("endPlannedDate").setHeader("Fecha Planificada Fin").setAutoWidth(true);
+		grid.addColumn("initDate").setHeader("Fecha Inicio").setAutoWidth(true);
+		grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
+		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
+		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
+		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
+		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 
-        grid.setItems(query -> {
-            Specification<Fieldwork> spec = (root, q, cb) -> {
-                return cb.and();
-            };
-            if (studyFilter.getValue() != null) {
-                spec = spec.and((root, q, cb) -> cb.equal(root.get("study"), studyFilter.getValue()));
-            }
-            if (statusFilter.getValue() != null) {
-                spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), statusFilter.getValue()));
-            }
-            if (typeFilter.getValue() != null) {
-                spec = spec.and((root, q, cb) -> cb.equal(root.get("type"), typeFilter.getValue()));
-            }
-            return fieldworkService.list(VaadinSpringDataHelpers.toSpringPageRequest(query), spec).stream();
-        });
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+		grid.setItems(query -> {
+			Specification<Fieldwork> spec = (root, q, cb) -> {
+				return cb.and();
+			};
+			if (studyFilter.getValue() != null) {
+				spec = spec.and((root, q, cb) -> cb.equal(root.get("study"), studyFilter.getValue()));
+			}
+			if (statusFilter.getValue() != null) {
+				spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), statusFilter.getValue()));
+			}
+			if (typeFilter.getValue() != null) {
+				spec = spec.and((root, q, cb) -> cb.equal(root.get("type"), typeFilter.getValue()));
+			}
+			return fieldworkService.list(VaadinSpringDataHelpers.toSpringPageRequest(query), spec).stream();
+		});
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
-        // when a row is selected or deselected, populate form
-        grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(FIELDWORK_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
-            } else {
-                clearForm();
-                UI.getCurrent().navigate(FieldworksView.class);
-            }
-        });
+		// when a row is selected or deselected, populate form
+		grid.asSingleSelect().addValueChangeListener(event -> {
+			if (event.getValue() != null) {
+				UI.getCurrent().navigate(String.format(FIELDWORK_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+			} else {
+				clearForm();
+				UI.getCurrent().navigate(FieldworksView.class);
+			}
+		});
 
-        // Configure Form
-        binder = new BeanValidationBinder<>(Fieldwork.class);
-        binder.bindInstanceFields(this);
+		// Configure Form
+		binder = new BeanValidationBinder<>(Fieldwork.class);
+		binder.bindInstanceFields(this);
 
-        cancel.addClickListener(e -> {
-            clearForm();
-            refreshGrid();
-        });
+		cancel.addClickListener(e -> {
+			clearForm();
+			refreshGrid();
+		});
 
-        save.addClickListener(e -> {
-            try {
-                if (this.fieldwork == null) {
-                    this.fieldwork = new Fieldwork();
-                }
-                binder.writeBean(this.fieldwork);
-                fieldworkService.save(this.fieldwork);
-                clearForm();
-                refreshGrid();
-                Notification.show("Solicitud de campo guardada.");
-                UI.getCurrent().navigate(FieldworksView.class);
-            } catch (ValidationException validationException) {
-                Notification.show("No se pudo guardar la solicitud. Verifique los campos.");
-            }
-        });
+		save.addClickListener(e -> {
+			try {
+				if (this.fieldwork == null) {
+					this.fieldwork = new Fieldwork();
+				}
+				binder.writeBean(this.fieldwork);
+				fieldworkService.save(this.fieldwork);
+				clearForm();
+				refreshGrid();
+				Notification.show("Solicitud de campo guardada.");
+				UI.getCurrent().navigate(FieldworksView.class);
+			} catch (ValidationException validationException) {
+				Notification.show("No se pudo guardar la solicitud. Verifique los campos.");
+			}
+		});
 
-        delete.addClickListener(e -> {
-            if (this.fieldwork != null) {
-                fieldworkService.delete(this.fieldwork.getId());
-                clearForm();
-                refreshGrid();
-                Notification.show("Solicitud de campo eliminada.");
-                UI.getCurrent().navigate(FieldworksView.class);
-            }
-        });
-    }
+		delete.addClickListener(e -> {
+			if (this.fieldwork != null) {
+				fieldworkService.delete(this.fieldwork.getId());
+				clearForm();
+				refreshGrid();
+				Notification.show("Solicitud de campo eliminada.");
+				UI.getCurrent().navigate(FieldworksView.class);
+			}
+		});
+	}
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Long> fieldworkId = event.getRouteParameters().get(FIELDWORK_ID).map(Long::parseLong);
-        if (fieldworkId.isPresent()) {
-            Optional<Fieldwork> fieldworkFromBackend = fieldworkService.get(fieldworkId.get());
-            if (fieldworkFromBackend.isPresent()) {
-                populateForm(fieldworkFromBackend.get());
-            } else {
-                Notification.show(
-                        String.format("La solicitud de campo con id = %s no fue encontrada", fieldworkId.get()), 3000,
-                        Notification.Position.BOTTOM_START);
-                refreshGrid();
-                event.forwardTo(FieldworksView.class);
-            }
-        }
-    }
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		Optional<Long> fieldworkId = event.getRouteParameters().get(FIELDWORK_ID).map(Long::parseLong);
+		if (fieldworkId.isPresent()) {
+			Optional<Fieldwork> fieldworkFromBackend = fieldworkService.get(fieldworkId.get());
+			if (fieldworkFromBackend.isPresent()) {
+				populateForm(fieldworkFromBackend.get());
+			} else {
+				Notification.show(
+						String.format("La solicitud de campo con id = %s no fue encontrada", fieldworkId.get()), 3000,
+						Notification.Position.BOTTOM_START);
+				refreshGrid();
+				event.forwardTo(FieldworksView.class);
+			}
+		}
+	}
 
-    private void createEditorLayout(SplitLayout splitLayout) {
-        this.editorLayoutDiv = new Div();
-        this.editorLayoutDiv.setClassName("editor-layout");
+	private void createEditorLayout(SplitLayout splitLayout) {
+		this.editorLayoutDiv = new Div();
+		this.editorLayoutDiv.setClassName("editor-layout");
 
-        Div editorDiv = new Div();
-        editorDiv.setClassName("editor");
-        this.editorLayoutDiv.add(editorDiv);
+		Div editorDiv = new Div();
+		editorDiv.setClassName("editor");
+		this.editorLayoutDiv.add(editorDiv);
 
-        FormLayout formLayout = new FormLayout();
-        study = new ComboBox<>("Estudio");
-        study.setItems(studyService.listAll());
-        study.setItemLabelGenerator(Study::getName);
-        initPlannedDate = new DatePicker("Fecha Planificada Inicio");
-        endPlannedDate = new DatePicker("Fecha Planificada Fin");
-        initDate = new DatePicker("Fecha Inicio");
-        endDate = new DatePicker("Fecha Fin");
-        goalQuantity = new IntegerField("Cantidad Objetivo");
-        completed = new IntegerField("Completadas");
-        obse = new TextField("Observaciones");
-        status = new ComboBox<>("Estado");
-        status.setItems(FieldworkStatus.values());
-        type = new ComboBox<>("Tipo");
-        type.setItems(FieldworkType.values());
-        formLayout.add(study, initPlannedDate, endPlannedDate, initDate, endDate, goalQuantity, completed, obse, status, type);
+		FormLayout formLayout = new FormLayout();
+		study = new ComboBox<>("Estudio");
+		study.setItems(studyService.listAll());
+		study.setItemLabelGenerator(Study::getName);
+		initPlannedDate = new DatePicker("Fecha Planificada Inicio");
+		endPlannedDate = new DatePicker("Fecha Planificada Fin");
+		initDate = new DatePicker("Fecha Inicio");
+		endDate = new DatePicker("Fecha Fin");
+		goalQuantity = new IntegerField("Cantidad Objetivo");
+		completed = new IntegerField("Completadas");
+		obs = new TextField("Observaciones");
+		status = new ComboBox<>("Estado");
+		status.setItems(FieldworkStatus.values());
+		type = new ComboBox<>("Tipo");
+		type.setItems(FieldworkType.values());
+		formLayout.add(study, initPlannedDate, endPlannedDate, initDate, endDate, goalQuantity, completed, obs, status,
+				type);
 
-        editorDiv.add(formLayout);
-        createButtonLayout(this.editorLayoutDiv);
+		editorDiv.add(formLayout);
+		createButtonLayout(this.editorLayoutDiv);
 
-        splitLayout.addToSecondary(this.editorLayoutDiv);
-        this.editorLayoutDiv.setVisible(false);
-    }
+		splitLayout.addToSecondary(this.editorLayoutDiv);
+		this.editorLayoutDiv.setVisible(false);
+	}
 
-    private void createButtonLayout(Div editorLayoutDiv) {
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setClassName("button-layout");
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        buttonLayout.add(save, delete, cancel);
-        editorLayoutDiv.add(buttonLayout);
-    }
+	private void createButtonLayout(Div editorLayoutDiv) {
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setClassName("button-layout");
+		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		buttonLayout.add(save, delete, cancel);
+		editorLayoutDiv.add(buttonLayout);
+	}
 
-    private void createGridLayout(SplitLayout splitLayout) {
-        Div wrapper = new Div();
-        wrapper.setClassName("grid-wrapper");
-        splitLayout.addToPrimary(wrapper);
+	private void createGridLayout(SplitLayout splitLayout) {
+		Div wrapper = new Div();
+		wrapper.setClassName("grid-wrapper");
+		splitLayout.addToPrimary(wrapper);
 
-        H2 title = new H2("Solicitudes de Campo");
-        Button addButton = new Button("Agregar Solicitud");
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addButton.addClickListener(e -> {
-            clearForm();
-            this.fieldwork = new Fieldwork();
-            binder.readBean(this.fieldwork);
-            this.editorLayoutDiv.setVisible(true);
-        });
+		H2 title = new H2("Solicitudes de Campo");
+		Button addButton = new Button("Agregar Solicitud");
+		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addButton.addClickListener(e -> {
+			clearForm();
+			this.fieldwork = new Fieldwork();
+			binder.readBean(this.fieldwork);
+			this.editorLayoutDiv.setVisible(true);
+		});
 
-        HorizontalLayout topLayout = new HorizontalLayout(title, addButton);
-        topLayout.setWidth("100%");
-        topLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
+		HorizontalLayout topLayout = new HorizontalLayout(title, addButton);
+		topLayout.setWidth("100%");
+		topLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        studyFilter = new ComboBox<>("Estudio");
-        studyFilter.setItems(studyService.listAll());
-        studyFilter.setItemLabelGenerator(Study::getName);
-        studyFilter.setClearButtonVisible(true);
-        studyFilter.addValueChangeListener(e -> refreshGrid());
+		studyFilter = new ComboBox<>("Estudio");
+		studyFilter.setItems(studyService.listAll());
+		studyFilter.setItemLabelGenerator(Study::getName);
+		studyFilter.setClearButtonVisible(true);
+		studyFilter.addValueChangeListener(e -> refreshGrid());
 
-        statusFilter = new ComboBox<>("Estado");
-        statusFilter.setItems(FieldworkStatus.values());
-        statusFilter.setClearButtonVisible(true);
-        statusFilter.addValueChangeListener(e -> refreshGrid());
+		statusFilter = new ComboBox<>("Estado");
+		statusFilter.setItems(FieldworkStatus.values());
+		statusFilter.setClearButtonVisible(true);
+		statusFilter.addValueChangeListener(e -> refreshGrid());
 
-        typeFilter = new ComboBox<>("Tipo");
-        typeFilter.setItems(FieldworkType.values());
-        typeFilter.setClearButtonVisible(true);
-        typeFilter.addValueChangeListener(e -> refreshGrid());
+		typeFilter = new ComboBox<>("Tipo");
+		typeFilter.setItems(FieldworkType.values());
+		typeFilter.setClearButtonVisible(true);
+		typeFilter.addValueChangeListener(e -> refreshGrid());
 
-        HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, statusFilter, typeFilter);
-        filterLayout.setWidth("100%");
+		HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, statusFilter, typeFilter);
+		filterLayout.setWidth("100%");
 
-        wrapper.add(topLayout, filterLayout, grid);
-    }
+		wrapper.add(topLayout, filterLayout, grid);
+	}
 
-    private void refreshGrid() {
-        grid.select(null);
-        grid.getDataProvider().refreshAll();
-    }
+	private void refreshGrid() {
+		grid.select(null);
+		grid.getDataProvider().refreshAll();
+	}
 
-    private void clearForm() {
-        populateForm(null);
-    }
+	private void clearForm() {
+		populateForm(null);
+	}
 
-    private void populateForm(Fieldwork value) {
-        this.fieldwork = value;
-        binder.readBean(this.fieldwork);
-        this.editorLayoutDiv.setVisible(value != null);
-    }
+	private void populateForm(Fieldwork value) {
+		this.fieldwork = value;
+		binder.readBean(this.fieldwork);
+		this.editorLayoutDiv.setVisible(value != null);
+	}
 }
