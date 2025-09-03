@@ -5,8 +5,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import uy.com.bay.utiles.data.Fieldwork;
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -40,5 +42,9 @@ public class FieldworkService {
 
     public int count() {
         return (int) repository.count();
+    }
+
+    public List<Fieldwork> findAllByStudy(Study study) {
+        return repository.findAllByStudy(study);
     }
 }
