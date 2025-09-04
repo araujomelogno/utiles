@@ -27,7 +27,6 @@ public class FieldworkDialog extends Dialog {
 			UI.getCurrent().navigate("fieldworks/" + event.getItem().getId() + "/edit");
 			close();
 		});
-
 		VerticalLayout layout = new VerticalLayout(grid);
 		add(layout);
 
