@@ -12,7 +12,7 @@ import uy.com.bay.utiles.data.ExpenseStatus;
 import java.util.Date;
 import java.util.List;
 
-public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, Long>, JpaSpecificationExecutor<ExpenseRequest> {
+public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, Long>, JpaSpecificationExecutor<ExpenseRequest>, ExpenseRequestRepositoryCustom {
 
     List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable);
 
