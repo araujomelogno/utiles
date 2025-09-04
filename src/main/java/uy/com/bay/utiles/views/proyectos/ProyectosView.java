@@ -41,6 +41,7 @@ import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.utils.FormattingUtils;
 
 @PageTitle("Proyectos")
 @Route("/:proyectoID?/:action?(edit)")
@@ -356,8 +357,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.proyecto = value;
 		binder.readBean(this.proyecto);
 		if (value != null) {
-			totalTransfered.setValue(String.valueOf(value.getTotalTransfered()));
-			totalReportedCost.setValue(String.valueOf(value.getTotalReportedCost()));
+			totalTransfered.setValue(FormattingUtils.formatAmount(value.getTotalTransfered()));
+			totalReportedCost.setValue(FormattingUtils.formatAmount(value.getTotalReportedCost()));
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");

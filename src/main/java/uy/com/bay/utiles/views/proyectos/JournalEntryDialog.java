@@ -13,6 +13,7 @@ import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
+import uy.com.bay.utiles.utils.FormattingUtils;
 import uy.com.bay.utiles.views.expenses.ExpenseReportViewDialog;
 import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
@@ -77,7 +78,13 @@ public class JournalEntryDialog extends Dialog {
 			col.setAutoWidth(true); // Ajusta según contenido
 			col.setFlexGrow(0); // No se expande más allá de lo necesario
 		});
-		grid.addColumn(JournalEntry::getAmount).setHeader("Monto");
+		grid.addColumn(entry -> {
+			double amount = entry.getAmount();
+			if (entry.getOperation() == Operation.CREDITO) {
+				amount *= -1;
+			}
+			return FormattingUtils.formatAmount(amount);
+		}).setHeader("Monto");
 		grid.addColumn(entry -> entry.getSurveyor() != null ? entry.getSurveyor().getName() : "")
 				.setHeader("Encuestador");
 		grid.addColumn(JournalEntry::getOperation).setHeader("Operación");
@@ -101,8 +108,7 @@ public class JournalEntryDialog extends Dialog {
 			saldoMap.put(entry, runningSaldo.get());
 		}
 
-		grid.getColumnByKey("saldoColumn").setRenderer(new com.vaadin.flow.data.renderer.TextRenderer<>(entry -> {
-			return String.format("%.2f", saldoMap.get(entry));
-		}));
+		grid.getColumnByKey("saldoColumn").setRenderer(new com.vaadin.flow.data.renderer.TextRenderer<>(
+				entry -> FormattingUtils.formatAmount(saldoMap.get(entry))));
 	}
 }

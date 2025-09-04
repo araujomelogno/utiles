@@ -23,6 +23,7 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.services.ExpenseReportService;
+import uy.com.bay.utiles.utils.FormattingUtils;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Aprobar Rendiciones")
@@ -68,7 +69,8 @@ public class ExpenseReportApprovalView extends Div {
 		}).setHeader("Surveyor").setSortable(true);
 		Grid.Column<ExpenseReport> studyColumn = grid.addColumn(report -> report.getStudy().getName())
 				.setHeader("Study").setSortable(true);
-		Grid.Column<ExpenseReport> amountColumn = grid.addColumn(ExpenseReport::getAmount).setHeader("Amount")
+		Grid.Column<ExpenseReport> amountColumn = grid
+				.addColumn(report -> FormattingUtils.formatAmount(report.getAmount())).setHeader("Amount")
 				.setSortable(true);
 		Grid.Column<ExpenseReport> conceptColumn = grid
 				.addColumn(report -> report.getConcept() != null ? report.getConcept().getName() : "")

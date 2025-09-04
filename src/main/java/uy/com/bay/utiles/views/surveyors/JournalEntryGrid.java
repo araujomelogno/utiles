@@ -16,6 +16,7 @@ import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
+import uy.com.bay.utiles.utils.FormattingUtils;
 import uy.com.bay.utiles.views.expenses.ExpenseReportViewDialog;
 import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
@@ -40,7 +41,13 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		addColumn(entry -> sdf.format(entry.getDate())).setHeader("Fecha");
 		addComponentColumn(this::createDetailLink).setHeader("Detalle");
-		addColumn(JournalEntry::getAmount).setHeader("Monto");
+		addColumn(entry -> {
+			double amount = entry.getAmount();
+			if (entry.getOperation() == Operation.CREDITO) {
+				amount *= -1;
+			}
+			return FormattingUtils.formatAmount(amount);
+		}).setHeader("Monto");
 		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Estudio");
 		addColumn(JournalEntry::getOperation).setHeader("Movimiento");
 		addColumn(entry -> "").setHeader("Saldo").setKey("saldoColumn");
@@ -85,8 +92,7 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 			saldoMap.put(entry, runningSaldo.get());
 		}
 
-		getColumnByKey("saldoColumn").setRenderer(new com.vaadin.flow.data.renderer.TextRenderer<>(entry -> {
-			return String.format("%.2f", saldoMap.get(entry));
-		}));
+		getColumnByKey("saldoColumn").setRenderer(new com.vaadin.flow.data.renderer.TextRenderer<>(
+				entry -> FormattingUtils.formatAmount(saldoMap.get(entry))));
 	}
 }
