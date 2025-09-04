@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.views.proyectos;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -22,6 +23,10 @@ public class FieldworkDialog extends Dialog {
 		grid.addColumn("goalQuantity").setHeader("Encuestas objetivo").setAutoWidth(true);
 
 		grid.setItems(fieldworkService.findAllByStudy(study));
+		grid.addItemClickListener(event -> {
+			UI.getCurrent().navigate("fieldworks/" + event.getItem().getId() + "/edit");
+			close();
+		});
 
 		VerticalLayout layout = new VerticalLayout(grid);
 		add(layout);
