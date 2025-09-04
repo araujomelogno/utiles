@@ -146,6 +146,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				}
 				binder.writeBean(this.fieldwork);
 				fieldworkService.save(this.fieldwork);
+				if (this.fieldwork.getStudy() != null
+						&& !this.fieldwork.getStudy().getFieldworks().contains(this.fieldwork)) {
+					this.fieldwork.getStudy().getFieldworks().add(this.fieldwork);
+					this.studyService.save(this.fieldwork.getStudy());
+				}
+
 				clearForm();
 				refreshGrid();
 				Notification.show("Solicitud de campo guardada.");
