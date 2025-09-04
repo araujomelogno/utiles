@@ -16,4 +16,6 @@ public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, Jpa
 	Optional<Fieldwork> findByDoobloId(String doobloId);
 
 	List<Fieldwork> findAllByStudy(Study study);
+
+	List<Fieldwork> findAllByEndPlannedDateBetween(java.time.LocalDate startDate, java.time.LocalDate endDate);
 }
