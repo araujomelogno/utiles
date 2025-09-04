@@ -64,4 +64,8 @@ public class ExpenseRequestService {
 	public void revokeRequests(List<Long> ids) {
 		repository.revokeRequests(ids, ExpenseStatus.RECHAZADO, new Date());
 	}
+
+	public Double sumAmount(Specification<ExpenseRequest> spec) {
+		return repository.sumAmount(spec);
+	}
 }
