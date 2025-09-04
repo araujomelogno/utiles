@@ -89,7 +89,7 @@ public class MainLayout extends AppLayout {
 
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
 		menuEntries.forEach(entry -> {
-			if (!entry.title().equals("Usuarios")) {
+			if (!entry.title().equals("Usuarios") && !entry.title().equals("Proyectos")) {
 				if (entry.icon() != null) {
 					nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
 				} else {
@@ -159,12 +159,12 @@ public class MainLayout extends AppLayout {
 
 		nav.addItem(surveyorPortalItem);
 
-		SideNavItem solicitudesCampoItem = new SideNavItem("Solicitudes de campo");
-		solicitudesCampoItem.setPrefixComponent(new Icon("vaadin", "clipboard-text"));
+		SideNavItem proyectosItem = new SideNavItem("Proyectos");
+		proyectosItem.setPrefixComponent(new Icon("vaadin", "briefcase"));
 		SideNavItem listarSolicitudesItem = new SideNavItem("Listar Solicitudes", "fieldworks");
 		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
-		solicitudesCampoItem.addItem(listarSolicitudesItem);
-		nav.addItem(solicitudesCampoItem);
+		proyectosItem.addItem(listarSolicitudesItem);
+		nav.addItem(proyectosItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
