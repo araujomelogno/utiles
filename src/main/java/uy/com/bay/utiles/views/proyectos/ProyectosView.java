@@ -45,7 +45,7 @@ import uy.com.bay.utiles.services.StudyService;
 @PageTitle("Proyectos")
 @Route("/:proyectoID?/:action?(edit)")
 @Menu(order = 0, icon = LineAwesomeIconUrl.BRIEFCASE_SOLID)
-@RouteAlias("")
+@RouteAlias("studies")
 @RolesAllowed("ADMIN")
 public class ProyectosView extends Div implements BeforeEnterObserver {
 

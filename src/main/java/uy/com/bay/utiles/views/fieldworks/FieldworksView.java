@@ -191,8 +191,9 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private void createEditorLayout(SplitLayout splitLayout) {
 		this.editorLayoutDiv = new Div();
-		this.editorLayoutDiv.setClassName("editor-layout");
 
+		this.editorLayoutDiv.setClassName("editor-layout");
+		this.editorLayoutDiv.setWidth("30%");
 		Div editorDiv = new Div();
 		editorDiv.setClassName("editor");
 		this.editorLayoutDiv.add(editorDiv);

@@ -87,6 +87,16 @@ public class MainLayout extends AppLayout {
 	private SideNav createNavigation() {
 		SideNav nav = new SideNav();
 
+		SideNavItem proyectosItem = new SideNavItem("Proyectos");
+		proyectosItem.setPrefixComponent(new Icon("vaadin", "briefcase"));
+		SideNavItem listarProeyctosItem = new SideNavItem("Listar proyectos", "studies");
+		listarProeyctosItem.setPrefixComponent(new Icon("vaadin", "list"));
+		proyectosItem.addItem(listarProeyctosItem);
+		SideNavItem listarSolicitudesItem = new SideNavItem("Solicitudes de campo", "fieldworks");
+		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
+		proyectosItem.addItem(listarSolicitudesItem);
+		nav.addItem(proyectosItem);
+
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
 		menuEntries.forEach(entry -> {
 			if (!entry.title().equals("Usuarios") && !entry.title().equals("Proyectos")) {
@@ -158,13 +168,6 @@ public class MainLayout extends AppLayout {
 		surveyorPortalItem.addItem(rendirGastoItem);
 
 		nav.addItem(surveyorPortalItem);
-
-		SideNavItem proyectosItem = new SideNavItem("Proyectos");
-		proyectosItem.setPrefixComponent(new Icon("vaadin", "briefcase"));
-		SideNavItem listarSolicitudesItem = new SideNavItem("Listar Solicitudes", "fieldworks");
-		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
-		proyectosItem.addItem(listarSolicitudesItem);
-		nav.addItem(proyectosItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
