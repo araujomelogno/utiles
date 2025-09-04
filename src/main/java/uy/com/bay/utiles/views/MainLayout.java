@@ -151,6 +151,10 @@ public class MainLayout extends AppLayout {
 		SideNavItem rendirGastoItem = new SideNavItem("Rendir gasto", "surveyor-expense-report");
 		rendirGastoItem.setPrefixComponent(new Icon("vaadin", "file-add"));
 		surveyorPortalItem.addItem(rendirGastoItem);
+
+		SideNavItem saldoGastoItem = new SideNavItem("Saldo de gastos", "surveyor-journal-entry");
+		saldoGastoItem.setPrefixComponent(new Icon("vaadin", "wallet"));
+		surveyorPortalItem.addItem(saldoGastoItem);
 		
 		nav.addItem(surveyorPortalItem);
 
