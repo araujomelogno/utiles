@@ -12,6 +12,7 @@ public class FormattingUtils {
     static {
         symbols.setDecimalSeparator(',');
         symbols.setGroupingSeparator('.');
+        
         formatter = new DecimalFormat("#,##0.00", symbols);
     }
 
