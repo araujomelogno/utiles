@@ -105,25 +105,6 @@ public class SurveyorExpenseReportEntry extends Div {
 		binder.bindInstanceFields(this);
 
 		List<ExpenseReportFile> uploadedFiles = new ArrayList<>();
-//		MemoryBuffer buffer = new MemoryBuffer();
-//		comprobantes.setReceiver(buffer);
-//		comprobantes.addSucceededListener(event -> {
-//			try (InputStream inputStream = buffer.getInputStream()) {
-//				ExpenseReportFile file = new ExpenseReportFile();
-//				file.setName(event.getFileName());
-//				file.setType(event.getMIMEType());
-//				file.setContent(inputStream.readAllBytes());
-//				file.setCreated(new Date());
-//				uploadedFiles.add(file);
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		});
-
-//		comprobantes = new Upload();
-//		// files.setMaxFileSize(20480);
-//		comprobantes.setAcceptedFileTypes("image/jpeg", "image/png", "application/pdf");
-//
 		Map<String, ByteArrayOutputStream> fileBuffers = new HashMap<>();
 
 		comprobantes.setReceiver((MultiFileReceiver) (fileName, mimeType) -> {

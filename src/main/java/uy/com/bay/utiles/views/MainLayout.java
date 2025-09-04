@@ -144,18 +144,19 @@ public class MainLayout extends AppLayout {
 
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
 		surveyorPortalItem.setPrefixComponent(new Icon("vaadin", "user-card"));
-		SideNavItem solicitarGastoItem = new SideNavItem("Solicitud de gastos", "surveyor-expense-request");
-		solicitarGastoItem.setPrefixComponent(new Icon("vaadin", "cash"));
-		surveyorPortalItem.addItem(solicitarGastoItem);
-		
-		SideNavItem rendirGastoItem = new SideNavItem("Rendir gasto", "surveyor-expense-report");
-		rendirGastoItem.setPrefixComponent(new Icon("vaadin", "file-add"));
-		surveyorPortalItem.addItem(rendirGastoItem);
 
 		SideNavItem saldoGastoItem = new SideNavItem("Saldo de gastos", "surveyor-journal-entry");
 		saldoGastoItem.setPrefixComponent(new Icon("vaadin", "wallet"));
 		surveyorPortalItem.addItem(saldoGastoItem);
-		
+
+		SideNavItem solicitarGastoItem = new SideNavItem("Solicitud de gastos", "surveyor-expense-request");
+		solicitarGastoItem.setPrefixComponent(new Icon("vaadin", "cash"));
+		surveyorPortalItem.addItem(solicitarGastoItem);
+
+		SideNavItem rendirGastoItem = new SideNavItem("Rendir gasto", "surveyor-expense-report");
+		rendirGastoItem.setPrefixComponent(new Icon("vaadin", "file-add"));
+		surveyorPortalItem.addItem(rendirGastoItem);
+
 		nav.addItem(surveyorPortalItem);
 
 		SideNavItem solicitudesCampoItem = new SideNavItem("Solicitudes de campo");
@@ -164,7 +165,6 @@ public class MainLayout extends AppLayout {
 		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
 		solicitudesCampoItem.addItem(listarSolicitudesItem);
 		nav.addItem(solicitudesCampoItem);
-
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
