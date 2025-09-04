@@ -77,7 +77,7 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 
 		for (JournalEntry entry : sortedItems) {
 			double amount = entry.getAmount();
-			if (entry.getOperation() == Operation.DEBITO) {
+			if (entry.getOperation() == Operation.CREDITO) {
 				runningSaldo.updateAndGet(v -> v - amount);
 			} else {
 				runningSaldo.updateAndGet(v -> v + amount);

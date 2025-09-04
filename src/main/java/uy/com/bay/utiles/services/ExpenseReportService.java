@@ -79,7 +79,7 @@ public class ExpenseReportService {
 		JournalEntry journalEntry = new JournalEntry();
 		journalEntry.setDetail("rendicion aprobada por el concepto " + report.getConcept().getName());
 		journalEntry.setDate(new Date());
-		journalEntry.setOperation(Operation.DEBITO);
+		journalEntry.setOperation(Operation.CREDITO);
 		journalEntry.setAmount(report.getAmount());
 		journalEntry.setSurveyor(report.getSurveyor());
 		journalEntry.setStudy(report.getStudy());

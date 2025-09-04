@@ -84,8 +84,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 	private final ExpenseReportFileService expenseReportFileService;
 
 	public EncuestadoresView(SurveyorService encuestadorService, JournalEntryService journalEntryService,
-			ExpenseTransferFileService expenseTransferFileService,
-			ExpenseReportFileService expenseReportFileService) {
+			ExpenseTransferFileService expenseTransferFileService, ExpenseReportFileService expenseReportFileService) {
 		this.encuestadorService = encuestadorService;
 		this.journalEntryService = journalEntryService;
 		this.expenseTransferFileService = expenseTransferFileService;
@@ -403,7 +402,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 			JournalEntry entry = new JournalEntry();
 			entry.setDetail("Liquidación total de gastos del encuestador");
 			entry.setDate(new Date());
-			entry.setOperation(Operation.DEBITO);
+			entry.setOperation(Operation.CREDITO);
 			entry.setAmount(encuestador.getBalance());
 			entry.setSurveyor(encuestador);
 			entry.setSource(Source.LIQUIDACION);
@@ -435,7 +434,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 				JournalEntry entry = new JournalEntry();
 				entry.setDetail("Liquidación parcial de gastos del encuestador");
 				entry.setDate(new Date());
-				entry.setOperation(Operation.DEBITO);
+				entry.setOperation(Operation.CREDITO);
 				entry.setAmount(amount);
 				entry.setSurveyor(encuestador);
 				journalEntryService.save(entry);

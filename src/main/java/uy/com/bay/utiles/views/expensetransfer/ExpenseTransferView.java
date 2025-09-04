@@ -194,7 +194,7 @@ public class ExpenseTransferView extends VerticalLayout {
 			journalEntry.setTransfer(savedExpenseTransfer);
 			journalEntry.setDetail("transferencia realizada a encuestador por multiples conceptos");
 			journalEntry.setDate(new Date());
-			journalEntry.setOperation(Operation.CREDITO);
+			journalEntry.setOperation(Operation.DEBITO);
 			journalEntry.setAmount(totalAmount);
 			journalEntry.setSurveyor(surveyor);
 			journalEntry.setStudy(study);

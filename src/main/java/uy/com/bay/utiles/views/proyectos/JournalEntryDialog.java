@@ -93,10 +93,10 @@ public class JournalEntryDialog extends Dialog {
 
 		for (JournalEntry entry : sortedItems) {
 			double amount = entry.getAmount();
-			if (entry.getOperation() == Operation.DEBITO) {
-				runningSaldo.updateAndGet(v -> v + amount);
-			} else {
+			if (entry.getOperation() == Operation.CREDITO) {
 				runningSaldo.updateAndGet(v -> v - amount);
+			} else {
+				runningSaldo.updateAndGet(v -> v + amount);
 			}
 			saldoMap.put(entry, runningSaldo.get());
 		}

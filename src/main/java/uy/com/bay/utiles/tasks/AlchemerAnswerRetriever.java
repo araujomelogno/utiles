@@ -53,7 +53,6 @@ public class AlchemerAnswerRetriever {
                         task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
 
                 String response = restTemplate.getForObject(url, String.class);
-                LOGGER.info("Response from Alchemer API: {}", response);
 
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response);
@@ -80,7 +79,7 @@ public class AlchemerAnswerRetriever {
                                 alchemerAnswer.setSurveyId(task.getSurveyId());
                                 alchemerAnswer.setResponseId(task.getResponseId());
                                 alchemerAnswerRepository.save(alchemerAnswer);
-                                LOGGER.info("Saved answer for question ID: {}", alchemerAnswer.getId());
+                                
                                 break;
                             case "parent":
                                 processParentAnswer(answerNode, task);

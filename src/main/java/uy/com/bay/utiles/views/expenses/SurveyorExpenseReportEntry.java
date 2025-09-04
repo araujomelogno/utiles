@@ -43,7 +43,6 @@ import uy.com.bay.utiles.views.MainLayout;
 @RolesAllowed({ "ADMIN", "ENCUESTADORES" })
 public class SurveyorExpenseReportEntry extends Div {
 
-	private ComboBox<Study> study;
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
 	private TextArea obs;
@@ -70,10 +69,6 @@ public class SurveyorExpenseReportEntry extends Div {
 		addClassName("surveyor-expense-report-entry-view");
 
 		FormLayout formLayout = new FormLayout();
-		study = new ComboBox<>("Estudio");
-		study.setItems(studyService.findAllByShowSurveyor(true));
-		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
-		study.setRequired(true);
 
 		amount = new NumberField("Monto");
 		amount.setRequiredIndicatorVisible(true);
@@ -98,7 +93,7 @@ public class SurveyorExpenseReportEntry extends Div {
 		Button saveButton = new Button("Guardar");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		formLayout.add(study, amount, concept, obs, comprobantes, saveButton);
+		formLayout.add(amount, concept, obs, comprobantes, saveButton);
 		add(formLayout);
 
 		binder = new BeanValidationBinder<>(ExpenseReport.class);
