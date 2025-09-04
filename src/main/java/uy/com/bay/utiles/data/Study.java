@@ -2,13 +2,14 @@ package uy.com.bay.utiles.data;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import java.util.List;
 
 @Entity
 public class Study extends AbstractEntity {
 
-	@OneToMany(mappedBy = "study", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "study", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<Fieldwork> fieldworks;
 	private String name;
 	private String odooId;
