@@ -15,6 +15,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridMultiSelectionModel;
 import com.vaadin.flow.component.grid.GridMultiSelectionModel.SelectAllCheckboxVisibility;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
@@ -113,6 +114,9 @@ public class ExpensesAprovalView extends Div {
 			return expenseRequestService.count(spec);
 		}));
 
+		FooterRow footerRow = grid.appendFooterRow();
+		updateFooter(footerRow, studyColumn, amountColumn);
+
 		HeaderRow headerRow = grid.appendHeaderRow();
 
 		TextField studyFilter = new TextField();
@@ -122,6 +126,7 @@ public class ExpensesAprovalView extends Div {
 		studyFilter.addValueChangeListener(e -> {
 			filters.setStudyName(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(studyColumn).setComponent(studyFilter);
 
@@ -132,6 +137,7 @@ public class ExpensesAprovalView extends Div {
 		surveyorFilter.addValueChangeListener(e -> {
 			filters.setSurveyorName(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
@@ -141,6 +147,7 @@ public class ExpensesAprovalView extends Div {
 		requestDateFilter.addValueChangeListener(e -> {
 			filters.setRequestDate(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 
 		headerRow.getCell(requestDateColumn).setComponent(requestDateFilter);
@@ -152,6 +159,7 @@ public class ExpensesAprovalView extends Div {
 		amountFilter.addValueChangeListener(e -> {
 			filters.setAmount(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(amountColumn).setComponent(amountFilter);
 
@@ -163,9 +171,18 @@ public class ExpensesAprovalView extends Div {
 		conceptFilter.addValueChangeListener(e -> {
 			filters.setConcept(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(conceptColumn).setComponent(conceptFilter);
 
+	}
+
+	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseRequest> studyColumn,
+			Grid.Column<ExpenseRequest> amountColumn) {
+		Specification<ExpenseRequest> spec = createSpecification(filters);
+		Double total = expenseRequestService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
 	}
 
 	private Specification<ExpenseRequest> createSpecification(Filters filters) {
