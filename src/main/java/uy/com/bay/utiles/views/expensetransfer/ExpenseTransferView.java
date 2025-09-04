@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.notification.Notification;
@@ -129,6 +130,9 @@ public class ExpenseTransferView extends VerticalLayout {
 		grid.asMultiSelect().addValueChangeListener(event -> {
 			transferButton.setEnabled(!event.getValue().isEmpty());
 		});
+
+		FooterRow footerRow = grid.appendFooterRow();
+		updateFooter(footerRow, studyColumn, grid.getColumnByKey("amount"));
 	}
 
 	private void createTransferButton() {
@@ -243,5 +247,33 @@ public class ExpenseTransferView extends VerticalLayout {
 
 			return expenseRequestService.list(pageRequest, spec).stream();
 		});
+		FooterRow footerRow = grid.getFooterRows().get(0);
+		updateFooter(footerRow, grid.getColumnByKey("study.name"), grid.getColumnByKey("amount"));
+	}
+
+	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseRequest> studyColumn,
+			Grid.Column<ExpenseRequest> amountColumn) {
+		Specification<ExpenseRequest> spec = (root, q, cb) -> cb.equal(root.get("expenseStatus"),
+				ExpenseStatus.APROBADO);
+
+		if (surveyorFilter != null && !surveyorFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("surveyor").get("lastName")),
+					"%" + surveyorFilter.getValue().toLowerCase() + "%"));
+		}
+		if (studyFilter != null && !studyFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
+					"%" + studyFilter.getValue().toLowerCase() + "%"));
+		}
+		if (conceptFilter != null && !conceptFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
+					"%" + conceptFilter.getValue().toLowerCase() + "%"));
+		}
+		if (obsFilter != null && !obsFilter.isEmpty()) {
+			spec = spec.and(
+					(root, q, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsFilter.getValue().toLowerCase() + "%"));
+		}
+		Double total = expenseRequestService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
 	}
 }
