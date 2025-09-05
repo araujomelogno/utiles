@@ -646,6 +646,6 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		Specification<ExpenseRequest> spec = createSpecification(filters);
 		Double total = expenseRequestService.sumAmount(spec);
 		footerRow.getCell(studyColumn).setText("TOTAL");
-		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
+		footerRow.getCell(amountColumn).setText(uy.com.bay.utiles.utils.FormattingUtils.formatAmount(total));
 	}
 }
