@@ -223,7 +223,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
 		grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-
+		grid.setHeightFull();
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
 				.setAutoWidth(true).setSortable(true).setSortProperty("study.name");

@@ -181,6 +181,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
 		grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+		grid.setHeightFull();
 
 		grid.asSingleSelect().addValueChangeListener(event -> {
 			if (event.getValue() != null) {
@@ -194,30 +195,31 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 			}
 		});
 
-		Grid.Column<ExpenseReport> dateColumn = grid.addColumn(ExpenseReport::getDate).setHeader("Date")
+		Grid.Column<ExpenseReport> dateColumn = grid.addColumn(ExpenseReport::getDate).setHeader("Fecha")
 				.setSortable(true);
 		Grid.Column<ExpenseReport> surveyorColumn = grid.addColumn(report -> {
 			if (report.getSurveyor() == null) {
 				return "";
 			}
 			return report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
-		}).setHeader("Surveyor").setSortable(true);
+		}).setHeader("Encuestador").setSortable(true);
 		Grid.Column<ExpenseReport> studyColumn = grid
-				.addColumn(report -> report.getStudy() != null ? report.getStudy().getName() : "")
-				.setHeader("Study").setSortable(true);
+				.addColumn(report -> report.getStudy() != null ? report.getStudy().getName() : "").setHeader("Estudio")
+				.setSortable(true);
 		Grid.Column<ExpenseReport> amountColumn = grid
-				.addColumn(report -> FormattingUtils.formatAmount(report.getAmount())).setHeader("Amount")
+				.addColumn(report -> FormattingUtils.formatAmount(report.getAmount())).setHeader("Monto")
 				.setSortable(true);
 		Grid.Column<ExpenseReport> conceptColumn = grid
 				.addColumn(report -> report.getConcept() != null ? report.getConcept().getName() : "")
-				.setHeader("Concept").setSortable(true);
-		Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Status")
+				.setHeader("Concepto").setSortable(true);
+		Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Estado")
 				.setSortable(true);
 
 		grid.setDataProvider(new CallbackDataProvider<>(
-				query -> expenseReportService.list(
-						com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query),
-						createSpecification(filters)).stream(),
+				query -> expenseReportService
+						.list(com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query),
+								createSpecification(filters))
+						.stream(),
 				query -> (int) expenseReportService.count(createSpecification(filters))));
 
 		// Create filters
@@ -306,7 +308,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new TextArea("Observaciones");
-		formLayout.add(date, amount, concept, obs, study, surveyor);
+		formLayout.add(study, surveyor, date, amount, concept, obs);
 		editorDiv.add(formLayout);
 
 		createButtonLayout(editorDiv);
@@ -356,10 +358,10 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		this.expenseReport = value;
 		binder.readBean(this.expenseReport);
 		if (value != null) {
-			approve.setEnabled(
-					value.getId() != null && value.getId() != 0 && value.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
-			reject.setEnabled(
-					value.getId() != null && value.getId() != 0 && value.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
+			approve.setEnabled(value.getId() != null && value.getId() != 0
+					&& value.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
+			reject.setEnabled(value.getId() != null && value.getId() != 0
+					&& value.getExpenseStatus() == ExpenseReportStatus.INGRESADO);
 		} else {
 			approve.setEnabled(false);
 			reject.setEnabled(false);
