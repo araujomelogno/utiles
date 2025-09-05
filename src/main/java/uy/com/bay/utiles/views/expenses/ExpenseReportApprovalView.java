@@ -2,7 +2,6 @@ package uy.com.bay.utiles.views.expenses;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,20 +13,21 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.FooterRow;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.CallbackDataProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -202,7 +202,8 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 			}
 			return report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
 		}).setHeader("Surveyor").setSortable(true);
-		Grid.Column<ExpenseReport> studyColumn = grid.addColumn(report -> report.getStudy().getName())
+		Grid.Column<ExpenseReport> studyColumn = grid
+				.addColumn(report -> report.getStudy() != null ? report.getStudy().getName() : "")
 				.setHeader("Study").setSortable(true);
 		Grid.Column<ExpenseReport> amountColumn = grid
 				.addColumn(report -> FormattingUtils.formatAmount(report.getAmount())).setHeader("Amount")
@@ -305,7 +306,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new TextArea("Observaciones");
-		formLayout.add(study, surveyor, date, amount, concept, obs);
+		formLayout.add(date, amount, concept, obs, study, surveyor);
 		editorDiv.add(formLayout);
 
 		createButtonLayout(editorDiv);
