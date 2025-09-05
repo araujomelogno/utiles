@@ -308,7 +308,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new TextArea("Observaciones");
-		formLayout.add(study, surveyor, date, amount, concept, obs);
+		formLayout.add(date, amount, concept, obs, study, surveyor);
 		editorDiv.add(formLayout);
 
 		createButtonLayout(editorDiv);
