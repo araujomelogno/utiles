@@ -1,25 +1,32 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import org.springframework.data.jpa.domain.Specification;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.provider.CallbackDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.services.ExpenseReportService;
@@ -33,10 +40,11 @@ public class ExpenseReportApprovalView extends Div {
 
 	private final ExpenseReportService expenseReportService;
 	private final Grid<ExpenseReport> grid = new Grid<>(ExpenseReport.class, false);
-	private ListDataProvider<ExpenseReport> dataProvider;
+	private final Filters filters;
 
 	public ExpenseReportApprovalView(ExpenseReportService expenseReportService) {
 		this.expenseReportService = expenseReportService;
+		this.filters = new Filters();
 		addClassName("expensereport-approval-view");
 		setSizeFull();
 		createGrid();
@@ -78,67 +86,71 @@ public class ExpenseReportApprovalView extends Div {
 		Grid.Column<ExpenseReport> statusColumn = grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Status")
 				.setSortable(true);
 
-		// Fetch and set data
-		List<ExpenseReport> reports = expenseReportService.findAllByExpenseStatus(ExpenseReportStatus.INGRESADO);
-		reports.sort(Comparator.comparing(ExpenseReport::getDate, Comparator.nullsFirst(Comparator.naturalOrder()))
-				.reversed());
-		dataProvider = new ListDataProvider<>(reports);
-		grid.setDataProvider(dataProvider);
+		grid.setDataProvider(new CallbackDataProvider<>(
+				query -> expenseReportService.list(
+						com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query),
+						createSpecification(filters)).stream(),
+				query -> (int) expenseReportService.count(createSpecification(filters))));
 
 		// Create filters
 		HeaderRow filterRow = grid.appendHeaderRow();
 
 		// Date filter
-		TextField dateFilter = new TextField();
-		dateFilter.setPlaceholder("Filter by date...");
-		dateFilter.addValueChangeListener(
-				event -> dataProvider.addFilter(report -> report.getDate().toString().contains(event.getValue())));
+		DatePicker dateFilter = new DatePicker();
+		dateFilter.setPlaceholder("Filtrar por fecha...");
+		dateFilter.addValueChangeListener(event -> {
+			filters.setDate(event.getValue());
+			grid.getDataProvider().refreshAll();
+		});
 		filterRow.getCell(dateColumn).setComponent(dateFilter);
 
 		// Surveyor filter
 		TextField surveyorFilter = new TextField();
-		surveyorFilter.setPlaceholder("Filter by surveyor...");
-		surveyorFilter.addValueChangeListener(event -> dataProvider.addFilter(report -> {
-			if (report.getSurveyor() == null) {
-				return event.getValue().isEmpty();
-			}
-			String fullName = report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
-			return fullName.toLowerCase().contains(event.getValue().toLowerCase());
-		}));
+		surveyorFilter.setPlaceholder("Filtrar por encuestador...");
+		surveyorFilter.addValueChangeListener(event -> {
+			filters.setSurveyorName(event.getValue());
+			grid.getDataProvider().refreshAll();
+		});
 		filterRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
 		// Study filter
 		TextField studyFilter = new TextField();
-		studyFilter.setPlaceholder("Filter by study...");
-		studyFilter.addValueChangeListener(event -> dataProvider.addFilter(
-				report -> report.getStudy().getName().toLowerCase().contains(event.getValue().toLowerCase())));
+		studyFilter.setPlaceholder("Filtrar por estudio...");
+		studyFilter.addValueChangeListener(event -> {
+			filters.setStudyName(event.getValue());
+			grid.getDataProvider().refreshAll();
+		});
 		filterRow.getCell(studyColumn).setComponent(studyFilter);
 
 		// Amount filter
-		TextField amountFilter = new TextField();
-		amountFilter.setPlaceholder("Filter by amount...");
-		amountFilter.addValueChangeListener(
-				event -> dataProvider.addFilter(report -> report.getAmount().toString().contains(event.getValue())));
+		NumberField amountFilter = new NumberField();
+		amountFilter.setPlaceholder("Filtrar por monto...");
+		amountFilter.addValueChangeListener(event -> {
+			filters.setAmount(event.getValue());
+			grid.getDataProvider().refreshAll();
+		});
 		filterRow.getCell(amountColumn).setComponent(amountFilter);
 
 		// Concept filter
 		TextField conceptFilter = new TextField();
-		conceptFilter.setPlaceholder("Filter by concept...");
-		conceptFilter.addValueChangeListener(event -> dataProvider.addFilter(report -> {
-			if (report.getConcept() == null) {
-				return event.getValue().isEmpty();
-			}
-			return report.getConcept().getName().toLowerCase().contains(event.getValue().toLowerCase());
-		}));
+		conceptFilter.setPlaceholder("Filtrar por concepto...");
+		conceptFilter.addValueChangeListener(event -> {
+			filters.setConceptName(event.getValue());
+			grid.getDataProvider().refreshAll();
+		});
 		filterRow.getCell(conceptColumn).setComponent(conceptFilter);
 
 		// Status filter
 		TextField statusFilter = new TextField();
-		statusFilter.setPlaceholder("Filter by status...");
-		statusFilter.addValueChangeListener(event -> dataProvider.addFilter(
-				report -> report.getExpenseStatus().toString().toLowerCase().contains(event.getValue().toLowerCase())));
+		statusFilter.setPlaceholder("Filtrar por estado...");
+		statusFilter.addValueChangeListener(event -> {
+			filters.setStatus(event.getValue());
+			grid.getDataProvider().refreshAll();
+		});
 		filterRow.getCell(statusColumn).setComponent(statusFilter);
 
+		FooterRow footerRow = grid.appendFooterRow();
+		updateFooter(footerRow, studyColumn, amountColumn);
 	}
 
 	private void approveSelectedReports() {
@@ -151,5 +163,102 @@ public class ExpenseReportApprovalView extends Div {
 		expenseReportService.revokeReports(grid.getSelectedItems());
 		grid.getSelectionModel().deselectAll();
 		UI.getCurrent().getPage().reload();
+	}
+
+	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseReport> studyColumn,
+			Grid.Column<ExpenseReport> amountColumn) {
+		Specification<ExpenseReport> spec = createSpecification(filters);
+		Double total = expenseReportService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(FormattingUtils.formatAmount(total));
+	}
+
+	private Specification<ExpenseReport> createSpecification(Filters filters) {
+		return (root, query, criteriaBuilder) -> {
+			List<Predicate> predicates = new ArrayList<>();
+			predicates.add(criteriaBuilder.equal(root.get("expenseStatus"), ExpenseReportStatus.INGRESADO));
+
+			if (filters.getDate() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("date"), filters.getDate()));
+			}
+			if (filters.getSurveyorName() != null && !filters.getSurveyorName().isEmpty()) {
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("surveyor").get("lastName")),
+						"%" + filters.getSurveyorName().toLowerCase() + "%"));
+			}
+			if (filters.getStudyName() != null && !filters.getStudyName().isEmpty()) {
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("study").get("name")),
+						"%" + filters.getStudyName().toLowerCase() + "%"));
+			}
+			if (filters.getAmount() != null) {
+				predicates.add(criteriaBuilder.equal(root.get("amount"), filters.getAmount()));
+			}
+			if (filters.getConceptName() != null && !filters.getConceptName().isEmpty()) {
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("concept").get("name")),
+						"%" + filters.getConceptName().toLowerCase() + "%"));
+			}
+			if (filters.getStatus() != null && !filters.getStatus().isEmpty()) {
+				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("expenseStatus").as(String.class)),
+						"%" + filters.getStatus().toLowerCase() + "%"));
+			}
+
+			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+		};
+	}
+
+	private static class Filters {
+		private String studyName;
+		private String surveyorName;
+		private LocalDate date;
+		private Double amount;
+		private String conceptName;
+		private String status;
+
+		public String getStudyName() {
+			return studyName;
+		}
+
+		public void setStudyName(String studyName) {
+			this.studyName = studyName;
+		}
+
+		public String getSurveyorName() {
+			return surveyorName;
+		}
+
+		public void setSurveyorName(String surveyorName) {
+			this.surveyorName = surveyorName;
+		}
+
+		public LocalDate getDate() {
+			return date;
+		}
+
+		public void setDate(LocalDate date) {
+			this.date = date;
+		}
+
+		public Double getAmount() {
+			return amount;
+		}
+
+		public void setAmount(Double amount) {
+			this.amount = amount;
+		}
+
+		public String getConceptName() {
+			return conceptName;
+		}
+
+		public void setConceptName(String conceptName) {
+			this.conceptName = conceptName;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
 	}
 }
