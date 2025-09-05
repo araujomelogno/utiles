@@ -22,6 +22,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -202,7 +204,8 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 			}
 			return report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
 		}).setHeader("Surveyor").setSortable(true);
-		Grid.Column<ExpenseReport> studyColumn = grid.addColumn(report -> report.getStudy().getName())
+		Grid.Column<ExpenseReport> studyColumn = grid
+				.addColumn(report -> report.getStudy() != null ? report.getStudy().getName() : "")
 				.setHeader("Study").setSortable(true);
 		Grid.Column<ExpenseReport> amountColumn = grid
 				.addColumn(report -> FormattingUtils.formatAmount(report.getAmount())).setHeader("Amount")
