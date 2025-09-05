@@ -20,6 +20,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -139,6 +140,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				query -> expenseReportService
 						.list(VaadinSpringDataHelpers.toSpringPageRequest(query), createFilterSpecification()).stream(),
 				query -> (int) expenseReportService.count(createFilterSpecification())));
+
+		FooterRow footerRow = grid.appendFooterRow();
+		updateFooter(footerRow, grid.getColumnByKey("study"), grid.getColumnByKey("amount"));
 
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
@@ -398,6 +402,16 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private void refreshGrid() {
 		grid.select(null);
 		grid.getDataProvider().refreshAll();
+		FooterRow footerRow = grid.getFooterRows().get(0);
+		updateFooter(footerRow, grid.getColumnByKey("study"), grid.getColumnByKey("amount"));
+	}
+
+	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseReport> studyColumn,
+			Grid.Column<ExpenseReport> amountColumn) {
+		Specification<ExpenseReport> spec = createFilterSpecification();
+		Double total = expenseReportService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
 	}
 
 	private void clearForm() {

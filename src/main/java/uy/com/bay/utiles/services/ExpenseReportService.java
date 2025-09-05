@@ -110,4 +110,8 @@ public class ExpenseReportService {
 	public int count() {
 		return (int) repository.count();
 	}
+
+	public Double sumAmount(Specification<ExpenseReport> spec) {
+		return repository.sumAmount(spec);
+	}
 }
