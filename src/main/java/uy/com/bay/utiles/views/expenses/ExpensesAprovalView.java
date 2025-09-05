@@ -57,7 +57,7 @@ public class ExpensesAprovalView extends Div {
 		this.filters = new Filters();
 
 		addClassName("expenses-aproval-view");
-		setSizeFull();
+		setHeight("100%");
 
 		Button approveButton = new Button("Aprobar solicitudes", event -> approveSelected());
 		Button revokeButton = new Button("Rechazar solicitudes", event -> revokeSelected());
