@@ -11,8 +11,8 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.server.StreamResource;
-
 import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.ExcelExportService;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
@@ -46,9 +46,10 @@ public class JournalEntryDialog extends Dialog {
 
 		Grid<JournalEntry> grid = new Grid<>(JournalEntry.class, false);
 		grid.addColumn("date").setHeader("Fecha");
-		grid.addColumn("debit").setHeader("Debe");
-		grid.addColumn("credit").setHeader("Haber");
-		grid.addColumn("description").setHeader("Descripción");
+		grid.addColumn(entry -> entry.getOperation() == Operation.DEBITO ? entry.getAmount() : null).setHeader("Debe");
+		grid.addColumn(entry -> entry.getOperation() == Operation.CREDITO ? entry.getAmount() : null)
+				.setHeader("Haber");
+		grid.addColumn("detail").setHeader("Descripción");
 		grid.setItems(journalEntryService.findAllByStudy(proyecto));
 
 		Button closeButton = new Button("Cerrar", e -> close());
