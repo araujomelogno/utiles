@@ -36,12 +36,11 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
-import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.data.service.FieldworkService;
+import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
-import uy.com.bay.utiles.utils.FormattingUtils;
 
 @PageTitle("Proyectos")
 @Route("/:proyectoID?/:action?(edit)")
@@ -250,7 +249,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		viewMovementsButton.addClickListener(e -> {
 			if (this.proyecto != null) {
 				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService,
-						expenseReportFileService, expenseTransferFileService);
+						expenseReportFileService, expenseTransferFileService, excelExportService);
 				dialog.open();
 			}
 		});
@@ -300,8 +299,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		totalTransfered.setReadOnly(true);
 		totalReportedCost = new TextField("Total de gastos rendidos");
 		totalReportedCost.setReadOnly(true);
-		formLayout.add(name, odooId, obs, casosCompletos, showSurveyor, totalTransfered,
-				totalReportedCost);
+		formLayout.add(name, odooId, obs, casosCompletos, showSurveyor, totalTransfered, totalReportedCost);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
@@ -357,8 +355,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.proyecto = value;
 		binder.readBean(this.proyecto);
 		if (value != null) {
-			totalTransfered.setValue(FormattingUtils.formatAmount(value.getTotalTransfered()));
-			totalReportedCost.setValue(FormattingUtils.formatAmount(value.getTotalReportedCost()));
+			totalTransfered.setValue(Double.valueOf(value.getTotalTransfered()).toString());
+			totalReportedCost.setValue(Double.valueOf(value.getTotalReportedCost()).toString());
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");

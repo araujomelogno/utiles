@@ -2,8 +2,10 @@ package uy.com.bay.utiles.views;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -231,6 +233,12 @@ public class MainLayout extends AppLayout {
 	protected void afterNavigation() {
 		super.afterNavigation();
 		viewTitle.setText(getCurrentPageTitle());
+	}
+
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		attachEvent.getUI().setLocale(new Locale("es", "UY"));
 	}
 
 	private String getCurrentPageTitle() {

@@ -6,17 +6,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.component.grid.Grid;
+
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
-import uy.com.bay.utiles.utils.FormattingUtils;
+
 import uy.com.bay.utiles.views.expenses.ExpenseReportViewDialog;
 import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
@@ -46,7 +45,7 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 			if (entry.getOperation() == Operation.CREDITO) {
 				amount *= -1;
 			}
-			return FormattingUtils.formatAmount(amount);
+			return (amount);
 		}).setHeader("Monto");
 		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Estudio");
 		addColumn(JournalEntry::getOperation).setHeader("Movimiento");
@@ -92,7 +91,7 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 			saldoMap.put(entry, runningSaldo.get());
 		}
 
-		getColumnByKey("saldoColumn").setRenderer(new com.vaadin.flow.data.renderer.TextRenderer<>(
-				entry -> FormattingUtils.formatAmount(saldoMap.get(entry))));
+		getColumnByKey("saldoColumn").setRenderer(
+				new com.vaadin.flow.data.renderer.TextRenderer<>(entry -> (saldoMap.get(entry).toString())));
 	}
 }

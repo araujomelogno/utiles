@@ -45,7 +45,6 @@ import uy.com.bay.utiles.services.ExpenseReportService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
-import uy.com.bay.utiles.utils.FormattingUtils;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Aprobar Rendiciones")
@@ -206,8 +205,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		Grid.Column<ExpenseReport> studyColumn = grid
 				.addColumn(report -> report.getStudy() != null ? report.getStudy().getName() : "").setHeader("Estudio")
 				.setSortable(true);
-		Grid.Column<ExpenseReport> amountColumn = grid
-				.addColumn(report -> FormattingUtils.formatAmount(report.getAmount())).setHeader("Monto")
+		Grid.Column<ExpenseReport> amountColumn = grid.addColumn(report -> (report.getAmount())).setHeader("Monto")
 				.setSortable(true);
 		Grid.Column<ExpenseReport> conceptColumn = grid
 				.addColumn(report -> report.getConcept() != null ? report.getConcept().getName() : "")
@@ -373,7 +371,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		Specification<ExpenseReport> spec = createSpecification(filters);
 		Double total = expenseReportService.sumAmount(spec);
 		footerRow.getCell(studyColumn).setText("TOTAL");
-		footerRow.getCell(amountColumn).setText(FormattingUtils.formatAmount(total));
+		footerRow.getCell(amountColumn).setText((total.toString()));
 	}
 
 	private Specification<ExpenseReport> createSpecification(Filters filters) {
