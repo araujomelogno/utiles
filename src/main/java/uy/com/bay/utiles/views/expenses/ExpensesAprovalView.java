@@ -68,6 +68,8 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 	private final Button approve = new Button("Aprobar");
 	private final Button reject = new Button("Rechazar");
 	private final Button delete = new Button("Borrar");
+	private final Button approveSelected = new Button("Aprobar solicitudes");
+	private final Button rejectSelected = new Button("Rechazar solicitudes");
 
 	private final BeanValidationBinder<ExpenseRequest> binder;
 	private ExpenseRequest expenseRequest;
@@ -91,6 +93,8 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		addClassName("expenses-aproval-view");
 		setHeight("100%");
 
+		HorizontalLayout buttonLayout = new HorizontalLayout(approveSelected, rejectSelected);
+
 		SplitLayout splitLayout = new SplitLayout();
 		splitLayout.setSizeFull();
 		splitLayout.setSplitterPosition(80);
@@ -98,7 +102,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		createEditorLayout(splitLayout);
 		createGridLayout(splitLayout);
 
-		add(splitLayout);
+		add(buttonLayout, splitLayout);
 
 		grid.setDataProvider(DataProvider.fromFilteringCallbacks(query -> {
 			Specification<ExpenseRequest> spec = createSpecification(filters);
@@ -110,14 +114,17 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 			return expenseRequestService.count(spec);
 		}));
 
-		grid.asSingleSelect().addValueChangeListener(event -> {
-			if (event.getValue() != null) {
+		grid.addSelectionListener(event -> {
+			if (event.getAllSelectedItems().size() == 1) {
 				editorLayoutDiv.setVisible(true);
-				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+				UI.getCurrent().navigate(
+						String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getFirstSelectedItem().get().getId()));
 			} else {
 				editorLayoutDiv.setVisible(false);
 				clearForm();
-				UI.getCurrent().navigate(ExpensesAprovalView.class);
+				if (event.getAllSelectedItems().isEmpty()) {
+					UI.getCurrent().navigate(ExpensesAprovalView.class);
+				}
 			}
 		});
 
@@ -212,6 +219,36 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 				dialog.open();
 			}
 		});
+
+		approveSelected.addClickListener(e -> {
+			java.util.Set<ExpenseRequest> selectedItems = grid.getSelectedItems();
+			if (selectedItems.isEmpty()) {
+				Notification.show("No hay solicitudes seleccionadas.");
+				return;
+			}
+			selectedItems.forEach(expenseRequest -> {
+				expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
+				expenseRequest.setAprovalDate(new Date());
+				expenseRequestService.update(expenseRequest);
+			});
+			refreshGrid();
+			Notification.show(selectedItems.size() + " solicitudes aprobadas.");
+		});
+
+		rejectSelected.addClickListener(e -> {
+			java.util.Set<ExpenseRequest> selectedItems = grid.getSelectedItems();
+			if (selectedItems.isEmpty()) {
+				Notification.show("No hay solicitudes seleccionadas.");
+				return;
+			}
+			selectedItems.forEach(expenseRequest -> {
+				expenseRequest.setExpenseStatus(ExpenseStatus.RECHAZADO);
+				expenseRequest.setAprovalDate(new Date());
+				expenseRequestService.update(expenseRequest);
+			});
+			refreshGrid();
+			Notification.show(selectedItems.size() + " solicitudes rechazadas.");
+		});
 	}
 
 	private void createGridLayout(SplitLayout splitLayout) {
@@ -222,7 +259,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		wrapper.add(grid);
 
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
-		grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+		grid.setSelectionMode(Grid.SelectionMode.MULTI);
 		grid.setHeightFull();
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
