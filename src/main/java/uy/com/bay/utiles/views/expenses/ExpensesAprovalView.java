@@ -128,6 +128,20 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 			}
 		});
 
+		grid.addItemClickListener(event -> {
+			if (event.getItem() != null) {
+
+				editorLayoutDiv.setVisible(true);
+				populateForm(event.getItem());
+				UI.getCurrent().navigate(String.format(EXPENSE_EDIT_ROUTE_TEMPLATE, event.getItem().getId()));
+
+			} else {
+				editorLayoutDiv.setVisible(false);
+				clearForm();
+				UI.getCurrent().navigate(ExpenseReportApprovalView.class);
+			}
+		});
+
 		binder = new BeanValidationBinder<>(ExpenseRequest.class);
 		binder.bindInstanceFields(this);
 
