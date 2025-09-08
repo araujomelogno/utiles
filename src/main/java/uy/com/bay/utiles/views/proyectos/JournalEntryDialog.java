@@ -49,7 +49,7 @@ public class JournalEntryDialog extends Dialog {
 		grid.addColumn("debit").setHeader("Debe");
 		grid.addColumn("credit").setHeader("Haber");
 		grid.addColumn("description").setHeader("Descripción");
-		grid.setItems(journalEntryService.getJournalEntries(proyecto));
+		grid.setItems(journalEntryService.findAllByStudy(proyecto));
 
 		Button closeButton = new Button("Cerrar", e -> close());
 
@@ -70,9 +70,11 @@ public class JournalEntryDialog extends Dialog {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 		String filename = "journal_entries_" + proyecto.getName().replaceAll("\\s+", "_") + "_" + sdf.format(new Date())
 				+ ".xlsx";
-		return new StreamResource(filename, () -> {
+		return new StreamResource(filename, (outputStream, vaadinSession) -> {
 			try {
-				return excelExportService.exportJournalEntriesToExcel(journalEntryService.getJournalEntries(proyecto));
+				java.io.ByteArrayInputStream inputStream = excelExportService
+						.exportJournalEntriesToExcel(journalEntryService.findAllByStudy(proyecto));
+				inputStream.transferTo(outputStream);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

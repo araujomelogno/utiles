@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.Operation;
 
 @Service
 public class ExcelExportService {
@@ -39,9 +40,14 @@ public class ExcelExportService {
 				Row row = sheet.createRow(rowIdx++);
 				row.createCell(0).setCellValue(entry.getDate());
 				row.getCell(0).setCellStyle(dateCellStyle);
-				row.createCell(1).setCellValue(entry.getgetDebit());
-				row.createCell(2).setCellValue(entry.getCredit());
-				row.createCell(3).setCellValue(entry.getDescription());
+				if (entry.getOperation() == Operation.DEBITO) {
+					row.createCell(1).setCellValue(entry.getAmount());
+					row.createCell(2).setCellValue(0);
+				} else {
+					row.createCell(1).setCellValue(0);
+					row.createCell(2).setCellValue(entry.getAmount());
+				}
+				row.createCell(3).setCellValue(entry.getDetail());
 			}
 
 			workbook.write(out);

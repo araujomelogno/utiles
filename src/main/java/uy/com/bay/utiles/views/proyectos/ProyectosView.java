@@ -84,17 +84,19 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final ExpenseReportFileService expenseReportFileService;
 	private final ExpenseTransferFileService expenseTransferFileService;
 	private final FieldworkService fieldworkService;
+	private final uy.com.bay.utiles.services.ExcelExportService excelExportService;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
 			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService,
-			FieldworkService fieldworkService) {
+			FieldworkService fieldworkService, uy.com.bay.utiles.services.ExcelExportService excelExportService) {
 		this.proyectoService = proyectoService;
 		this.journalEntryService = journalEntryService;
 		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
 		this.expenseReportFileService = expenseReportFileService;
 		this.expenseTransferFileService = expenseTransferFileService;
+		this.excelExportService = excelExportService;
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
 
