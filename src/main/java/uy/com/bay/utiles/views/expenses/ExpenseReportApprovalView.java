@@ -71,6 +71,8 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 	private final Button save = new Button("Guardar");
 	private final Button approve = new Button("Aprobar");
 	private final Button reject = new Button("Rechazar");
+	private final Button approveSelected = new Button("Aprobar rendiciones");
+	private final Button rejectSelected = new Button("Rechazar rendiciones");
 
 	private final BeanValidationBinder<ExpenseReport> binder;
 	private ExpenseReport expenseReport;
@@ -169,6 +171,36 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 				Notification.show("Failed to update the data. Check again that all values are valid");
 			}
 		});
+
+		approveSelected.addClickListener(e -> {
+			java.util.Set<ExpenseReport> selectedItems = grid.getSelectedItems();
+			if (selectedItems.isEmpty()) {
+				Notification.show("No hay rendiciones seleccionadas para aprobar.");
+				return;
+			}
+			selectedItems.forEach(report -> {
+				report.setExpenseStatus(ExpenseReportStatus.APROBADO);
+				report.setApprovalDate(new java.util.Date());
+				expenseReportService.update(report);
+			});
+			refreshGrid();
+			Notification.show(selectedItems.size() + " rendiciones aprobadas.");
+		});
+
+		rejectSelected.addClickListener(e -> {
+			java.util.Set<ExpenseReport> selectedItems = grid.getSelectedItems();
+			if (selectedItems.isEmpty()) {
+				Notification.show("No hay rendiciones seleccionadas para rechazar.");
+				return;
+			}
+			selectedItems.forEach(report -> {
+				report.setExpenseStatus(ExpenseReportStatus.RECHAZADO);
+				report.setApprovalDate(new java.util.Date());
+				expenseReportService.update(report);
+			});
+			refreshGrid();
+			Notification.show(selectedItems.size() + " rendiciones rechazadas.");
+		});
 	}
 
 	private void createGridLayout(SplitLayout splitLayout) {
@@ -178,15 +210,17 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		wrapper.setPadding(false);
 		wrapper.setSpacing(false);
 
+		HorizontalLayout topButtons = new HorizontalLayout(approveSelected, rejectSelected);
+
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);
-		grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+		grid.setSelectionMode(Grid.SelectionMode.MULTI);
 		grid.setHeightFull();
 
-		grid.asSingleSelect().addValueChangeListener(event -> {
-			if (event.getValue() != null) {
+		grid.addItemClickListener(event -> {
+			if (event.getItem() != null) {
 				editorLayoutDiv.setVisible(true);
-				populateForm(event.getValue());
-				UI.getCurrent().navigate(String.format(EXPENSE_REPORT_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+				populateForm(event.getItem());
+				UI.getCurrent().navigate(String.format(EXPENSE_REPORT_EDIT_ROUTE_TEMPLATE, event.getItem().getId()));
 			} else {
 				editorLayoutDiv.setVisible(false);
 				clearForm();
@@ -280,7 +314,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		FooterRow footerRow = grid.appendFooterRow();
 		updateFooter(footerRow, studyColumn, amountColumn);
 
-		wrapper.add(grid);
+		wrapper.add(topButtons, grid);
 		wrapper.setFlexGrow(1, grid);
 		splitLayout.addToPrimary(wrapper);
 	}
