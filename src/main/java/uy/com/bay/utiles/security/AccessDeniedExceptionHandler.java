@@ -9,10 +9,12 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.ErrorParameter;
 import com.vaadin.flow.router.HasErrorParameter;
 import com.vaadin.flow.server.auth.AccessDeniedException;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletResponse;
 
 @Tag("div")
+@Component
 public class AccessDeniedExceptionHandler implements HasErrorParameter<AccessDeniedException> {
 
     @Override
