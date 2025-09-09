@@ -1,0 +1,14 @@
+SET FOREIGN_KEY_CHECKS = 0;
+delete from expense_report_file where id >0;
+delete from expense_report where id >0;
+delete from expense_request where id >0;
+delete from expense_transfer where id >0;
+delete from expense_transfer_expense_requests where expense_transfer_id >0;
+delete from expense_transfer_file where id >0;
+delete from journal_entry where id >0;
+update surveyor set balance =0 where id >0;
+update study set total_reported_cost=0 where id >0;
+update study set total_transfered=0 where id >0;
+SET FOREIGN_KEY_CHECKS = 1;
+
+

@@ -24,46 +24,42 @@ import uy.com.bay.utiles.views.login.LoginView;
 @Configuration
 public class SecurityConfiguration extends VaadinWebSecurity {
 
-    private final CustomAuthenticationSuccessHandler successHandler;
+	private final CustomAuthenticationSuccessHandler successHandler;
 
-    public SecurityConfiguration(CustomAuthenticationSuccessHandler successHandler) {
-        this.successHandler = successHandler;
-    }
+	public SecurityConfiguration(CustomAuthenticationSuccessHandler successHandler) {
+		this.successHandler = successHandler;
+	}
 
-    // Recomendado en prod (usa {bcrypt}, {noop}, etc.)
-    @Bean
-    public PasswordEncoder passwordEncoder() {
+	// Recomendado en prod (usa {bcrypt}, {noop}, etc.)
+	@Bean
+	public PasswordEncoder passwordEncoder() {
 		return NoOpPasswordEncoder.getInstance();
-    }
-    @Bean
-    @Order(1)
-    public SecurityFilterChain webhookChain(HttpSecurity http) throws Exception {
-      // Matchea /api/webhook/** con o SIN context path (/utiles, /lo-que-sea)
-      RequestMatcher r1 = new RegexRequestMatcher(".*/api/webhook/.*", null);
-      RequestMatcher r2 = new AntPathRequestMatcher("/api/webhook/**");         // por si acaso
-      RequestMatcher r3 = new AntPathRequestMatcher("/utiles/api/webhook/**");  // por si acaso
-      RequestMatcher matcher = new OrRequestMatcher(r1, r2, r3);
+	}
 
-      http
-        .securityMatcher(matcher)
-        .csrf(csrf -> csrf.disable())
-        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .requestCache(rc -> rc.disable())
-        .formLogin(form -> form.disable())
-        .logout(lo -> lo.disable())
-        .exceptionHandling(eh -> eh.authenticationEntryPoint(
-            (req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN)))
-        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-        .httpBasic(Customizer.withDefaults());
+	@Bean
+	@Order(1)
+	public SecurityFilterChain webhookChain(HttpSecurity http) throws Exception {
+		// Matchea /api/webhook/** con o SIN context path (/utiles, /lo-que-sea)
+		RequestMatcher r1 = new RegexRequestMatcher(".*/api/webhook/.*", null);
+		RequestMatcher r2 = new AntPathRequestMatcher("/api/webhook/**"); // por si acaso
+		RequestMatcher r3 = new AntPathRequestMatcher("/utiles/api/webhook/**"); // por si acaso
+		RequestMatcher matcher = new OrRequestMatcher(r1, r2, r3);
 
-      return http.build();
-    }
+		http.securityMatcher(matcher).csrf(csrf -> csrf.disable())
+				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.requestCache(rc -> rc.disable()).formLogin(form -> form.disable()).logout(lo -> lo.disable())
+				.exceptionHandling(eh -> eh
+						.authenticationEntryPoint((req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN)))
+				.authorizeHttpRequests(auth -> auth.anyRequest().permitAll()).httpBasic(Customizer.withDefaults());
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      // (si querés, dejá estáticos en permitAll)
-      super.configure(http);
-      setLoginView(http, LoginView.class);
-      http.formLogin(form -> form.successHandler(successHandler));
-    }
-  }
+		return http.build();
+	}
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		super.configure(http);
+		setLoginView(http, LoginView.class);
+		http.formLogin(form -> form.successHandler(successHandler));
+		http.exceptionHandling(e -> e.accessDeniedPage("/access-denied"));
+	}
+}
