@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -381,11 +383,15 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 						"%" + surveyorFilter.getValue().toLowerCase() + "%"));
 			}
 			if (dateFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("date"), dateFilter.getValue()));
+				LocalDate localDate = dateFilter.getValue();
+				Date startDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+				Date endDate = Date.from(localDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), startDate));
+				predicates.add(criteriaBuilder.lessThan(root.get("date"), endDate));
 			}
 
 			if (amountFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("amount"), dateFilter.getValue()));
+				predicates.add(criteriaBuilder.equal(root.get("amount"), amountFilter.getValue()));
 			}
 			if (conceptFilter.getValue() != null && !conceptFilter.getValue().isEmpty()) {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("concept").get("name")),
