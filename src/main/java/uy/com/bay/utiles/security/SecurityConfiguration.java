@@ -65,5 +65,6 @@ public class SecurityConfiguration extends VaadinWebSecurity {
       super.configure(http);
       setLoginView(http, LoginView.class);
       http.formLogin(form -> form.successHandler(successHandler));
+      http.exceptionHandling(e -> e.accessDeniedPage("/access-denied"));
     }
   }
