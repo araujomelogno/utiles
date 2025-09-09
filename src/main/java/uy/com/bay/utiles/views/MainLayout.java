@@ -10,11 +10,13 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.SvgIcon;
@@ -29,7 +31,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-
+import org.springframework.security.access.AccessDeniedException;
 import uy.com.bay.utiles.data.User;
 import uy.com.bay.utiles.security.AuthenticatedUser;
 import uy.com.bay.utiles.services.JournalEntryService;
@@ -239,6 +241,22 @@ public class MainLayout extends AppLayout {
 	protected void onAttach(AttachEvent attachEvent) {
 		super.onAttach(attachEvent);
 		attachEvent.getUI().setLocale(new Locale("es", "UY"));
+		attachEvent.getUI().getSession().setErrorHandler(errorEvent -> {
+			if (isAccessDeniedException(errorEvent.getThrowable())) {
+				Dialog dialog = new Dialog(new Label("No tiene permisos para acceder a esta funcionalidad."));
+				dialog.open();
+			}
+		});
+	}
+
+	private boolean isAccessDeniedException(Throwable throwable) {
+		if (throwable instanceof AccessDeniedException) {
+			return true;
+		}
+		if (throwable.getCause() != null) {
+			return isAccessDeniedException(throwable.getCause());
+		}
+		return false;
 	}
 
 	private String getCurrentPageTitle() {
