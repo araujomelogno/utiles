@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -57,6 +58,7 @@ public class ExpenseTransferView extends VerticalLayout {
 
 	private TextField surveyorFilter;
 	private TextField studyFilter;
+	private DatePicker requestDateFilter;
 	private TextField conceptFilter;
 	private TextField obsFilter;
 
@@ -96,8 +98,12 @@ public class ExpenseTransferView extends VerticalLayout {
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Proyecto")
 				.setSortable(true).setKey("study.name");
-		grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Fecha Solicitud").setSortable(true)
-				.setKey("requestDate");
+		Grid.Column<ExpenseRequest> requestDateColumn = grid.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> {
+			if (er.getRequestDate() != null) {
+				return new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate());
+			}
+			return "";
+		})).setHeader("Fecha Solicitud").setSortable(true).setKey("requestDate");
 		grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
 				.addColumn(er -> er.getConcept() != null ? er.getConcept().getDescription() : "").setHeader("Concepto")
@@ -115,6 +121,11 @@ public class ExpenseTransferView extends VerticalLayout {
 		studyFilter.setPlaceholder("Filtrar por proyecto...");
 		studyFilter.addValueChangeListener(e -> refreshGrid());
 		filterRow.getCell(studyColumn).setComponent(studyFilter);
+
+		requestDateFilter = new DatePicker();
+		requestDateFilter.setPlaceholder("Filtrar por fecha...");
+		requestDateFilter.addValueChangeListener(e -> refreshGrid());
+		filterRow.getCell(requestDateColumn).setComponent(requestDateFilter);
 
 		conceptFilter = new TextField();
 		conceptFilter.setPlaceholder("Filtrar por concepto...");
@@ -236,6 +247,11 @@ public class ExpenseTransferView extends VerticalLayout {
 				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
 						"%" + studyFilter.getValue().toLowerCase() + "%"));
 			}
+			if (requestDateFilter != null && !requestDateFilter.isEmpty()) {
+				spec = spec.and((root, q, cb) -> cb.between(root.get("requestDate"),
+						Date.from(requestDateFilter.getValue().atStartOfDay().toInstant(java.time.ZoneOffset.UTC)),
+						Date.from(requestDateFilter.getValue().atTime(23, 59, 59).toInstant(java.time.ZoneOffset.UTC))));
+			}
 			if (conceptFilter != null && !conceptFilter.isEmpty()) {
 				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
 						"%" + conceptFilter.getValue().toLowerCase() + "%"));
@@ -263,6 +279,11 @@ public class ExpenseTransferView extends VerticalLayout {
 		if (studyFilter != null && !studyFilter.isEmpty()) {
 			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
 					"%" + studyFilter.getValue().toLowerCase() + "%"));
+		}
+		if (requestDateFilter != null && !requestDateFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.between(root.get("requestDate"),
+					Date.from(requestDateFilter.getValue().atStartOfDay().toInstant(java.time.ZoneOffset.UTC)),
+					Date.from(requestDateFilter.getValue().atTime(23, 59, 59).toInstant(java.time.ZoneOffset.UTC))));
 		}
 		if (conceptFilter != null && !conceptFilter.isEmpty()) {
 			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
