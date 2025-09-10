@@ -88,6 +88,7 @@ public class AreasView extends Div implements BeforeEnterObserver {
 		cancel.addClickListener(e -> {
 			clearForm();
 			refreshGrid();
+			
 		});
 
 		save.addClickListener(e -> {
