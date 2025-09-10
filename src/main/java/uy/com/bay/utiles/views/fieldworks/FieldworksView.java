@@ -74,10 +74,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
+	private final uy.com.bay.utiles.services.AreaService areaService;
 
-	public FieldworksView(FieldworkService fieldworkService, StudyService studyService) {
+	public FieldworksView(FieldworkService fieldworkService, StudyService studyService, uy.com.bay.utiles.services.AreaService areaService) {
 		this.fieldworkService = fieldworkService;
 		this.studyService = studyService;
+		this.areaService = areaService;
 		addClassNames("fieldworks-view");
 
 		// Create UI
@@ -216,7 +218,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		type = new ComboBox<>("Tipo");
 		type.setItems(FieldworkType.values());
 		area = new ComboBox<>("Area");
-		area.setItems(Area.values());
+		area.setItems(areaService.listAll());
+		area.setItemLabelGenerator(Area::getNombre);
 		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed, obs,
 				status, type, area);
 
