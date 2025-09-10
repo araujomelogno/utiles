@@ -129,16 +129,29 @@ public class AreasView extends Div implements BeforeEnterObserver {
 
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
-		Optional<Long> areaId = event.getRouteParameters().get(AREA_ID).map(Long::parseLong);
-		if (areaId.isPresent()) {
-			Optional<Area> areaFromBackend = areaService.get(areaId.get());
-			if (areaFromBackend.isPresent()) {
-				populateForm(areaFromBackend.get());
+		Optional<String> areaIdParam = event.getRouteParameters().get(AREA_ID);
+		if (areaIdParam.isPresent()) {
+			String areaId = areaIdParam.get();
+			if ("new".equals(areaId)) {
+				clearForm();
+				grid.asSingleSelect().clear();
 			} else {
-				Notification.show(String.format("El area no fue encontrada, ID = %s", areaId.get()), 3000,
-						Notification.Position.BOTTOM_START);
-				refreshGrid();
-				event.forwardTo(AreasView.class);
+				try {
+					Optional<Area> areaFromBackend = areaService.get(Long.parseLong(areaId));
+					if (areaFromBackend.isPresent()) {
+						populateForm(areaFromBackend.get());
+					} else {
+						Notification.show(String.format("El area con id = '%s' no fue encontrada", areaId), 3000,
+								Notification.Position.BOTTOM_START);
+						refreshGrid();
+						event.forwardTo(AreasView.class);
+					}
+				} catch (NumberFormatException e) {
+					Notification.show(String.format("El id de area debe ser un numero. Id recibido: '%s'", areaId), 3000,
+							Notification.Position.BOTTOM_START);
+					refreshGrid();
+					event.forwardTo(AreasView.class);
+				}
 			}
 		}
 	}
