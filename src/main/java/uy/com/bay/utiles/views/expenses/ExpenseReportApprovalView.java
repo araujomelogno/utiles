@@ -59,6 +59,9 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 	private final Grid<ExpenseReport> grid = new Grid<>(ExpenseReport.class, false);
 	private final Filters filters;
 	private Div editorLayoutDiv;
+	private FooterRow footerRow;
+	private Grid.Column<ExpenseReport> studyColumn;
+	private Grid.Column<ExpenseReport> amountColumn;
 
 	private ComboBox<Study> study;
 	private ComboBox<Surveyor> surveyor;
@@ -236,10 +239,10 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 			}
 			return report.getSurveyor().getFirstName() + " " + report.getSurveyor().getLastName();
 		}).setHeader("Encuestador").setSortable(true);
-		Grid.Column<ExpenseReport> studyColumn = grid
+		this.studyColumn = grid
 				.addColumn(report -> report.getStudy() != null ? report.getStudy().getName() : "").setHeader("Estudio")
 				.setSortable(true);
-		Grid.Column<ExpenseReport> amountColumn = grid.addColumn(report -> (report.getAmount())).setHeader("Monto")
+		this.amountColumn = grid.addColumn(report -> (report.getAmount())).setHeader("Monto")
 				.setSortable(true);
 		Grid.Column<ExpenseReport> conceptColumn = grid
 				.addColumn(report -> report.getConcept() != null ? report.getConcept().getName() : "")
@@ -263,6 +266,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		dateFilter.addValueChangeListener(event -> {
 			filters.setDate(event.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		});
 		filterRow.getCell(dateColumn).setComponent(dateFilter);
 
@@ -272,6 +276,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		surveyorFilter.addValueChangeListener(event -> {
 			filters.setSurveyorName(event.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		});
 		filterRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
@@ -281,6 +286,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		studyFilter.addValueChangeListener(event -> {
 			filters.setStudyName(event.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		});
 		filterRow.getCell(studyColumn).setComponent(studyFilter);
 
@@ -290,6 +296,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		amountFilter.addValueChangeListener(event -> {
 			filters.setAmount(event.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		});
 		filterRow.getCell(amountColumn).setComponent(amountFilter);
 
@@ -299,6 +306,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		conceptFilter.addValueChangeListener(event -> {
 			filters.setConceptName(event.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		});
 		filterRow.getCell(conceptColumn).setComponent(conceptFilter);
 
@@ -308,11 +316,12 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		statusFilter.addValueChangeListener(event -> {
 			filters.setStatus(event.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		});
 		filterRow.getCell(statusColumn).setComponent(statusFilter);
 
-		FooterRow footerRow = grid.appendFooterRow();
-		updateFooter(footerRow, studyColumn, amountColumn);
+		this.footerRow = grid.appendFooterRow();
+		updateFooter();
 
 		wrapper.add(topButtons, grid);
 		wrapper.setFlexGrow(1, grid);
@@ -380,6 +389,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 	private void refreshGrid() {
 		grid.select(null);
 		grid.getDataProvider().refreshAll();
+		updateFooter();
 	}
 
 	private void clearForm() {
@@ -400,12 +410,11 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		}
 	}
 
-	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseReport> studyColumn,
-			Grid.Column<ExpenseReport> amountColumn) {
+	private void updateFooter() {
 		Specification<ExpenseReport> spec = createSpecification(filters);
 		Double total = expenseReportService.sumAmount(spec);
-		footerRow.getCell(studyColumn).setText("TOTAL");
-		footerRow.getCell(amountColumn).setText((total.toString()));
+		this.footerRow.getCell(this.studyColumn).setText("TOTAL");
+		this.footerRow.getCell(this.amountColumn).setText((total.toString()));
 	}
 
 	private Specification<ExpenseReport> createSpecification(Filters filters) {
