@@ -277,7 +277,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		grid.setHeightFull();
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
-				.setAutoWidth(true).setSortable(true).setSortProperty("study.name");
+				.setAutoWidth(true).setSortable(true).setSortProperty("study.name").setKey("study");
 		Grid.Column<ExpenseRequest> surveyorColumn = grid
 				.addColumn(er -> er.getSurveyor() != null
 						? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName()
@@ -289,13 +289,13 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 						: "")
 				.setHeader("Solicitado").setAutoWidth(true).setSortable(true).setSortProperty("requestDate");
 		Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto")
-				.setAutoWidth(true).setSortable(true).setSortProperty("amount");
+				.setAutoWidth(true).setSortable(true).setSortProperty("amount").setKey("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
 				.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
 				.setAutoWidth(true).setSortable(true).setSortProperty("concept.name");
 
-		FooterRow footerRow = grid.appendFooterRow();
-		updateFooter(footerRow, studyColumn, amountColumn);
+		grid.appendFooterRow();
+		updateFooter();
 
 		HeaderRow headerRow = grid.appendHeaderRow();
 
@@ -305,8 +305,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		studyFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		studyFilter.addValueChangeListener(e -> {
 			filters.setStudyName(e.getValue());
-			grid.getDataProvider().refreshAll();
-			updateFooter(footerRow, studyColumn, amountColumn);
+			refreshGrid();
 		});
 		headerRow.getCell(studyColumn).setComponent(studyFilter);
 
@@ -316,8 +315,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		surveyorFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		surveyorFilter.addValueChangeListener(e -> {
 			filters.setSurveyorName(e.getValue());
-			grid.getDataProvider().refreshAll();
-			updateFooter(footerRow, studyColumn, amountColumn);
+			refreshGrid();
 		});
 		headerRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
@@ -326,8 +324,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		requestDateFilter.setClearButtonVisible(true);
 		requestDateFilter.addValueChangeListener(e -> {
 			filters.setRequestDate(e.getValue());
-			grid.getDataProvider().refreshAll();
-			updateFooter(footerRow, studyColumn, amountColumn);
+			refreshGrid();
 		});
 		headerRow.getCell(requestDateColumn).setComponent(requestDateFilter);
 
@@ -337,8 +334,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		amountFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		amountFilter.addValueChangeListener(e -> {
 			filters.setAmount(e.getValue());
-			grid.getDataProvider().refreshAll();
-			updateFooter(footerRow, studyColumn, amountColumn);
+			refreshGrid();
 		});
 		headerRow.getCell(amountColumn).setComponent(amountFilter);
 
@@ -349,8 +345,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		conceptFilter.setClearButtonVisible(true);
 		conceptFilter.addValueChangeListener(e -> {
 			filters.setConcept(e.getValue());
-			grid.getDataProvider().refreshAll();
-			updateFooter(footerRow, studyColumn, amountColumn);
+			refreshGrid();
 		});
 		headerRow.getCell(conceptColumn).setComponent(conceptFilter);
 	}
@@ -416,6 +411,9 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 	private void refreshGrid() {
 		grid.select(null);
 		grid.getDataProvider().refreshAll();
+		if (grid.getFooterRows().size() > 0) {
+			updateFooter();
+		}
 	}
 
 	private void clearForm() {
@@ -439,8 +437,10 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		}
 	}
 
-	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseRequest> studyColumn,
-			Grid.Column<ExpenseRequest> amountColumn) {
+	private void updateFooter() {
+		FooterRow footerRow = grid.getFooterRows().get(0);
+		Grid.Column<ExpenseRequest> studyColumn = grid.getColumnByKey("study");
+		Grid.Column<ExpenseRequest> amountColumn = grid.getColumnByKey("amount");
 		Specification<ExpenseRequest> spec = createSpecification(filters);
 		Double total = expenseRequestService.sumAmount(spec);
 		footerRow.getCell(studyColumn).setText("TOTAL");
