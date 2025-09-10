@@ -8,11 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.Surveyor;
 
 import java.util.Date;
 import java.util.List;
 
 public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, Long>, JpaSpecificationExecutor<ExpenseRequest>, ExpenseRequestRepositoryCustom {
+
+    List<ExpenseRequest> findAllBySurveyorAndExpenseStatus(Surveyor surveyor, ExpenseStatus expenseStatus);
 
     List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable);
 

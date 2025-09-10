@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.repository.ExpenseRequestRepository;
 
 import java.util.Date;
@@ -67,5 +68,9 @@ public class ExpenseRequestService {
 
 	public Double sumAmount(Specification<ExpenseRequest> spec) {
 		return repository.sumAmount(spec);
+	}
+
+	public List<ExpenseRequest> findAllBySurveyorAndStatus(Surveyor surveyor, ExpenseStatus status) {
+		return repository.findAllBySurveyorAndExpenseStatus(surveyor, status);
 	}
 }
