@@ -32,21 +32,14 @@ html {
 	--lumo-success-contrast-color: hsl(159, 29%, 10%);
 	--lumo-success-text-color: hsl(159, 61%, 40%);
 
-	/* Color base de la app  de testing 
-  --lumo-base-color: #e8f5e9;           
-  --lumo-body-text-color: #1b5e20;     
-
-  
-  --lumo-primary-color: #2e7d32;       
-  --lumo-primary-text-color: #ffffff;  
-  
-  
-  --lumo-success-color: #388e3c;
-  --lumo-error-color: #66bb6a;         
-  --lumo-warning-color: #81c784;
-
-  
-  --lumo-link-color: #1b5e20;
-
-*/
+	/* Color base
+	--lumo-base-color: #e8f5e9;
+	--lumo-body-text-color: #1b5e20;
+	--lumo-primary-color: #2e7d32;
+	--lumo-primary-text-color: #ffffff;
+	--lumo-success-color: #388e3c;
+	--lumo-error-color: #66bb6a;
+	--lumo-warning-color: #81c784;
+	--lumo-link-color: #1b5e20;
+	 de la app  de testing */
 }
