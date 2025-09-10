@@ -28,7 +28,8 @@ public class Fieldwork extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private FieldworkType type;
 
-	@Enumerated(EnumType.STRING)
+	@ManyToOne
+	@JoinColumn(name = "area_id")
 	private Area area;
 
 	private String doobloId;

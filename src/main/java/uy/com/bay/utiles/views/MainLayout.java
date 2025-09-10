@@ -179,6 +179,12 @@ public class MainLayout extends AppLayout {
 		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
 		usersItem.setPrefixComponent(new Icon("vaadin", "users"));
 		settingsItem.addItem(usersItem);
+		
+		
+		
+		SideNavItem areasItem = new SideNavItem("Areas", "areas");
+		areasItem.setPrefixComponent(new Icon("vaadin", "list"));
+		settingsItem.addItem(areasItem);
 
 		SideNavItem tasksItem = new SideNavItem("Tareas", "tasks");
 		tasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
