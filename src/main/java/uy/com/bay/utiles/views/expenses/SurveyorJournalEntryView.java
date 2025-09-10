@@ -50,7 +50,7 @@ public class SurveyorJournalEntryView extends Div {
 		Button expenseReportButton = new Button("Ingresar rendición");
 		expenseReportButton.addClickListener(e -> UI.getCurrent().navigate(SurveyorExpenseReportEntry.class));
 
-		HorizontalLayout buttonLayout = new HorizontalLayout(expenseRequestButton, expenseReportButton);
+		VerticalLayout buttonLayout = new VerticalLayout(expenseRequestButton, expenseReportButton);
 
 		configureExpenseRequestGrid();
 
