@@ -61,7 +61,7 @@ public class AlchemerAnswerRetriever {
 				ObjectMapper mapperStudy = new ObjectMapper();
 				JsonNode rootStudy = mapperStudy.readTree(responsesTudy);
 
-				String surveyTitle = rootStudy.path("data").path("title").asText();
+				String surveyTitle = rootStudy.path("data").path("internal_title").asText();
 
 				String url = String.format(
 						"https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",

@@ -1,5 +1,14 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -7,14 +16,15 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -26,15 +36,9 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.data.jpa.domain.Specification;
-import jakarta.persistence.criteria.Predicate;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
@@ -91,6 +95,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		this.filters = new Filters();
 
 		addClassName("expenses-aproval-view");
+
 		setHeight("100%");
 
 		HorizontalLayout buttonLayout = new HorizontalLayout(approveSelected, rejectSelected);
@@ -102,7 +107,13 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		createEditorLayout(splitLayout);
 		createGridLayout(splitLayout);
 
-		add(buttonLayout, splitLayout);
+		VerticalLayout layout = new VerticalLayout();
+		layout.setSizeFull(); // ancho y alto al 100%
+		layout.add(buttonLayout, splitLayout);
+
+		layout.setFlexGrow(1, splitLayout);
+
+		add(layout);
 
 		grid.setDataProvider(DataProvider.fromFilteringCallbacks(query -> {
 			Specification<ExpenseRequest> spec = createSpecification(filters);
@@ -270,6 +281,8 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		wrapper.setClassName("grid-wrapper");
 		wrapper.setWidthFull();
 		splitLayout.addToPrimary(wrapper);
+		splitLayout.setHeight("100%");
+
 		wrapper.add(grid);
 
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES);

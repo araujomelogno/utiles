@@ -12,6 +12,8 @@ import jakarta.persistence.Table;
 @Table(name = "alchemer_survey_response")
 public class AlchemerSurveyResponse extends AbstractEntity {
 
+	
+	private String  studyName;
     @JsonProperty("webhook_name")
     private String webhookName;
 
@@ -47,4 +49,12 @@ public class AlchemerSurveyResponse extends AbstractEntity {
     public void setFieldwork(Fieldwork fieldwork) {
         this.fieldwork = fieldwork;
     }
+
+	public String getStudyName() {
+		return studyName;
+	}
+
+	public void setStudyName(String studyName) {
+		this.studyName = studyName;
+	}
 }

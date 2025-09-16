@@ -85,7 +85,7 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 		setSizeFull();
 
 		SplitLayout splitLayout = new SplitLayout();
-		splitLayout.setSizeFull();
+//		splitLayout.setSizeFull();
 		splitLayout.setSplitterPosition(80);
 
 		createEditorLayout(splitLayout, studyService, surveyorService, expenseRequestTypeService);

@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,21 +15,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import uy.com.bay.utiles.data.AlchemerSurveyResponse;
-import uy.com.bay.utiles.data.JobType;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.JobType;
-import uy.com.bay.utiles.data.Study;
-import uy.com.bay.utiles.data.StudyRepository;
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.Task;
-import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseRepository;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
 import uy.com.bay.utiles.data.repository.TaskRepository;
@@ -43,16 +42,16 @@ public class AlchemerController {
 	private AlchemerSurveyResponseRepository alchemerSurveyResponseRepository;
 
 	@Autowired
-	private AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
-
-	@Autowired
-	private StudyRepository proyectoRepository;
-
-	@Autowired
 	private FieldworkRepository fieldworkRepository;
 
 	@Autowired
 	private TaskRepository taskRepository;
+
+	@Value("${alchemer.api.token}")
+	private String apiToken;
+
+	@Value("${alchemer.api.token.secret}")
+	private String apiTokenSecret;
 
 	// 1) application/x-www-form-urlencoded (Alchemer suele mandar esto)
 	@PostMapping(path = "/survey-response", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
@@ -147,6 +146,32 @@ public class AlchemerController {
 		task.setResponseId(response.getData().getResponseId());
 		taskRepository.save(task);
 		log.info("Created new Task with id: {}", task.getId());
+
+		String urlStudy = String.format("https://api.alchemer.com/v5/survey/%d?api_token=%s&api_token_secret=%s",
+				task.getSurveyId(), apiToken, apiTokenSecret);
+
+		RestTemplate restTemplate = new RestTemplate();
+		String responsesTudy = restTemplate.getForObject(urlStudy, String.class);
+
+		ObjectMapper mapperStudy = new ObjectMapper();
+		JsonNode rootStudy;
+		try {
+			rootStudy = mapperStudy.readTree(responsesTudy);
+
+			String surveyTitle = rootStudy.path("data").path("internal_title").asText();
+
+			response.setStudyName(surveyTitle);
+
+			alchemerSurveyResponseRepository.save(response);
+
+		} catch (JsonMappingException e) {
+			log.error(e.getLocalizedMessage());
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			log.error(e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+
 		return ResponseEntity.ok().build();
 	}
 }
