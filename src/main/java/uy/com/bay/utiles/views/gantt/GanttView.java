@@ -1,8 +1,6 @@
 package uy.com.bay.utiles.views.gantt;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +11,6 @@ import java.util.stream.Collectors;
 
 import org.vaadin.tltv.gantt.Gantt;
 import org.vaadin.tltv.gantt.element.StepElement;
-import org.vaadin.tltv.gantt.event.GanttClickEvent;
 import org.vaadin.tltv.gantt.event.StepClickEvent;
 import org.vaadin.tltv.gantt.model.Resolution;
 import org.vaadin.tltv.gantt.model.Step;
@@ -22,7 +19,6 @@ import org.vaadin.tltv.gantt.model.SubStep;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
@@ -48,15 +44,12 @@ public class GanttView extends VerticalLayout {
 	private final GanttService ganttService;
 	private Gantt gantt;
 	private FlexLayout scrollWrapper;
-	private Grid<Step> grid;
 	private TreeGrid<Step> treeGrid;
 
 	private DatePicker startDateField;
 	private DatePicker endDateField;
 
 	private int clickedBackgroundIndex;
-	private LocalDateTime clickedBackgroundDate;
-	private int stepCounter = 2;
 	private int totalgoal = 0;
 	private int totalCompleted = 0;
 	private final Map<String, Fieldwork> stepToFieldworkMap;
@@ -69,13 +62,11 @@ public class GanttView extends VerticalLayout {
 
 		gantt = createGantt();
 		gantt.setWidth("70%");
-		// buildCaptionGrid();
 
 		gantt.setMovableStepsBetweenRows(false);
 
-		buildCaptionTreeGrid();
-
 		Div controlPanel = buildControlPanel();
+		buildCaptionTreeGrid();
 
 		scrollWrapper = new FlexLayout();
 		scrollWrapper.setId("scroll-wrapper");
@@ -86,13 +77,6 @@ public class GanttView extends VerticalLayout {
 
 		add(controlPanel, scrollWrapper);
 	}
-
-//	private void buildCaptionGrid() {
-//		grid = gantt.buildCaptionGrid("Header");
-//		grid.setWidth("30%");
-//		grid.setAllRowsVisible(true);
-//		grid.getStyle().set("--gantt-caption-grid-row-height", "30px");
-//	}
 
 	private void buildCaptionTreeGrid() {
 		treeGrid = gantt.buildCaptionTreeGrid("Header");
@@ -141,22 +125,20 @@ public class GanttView extends VerticalLayout {
 			});
 
 			if (totalgoal != 0)
-				gantt.getStepElement(studyStep.getUid()).add(createProgressBar(totalCompleted / totalgoal));
+				gantt.getStepElement(studyStep.getUid()).add(createProgressBar(100 * totalCompleted / totalgoal));
 			totalgoal = 0;
 			totalCompleted = 0;
-//			treeGrid.expand(studyStep);
 		});
 	}
 
 	private Gantt createGantt() {
 		Gantt gantt = new Gantt();
 		gantt.setResolution(Resolution.Day);
-		gantt.setStartDate(LocalDate.now());
-		gantt.setEndDate(LocalDate.now().plusMonths(1));
+		gantt.setStartDate(LocalDate.now().minusMonths(1));
+		gantt.setEndDate(LocalDate.now().plusMonths(6));
 		gantt.setLocale(UI.getCurrent().getLocale());
 		gantt.setTimeZone(TimeZone.getDefault());
 
-		gantt.addGanttClickListener(this::onGanttBackgroundClick);
 		gantt.addStepClickListener(this::onGanttStepClick);
 		gantt.addStepMoveListener(event -> {
 			Notification.show("Moved step : " + event.getAnyStep().getCaption());
@@ -197,59 +179,12 @@ public class GanttView extends VerticalLayout {
 		backgroundContextMenu.setTarget(gantt);
 		gantt.getElement().addEventListener("vaadin-context-menu-before-open", event -> {
 			backgroundContextMenu.removeAll();
-//			backgroundContextMenu.addItem("Add step at index " + clickedBackgroundIndex,
-//					e -> onHandleAddStepContextMenuAction(clickedBackgroundIndex, clickedBackgroundDate));
 			var targetStep = gantt.getStepsList().get(clickedBackgroundIndex);
-//			backgroundContextMenu.addItem("Add sub-step for " + targetStep.getCaption(),
-//					e -> onHandleAddSubStepContextMenuAction(targetStep.getUid()));
 			backgroundContextMenu.add(new Hr());
-//			backgroundContextMenu.addItem("Remove step " + targetStep.getCaption(),
-//					e -> onHandleRemoveStepContextMenuAction(targetStep.getUid()));
-//			if (gantt.getCaptionTreeGrid() != null) {
-//				backgroundContextMenu.add(new Hr());
-//				backgroundContextMenu.addItem("TreeGrid: Add new child step for " + targetStep.getCaption(),
-//						e -> onAddTreeGridChildStep(targetStep.getUid()));
-//			}
 			backgroundContextMenu.add(new Hr());
 			backgroundContextMenu.add(createProgressEditor(gantt.getStepElement(targetStep.getUid())));
 		});
 	}
-
-//	private void onAddTreeGridChildStep(String targetStepUid) {
-//		Step parentStep = gantt.getStep(targetStepUid);
-//		Step childStep = createDefaultNewStep();
-//		childStep.setUid(UUID.randomUUID().toString()); // needed when adding to TreeData directly
-//		childStep.setCaption(
-//				"Child Step " + (gantt.getCaptionTreeGrid().getTreeData().getChildren(parentStep).size() + 1));
-//		childStep.setStartDate(parentStep.getStartDate());
-//		childStep.setEndDate(parentStep.getStartDate().plusDays(7));
-//		gantt.getCaptionTreeGrid().getTreeData().addItem(parentStep, childStep);
-//		gantt.getCaptionTreeGrid().getDataProvider().refreshAll();
-//
-//		if (!gantt.getCaptionTreeGrid().isExpanded(parentStep)) {
-//			treeGrid.expand(parentStep);
-//		} else {
-//			// Gantt can't know what was added/removed in data provider, so we need to call
-//			// expand to trigger expand event listener in Gantt.
-//			gantt.expand(parentStep, false);
-//		}
-//	}
-
-//	private void addDynamicSubStepContextMenu(StepElement stepElement) {
-////		stepElement.addContextMenu((contextMenu, uid) -> {
-////			contextMenu.removeAll();
-//////			contextMenu.addItem("Add step at index " + clickedBackgroundIndex,
-//////					e -> onHandleAddStepContextMenuAction(clickedBackgroundIndex, stepElement.getStartDateTime()));
-////			var targetStep = gantt.getStepsList().get(clickedBackgroundIndex);
-//////			contextMenu.addItem("Add sub-step for " + targetStep.getCaption(),
-//////					e -> onHandleAddSubStepContextMenuAction(targetStep.getUid()));
-////			contextMenu.add(new Hr());
-//////			contextMenu.addItem("Remove step " + stepElement.getCaption(),
-//////					e -> onHandleRemoveStepContextMenuAction(uid));
-////			contextMenu.add(new Hr());
-////			contextMenu.add(createProgressEditor(stepElement));
-////		});
-////	}
 
 	private IntegerField createProgressEditor(StepElement stepElement) {
 		var field = new IntegerField();
@@ -274,37 +209,6 @@ public class GanttView extends VerticalLayout {
 					});
 		});
 		return field;
-	}
-
-//	private void onHandleRemoveStepContextMenuAction(String uid) {
-//		gantt.removeAnyStep(uid);
-//	}
-
-//	private void onHandleAddSubStepContextMenuAction(String uid) {
-//		var substep = createDefaultSubStep(uid);
-//		gantt.addSubStep(substep);
-//		addDynamicSubStepContextMenu(gantt.getStepElement(substep.getUid()));
-//
-//	}
-//
-//	private void onHandleAddStepContextMenuAction(int index, LocalDateTime startDate) {
-//		var step = createDefaultNewStep();
-//		if (startDate != null) {
-//			step.setStartDate(startDate);
-//			step.setEndDate(startDate.plusDays(7));
-//		}
-//		gantt.addStep(index, step);
-//	}
-
-	private void onGanttBackgroundClick(GanttClickEvent event) {
-		clickedBackgroundIndex = event.getIndex() != null ? event.getIndex() : 0;
-		clickedBackgroundDate = event.getDate();
-		if (event.getButton() == 2) {
-			Notification.show("Clicked with mouse 2 at index: " + event.getIndex());
-		} else {
-			Notification.show("Clicked at index: " + event.getIndex() + " at date "
-					+ event.getDate().format(DateTimeFormatter.ofPattern("M/d/yyyy HH:mm")));
-		}
 	}
 
 	private void onGanttStepClick(StepClickEvent event) {
@@ -335,276 +239,6 @@ public class GanttView extends VerticalLayout {
 		tools.add(startDateField, endDateField);
 		return tools;
 	}
-
-//	private ComboBox<String> createTimeZoneField(Gantt gantt) {
-//		ComboBox<String> timeZoneField = new ComboBox<>("Timezone", getSupportedTimeZoneIds());
-//		timeZoneField.setWidth("350px");
-//		timeZoneField.setValue("Default");
-//		timeZoneField.setItemLabelGenerator(item -> {
-//			if ("Default".equals(item)) {
-//				return "Default (" + getDefaultTimeZone().getDisplayName(TextStyle.FULL, UI.getCurrent().getLocale())
-//						+ ")";
-//			}
-//			TimeZone tz = TimeZone.getTimeZone(item);
-//			return tz.getID() + " (raw offset " + (tz.getRawOffset() / 60000) + "m)";
-//		});
-//		timeZoneField.addValueChangeListener(e -> Optional.ofNullable(e.getValue()).ifPresent(zoneId -> {
-//			if ("Default".equals(zoneId)) {
-//				gantt.setTimeZone(TimeZone.getTimeZone(getDefaultTimeZone()));
-//			} else {
-//				gantt.setTimeZone(TimeZone.getTimeZone(ZoneId.of(zoneId)));
-//			}
-//		}));
-//		return timeZoneField;
-//	}
-
-//	private ComboBox<Locale> createLocaleField(Gantt gantt) {
-//		ComboBox<Locale> localeField = new ComboBox<>("Locale",
-//				Stream.of(Locale.getAvailableLocales()).collect(Collectors.toList()));
-//		localeField.setWidth("350px");
-//		localeField.setItemLabelGenerator((l) -> l.getDisplayName(UI.getCurrent().getLocale()));
-//		localeField.setValue(gantt.getLocale());
-//		localeField.addValueChangeListener(e -> Optional.ofNullable(e.getValue()).ifPresent(l -> gantt.setLocale(l)));
-//		return localeField;
-//	}
-
-//	private MenuBar buildMenu() {
-//
-//		MenuBar menu = new MenuBar();
-//		MenuItem menuView = menu.addItem("View");
-//		MenuItem size = menuView.getSubMenu().addItem("Size");
-//		MenuItem size100x100 = size.getSubMenu().addItem(SizeOption.FULL_SIZE.getText());
-//		size100x100.setChecked(this.size == SizeOption.FULL_SIZE);
-//		size100x100.setCheckable(true);
-//		MenuItem size100xAuto = size.getSubMenu().addItem(SizeOption.FULL_WIDTH.getText());
-//		size100xAuto.setCheckable(true);
-//		size100xAuto.setChecked(this.size == SizeOption.FULL_WIDTH);
-//		MenuItem size50x100 = size.getSubMenu().addItem(SizeOption.HALF_WIDTH.getText());
-//		size50x100.setCheckable(true);
-//		size100x100.setChecked(this.size == SizeOption.HALF_WIDTH);
-//		MenuItem size100x50 = size.getSubMenu().addItem(SizeOption.HALF_HEIGHT.getText());
-//		size100x50.setCheckable(true);
-//		size100x100.setChecked(this.size == SizeOption.HALF_HEIGHT);
-//
-//		size100x100.addClickListener(event -> {
-//			setSize(SizeOption.FULL_SIZE);
-//			event.getSource().setChecked(true);
-//			size100xAuto.setChecked(false);
-//			size100x50.setChecked(false);
-//			size50x100.setChecked(false);
-//		});
-//		size100xAuto.addClickListener(event -> {
-//			setSize(SizeOption.FULL_WIDTH);
-//			event.getSource().setChecked(true);
-//			size100x100.setChecked(false);
-//			size100x50.setChecked(false);
-//			size50x100.setChecked(false);
-//		});
-//		size50x100.addClickListener(event -> {
-//			setSize(SizeOption.HALF_WIDTH);
-//			event.getSource().setChecked(true);
-//			size100xAuto.setChecked(false);
-//			size100x100.setChecked(false);
-//			size100x50.setChecked(false);
-//		});
-//		size100x50.addClickListener(event -> {
-//			setSize(SizeOption.HALF_HEIGHT);
-//			event.getSource().setChecked(true);
-//			size100xAuto.setChecked(false);
-//			size100x100.setChecked(false);
-//			size50x100.setChecked(false);
-//		});
-//
-//		MenuItem twelveHourClock = menuView.getSubMenu().addItem("Twelve hour clock");
-//		twelveHourClock.addClickListener(event -> {
-//			gantt.setTwelveHourClock(event.getSource().isChecked());
-//		});
-//		twelveHourClock.setCheckable(true);
-//		twelveHourClock.setChecked(gantt.isTwelveHourClock());
-//
-//		MenuItem showYear = menuView.getSubMenu().addItem("Show year");
-//		showYear.addClickListener(event -> {
-//			gantt.setYearRowVisible(event.getSource().isChecked());
-//		});
-//		showYear.setCheckable(true);
-//		showYear.setChecked(gantt.isYearRowVisible());
-//
-//		MenuItem showMonth = menuView.getSubMenu().addItem("Show month");
-//		showMonth.addClickListener(event -> {
-//			gantt.setMonthRowVisible(event.getSource().isChecked());
-//		});
-//		showMonth.setCheckable(true);
-//		showMonth.setChecked(gantt.isMonthRowVisible());
-//
-//		MenuItem showCaptionGrid = menuView.getSubMenu().addItem("Show Caption Grid");
-//		MenuItem showCaptionTreeGrid = menuView.getSubMenu().addItem("Show Caption TreeGrid");
-//		showCaptionGrid.addClickListener(event -> {
-//			if (treeGrid != null) {
-//				treeGrid.removeFromParent();
-//				treeGrid = null;
-//				showCaptionTreeGrid.setChecked(false);
-//			}
-//			if (event.getSource().isChecked()) {
-//				buildCaptionGrid();
-//				scrollWrapper.addComponentAsFirst(grid);
-//			} else {
-//				gantt.removeCaptionGrid();
-//				scrollWrapper.remove(grid);
-//				grid = null;
-//			}
-//			setSize(this.size);
-//		});
-//		showCaptionGrid.setCheckable(true);
-//		showCaptionGrid.setChecked(grid != null && grid.isVisible());
-//
-//		showCaptionTreeGrid.addClickListener(event -> {
-//			if (grid != null) {
-//				grid.removeFromParent();
-//				grid = null;
-//				showCaptionGrid.setChecked(false);
-//			}
-//			if (event.getSource().isChecked()) {
-//				buildCaptionTreeGrid();
-//				scrollWrapper.addComponentAsFirst(treeGrid);
-//			} else {
-//				gantt.removeCaptionGrid();
-//				scrollWrapper.remove(treeGrid);
-//				treeGrid = null;
-//			}
-//			setSize(this.size);
-//		});
-//		showCaptionTreeGrid.setCheckable(true);
-//		showCaptionTreeGrid.setChecked(treeGrid != null && treeGrid.isVisible());
-//
-//		MenuItem menuEdit = menu.addItem("Edit");
-//
-//		MenuItem movableSteps = menuEdit.getSubMenu().addItem("Movable steps");
-//		movableSteps.addClickListener(event -> {
-//			gantt.setMovableSteps(event.getSource().isChecked());
-//		});
-//		movableSteps.setCheckable(true);
-//		movableSteps.setChecked(gantt.isMovableSteps());
-//
-//		MenuItem resizableSteps = menuEdit.getSubMenu().addItem("Resizable steps");
-//		resizableSteps.addClickListener(event -> {
-//			gantt.setResizableSteps(event.getSource().isChecked());
-//		});
-//		resizableSteps.setCheckable(true);
-//		resizableSteps.setChecked(gantt.isResizableSteps());
-//
-//		MenuItem movableStepsBetweenRows = menuEdit.getSubMenu().addItem("Movable steps between rows");
-//		movableStepsBetweenRows.addClickListener(event -> {
-//			gantt.setMovableStepsBetweenRows(event.getSource().isChecked());
-//		});
-//		movableStepsBetweenRows.setCheckable(true);
-//		movableStepsBetweenRows.setChecked(gantt.isMovableStepsBetweenRows());
-//
-//		MenuItem menuAdd = menu.addItem("Add new Step");
-//		menuAdd.addClickListener(event -> insertNewStep());
-//
-//		return menu;
-//	}
-
-//	private void setSize(SizeOption newSize) {
-//		this.size = newSize;
-//		switch (size) {
-//		case FULL_SIZE:
-//			setSizeFull();
-//			gantt.setWidth("70%");
-//			setCaptionGridWidth("30%");
-//			gantt.setHeight("100%");
-//			setCaptionGridHeight("100%");
-//			setFlexGrow(1, scrollWrapper);
-//			break;
-//		case FULL_WIDTH:
-//			setWidthFull();
-//			setHeight(null);
-//			gantt.setWidth("70%");
-//			setCaptionGridWidth("30%");
-//			gantt.setHeight(null);
-//			setCaptionGridHeight(null);
-//			grid.setAllRowsVisible(true);
-//			setFlexGrow(0, scrollWrapper);
-//			break;
-//		case HALF_WIDTH:
-//			setSizeFull();
-//			gantt.setWidth("40%");
-//			setCaptionGridWidth("10%");
-//			gantt.setHeight("100%");
-//			setCaptionGridHeight("100%");
-//			setFlexGrow(1, scrollWrapper);
-//			break;
-//		case HALF_HEIGHT:
-//			setSizeFull();
-//			gantt.setWidth("70%");
-//			setCaptionGridWidth("30%");
-//			gantt.setHeight("50%");
-//			setCaptionGridHeight("50%");
-//			setFlexGrow(1, scrollWrapper);
-//			break;
-//		}
-//	}
-
-//	private void setCaptionGridWidth(String width) {
-//		if (grid != null) {
-//			grid.setWidth(width);
-//		}
-//		if (treeGrid != null) {
-//			treeGrid.setWidth(width);
-//		}
-//	}
-//
-//	private void setCaptionGridHeight(String height) {
-//		if (grid != null) {
-//			grid.setHeight(height);
-//		}
-//		if (treeGrid != null) {
-//			treeGrid.setHeight(height);
-//		}
-//	}
-
-//	private ZoneId getDefaultTimeZone() {
-//		ZoneId zone = ZoneId.systemDefault();
-//		return zone;
-//	}
-//
-//	private List<String> getSupportedTimeZoneIds() {
-//		List<String> items = new ArrayList<>();
-//		items.add("Default");
-//		items.addAll(Arrays.asList(TimeZone.getAvailableIDs()));
-//		return items;
-//	}
-
-//	private void insertNewStep() {
-//		var step = createDefaultNewStep();
-//		gantt.addStep(step);
-//	}
-
-//	private Step createDefaultNewStep() {
-//		Step step = new Step();
-//		step.setCaption("New Step " + ++stepCounter);
-//		step.setBackgroundColor(String.format("#%06x", new Random().nextInt(0xffffff + 1)));
-//		step.setStartDate(LocalDateTime.of(2020, 4, 7, 0, 0));
-//		step.setEndDate(LocalDateTime.of(2020, 4, 14, 0, 0));
-//		return step;
-//	}
-//
-//	private SubStep createDefaultSubStep(String ownerUid) {
-//		var owner = gantt.getStep(ownerUid);
-//		SubStep substep = new SubStep(owner);
-//		substep.setCaption("New Sub Step");
-//		substep.setBackgroundColor(String.format("#%06x", new Random().nextInt(0xffffff + 1)));
-//		if (gantt.getSubStepElements(ownerUid).count() == 0) {
-//			substep.setStartDate(owner.getStartDate());
-//			substep.setEndDate(owner.getEndDate());
-//		} else {
-//			substep.setStartDate(owner.getEndDate());
-//			substep.setEndDate(owner.getEndDate().plusDays(7));
-//			owner.setEndDate(substep.getEndDate());
-//			gantt.refresh(ownerUid);
-//		}
-//		return substep;
-//	}
 
 	enum SizeOption {
 		FULL_SIZE("100% x 100%"), FULL_WIDTH("100% x auto"), HALF_WIDTH("50% x 100%"), HALF_HEIGHT("100% x 50%");

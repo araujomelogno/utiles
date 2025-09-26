@@ -1,4 +1,5 @@
 package uy.com.bay.utiles.tasks;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,7 @@ public class AlchemerAnswerRetriever {
 
 							break;
 						case "parent":
-							processParentAnswer(answerNode, task);
+							processParentAnswer(answerNode, task, surveyTitle);
 							break;
 						default:
 							LOGGER.warn("Unknown answer type: {}", type);
@@ -120,7 +121,7 @@ public class AlchemerAnswerRetriever {
 		LOGGER.info("Alchemer Answer Retriever task finished.");
 	}
 
-	private void processParentAnswer(JsonNode answerNode, Task task) {
+	private void processParentAnswer(JsonNode answerNode, Task task, String surveyTitle) {
 		if (answerNode.has("options")) {
 			Iterator<Map.Entry<String, JsonNode>> options = answerNode.path("options").fields();
 			while (options.hasNext()) {
@@ -135,6 +136,7 @@ public class AlchemerAnswerRetriever {
 					alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
 					alchemerAnswer.setShown(true);
 					alchemerAnswer.setSurveyId(task.getSurveyId());
+					alchemerAnswer.setStudyName(surveyTitle);
 					alchemerAnswer.setResponseId(task.getResponseId());
 					alchemerAnswerRepository.save(alchemerAnswer);
 					LOGGER.info("Saved answer for parent question ID: {}, option ID: {}",
@@ -162,6 +164,8 @@ public class AlchemerAnswerRetriever {
 						alchemerAnswer.setShown(true);
 						alchemerAnswer.setSurveyId(task.getSurveyId());
 						alchemerAnswer.setResponseId(task.getResponseId());
+						alchemerAnswer.setStudyName(surveyTitle);
+
 						alchemerAnswerRepository.save(alchemerAnswer);
 						LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}",
 								answerNode.path("id").asLong(), alchemerAnswer.getId());
