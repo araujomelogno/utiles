@@ -250,8 +250,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		viewMovementsButton.addClickListener(e -> {
 			if (this.proyecto != null) {
-				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService,
-						expenseReportFileService, expenseTransferFileService, excelExportService);
+				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService, excelExportService);
 				dialog.open();
 			}
 		});
