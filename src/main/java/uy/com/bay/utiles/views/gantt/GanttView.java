@@ -3,6 +3,7 @@ package uy.com.bay.utiles.views.gantt;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,9 +59,11 @@ public class GanttView extends VerticalLayout {
 	private int stepCounter = 2;
 	private int totalgoal = 0;
 	private int totalCompleted = 0;
+	private final Map<String, Fieldwork> stepToFieldworkMap;
 
 	public GanttView(GanttService ganttService) {
 		this.ganttService = ganttService;
+		this.stepToFieldworkMap = new HashMap<>();
 		setWidthFull();
 		setPadding(false);
 
@@ -123,10 +126,12 @@ public class GanttView extends VerticalLayout {
 					subStep.setCaption(fieldwork.getType().toString());
 					subStep.setStartDate(fieldwork.getInitPlannedDate().atStartOfDay());
 					subStep.setEndDate(fieldwork.getEndPlannedDate().atStartOfDay());
-					subStep.setUid(UUID.randomUUID().toString());
+					String uid = UUID.randomUUID().toString();
+					subStep.setUid(uid);
 					subStep.setBackgroundColor("#E6E6E6");
 					subStep.setMovable(false);
 					treeGrid.getTreeData().addItem(studyStep, subStep);
+					stepToFieldworkMap.put(uid, fieldwork);
 					if (fieldwork.getGoalQuantity() != null)
 						totalgoal = totalgoal + fieldwork.getGoalQuantity();
 					if (fieldwork.getCompleted() != null)
@@ -304,7 +309,11 @@ public class GanttView extends VerticalLayout {
 
 	private void onGanttStepClick(StepClickEvent event) {
 		clickedBackgroundIndex = event.getIndex();
-		Notification.show("Clicked step " + event.getAnyStep().getCaption());
+		Fieldwork fieldwork = stepToFieldworkMap.get(event.getAnyStep().getUid());
+		if (fieldwork != null) {
+			FieldworkDetailsDialog dialog = new FieldworkDetailsDialog(fieldwork);
+			dialog.open();
+		}
 	}
 
 	private Div buildControlPanel() {
