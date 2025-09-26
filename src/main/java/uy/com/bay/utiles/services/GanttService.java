@@ -16,9 +16,7 @@ public class GanttService {
         this.fieldworkRepository = fieldworkRepository;
     }
 
-    public List<Fieldwork> getFieldworks() {
-        LocalDate today = LocalDate.now();
-        LocalDate sixMonthsFromNow = today.plusMonths(6);
-        return fieldworkRepository.findAllByEndPlannedDateBetween(today, sixMonthsFromNow);
+    public List<Fieldwork> getFieldworks(LocalDate startDate, LocalDate endDate) {
+        return fieldworkRepository.findAllByInitPlannedDateLessThanAndEndPlannedDateGreaterThan(endDate, startDate);
     }
 }
