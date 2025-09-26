@@ -207,6 +207,11 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 					Notification.show("No expense request selected.");
 					return;
 				}
+
+				if (this.expenseRequest.getStudy() == null) {
+					Notification.show("Debe asociarse estudio");
+					return;
+				}
 				binder.writeBean(this.expenseRequest);
 				this.expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
 				this.expenseRequest.setAprovalDate(new Date());
@@ -252,6 +257,10 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 				return;
 			}
 			selectedItems.forEach(expenseRequest -> {
+				if (expenseRequest.getStudy() == null) {
+					Notification.show("Debe asociarse estudio a todas las solicitudes de gasto");
+					return;
+				}
 				expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
 				expenseRequest.setAprovalDate(new Date());
 				expenseRequestService.update(expenseRequest);

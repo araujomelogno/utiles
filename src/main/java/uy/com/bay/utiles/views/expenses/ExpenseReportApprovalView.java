@@ -125,14 +125,18 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 
 		approve.addClickListener(e -> {
 			try {
+
 				if (this.expenseReport == null) {
 					Notification.show("No expense report selected.");
 					return;
 				}
+
 				binder.writeBean(this.expenseReport);
-				this.expenseReport.setExpenseStatus(ExpenseReportStatus.APROBADO);
-				this.expenseReport.setApprovalDate(new java.util.Date());
-				expenseReportService.update(this.expenseReport);
+				if (this.expenseReport.getStudy() == null) {
+					Notification.show("Se debe definir estudio asociado.");
+					return;
+				}
+				expenseReportService.approveReport(this.expenseReport);
 				clearForm();
 				refreshGrid();
 				Notification.show("ExpenseReport approved.");
@@ -179,10 +183,12 @@ public class ExpenseReportApprovalView extends Div implements BeforeEnterObserve
 				return;
 			}
 			selectedItems.forEach(report -> {
-				report.setExpenseStatus(ExpenseReportStatus.APROBADO);
-				report.setApprovalDate(new java.util.Date());
-				expenseReportService.update(report);
+				if (this.expenseReport.getStudy() == null) {
+					Notification.show("Se debe asociad estudio");
+					return;
+				}
 			});
+			expenseReportService.approveReports(selectedItems);
 			refreshGrid();
 			Notification.show(selectedItems.size() + " rendiciones aprobadas.");
 		});

@@ -1,4 +1,4 @@
-package uy.com.bay.utiles.views.gantt;
+package uy.com.bay.utiles.views;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,9 +41,9 @@ import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.GanttService;
 
-@Route(value = "gantt")
+@Route("demoview")
 @PermitAll
-public class GanttView extends VerticalLayout {
+public class GanttDemoView extends VerticalLayout {
 	private final GanttService ganttService;
 	private Gantt gantt;
 	private FlexLayout scrollWrapper;
@@ -56,10 +56,8 @@ public class GanttView extends VerticalLayout {
 	private int clickedBackgroundIndex;
 	private LocalDateTime clickedBackgroundDate;
 	private int stepCounter = 2;
-	private int totalgoal = 0;
-	private int totalCompleted = 0;
 
-	public GanttView(GanttService ganttService) {
+	public GanttDemoView(GanttService ganttService) {
 		this.ganttService = ganttService;
 		setWidthFull();
 		setPadding(false);
@@ -67,8 +65,6 @@ public class GanttView extends VerticalLayout {
 		gantt = createGantt();
 		gantt.setWidth("70%");
 		// buildCaptionGrid();
-
-		gantt.setMovableStepsBetweenRows(false);
 
 		buildCaptionTreeGrid();
 
@@ -98,8 +94,6 @@ public class GanttView extends VerticalLayout {
 		treeGrid.getStyle().set("--gantt-caption-grid-row-height", "30px");
 
 		gantt.setMovableStepsBetweenRows(false);
-		gantt.setMovableSteps(false);
-		gantt.setResizableSteps(false);
 
 		List<Fieldwork> fieldworks = ganttService.getFieldworks();
 		Map<Study, List<Fieldwork>> fieldworksByStudy = fieldworks.stream()
@@ -114,8 +108,6 @@ public class GanttView extends VerticalLayout {
 			fieldworkList.stream().map(Fieldwork::getEndPlannedDate).filter(Objects::nonNull).max(LocalDate::compareTo)
 					.ifPresent(maxDate -> studyStep.setEndDate(maxDate.atStartOfDay()));
 			studyStep.setBackgroundColor("#eb590580");
-			studyStep.setMovable(false);
-
 			gantt.addStep(0, studyStep);
 			fieldworkList.forEach(fieldwork -> {
 				if (fieldwork.getInitPlannedDate() != null && fieldwork.getEndPlannedDate() != null) {
@@ -125,20 +117,21 @@ public class GanttView extends VerticalLayout {
 					subStep.setEndDate(fieldwork.getEndPlannedDate().atStartOfDay());
 					subStep.setUid(UUID.randomUUID().toString());
 					subStep.setBackgroundColor("#E6E6E6");
-					subStep.setMovable(false);
 					treeGrid.getTreeData().addItem(studyStep, subStep);
-					if (fieldwork.getGoalQuantity() != null)
-						totalgoal = totalgoal + fieldwork.getGoalQuantity();
-					if (fieldwork.getCompleted() != null)
-						totalCompleted = totalCompleted + fieldwork.getCompleted();
+
+//					addDynamicSubStepContextMenu(gantt.getStepElement(subStep.getUid()));
+					if (fieldwork.getGoalQuantity() != null && fieldwork.getGoalQuantity() > 0
+							&& fieldwork.getCompleted() != null) {
+						ProgressBar progressBar = new ProgressBar();
+						double progress = (double) fieldwork.getCompleted() / fieldwork.getGoalQuantity();
+						progressBar.setValue(progress);
+//						gantt.getStepElement(studyStep.getUid()).add(progressBar);
+
+					}
+					gantt.getStepElement(studyStep.getUid()).add(createProgressBar(20d));
 
 				}
 			});
-
-			if (totalgoal != 0)
-				gantt.getStepElement(studyStep.getUid()).add(createProgressBar(totalCompleted / totalgoal));
-			totalgoal = 0;
-			totalCompleted = 0;
 //			treeGrid.expand(studyStep);
 		});
 	}
