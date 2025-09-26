@@ -188,6 +188,23 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				refreshGrid();
 				event.forwardTo(FieldworksView.class);
 			}
+		} else {
+			event.getLocation().getQueryParameters().get("studyId").stream().findFirst().ifPresent(studyId -> {
+				try {
+					Optional<Study> study = studyService.get(Long.parseLong(studyId));
+					if (study.isPresent()) {
+						clearForm();
+						this.fieldwork = new Fieldwork();
+						this.fieldwork.setStudy(study.get());
+						binder.readBean(this.fieldwork);
+						this.editorLayoutDiv.setVisible(true);
+					} else {
+						Notification.show("El estudio no fue encontrado.", 3000, Notification.Position.BOTTOM_START);
+					}
+				} catch (NumberFormatException e) {
+					Notification.show("Id de estudio invalido.", 3000, Notification.Position.BOTTOM_START);
+				}
+			});
 		}
 	}
 
