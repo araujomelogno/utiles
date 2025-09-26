@@ -88,7 +88,7 @@ public class GanttView extends VerticalLayout {
 		gantt.setMovableSteps(false);
 		gantt.setResizableSteps(false);
 
-		List<Fieldwork> fieldworks = ganttService.getFieldworks();
+		List<Fieldwork> fieldworks = ganttService.getFieldworks(gantt.getStartDate(), gantt.getEndDate());
 		Map<Study, List<Fieldwork>> fieldworksByStudy = fieldworks.stream()
 				.collect(Collectors.groupingBy(Fieldwork::getStudy));
 		fieldworksByStudy.forEach((study, fieldworkList) -> {
