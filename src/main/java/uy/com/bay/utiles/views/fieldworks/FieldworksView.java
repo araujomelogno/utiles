@@ -189,7 +189,9 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				event.forwardTo(FieldworksView.class);
 			}
 		} else {
-			event.getLocation().getQueryParameters().get("studyId").stream().findFirst().ifPresent(studyId -> {
+			Optional.ofNullable(event.getLocation().getQueryParameters().getParameters().get("studyId"))
+				.flatMap(list -> list.stream().findFirst())
+				.ifPresent(studyId -> {
 				try {
 					Optional<Study> study = studyService.get(Long.parseLong(studyId));
 					if (study.isPresent()) {
