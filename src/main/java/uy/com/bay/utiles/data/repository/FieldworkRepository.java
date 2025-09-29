@@ -19,4 +19,6 @@ public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, Jpa
 
 	List<Fieldwork> findAllByInitPlannedDateLessThanAndEndPlannedDateGreaterThan(LocalDate endDate,
 			LocalDate startDate);
+
+	List<Fieldwork> findAllByInitPlannedDateAfterAndAlchemerIdIsNotNull(LocalDate date);
 }
