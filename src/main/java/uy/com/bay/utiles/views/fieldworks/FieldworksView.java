@@ -233,7 +233,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		initDate = new DatePicker("Fecha Inicio");
 		endDate = new DatePicker("Fecha Fin");
 		goalQuantity = new IntegerField("Cantidad Objetivo");
-		completed = new IntegerField("Completadas");
+		completed = new IntegerField("Completas");
+		completed.setReadOnly(true);
 		budget = new IntegerField("Presupuesto");
 		obs = new TextField("Observaciones");
 		status = new ComboBox<>("Estado");
@@ -243,7 +244,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area = new ComboBox<>("Area");
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
-		formLayout.add(study, doobloId, alchemerId, budget, initPlannedDate, endPlannedDate, goalQuantity, completed,
+		formLayout.add(study, budget, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed,
 				obs, status, type, area);
 
 		editorDiv.add(formLayout);

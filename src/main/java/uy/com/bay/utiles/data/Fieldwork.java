@@ -101,7 +101,10 @@ public class Fieldwork extends AbstractEntity {
 	}
 
 	public Integer getGoalQuantity() {
-		return goalQuantity;
+		if (goalQuantity != null)
+			return goalQuantity;
+		else
+			return 0;
 	}
 
 	public void setGoalQuantity(Integer goalQuantity) {

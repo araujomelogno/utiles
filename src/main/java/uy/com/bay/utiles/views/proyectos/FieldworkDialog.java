@@ -24,9 +24,11 @@ public class FieldworkDialog extends Dialog {
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
-		grid.addColumn("initPlannedDate").setHeader("Fecha inicio planificada").setAutoWidth(true);
-		grid.addColumn("endPlannedDate").setHeader("Fecha fin planificada").setAutoWidth(true);
-		grid.addColumn("goalQuantity").setHeader("Encuestas objetivo").setAutoWidth(true);
+		grid.addColumn("initPlannedDate").setHeader("Inicio planificado").setAutoWidth(true);
+		grid.addColumn("endPlannedDate").setHeader("Fin planificado").setAutoWidth(true);
+		grid.addColumn("goalQuantity").setHeader("Objetivo").setAutoWidth(true);
+		grid.addColumn("completed").setHeader("Completas").setAutoWidth(true);
+		grid.addColumn("budget").setHeader("Presupuesto").setAutoWidth(true);
 
 		grid.setItems(fieldworkService.findAllByStudy(study));
 		grid.addItemClickListener(event -> {
@@ -36,7 +38,8 @@ public class FieldworkDialog extends Dialog {
 
 		Button closeButton = new Button("Cerrar", e -> close());
 		Button createButton = new Button("Crear", e -> {
-			QueryParameters params = QueryParameters.simple(Collections.singletonMap("studyId", study.getId().toString()));
+			QueryParameters params = QueryParameters
+					.simple(Collections.singletonMap("studyId", study.getId().toString()));
 			UI.getCurrent().navigate(FieldworksView.class, params);
 			close();
 		});

@@ -118,7 +118,7 @@ public class GanttView extends VerticalLayout {
 			fieldworkList.forEach(fieldwork -> {
 				if (fieldwork.getInitPlannedDate() != null && fieldwork.getEndPlannedDate() != null) {
 					Step subStep = new Step();
-					subStep.setCaption(fieldwork.getType().toString());
+					subStep.setCaption(fieldwork.getType().toString() + " - "+ fieldwork.getGoalQuantity() + " casos");
 					subStep.setStartDate(fieldwork.getInitPlannedDate().atStartOfDay());
 					subStep.setEndDate(fieldwork.getEndPlannedDate().atStartOfDay());
 					String uid = UUID.randomUUID().toString();

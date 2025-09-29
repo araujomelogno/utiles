@@ -58,7 +58,6 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private TextField name;
 	private TextField odooId;
 	private TextArea obs;
-	private TextField casosCompletos;
 	private Checkbox showSurveyor;
 	private TextField totalTransfered;
 	private TextField totalReportedCost;
@@ -296,14 +295,12 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		name = new TextField("Name");
 		odooId = new TextField("Odoo Id");
 		obs = new TextArea("Observaciones");
-		casosCompletos = new TextField("Casos completos");
-		casosCompletos.setReadOnly(true);
 		showSurveyor = new Checkbox("Mostrar a encuestador");
 		totalTransfered = new TextField("Total de gastos transferidos");
 		totalTransfered.setReadOnly(true);
 		totalReportedCost = new TextField("Total de gastos rendidos");
 		totalReportedCost.setReadOnly(true);
-		formLayout.add(name, odooId, obs, casosCompletos, showSurveyor, totalTransfered, totalReportedCost);
+		formLayout.add(name, odooId, obs, showSurveyor, totalTransfered, totalReportedCost);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
