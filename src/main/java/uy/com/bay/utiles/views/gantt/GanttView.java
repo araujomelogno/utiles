@@ -84,8 +84,8 @@ public class GanttView extends VerticalLayout {
 	}
 
 	private void buildCaptionTreeGrid() {
-		treeGrid = new TreeGrid<>();
-		treeGrid.addHierarchyColumn(Step::getCaption).setHeader("Proyecto");
+
+		treeGrid = gantt.buildCaptionTreeGrid("Proyecto");
 		treeGrid.setWidth("30%");
 		treeGrid.setAllRowsVisible(true);
 		treeGrid.getStyle().set("--gantt-caption-grid-row-height", "30px");

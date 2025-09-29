@@ -36,7 +36,7 @@ public class AlchemerCompletedSurveyCounter {
                     long count = alchemerSurveyResponseDataRepository.countBySurveyId(surveyId);
 
                     Integer previousCompleted = fieldwork.getCompleted() == null ? 0 : fieldwork.getCompleted();
-                    int newCompleted = (int) count;
+					int newCompleted = (int) count;
 
                     fieldwork.setCompleted(newCompleted);
 

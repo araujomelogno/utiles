@@ -1,5 +1,8 @@
 package uy.com.bay.utiles.views.gantt;
 
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -12,54 +15,52 @@ import uy.com.bay.utiles.data.Study;
 
 public class StudyDetailsDialog extends Dialog {
 
-    public StudyDetailsDialog(Study study) {
-        setHeaderTitle("Detalles del Estudio: " + study.getName());
-        setWidth("800px");
+	public StudyDetailsDialog(Study study) {
+		setHeaderTitle("Detalles del Estudio: " + study.getName());
+		setWidth("1200px");
 
-        VerticalLayout layout = new VerticalLayout();
-        add(layout);
+		VerticalLayout layout = new VerticalLayout();
+		add(layout);
 
-        FormLayout formLayout = new FormLayout();
-        TextField name = new TextField("Name");
-        name.setValue(study.getName());
-        name.setReadOnly(true);
+		FormLayout formLayout = new FormLayout();
+		TextField name = new TextField("Name");
+		name.setValue(study.getName());
+		name.setReadOnly(true);
 
-        TextField odooId = new TextField("Odoo Id");
-        odooId.setValue(study.getOdooId());
-        odooId.setReadOnly(true);
+		TextField casosCompletos = new TextField("Casos completos");
+		casosCompletos.setReadOnly(true);
 
-        TextArea obs = new TextArea("Observaciones");
-        obs.setValue(study.getObs());
-        obs.setReadOnly(true);
+		TextField totalTransfered = new TextField("Total de gastos transferidos");
+		totalTransfered.setValue(Double.valueOf(study.getTotalTransfered()).toString());
+		totalTransfered.setReadOnly(true);
 
-        TextField casosCompletos = new TextField("Casos completos");
-        casosCompletos.setReadOnly(true);
+		TextField totalReportedCost = new TextField("Total de gastos rendidos");
+		totalReportedCost.setValue(Double.valueOf(study.getTotalReportedCost()).toString());
+		totalReportedCost.setReadOnly(true);
 
-        Checkbox showSurveyor = new Checkbox("Mostrar a encuestador");
-        showSurveyor.setValue(study.isShowSurveyor());
-        showSurveyor.setReadOnly(true);
+		formLayout.add(name, casosCompletos, totalTransfered, totalReportedCost);
+		layout.add(formLayout);
 
-        TextField totalTransfered = new TextField("Total de gastos transferidos");
-        totalTransfered.setValue(Double.valueOf(study.getTotalTransfered()).toString());
-        totalTransfered.setReadOnly(true);
+		Grid<Fieldwork> fieldworkGrid = new Grid<>(Fieldwork.class, false);
+		fieldworkGrid.addColumn("status").setHeader("Estado");
+		fieldworkGrid.addColumn("type").setHeader("Tipo");
+		fieldworkGrid.addColumn("initPlannedDate").setHeader("Inicio planificado");
+		fieldworkGrid.addColumn("endPlannedDate").setHeader("Fin planificado");
+		fieldworkGrid.addColumn("goalQuantity").setHeader("Cantidad objetivo");
+		fieldworkGrid.addColumn("completed").setHeader("Completas");
+		fieldworkGrid.setItems(study.getFieldworks());
+		fieldworkGrid.setAllRowsVisible(true);
 
-        TextField totalReportedCost = new TextField("Total de gastos rendidos");
-        totalReportedCost.setValue(Double.valueOf(study.getTotalReportedCost()).toString());
-        totalReportedCost.setReadOnly(true);
+		layout.add(fieldworkGrid);
 
-        formLayout.add(name, odooId, obs, casosCompletos, showSurveyor, totalTransfered, totalReportedCost);
-        layout.add(formLayout);
+		Button editButton = new Button("Editar");
+		editButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		editButton.addClickListener(e -> {
+			UI.getCurrent().navigate(study.getId() + "/edit");
+			close();
+		});
 
-        Grid<Fieldwork> fieldworkGrid = new Grid<>(Fieldwork.class, false);
-        fieldworkGrid.addColumn("status").setHeader("Estado");
-        fieldworkGrid.addColumn("type").setHeader("Tipo");
-        fieldworkGrid.addColumn("initPlannedDate").setHeader("Fecha de inicio planificada");
-        fieldworkGrid.addColumn("endPlannedDate").setHeader("Fecha de fin planificada");
-        fieldworkGrid.addColumn("goalQuantity").setHeader("Cantidad objetivo");
-        fieldworkGrid.addColumn("completed").setHeader("Completado");
-        fieldworkGrid.setItems(study.getFieldworks());
-        fieldworkGrid.setAllRowsVisible(true);
-
-        layout.add(fieldworkGrid);
-    }
+		Button closeButton = new Button("Cerrar", e -> close());
+		getFooter().add(editButton, closeButton);
+	}
 }
