@@ -20,6 +20,7 @@ public class Fieldwork extends AbstractEntity {
 	private LocalDate endDate;
 	private Integer goalQuantity;
 	private Integer completed;
+	private Integer budget;
 	private String obs;
 
 	@Enumerated(EnumType.STRING)
@@ -137,5 +138,13 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setType(FieldworkType type) {
 		this.type = type;
+	}
+
+	public Integer getBudget() {
+		return budget;
+	}
+
+	public void setBudget(Integer budget) {
+		this.budget = budget;
 	}
 }

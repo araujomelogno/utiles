@@ -20,11 +20,9 @@ public class FieldworkDetailsDialog extends Dialog {
 		study.setValue(fieldwork.getStudy() != null ? fieldwork.getStudy().getName() : "");
 		study.setReadOnly(true);
 
-
 		TextField area = new TextField("Area");
 		area.setValue(fieldwork.getArea() != null ? fieldwork.getArea().getNombre() : "");
 		area.setReadOnly(true);
-
 
 		TextField status = new TextField("Estado");
 		status.setValue(fieldwork.getStatus() != null ? fieldwork.getStatus().toString() : "");
@@ -33,7 +31,6 @@ public class FieldworkDetailsDialog extends Dialog {
 		TextField type = new TextField("Tipo");
 		type.setValue(fieldwork.getType() != null ? fieldwork.getType().toString() : "");
 		type.setReadOnly(true);
-
 
 		TextField doobloId = new TextField("Dooblo Id");
 		doobloId.setValue(fieldwork.getDoobloId() != null ? fieldwork.getDoobloId() : "");
@@ -44,7 +41,8 @@ public class FieldworkDetailsDialog extends Dialog {
 		alchemerId.setReadOnly(true);
 
 		TextField initPlannedDate = new TextField("Fecha Planificada Inicio");
-		initPlannedDate.setValue(fieldwork.getInitPlannedDate() != null ? fieldwork.getInitPlannedDate().toString() : "");
+		initPlannedDate
+				.setValue(fieldwork.getInitPlannedDate() != null ? fieldwork.getInitPlannedDate().toString() : "");
 		initPlannedDate.setReadOnly(true);
 
 		TextField endPlannedDate = new TextField("Fecha Planificada Fin");
@@ -67,11 +65,16 @@ public class FieldworkDetailsDialog extends Dialog {
 		completed.setValue(fieldwork.getCompleted() != null ? fieldwork.getCompleted().toString() : "");
 		completed.setReadOnly(true);
 
+		TextField budget = new TextField("Presupuesto");
+		budget.setValue(fieldwork.getBudget() != null ? fieldwork.getBudget().toString() : "");
+		budget.setReadOnly(true);
+
 		TextArea obs = new TextArea("Observaciones");
 		obs.setValue(fieldwork.getObs() != null ? fieldwork.getObs() : "");
 		obs.setReadOnly(true);
 
-		formLayout.add(study, type, status, area, doobloId, alchemerId, initPlannedDate, endPlannedDate, initDate, endDate, goalQuantity, completed, obs);
+		formLayout.add(study, type, status, area, doobloId, alchemerId, initPlannedDate, endPlannedDate, initDate,
+				endDate, goalQuantity, completed, budget, obs);
 		add(formLayout);
 
 		Button editButton = new Button("Editar");

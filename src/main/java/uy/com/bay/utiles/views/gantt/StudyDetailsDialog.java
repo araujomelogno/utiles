@@ -48,6 +48,7 @@ public class StudyDetailsDialog extends Dialog {
 		fieldworkGrid.addColumn("endPlannedDate").setHeader("Fin planificado");
 		fieldworkGrid.addColumn("goalQuantity").setHeader("Cantidad objetivo");
 		fieldworkGrid.addColumn("completed").setHeader("Completas");
+		fieldworkGrid.addColumn("budget").setHeader("Presupuesto");
 		fieldworkGrid.setItems(study.getFieldworks());
 		fieldworkGrid.setAllRowsVisible(true);
 
