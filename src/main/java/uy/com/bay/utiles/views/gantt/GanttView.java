@@ -56,10 +56,12 @@ public class GanttView extends VerticalLayout {
 	private int totalgoal = 0;
 	private int totalCompleted = 0;
 	private final Map<String, Fieldwork> stepToFieldworkMap;
+	private final Map<String, Study> stepToStudyMap;
 
 	public GanttView(GanttService ganttService) {
 		this.ganttService = ganttService;
 		this.stepToFieldworkMap = new HashMap<>();
+		this.stepToStudyMap = new HashMap<>();
 		setWidthFull();
 		setPadding(false);
 
@@ -82,7 +84,8 @@ public class GanttView extends VerticalLayout {
 	}
 
 	private void buildCaptionTreeGrid() {
-		treeGrid = gantt.buildCaptionTreeGrid("Proyecto");
+		treeGrid = new TreeGrid<>();
+		treeGrid.addHierarchyColumn(Step::getCaption).setHeader("Proyecto");
 		treeGrid.setWidth("30%");
 		treeGrid.setAllRowsVisible(true);
 		treeGrid.getStyle().set("--gantt-caption-grid-row-height", "30px");
@@ -110,6 +113,7 @@ public class GanttView extends VerticalLayout {
 			studyStep.setBackgroundColor("#eb590580");
 			studyStep.setMovable(false);
 
+			stepToStudyMap.put(studyStep.getUid(), study);
 			gantt.addStep(0, studyStep);
 			fieldworkList.forEach(fieldwork -> {
 				if (fieldwork.getInitPlannedDate() != null && fieldwork.getEndPlannedDate() != null) {
@@ -220,8 +224,13 @@ public class GanttView extends VerticalLayout {
 
 	private void onGanttStepClick(StepClickEvent event) {
 		clickedBackgroundIndex = event.getIndex();
-		Fieldwork fieldwork = stepToFieldworkMap.get(event.getAnyStep().getUid());
-		if (fieldwork != null) {
+		String stepUid = event.getAnyStep().getUid();
+		if (stepToStudyMap.containsKey(stepUid)) {
+			Study study = stepToStudyMap.get(stepUid);
+			StudyDetailsDialog dialog = new StudyDetailsDialog(study);
+			dialog.open();
+		} else if (stepToFieldworkMap.containsKey(stepUid)) {
+			Fieldwork fieldwork = stepToFieldworkMap.get(stepUid);
 			FieldworkDetailsDialog dialog = new FieldworkDetailsDialog(fieldwork);
 			dialog.open();
 		}
