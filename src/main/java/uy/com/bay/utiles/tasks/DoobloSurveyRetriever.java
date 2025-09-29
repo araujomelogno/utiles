@@ -146,13 +146,16 @@ public class DoobloSurveyRetriever {
 
 			Optional<Surveyor> surveyorOpt = surveyorRepository.findByFirstName(surveyorName);
 			Optional<Fieldwork> fieldworkOpt = fieldworkRepository.findByDoobloId(surveyId);
-
 			DoobloResponse doobloResponse = new DoobloResponse();
 			doobloResponse.setSurveyor(surveyorOpt.get());
-			doobloResponse.setFieldwork(fieldworkOpt.get());
 			doobloResponse.setInterviewId(interviewId);
 			doobloResponse.setDate(date);
-
+			if (fieldworkOpt.get() != null) {
+				Fieldwork fw = new Fieldwork();
+				doobloResponse.setFieldwork(fw);
+				fw.setCompleted(fw.getCompleted() + 1);
+				fieldworkRepository.save(fw);
+			}
 			doobloResponseRepository.save(doobloResponse);
 			LOGGER.info("Successfully saved DoobloResponse for interview ID {}", interviewId);
 

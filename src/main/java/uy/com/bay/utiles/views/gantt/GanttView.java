@@ -17,12 +17,14 @@ import org.vaadin.tltv.gantt.model.Step;
 import org.vaadin.tltv.gantt.model.SubStep;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -48,6 +50,7 @@ public class GanttView extends VerticalLayout {
 
 	private DatePicker startDateField;
 	private DatePicker endDateField;
+	private Button filterbutton;
 
 	private int clickedBackgroundIndex;
 	private int totalgoal = 0;
@@ -79,7 +82,7 @@ public class GanttView extends VerticalLayout {
 	}
 
 	private void buildCaptionTreeGrid() {
-		treeGrid = gantt.buildCaptionTreeGrid("Header");
+		treeGrid = gantt.buildCaptionTreeGrid("Proyecto");
 		treeGrid.setWidth("30%");
 		treeGrid.setAllRowsVisible(true);
 		treeGrid.getStyle().set("--gantt-caption-grid-row-height", "30px");
@@ -88,6 +91,10 @@ public class GanttView extends VerticalLayout {
 		gantt.setMovableSteps(false);
 		gantt.setResizableSteps(false);
 
+		fillGantt();
+	}
+
+	private void fillGantt() {
 		List<Fieldwork> fieldworks = ganttService.getFieldworks(gantt.getStartDate(), gantt.getEndDate());
 		Map<Study, List<Fieldwork>> fieldworksByStudy = fieldworks.stream()
 				.collect(Collectors.groupingBy(Fieldwork::getStudy));
@@ -230,14 +237,31 @@ public class GanttView extends VerticalLayout {
 
 	private HorizontalLayout createTools() {
 		HorizontalLayout tools = new HorizontalLayout();
+
 		startDateField = new DatePicker(gantt.getStartDate());
 		startDateField.setLabel("Inicio:");
 		startDateField.addValueChangeListener(event -> gantt.setStartDate(event.getValue()));
 		endDateField = new DatePicker(gantt.getEndDate());
 		endDateField.setLabel("Fin:");
 		endDateField.addValueChangeListener(event -> gantt.setEndDate(event.getValue()));
-		tools.add(startDateField, endDateField);
+
+		filterbutton = new Button("Filtrar");
+		filterbutton.addClickListener(e -> {
+			clearGantt();
+			fillGantt();
+
+		});
+
+		tools.add(startDateField, endDateField, filterbutton);
+		tools.setVerticalComponentAlignment(FlexComponent.Alignment.END, filterbutton);
+		tools.setPadding(true);
+		tools.setSpacing(true);
 		return tools;
+	}
+
+	private void clearGantt() {
+		this.gantt.removeSteps(gantt.getSteps());
+
 	}
 
 	enum SizeOption {
