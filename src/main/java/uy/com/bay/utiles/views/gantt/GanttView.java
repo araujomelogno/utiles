@@ -86,7 +86,7 @@ public class GanttView extends VerticalLayout {
 
 	private void buildCaptionTreeGrid() {
 
-		treeGrid = gantt.buildCaptionTreeGrid("Proyecto");
+		//treeGrid = gantt.buildCaptionTreeGrid("Proyecto");
 		treeGrid.setWidth("30%");
 		treeGrid.setAllRowsVisible(true);
 		treeGrid.getStyle().set("--gantt-caption-grid-row-height", "30px");
