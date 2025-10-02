@@ -157,6 +157,13 @@ public class MainLayout extends AppLayout {
 		});
 		gastosItem.addItem(reportesNavItem);
 
+		SideNavItem extrasItem = new SideNavItem("Extras");
+		extrasItem.setPrefixComponent(new Icon("vaadin", "puzzle-piece"));
+		SideNavItem extraConceptItem = new SideNavItem("Conceptos de extra", "extra-concept");
+		extraConceptItem.setPrefixComponent(new Icon("vaadin", "tag"));
+		extrasItem.addItem(extraConceptItem);
+		nav.addItem(extrasItem);
+
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
 		surveyorPortalItem.setPrefixComponent(new Icon("vaadin", "user-card"));
 
