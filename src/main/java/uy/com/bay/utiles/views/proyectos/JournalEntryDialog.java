@@ -1,7 +1,6 @@
 package uy.com.bay.utiles.views.proyectos;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -10,7 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -22,11 +23,14 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.server.StreamResource;
+
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.ExcelExportService;
 import uy.com.bay.utiles.services.JournalEntryService;
+import uy.com.bay.utiles.views.expenses.ExpenseReportViewDialog;
+import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
 public class JournalEntryDialog extends Dialog {
 
@@ -66,12 +70,13 @@ public class JournalEntryDialog extends Dialog {
 				.setHeader("Monto").setSortable(true);
 
 		// Saldo
-		Grid.Column<JournalEntry> balanceColumn = grid.addColumn(new NumberRenderer<>(this::getBalance, NumberFormat.getIntegerInstance(Locale.US)))
+		Grid.Column<JournalEntry> balanceColumn = grid
+				.addColumn(new NumberRenderer<>(this::getBalance, NumberFormat.getIntegerInstance(Locale.US)))
 				.setHeader("Saldo").setSortable(true);
 
 		// Movimiento
-		Grid.Column<JournalEntry> sourceColumn = grid.addColumn(JournalEntry::getSource).setHeader("Movimiento")
-				.setSortable(true);
+		Grid.Column<JournalEntry> sourceColumn = grid.addComponentColumn(this::createDetailLink)
+				.setHeader("Movimiento");
 
 		// Encuestador
 		Grid.Column<JournalEntry> surveyorColumn = grid.addColumn(entry -> {
@@ -86,7 +91,7 @@ public class JournalEntryDialog extends Dialog {
 
 		// Date filter
 		TextField dateFilter = new TextField();
-		dateFilter.setPlaceholder("Filter by date");
+		dateFilter.setPlaceholder("Filtrar por fecha");
 		dateFilter.setValueChangeMode(ValueChangeMode.EAGER);
 		dateFilter.addValueChangeListener(event -> dataProvider.addFilter(
 				entry -> new SimpleDateFormat("dd/MM/yyyy").format(entry.getDate()).contains(event.getValue())));
@@ -94,23 +99,23 @@ public class JournalEntryDialog extends Dialog {
 
 		// Amount filter
 		TextField amountFilter = new TextField();
-		amountFilter.setPlaceholder("Filter by amount");
+		amountFilter.setPlaceholder("Filtrar por monto");
 		amountFilter.setValueChangeMode(ValueChangeMode.EAGER);
-		amountFilter.addValueChangeListener(event -> dataProvider.addFilter(
-				entry -> String.valueOf(entry.getAmount()).contains(event.getValue())));
+		amountFilter.addValueChangeListener(
+				event -> dataProvider.addFilter(entry -> String.valueOf(entry.getAmount()).contains(event.getValue())));
 		filterRow.getCell(amountColumn).setComponent(amountFilter);
 
 		// Balance filter
 		TextField balanceFilter = new TextField();
-		balanceFilter.setPlaceholder("Filter by balance");
+		balanceFilter.setPlaceholder("Filtrar por saldo");
 		balanceFilter.setValueChangeMode(ValueChangeMode.EAGER);
-		balanceFilter.addValueChangeListener(event -> dataProvider.addFilter(
-				entry -> String.valueOf(getBalance(entry)).contains(event.getValue())));
+		balanceFilter.addValueChangeListener(
+				event -> dataProvider.addFilter(entry -> String.valueOf(getBalance(entry)).contains(event.getValue())));
 		filterRow.getCell(balanceColumn).setComponent(balanceFilter);
 
 		// Source filter
 		TextField sourceFilter = new TextField();
-		sourceFilter.setPlaceholder("Filter by source");
+		sourceFilter.setPlaceholder("Filtrar por movmiento");
 		sourceFilter.setValueChangeMode(ValueChangeMode.EAGER);
 		sourceFilter.addValueChangeListener(event -> dataProvider.addFilter(
 				entry -> entry.getSource().toString().toLowerCase().contains(event.getValue().toLowerCase())));
@@ -118,7 +123,7 @@ public class JournalEntryDialog extends Dialog {
 
 		// Surveyor filter
 		TextField surveyorFilter = new TextField();
-		surveyorFilter.setPlaceholder("Filter by surveyor");
+		surveyorFilter.setPlaceholder("Filtrar po r encuestador");
 		surveyorFilter.setValueChangeMode(ValueChangeMode.EAGER);
 		surveyorFilter.addValueChangeListener(event -> dataProvider.addFilter(entry -> {
 			if (entry.getSurveyor() != null) {
@@ -138,6 +143,31 @@ public class JournalEntryDialog extends Dialog {
 		layout.setPadding(false);
 		layout.setSpacing(false);
 		add(layout);
+	}
+
+	private Button createDetailLink(JournalEntry entry) {
+		Button link = new Button();
+		link.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+		if (entry.getSource() != null) {
+			if (entry.getSource() == Source.RENDICION && entry.getExpenseReport() != null) {
+				link.setText("Rendición");
+				link.addClickListener(e -> {
+					ExpenseReportViewDialog dialog = new ExpenseReportViewDialog(entry.getExpenseReport());
+					dialog.open();
+				});
+			} else if (entry.getSource() == Source.TRANSFERENCIA && entry.getTransfer() != null) {
+				link.setText("Transferencia");
+				link.addClickListener(e -> {
+					ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(entry.getTransfer());
+					dialog.open();
+				});
+			} else if (entry.getSource() == Source.LIQUIDACION && entry.getTransfer() != null) {
+				link.setText("Liquidación");
+
+			}
+
+		}
+		return link;
 	}
 
 	private void calculateBalances() {
@@ -162,7 +192,8 @@ public class JournalEntryDialog extends Dialog {
 				+ ".xlsx";
 		return new StreamResource(filename, (outputStream, vaadinSession) -> {
 			try {
-				java.io.ByteArrayInputStream inputStream = excelExportService.exportJournalEntriesToExcel(journalEntries);
+				java.io.ByteArrayInputStream inputStream = excelExportService
+						.exportJournalEntriesToExcel(journalEntries);
 				inputStream.transferTo(outputStream);
 			} catch (IOException e) {
 				e.printStackTrace();

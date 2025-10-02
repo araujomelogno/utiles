@@ -392,8 +392,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 			if (this.expenseRequest != null && this.expenseRequest.getExpenseTransfer() != null) {
 				uy.com.bay.utiles.data.ExpenseTransfer initializedTransfer = expenseTransferService
 						.findByIdAndInitialize(this.expenseRequest.getExpenseTransfer().getId());
-				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer,
-						expenseTransferFileService);
+				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer);
 				dialog.open();
 			} else {
 				Notification.show("No hay una transferencia asociada a esta solicitud.", 3000,

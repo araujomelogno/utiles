@@ -27,15 +27,10 @@ import uy.com.bay.utiles.services.ExpenseTransferFileService;
 
 public class ExpenseTransferViewDialog extends Dialog {
 
-	private final ExpenseTransferFileService expenseTransferFileService;
-	private final ExpenseTransfer expenseTransfer;
 	private Grid<ExpenseTransferFile> filesGrid;
 	private List<ExpenseTransferFile> files;
 
-	public ExpenseTransferViewDialog(ExpenseTransfer expenseTransfer,
-			ExpenseTransferFileService expenseTransferFileService) {
-		this.expenseTransferFileService = expenseTransferFileService;
-		this.expenseTransfer = expenseTransfer;
+	public ExpenseTransferViewDialog(ExpenseTransfer expenseTransfer) {
 		this.files = new ArrayList<>(expenseTransfer.getFiles());
 
 		setHeaderTitle("Detalles de la Transferencia");
@@ -108,7 +103,7 @@ public class ExpenseTransferViewDialog extends Dialog {
 				downloadLink.add(downloadButton);
 				return downloadLink;
 			}).setHeader("Acciones");
-			filesGrid.addComponentColumn(this::createDeleteButton).setHeader("Eliminar");
+
 			filesGrid.setAllRowsVisible(true);
 			filesLayout.add(filesGrid);
 			add(filesLayout);
@@ -121,23 +116,4 @@ public class ExpenseTransferViewDialog extends Dialog {
 		setCloseOnOutsideClick(true);
 	}
 
-	private Button createDeleteButton(ExpenseTransferFile file) {
-		Button deleteButton = new Button(new Icon(VaadinIcon.TRASH), click -> {
-			ConfirmDialog dialog = new ConfirmDialog();
-			dialog.setHeader("Confirmar eliminación");
-			dialog.setText("¿Está seguro de que desea eliminar el archivo '" + file.getName() + "'?");
-			dialog.setCancelable(true);
-			dialog.setConfirmText("Eliminar");
-			dialog.setConfirmButtonTheme("error primary");
-			dialog.addConfirmListener(event -> {
-				expenseTransferFileService.delete(file.getId());
-				files.remove(file);
-				expenseTransfer.setFiles(files);
-				filesGrid.getDataProvider().refreshAll();
-			});
-			dialog.open();
-		});
-		deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		return deleteButton;
-	}
 }

@@ -61,17 +61,18 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 			if (entry.getSource() == Source.RENDICION && entry.getExpenseReport() != null) {
 				link.setText("Rendición");
 				link.addClickListener(e -> {
-					ExpenseReportViewDialog dialog = new ExpenseReportViewDialog(entry.getExpenseReport(),
-							expenseReportFileService);
+					ExpenseReportViewDialog dialog = new ExpenseReportViewDialog(entry.getExpenseReport());
 					dialog.open();
 				});
 			} else if (entry.getSource() == Source.TRANSFERENCIA && entry.getTransfer() != null) {
 				link.setText("Transferencia");
 				link.addClickListener(e -> {
-					ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(entry.getTransfer(),
-							expenseTransferFileService);
+					ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(entry.getTransfer());
 					dialog.open();
 				});
+			} else if (entry.getSource() == Source.LIQUIDACION && entry.getTransfer() != null) {
+				link.setText("Liquidación");
+
 			}
 		}
 		return link;

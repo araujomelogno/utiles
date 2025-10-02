@@ -37,6 +37,7 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 import uy.com.bay.utiles.data.Fieldwork;
+import uy.com.bay.utiles.data.FieldworkType;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.GanttService;
 
@@ -118,7 +119,7 @@ public class GanttView extends VerticalLayout {
 			fieldworkList.forEach(fieldwork -> {
 				if (fieldwork.getInitPlannedDate() != null && fieldwork.getEndPlannedDate() != null) {
 					Step subStep = new Step();
-					subStep.setCaption(fieldwork.getType().toString() + " - "+ fieldwork.getGoalQuantity() + " casos");
+					subStep.setCaption(fieldwork.getType().toString() + " - " + fieldwork.getGoalQuantity() + " casos");
 					subStep.setStartDate(fieldwork.getInitPlannedDate().atStartOfDay());
 					subStep.setEndDate(fieldwork.getEndPlannedDate().atStartOfDay());
 					String uid = UUID.randomUUID().toString();
@@ -140,6 +141,42 @@ public class GanttView extends VerticalLayout {
 			totalgoal = 0;
 			totalCompleted = 0;
 		});
+
+		if (startDateField.getValue() != null && endDateField.getValue() != null) {
+			if (startDateField.getValue().plusMonths(1).isBefore(endDateField.getValue())) {
+				Step totalCasosCalleStep = new Step();
+				totalCasosCalleStep.setCaption("Total Casos Calle");
+				totalCasosCalleStep.setUid(UUID.randomUUID().toString());
+				totalCasosCalleStep.setStartDate(startDateField.getValue().atStartOfDay());
+				totalCasosCalleStep.setEndDate(endDateField.getValue().atStartOfDay());
+//				totalCasosCalleStep.setBackgroundColor("#1E90FF");
+				totalCasosCalleStep.setMovable(false);
+				gantt.addStep(totalCasosCalleStep);
+
+				LocalDate currentDate = startDateField.getValue();
+				while (currentDate.isBefore(endDateField.getValue())) {
+					LocalDate startOfMonth = currentDate.withDayOfMonth(1);
+					LocalDate endOfMonth = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+					int casosDelMes = fieldworks.stream()
+							.filter(fw -> fw.getType() == FieldworkType.CALLE
+									&& !fw.getInitPlannedDate().isAfter(endOfMonth)
+									&& !fw.getEndPlannedDate().isBefore(startOfMonth))
+							.mapToInt(Fieldwork::getGoalQuantity).sum();
+
+					SubStep subStep = new SubStep(totalCasosCalleStep);
+					subStep.setCaption("Casos del mes: " + casosDelMes);
+					subStep.setStartDate(startOfMonth.atStartOfDay());
+					subStep.setEndDate(endOfMonth.atStartOfDay().plusDays(1));
+					subStep.setUid(UUID.randomUUID().toString());
+					subStep.setBackgroundColor("#ADD8E6");
+					subStep.setMovable(false);
+					gantt.addSubStep(subStep);
+//					treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
+
+					currentDate = currentDate.plusMonths(1);
+				}
+			}
+		}
 	}
 
 	private Gantt createGantt() {
