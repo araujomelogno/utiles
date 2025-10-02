@@ -174,14 +174,19 @@ public class MainLayout extends AppLayout {
 
 		nav.addItem(surveyorPortalItem);
 
+		SideNavItem extrasItem = new SideNavItem("Extras");
+		extrasItem.setPrefixComponent(new Icon("vaadin", "plus"));
+		SideNavItem extraConceptItem = new SideNavItem("Conceptos de extra", "extraconcepts");
+		extraConceptItem.setPrefixComponent(new Icon("vaadin", "list"));
+		extrasItem.addItem(extraConceptItem);
+		nav.addItem(extrasItem);
+
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
 		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
 		usersItem.setPrefixComponent(new Icon("vaadin", "users"));
 		settingsItem.addItem(usersItem);
-		
-		
-		
+
 		SideNavItem areasItem = new SideNavItem("Areas", "areas");
 		areasItem.setPrefixComponent(new Icon("vaadin", "list"));
 		settingsItem.addItem(areasItem);
