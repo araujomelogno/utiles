@@ -97,9 +97,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem listarSolicitudesItem = new SideNavItem("Solicitudes de campo", "fieldworks");
 		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
 		proyectosItem.addItem(listarSolicitudesItem);
-		SideNavItem ganttItem = new SideNavItem("Gantt", "gantt");
-		ganttItem.setPrefixComponent(new Icon("vaadin", "chart-timeline"));
-		proyectosItem.addItem(ganttItem);
+		//SideNavItem ganttItem = new SideNavItem("Gantt", "gantt");
+		//ganttItem.setPrefixComponent(new Icon("vaadin", "chart-timeline"));
+		//proyectosItem.addItem(ganttItem);
 		nav.addItem(proyectosItem);
 
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
@@ -156,6 +156,13 @@ public class MainLayout extends AppLayout {
 			dialog.open();
 		});
 		gastosItem.addItem(reportesNavItem);
+
+		SideNavItem presupuestosItem = new SideNavItem("Presupuestos");
+		presupuestosItem.setPrefixComponent(new Icon("vaadin", "archive"));
+		SideNavItem budgetConceptsItem = new SideNavItem("Conceptos de presupuesto", "budget-concepts");
+		budgetConceptsItem.setPrefixComponent(new Icon("vaadin", "list"));
+		presupuestosItem.addItem(budgetConceptsItem);
+		nav.addItem(presupuestosItem);
 
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
 		surveyorPortalItem.setPrefixComponent(new Icon("vaadin", "user-card"));
