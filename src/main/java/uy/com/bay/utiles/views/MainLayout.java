@@ -97,9 +97,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem listarSolicitudesItem = new SideNavItem("Solicitudes de campo", "fieldworks");
 		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
 		proyectosItem.addItem(listarSolicitudesItem);
-		//SideNavItem ganttItem = new SideNavItem("Gantt", "gantt");
-		//ganttItem.setPrefixComponent(new Icon("vaadin", "chart-timeline"));
-		//proyectosItem.addItem(ganttItem);
+		SideNavItem ganttItem = new SideNavItem("Gantt", "gantt");
+		ganttItem.setPrefixComponent(new Icon("vaadin", "chart-timeline"));
+		proyectosItem.addItem(ganttItem);
 		nav.addItem(proyectosItem);
 
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
