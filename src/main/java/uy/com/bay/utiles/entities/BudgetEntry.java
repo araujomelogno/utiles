@@ -47,4 +47,8 @@ public class BudgetEntry extends AbstractEntity {
     public void setConcept(BudgetConcept concept) {
         this.concept = concept;
     }
+
+    public String getConceptName() {
+        return concept != null ? concept.getName() : "";
+    }
 }
