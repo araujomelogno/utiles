@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import uy.com.bay.utiles.data.AbstractEntity;
+import uy.com.bay.utiles.entities.Budget;
 
 @Entity
 public class BudgetEntry extends AbstractEntity {
@@ -15,6 +16,10 @@ public class BudgetEntry extends AbstractEntity {
     @ManyToOne
     @JoinColumn(name = "budget_concept_id")
     private BudgetConcept concept;
+
+    @ManyToOne
+    @JoinColumn(name = "budget_id")
+    private Budget budget;
 
     public Double getAmmount() {
         return ammount;
@@ -46,5 +51,13 @@ public class BudgetEntry extends AbstractEntity {
 
     public void setConcept(BudgetConcept concept) {
         this.concept = concept;
+    }
+
+    public Budget getBudget() {
+        return budget;
+    }
+
+    public void setBudget(Budget budget) {
+        this.budget = budget;
     }
 }

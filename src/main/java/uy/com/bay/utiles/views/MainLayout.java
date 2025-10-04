@@ -162,6 +162,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem budgetConceptsItem = new SideNavItem("Conceptos de presupuesto", "budget-concepts");
 		budgetConceptsItem.setPrefixComponent(new Icon("vaadin", "list"));
 		presupuestosItem.addItem(budgetConceptsItem);
+		SideNavItem crearPresupuestoItem = new SideNavItem("Crear", "budgets");
+		crearPresupuestoItem.setPrefixComponent(new Icon("vaadin", "plus"));
+		presupuestosItem.addItem(crearPresupuestoItem);
 		nav.addItem(presupuestosItem);
 
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
