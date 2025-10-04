@@ -8,7 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.data.AbstractEntity;
+import uy.com.bay.utiles.data.Study;
 
 @Entity
 public class Budget extends AbstractEntity {
