@@ -83,7 +83,7 @@ public class BudgetForm extends VerticalLayout {
 		NumberField ammountField = new NumberField();
 		ammountField.setWidthFull();
 		entryBinder.forField(ammountField).bind(BudgetEntry::getAmmount, BudgetEntry::setAmmount);
-		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Monto").setEditorComponent(ammountField);
+		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Costo unitario").setEditorComponent(ammountField);
 
 		// Quantity Column
 		IntegerField quantityField = new IntegerField();

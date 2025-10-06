@@ -10,30 +10,30 @@ import uy.com.bay.utiles.data.repository.BudgetRepository;
 @Service
 public class BudgetService {
 
-    private final BudgetRepository repository;
+	private final BudgetRepository repository;
 
-    public BudgetService(BudgetRepository repository) {
-        this.repository = repository;
-    }
+	public BudgetService(BudgetRepository repository) {
+		this.repository = repository;
+	}
 
-    public Optional<Budget> get(Long id) {
-        return repository.findById(id);
-    }
+	public Optional<Budget> get(Long id) {
+		return repository.findById(id);
+	}
 
-    public Budget save(Budget entity) {
-        return repository.save(entity);
-    }
+	public Budget save(Budget entity) {
+		return repository.save(entity);
+	}
 
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
+	public void delete(Long id) {
+		repository.deleteById(id);
+	}
 
-    public Page<Budget> list(Pageable pageable) {
-        return repository.findAll(pageable);
-    }
+	public Page<Budget> list(Pageable pageable) {
+		return repository.findAllWithEntries(pageable);
+	}
 
-    public int count() {
-        return (int) repository.count();
-    }
+	public int count() {
+		return (int) repository.count();
+	}
 
 }
