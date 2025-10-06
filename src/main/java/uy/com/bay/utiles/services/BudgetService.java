@@ -29,7 +29,7 @@ public class BudgetService {
     }
 
     public Page<Budget> list(Pageable pageable) {
-        return repository.findAll(pageable);
+        return repository.findAllWithEntries(pageable);
     }
 
     public int count() {
