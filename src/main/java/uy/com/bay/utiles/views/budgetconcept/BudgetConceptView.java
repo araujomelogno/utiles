@@ -33,201 +33,198 @@ import uy.com.bay.utiles.services.BudgetConceptService;
 import java.util.Optional;
 
 @PageTitle("Conceptos de Presupuesto")
-@Route("budget-concepts")
+@Route("budgetconcepts/:budgetconceptID?/:action?(edit)")
 @RolesAllowed("ADMIN")
 public class BudgetConceptView extends Div implements BeforeEnterObserver {
 
-    private final String BUDGET_CONCEPT_ID = "budgetConceptId";
-    private final String BUDGET_CONCEPT_EDIT_ROUTE_TEMPLATE = "budget-concepts/%s/edit";
+	private final String BUDGET_CONCEPT_ID = "budgetconceptID";
+	private final String BUDGET_CONCEPT_EDIT_ROUTE_TEMPLATE = "budgetconcepts/%s/edit";
 
-    private final Grid<BudgetConcept> grid = new Grid<>(BudgetConcept.class, false);
+	private final Grid<BudgetConcept> grid = new Grid<>(BudgetConcept.class, false);
 
-    private TextField name;
-    private TextArea description;
-    private ComboBox<MatchType> matchType;
+	private TextField name;
+	private TextArea description;
+	private ComboBox<MatchType> matchType;
 
-    private final Button cancel = new Button("Cerrar");
-    private final Button save = new Button("Guardar");
-    private final Button delete = new Button("Borrar");
+	private final Button cancel = new Button("Cerrar");
+	private final Button save = new Button("Guardar");
+	private final Button delete = new Button("Borrar");
 
-    private final BeanValidationBinder<BudgetConcept> binder;
-    private BudgetConcept budgetConcept;
-    private final BudgetConceptService budgetConceptService;
+	private final BeanValidationBinder<BudgetConcept> binder;
+	private BudgetConcept budgetConcept;
+	private final BudgetConceptService budgetConceptService;
 
-    private Div editorLayoutDiv;
+	private Div editorLayoutDiv;
 
-    public BudgetConceptView(BudgetConceptService budgetConceptService) {
-        this.budgetConceptService = budgetConceptService;
-        addClassNames("budget-concept-view");
+	public BudgetConceptView(BudgetConceptService budgetConceptService) {
+		this.budgetConceptService = budgetConceptService;
+		addClassNames("budget-concept-view");
 
-        // Create UI
-        SplitLayout splitLayout = new SplitLayout();
+		// Create UI
+		SplitLayout splitLayout = new SplitLayout();
 
-        createGridLayout(splitLayout);
-        createEditorLayout(splitLayout);
+		createGridLayout(splitLayout);
+		createEditorLayout(splitLayout);
 
-        add(splitLayout);
+		add(splitLayout);
 
-        // Configure Grid
-        grid.addColumn("name").setAutoWidth(true);
-        grid.addColumn("description").setAutoWidth(true);
-        grid.addColumn("matchType").setAutoWidth(true);
+		// Configure Grid
+		grid.addColumn("name").setAutoWidth(true);
+		grid.addColumn("description").setAutoWidth(true);
+		grid.addColumn("matchType").setAutoWidth(true);
 
-        grid.setItems(query -> budgetConceptService.list(
-                com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+		grid.setItems(query -> budgetConceptService
+				.list(com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
-        // when a row is selected or deselected, populate form
-        grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(BUDGET_CONCEPT_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
-            } else {
-                clearForm();
-                UI.getCurrent().navigate(BudgetConceptView.class);
-            }
-        });
+		// when a row is selected or deselected, populate form
+		grid.asSingleSelect().addValueChangeListener(event -> {
+			if (event.getValue() != null) {
+				UI.getCurrent().navigate(String.format(BUDGET_CONCEPT_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+			} else {
+				clearForm();
+				UI.getCurrent().navigate(BudgetConceptView.class);
+			}
+		});
 
-        // Configure Form
-        binder = new BeanValidationBinder<>(BudgetConcept.class);
-        binder.bindInstanceFields(this);
+		// Configure Form
+		binder = new BeanValidationBinder<>(BudgetConcept.class);
+		binder.bindInstanceFields(this);
 
-        cancel.addClickListener(e -> {
-            clearForm();
-            refreshGrid();
-        });
+		cancel.addClickListener(e -> {
+			clearForm();
+			refreshGrid();
+		});
 
-        save.addClickListener(e -> {
-            try {
-                if (this.budgetConcept == null) {
-                    this.budgetConcept = new BudgetConcept();
-                }
-                binder.writeBean(this.budgetConcept);
-                budgetConceptService.save(this.budgetConcept);
-                clearForm();
-                refreshGrid();
-                Notification.show("Concepto de presupuesto guardado.");
-                UI.getCurrent().navigate(BudgetConceptView.class);
-            } catch (ObjectOptimisticLockingFailureException exception) {
-                Notification n = Notification.show(
-                        "Error al guardar. Alguien más ha actualizado el registro mientras hacía cambios.");
-                n.setPosition(Position.MIDDLE);
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } catch (ValidationException validationException) {
-                Notification.show("No se pudo guardar. Verifique que todos los valores son válidos.");
-            }
-        });
+		save.addClickListener(e -> {
+			try {
+				if (this.budgetConcept == null) {
+					this.budgetConcept = new BudgetConcept();
+				}
+				binder.writeBean(this.budgetConcept);
+				budgetConceptService.save(this.budgetConcept);
+				clearForm();
+				refreshGrid();
+				Notification.show("Concepto de presupuesto guardado.");
+				UI.getCurrent().navigate(BudgetConceptView.class);
+			} catch (ObjectOptimisticLockingFailureException exception) {
+				Notification n = Notification
+						.show("Error al guardar. Alguien más ha actualizado el registro mientras hacía cambios.");
+				n.setPosition(Position.MIDDLE);
+				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} catch (ValidationException validationException) {
+				Notification.show("No se pudo guardar. Verifique que todos los valores son válidos.");
+			}
+		});
 
-        delete.addClickListener(e -> {
-            if (this.budgetConcept != null && this.budgetConcept.getId() != null) {
-                ConfirmDialog dialog = new ConfirmDialog();
-                dialog.setHeader("Confirmar borrado");
-                dialog.setText("¿Está seguro de que quiere borrar este concepto de presupuesto?");
-                dialog.setCancelable(true);
-                dialog.setConfirmText("Borrar");
-                dialog.setConfirmButtonTheme("error primary");
+		delete.addClickListener(e -> {
+			if (this.budgetConcept != null && this.budgetConcept.getId() != null) {
+				ConfirmDialog dialog = new ConfirmDialog();
+				dialog.setHeader("Confirmar borrado");
+				dialog.setText("¿Está seguro de que quiere borrar este concepto de presupuesto?");
+				dialog.setCancelable(true);
+				dialog.setConfirmText("Borrar");
+				dialog.setConfirmButtonTheme("error primary");
 
-                dialog.addConfirmListener(event -> {
-                    try {
-                        budgetConceptService.delete(this.budgetConcept.getId());
-                        clearForm();
-                        refreshGrid();
-                        Notification.show("Concepto de presupuesto borrado.", 3000, Notification.Position.BOTTOM_START);
-                    } catch (Exception ex) {
-                        Notification.show("Error al borrar: " + ex.getMessage(), 5000,
-                                Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                });
-                dialog.open();
-            }
-        });
-    }
+				dialog.addConfirmListener(event -> {
+					try {
+						budgetConceptService.delete(this.budgetConcept.getId());
+						clearForm();
+						refreshGrid();
+						Notification.show("Concepto de presupuesto borrado.", 3000, Notification.Position.BOTTOM_START);
+					} catch (Exception ex) {
+						Notification.show("Error al borrar: " + ex.getMessage(), 5000, Notification.Position.MIDDLE)
+								.addThemeVariants(NotificationVariant.LUMO_ERROR);
+					}
+				});
+				dialog.open();
+			}
+		});
+	}
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        Optional<Long> budgetConceptId = event.getRouteParameters().get(BUDGET_CONCEPT_ID).map(Long::parseLong);
-        if (budgetConceptId.isPresent()) {
-            Optional<BudgetConcept> budgetConceptFromBackend = budgetConceptService.get(budgetConceptId.get());
-            if (budgetConceptFromBackend.isPresent()) {
-                populateForm(budgetConceptFromBackend.get());
-            } else {
-                Notification.show(
-                        String.format("El concepto con id = %s no fue encontrado", budgetConceptId.get()), 3000,
-                        Notification.Position.BOTTOM_START);
-                refreshGrid();
-                event.forwardTo(BudgetConceptView.class);
-            }
-        }
-    }
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		Optional<Long> budgetConceptId = event.getRouteParameters().get(BUDGET_CONCEPT_ID).map(Long::parseLong);
 
-    private void createEditorLayout(SplitLayout splitLayout) {
-        editorLayoutDiv = new Div();
-        editorLayoutDiv.setClassName("editor-layout");
+		if (budgetConceptId.isPresent()) {
+			Optional<BudgetConcept> budgetConceptFromBackend = budgetConceptService.get(budgetConceptId.get());
+			if (budgetConceptFromBackend.isPresent()) {
+				populateForm(budgetConceptFromBackend.get());
+			} else {
+				Notification.show(String.format("El concepto con id = %s no fue encontrado", budgetConceptId.get()),
+						3000, Notification.Position.BOTTOM_START);
+				refreshGrid();
+				event.forwardTo(BudgetConceptView.class);
+			}
+		}
+	}
 
-        Div editorDiv = new Div();
-        editorDiv.setClassName("editor");
-        editorLayoutDiv.add(editorDiv);
+	private void createEditorLayout(SplitLayout splitLayout) {
+		editorLayoutDiv = new Div();
+		editorLayoutDiv.setClassName("editor-layout");
 
-        FormLayout formLayout = new FormLayout();
-        name = new TextField("Nombre");
-        description = new TextArea("Descripción");
-        matchType = new ComboBox<>("Tipo de Coincidencia");
-        matchType.setItems(MatchType.values());
-        formLayout.add(name, description, matchType);
+		Div editorDiv = new Div();
+		editorDiv.setClassName("editor");
+		editorLayoutDiv.add(editorDiv);
 
-        editorDiv.add(formLayout);
-        createButtonLayout(editorLayoutDiv);
+		FormLayout formLayout = new FormLayout();
+		name = new TextField("Nombre");
+		description = new TextArea("Descripción");
+		matchType = new ComboBox<>("Tipo de Coincidencia");
+		matchType.setItems(MatchType.values());
+		formLayout.add(name, description, matchType);
 
-        splitLayout.addToSecondary(editorLayoutDiv);
-        editorLayoutDiv.setVisible(false);
-    }
+		editorDiv.add(formLayout);
+		createButtonLayout(editorLayoutDiv);
 
-    private void createButtonLayout(Div editorLayoutDiv) {
-        HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setClassName("button-layout");
-        cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        buttonLayout.add(save, delete, cancel);
-        editorLayoutDiv.add(buttonLayout);
-    }
+		splitLayout.addToSecondary(editorLayoutDiv);
+		editorLayoutDiv.setVisible(false);
+	}
 
-    private void createGridLayout(SplitLayout splitLayout) {
-        Div wrapper = new Div();
-        wrapper.setClassName("grid-wrapper");
-        wrapper.setWidthFull();
-        splitLayout.addToPrimary(wrapper);
+	private void createButtonLayout(Div editorLayoutDiv) {
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setClassName("button-layout");
+		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+		buttonLayout.add(save, delete, cancel);
+		editorLayoutDiv.add(buttonLayout);
+	}
 
-        H2 title = new H2("Conceptos de Presupuesto");
+	private void createGridLayout(SplitLayout splitLayout) {
+		Div wrapper = new Div();
+		wrapper.setClassName("grid-wrapper");
+		wrapper.setWidthFull();
+		splitLayout.addToPrimary(wrapper);
 
-        Button addButton = new Button("Crear");
-        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addButton.addClickListener(e -> {
-            clearForm();
-            populateForm(new BudgetConcept());
-            editorLayoutDiv.setVisible(true);
-        });
+		Button addButton = new Button("Crear");
+		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addButton.addClickListener(e -> {
+			clearForm();
+			populateForm(new BudgetConcept());
+			editorLayoutDiv.setVisible(true);
+		});
 
-        HorizontalLayout titleLayout = new HorizontalLayout(title, addButton);
-        titleLayout.setWidthFull();
-        titleLayout.setAlignItems(Alignment.BASELINE);
-        titleLayout.setFlexGrow(1, title);
+		HorizontalLayout titleLayout = new HorizontalLayout(addButton);
+		titleLayout.setWidthFull();
+		titleLayout.setAlignItems(Alignment.BASELINE);
 
-        wrapper.add(titleLayout, grid);
-    }
+		wrapper.add(titleLayout, grid);
+	}
 
-    private void refreshGrid() {
-        grid.select(null);
-        grid.getDataProvider().refreshAll();
-    }
+	private void refreshGrid() {
+		grid.select(null);
+		grid.getDataProvider().refreshAll();
+	}
 
-    private void clearForm() {
-        populateForm(null);
-    }
+	private void clearForm() {
+		populateForm(null);
+	}
 
-    private void populateForm(BudgetConcept value) {
-        this.budgetConcept = value;
-        binder.readBean(this.budgetConcept);
-        editorLayoutDiv.setVisible(value != null);
-        delete.setEnabled(value != null && value.getId() != null);
-    }
+	private void populateForm(BudgetConcept value) {
+		this.budgetConcept = value;
+		binder.readBean(this.budgetConcept);
+		editorLayoutDiv.setVisible(value != null);
+		delete.setEnabled(value != null && value.getId() != null);
+	}
 }

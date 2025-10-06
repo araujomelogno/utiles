@@ -16,6 +16,7 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.shared.Registration;
+import org.springframework.data.domain.Pageable;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
@@ -30,7 +31,7 @@ public class BudgetForm extends VerticalLayout {
     private final DatePicker created = new DatePicker("Fecha de Creación");
     private final ComboBox<Study> study = new ComboBox<>("Estudio");
     private final Grid<BudgetEntry> entriesGrid = new Grid<>(BudgetEntry.class);
-    private final Button addEntryButton = new Button("Agregar Renglón");
+    private final Button addEntryButton = new Button("Agregar concepto");
 
     private final Button save = new Button("Guardar");
     private final Button delete = new Button("Borrar");
@@ -94,7 +95,7 @@ public class BudgetForm extends VerticalLayout {
 
         // Concept Column
         ComboBox<BudgetConcept> conceptComboBox = new ComboBox<>();
-        conceptComboBox.setItems(budgetConceptService.findAll());
+        conceptComboBox.setItems(budgetConceptService.list(Pageable.unpaged()).getContent());
         conceptComboBox.setItemLabelGenerator(BudgetConcept::getName);
         entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
         entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
