@@ -7,8 +7,10 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -24,7 +26,9 @@ import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.StudyService;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class BudgetForm extends VerticalLayout {
 
@@ -32,29 +36,24 @@ public class BudgetForm extends VerticalLayout {
 	private final ComboBox<Study> study = new ComboBox<>("Estudio");
 	private final Grid<BudgetEntry> entriesGrid = new Grid<>(BudgetEntry.class);
 	private final Button addEntryButton = new Button("Agregar concepto");
-
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
 	private final Button close = new Button("Cerrar");
-
 	private final Binder<Budget> binder = new BeanValidationBinder<>(Budget.class);
 	private final BudgetConceptService budgetConceptService;
 	private final Editor<BudgetEntry> editor;
+	private Span totalAmountLabel;
+	private Span totalSpentLabel;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService) {
 		this.budgetConceptService = budgetConceptService;
-
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
-
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(Study::getName);
-
 		editor = entriesGrid.getEditor();
 		configureGrid();
-
 		add(createFormLayout(), entriesGrid, addEntryButton, createButtonsLayout());
-
 		addEntryButton.addClickListener(click -> {
 			BudgetEntry newEntry = new BudgetEntry();
 			if (binder.getBean().getEntries() == null) {
@@ -63,6 +62,7 @@ public class BudgetForm extends VerticalLayout {
 			binder.getBean().getEntries().add(newEntry);
 			entriesGrid.setItems(binder.getBean().getEntries());
 			editor.editItem(newEntry);
+			updateTotal();
 		});
 	}
 
@@ -73,42 +73,35 @@ public class BudgetForm extends VerticalLayout {
 	}
 
 	private void configureGrid() {
-		entriesGrid.setColumns(); // Clear existing columns
-
+		entriesGrid.setColumns();
 		Binder<BudgetEntry> entryBinder = new Binder<>(BudgetEntry.class);
 		editor.setBinder(entryBinder);
 		editor.setBuffered(true);
-
-		editor.addSaveListener(e -> entriesGrid.setItems(binder.getBean().getEntries()));
-
-		// Amount Column
+		editor.addSaveListener(e -> {
+			entriesGrid.setItems(binder.getBean().getEntries());
+			updateTotal();
+		});
 		NumberField ammountField = new NumberField();
 		ammountField.setWidthFull();
 		entryBinder.forField(ammountField).bind(BudgetEntry::getAmmount, BudgetEntry::setAmmount);
 		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Costo unitario").setEditorComponent(ammountField);
-
-		// Quantity Column
 		IntegerField quantityField = new IntegerField();
 		quantityField.setWidthFull();
 		entryBinder.forField(quantityField).bind(BudgetEntry::getQuantity, BudgetEntry::setQuantity);
-		entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad").setEditorComponent(quantityField);
-
-		// Total Column
-		entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total");
-
-		// Concept Column
+		Grid.Column<BudgetEntry> quantityColumn = entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad")
+				.setEditorComponent(quantityField);
+		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total");
 		ComboBox<BudgetConcept> conceptComboBox = new ComboBox<>();
 		conceptComboBox.setItems(budgetConceptService.list(Pageable.unpaged()).getContent());
 		conceptComboBox.setItemLabelGenerator(BudgetConcept::getName);
 		entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
 		entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
 				.setHeader("Concepto").setEditorComponent(conceptComboBox);
-
-		// Edit Column
 		Button saveButton = new Button("Guardar", e -> editor.save());
 		HorizontalLayout actions = new HorizontalLayout(saveButton);
 		actions.setPadding(false);
 
+		Grid.Column<BudgetEntry> spentColumn = entriesGrid.addColumn(BudgetEntry::getSpent).setHeader("Gastado");
 		Grid.Column<BudgetEntry> editorColumn = entriesGrid.addComponentColumn(entry -> {
 			Button editButton = new Button("Editar");
 			editButton.addClickListener(e -> {
@@ -120,28 +113,32 @@ public class BudgetForm extends VerticalLayout {
 			return editButton;
 		});
 		editorColumn.setEditorComponent(actions);
-		// Remove Column
 		entriesGrid.addComponentColumn(entry -> {
 			Button removeButton = new Button("Borrar");
 			removeButton.addClickListener(e -> {
 				if (binder.getBean().getEntries() != null) {
 					binder.getBean().getEntries().remove(entry);
 					entriesGrid.setItems(binder.getBean().getEntries());
+					updateTotal();
 				}
 			});
 			return removeButton;
 		}).setWidth("150px").setFlexGrow(0);
+		FooterRow footerRow = entriesGrid.appendFooterRow();
+		footerRow.getCell(quantityColumn).setText("Total");
+		totalAmountLabel = new Span();
+		totalSpentLabel = new Span();
+		footerRow.getCell(totalColumn).setComponent(totalAmountLabel);
+		footerRow.getCell(spentColumn).setComponent(totalSpentLabel);
 	}
 
 	private Component createButtonsLayout() {
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
 		close.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
 		save.addClickListener(event -> validateAndSave());
 		delete.addClickListener(event -> fireEvent(new DeleteEvent(this, binder.getBean())));
 		close.addClickListener(event -> fireEvent(new CloseEvent(this)));
-
 		binder.addStatusChangeListener(e -> save.setEnabled(binder.isValid()));
 		return new HorizontalLayout(save, delete, close);
 	}
@@ -159,6 +156,21 @@ public class BudgetForm extends VerticalLayout {
 		} else if (budget != null) {
 			budget.setEntries(new ArrayList<>());
 			entriesGrid.setItems(budget.getEntries());
+		}
+		updateTotal();
+	}
+
+	private void updateTotal() {
+		double sum = 0.0;
+		double spentSum = 0.0;
+		if (binder.getBean() != null && binder.getBean().getEntries() != null) {
+			sum = binder.getBean().getEntries().stream().mapToDouble(BudgetEntry::getTotal).sum();
+			spentSum = binder.getBean().getEntries().stream().mapToDouble(BudgetEntry::getSpent).sum();
+		}
+		if (totalAmountLabel != null) {
+			NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+			totalAmountLabel.setText(currencyFormat.format(sum));
+			totalSpentLabel.setText(currencyFormat.format(spentSum));
 		}
 	}
 
