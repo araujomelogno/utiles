@@ -3,8 +3,8 @@ package uy.com.bay.utiles.entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import uy.com.bay.utiles.data.AbstractEntity;
-import uy.com.bay.utiles.entities.Budget;
 
 @Entity
 public class BudgetEntry extends AbstractEntity {
@@ -20,6 +20,16 @@ public class BudgetEntry extends AbstractEntity {
     @ManyToOne
     @JoinColumn(name = "budget_id")
     private Budget budget;
+
+    @Transient
+    private Double total;
+
+    public Double getTotal() {
+        if (ammount != null && quantity != null) {
+            return ammount * quantity;
+        }
+        return 0.0;
+    }
 
     public Double getAmmount() {
         return ammount;

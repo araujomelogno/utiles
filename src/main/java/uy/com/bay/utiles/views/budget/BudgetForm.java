@@ -79,6 +79,8 @@ public class BudgetForm extends VerticalLayout {
 		editor.setBinder(entryBinder);
 		editor.setBuffered(true);
 
+		editor.addSaveListener(e -> entriesGrid.setItems(binder.getBean().getEntries()));
+
 		// Amount Column
 		NumberField ammountField = new NumberField();
 		ammountField.setWidthFull();
@@ -90,6 +92,9 @@ public class BudgetForm extends VerticalLayout {
 		quantityField.setWidthFull();
 		entryBinder.forField(quantityField).bind(BudgetEntry::getQuantity, BudgetEntry::setQuantity);
 		entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad").setEditorComponent(quantityField);
+
+		// Total Column
+		entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total");
 
 		// Concept Column
 		ComboBox<BudgetConcept> conceptComboBox = new ComboBox<>();
@@ -113,7 +118,7 @@ public class BudgetForm extends VerticalLayout {
 				entriesGrid.getEditor().editItem(entry);
 			});
 			return editButton;
-		}).setWidth("150px").setFlexGrow(0);
+		});
 		editorColumn.setEditorComponent(actions);
 		// Remove Column
 		entriesGrid.addComponentColumn(entry -> {
