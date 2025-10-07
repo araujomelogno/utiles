@@ -18,7 +18,7 @@ public class BudgetService {
 	}
 
 	public Optional<Budget> get(Long id) {
-		return repository.findById(id);
+		return repository.findByIdWithEntries(id);
 	}
 
 	public Budget save(Budget entity) {
