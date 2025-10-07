@@ -271,10 +271,10 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 			Optional<Study> conflictingStudy = proyectoService.isBudgetInUse(this.proyecto);
 			if (conflictingStudy.isPresent()) {
-				Notification.show(
-						"El presupuesto ingresado esta siendo utilizado por el estudio : "
-								+ conflictingStudy.get().getName(),
-						5000, Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+				Notification
+						.show("El presupuesto ingresado esta siendo utilizado por el estudio : "
+								+ conflictingStudy.get().getName(), 5000, Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
 				return;
 			}
 
@@ -284,8 +284,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 			Notification.show("Data updated");
 			UI.getCurrent().navigate(ProyectosView.class);
 		} catch (ObjectOptimisticLockingFailureException exception) {
-			Notification n = Notification
-					.show("Error updating the data. Somebody else has updated the record while you were making changes.");
+			Notification n = Notification.show(
+					"Error updating the data. Somebody else has updated the record while you were making changes.");
 			n.setPosition(Position.MIDDLE);
 			n.addThemeVariants(NotificationVariant.LUMO_ERROR);
 		} catch (ValidationException validationException) {
@@ -336,6 +336,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
 		editorDiv.add(viewFieldworksButton);
+		editorDiv.add(viewBudgetButton);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -347,7 +348,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		buttonLayout.setClassName("button-layout");
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		buttonLayout.add(save, deleteButton, cancel, viewBudgetButton);
+		buttonLayout.add(save, deleteButton, cancel);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
