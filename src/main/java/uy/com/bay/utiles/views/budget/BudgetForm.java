@@ -1,11 +1,17 @@
 package uy.com.bay.utiles.views.budget;
 
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Locale;
+
+import org.springframework.data.domain.Pageable;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
@@ -15,10 +21,11 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.shared.Registration;
-import org.springframework.data.domain.Pageable;
+
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
@@ -26,13 +33,9 @@ import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.StudyService;
 
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Locale;
-
 public class BudgetForm extends VerticalLayout {
 
-	private final DatePicker created = new DatePicker("Fecha de Creación");
+	private final TextField name = new TextField("Nombre");
 	private final ComboBox<Study> study = new ComboBox<>("Estudio");
 	private final Grid<BudgetEntry> entriesGrid = new Grid<>(BudgetEntry.class);
 	private final Button addEntryButton = new Button("Agregar concepto");
@@ -68,7 +71,8 @@ public class BudgetForm extends VerticalLayout {
 
 	private Component createFormLayout() {
 		FormLayout formLayout = new FormLayout();
-		formLayout.add(created, study);
+		formLayout.add(name, study);
+
 		return formLayout;
 	}
 
@@ -84,6 +88,12 @@ public class BudgetForm extends VerticalLayout {
 		NumberField ammountField = new NumberField();
 		ammountField.setWidthFull();
 		entryBinder.forField(ammountField).bind(BudgetEntry::getAmmount, BudgetEntry::setAmmount);
+		ComboBox<BudgetConcept> conceptComboBox = new ComboBox<>();
+		conceptComboBox.setItems(budgetConceptService.list(Pageable.unpaged()).getContent());
+		conceptComboBox.setItemLabelGenerator(BudgetConcept::getName);
+		entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
+		entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
+				.setHeader("Concepto").setEditorComponent(conceptComboBox);
 		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Costo unitario").setEditorComponent(ammountField);
 		IntegerField quantityField = new IntegerField();
 		quantityField.setWidthFull();
@@ -91,12 +101,7 @@ public class BudgetForm extends VerticalLayout {
 		Grid.Column<BudgetEntry> quantityColumn = entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad")
 				.setEditorComponent(quantityField);
 		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total");
-		ComboBox<BudgetConcept> conceptComboBox = new ComboBox<>();
-		conceptComboBox.setItems(budgetConceptService.list(Pageable.unpaged()).getContent());
-		conceptComboBox.setItemLabelGenerator(BudgetConcept::getName);
-		entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
-		entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
-				.setHeader("Concepto").setEditorComponent(conceptComboBox);
+
 		Button saveButton = new Button("Guardar", e -> editor.save());
 		HorizontalLayout actions = new HorizontalLayout(saveButton);
 		actions.setPadding(false);
@@ -145,6 +150,8 @@ public class BudgetForm extends VerticalLayout {
 
 	private void validateAndSave() {
 		if (binder.isValid()) {
+			if (binder.getBean().getCreated() == null)
+				binder.getBean().setCreated(LocalDate.now());
 			fireEvent(new SaveEvent(this, binder.getBean()));
 		}
 	}

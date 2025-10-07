@@ -14,35 +14,45 @@ import uy.com.bay.utiles.data.Study;
 @Entity
 public class Budget extends AbstractEntity {
 
-    private LocalDate created;
+	private LocalDate created;
 
-    @OneToMany(mappedBy = "budget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<BudgetEntry> entries;
+	@OneToMany(mappedBy = "budget", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	private List<BudgetEntry> entries;
 
-    @OneToOne
-    private Study study;
+	@OneToOne
+	private Study study;
 
-    public LocalDate getCreated() {
-        return created;
-    }
+	private String name;
 
-    public void setCreated(LocalDate created) {
-        this.created = created;
-    }
+	public LocalDate getCreated() {
+		return created;
+	}
 
-    public List<BudgetEntry> getEntries() {
-        return entries;
-    }
+	public void setCreated(LocalDate created) {
+		this.created = created;
+	}
 
-    public void setEntries(List<BudgetEntry> entries) {
-        this.entries = entries;
-    }
+	public List<BudgetEntry> getEntries() {
+		return entries;
+	}
 
-    public Study getStudy() {
-        return study;
-    }
+	public void setEntries(List<BudgetEntry> entries) {
+		this.entries = entries;
+	}
 
-    public void setStudy(Study study) {
-        this.study = study;
-    }
+	public Study getStudy() {
+		return study;
+	}
+
+	public void setStudy(Study study) {
+		this.study = study;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

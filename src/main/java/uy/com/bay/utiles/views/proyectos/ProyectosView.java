@@ -324,12 +324,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		wrapper.setClassName("grid-wrapper");
 		wrapper.setWidthFull(); // Ensure wrapper takes full width
 
-		// Title Layout
-		H2 title = new H2("Proyectos");
-		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton);
+		HorizontalLayout titleLayout = new HorizontalLayout(addButton);
 		titleLayout.setWidthFull();
 		titleLayout.setAlignItems(Alignment.BASELINE); // Align items nicely
-		titleLayout.setFlexGrow(1, title); // Title takes available space
 
 		// Filter Layout
 		HorizontalLayout filterLayout = new HorizontalLayout();

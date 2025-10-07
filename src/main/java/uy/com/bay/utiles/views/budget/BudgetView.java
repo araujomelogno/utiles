@@ -1,5 +1,7 @@
 package uy.com.bay.utiles.views.budget;
 
+import org.springframework.data.domain.Pageable;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
@@ -7,8 +9,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.data.domain.Pageable;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
@@ -54,7 +56,8 @@ public class BudgetView extends VerticalLayout {
 	private void configureGrid() {
 		grid.addClassNames("budget-grid");
 		grid.setSizeFull();
-		grid.setColumns("created");
+		grid.setColumns("name", "created");
+
 		grid.addColumn(budget -> budget.getStudy() == null ? "" : budget.getStudy().getName()).setHeader("Estudio");
 		grid.getColumns().forEach(col -> col.setAutoWidth(true));
 		grid.asSingleSelect().addValueChangeListener(event -> editBudget(event.getValue()));
