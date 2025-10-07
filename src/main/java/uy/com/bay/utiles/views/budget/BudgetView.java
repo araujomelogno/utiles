@@ -37,7 +37,7 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 		setSizeFull();
 		configureGrid();
 
-		form = new BudgetForm(studyService, budgetConceptService);
+		form = new BudgetForm(studyService, budgetConceptService, budgetService);
 		form.addSaveListener(this::saveBudget);
 		form.addDeleteListener(this::deleteBudget);
 		form.addCloseListener(e -> closeEditor());
