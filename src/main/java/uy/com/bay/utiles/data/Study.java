@@ -4,10 +4,15 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import java.util.List;
+import uy.com.bay.utiles.entities.Budget;
 
 @Entity
 public class Study extends AbstractEntity {
+
+	@OneToOne(mappedBy = "study")
+	private Budget budget;
 
 	@OneToMany(mappedBy = "study", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<Fieldwork> fieldworks;
@@ -75,5 +80,13 @@ public class Study extends AbstractEntity {
 
 	public void setFieldworks(List<Fieldwork> fieldworks) {
 		this.fieldworks = fieldworks;
+	}
+
+	public Budget getBudget() {
+		return budget;
+	}
+
+	public void setBudget(Budget budget) {
+		this.budget = budget;
 	}
 }
