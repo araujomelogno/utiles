@@ -75,6 +75,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private Button deleteButton; // Added deleteButton declaration
 	private Button viewMovementsButton;
 	private Button viewFieldworksButton;
+	private Button viewBudgetButton;
 
 	private final BeanValidationBinder<Study> binder;
 
@@ -121,6 +122,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		viewFieldworksButton = new Button("Ver solicitudes de campo");
 		viewFieldworksButton.setEnabled(false);
+
+		viewBudgetButton = new Button("Ver presupuesto");
+		viewBudgetButton.setEnabled(false);
 
 		nameFilter = new TextField();
 		nameFilter.setPlaceholder("Nombre...");
@@ -269,6 +273,12 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 				dialog.open();
 			}
 		});
+
+		viewBudgetButton.addClickListener(e -> {
+			if (this.proyecto != null && this.proyecto.getBudget() != null) {
+				UI.getCurrent().navigate("budgets/" + this.proyecto.getBudget().getId() + "/edit");
+			}
+		});
 	}
 
 	@Override
@@ -325,7 +335,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		buttonLayout.setClassName("button-layout");
 		cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		buttonLayout.add(save, deleteButton, cancel);
+		buttonLayout.add(save, deleteButton, cancel, viewBudgetButton);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
@@ -379,6 +389,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		}
 		if (this.viewFieldworksButton != null) {
 			this.viewFieldworksButton.setEnabled(value != null && value.getId() != null);
+		}
+		if (this.viewBudgetButton != null) {
+			this.viewBudgetButton.setEnabled(value != null && value.getBudget() != null);
 		}
 	}
 }
