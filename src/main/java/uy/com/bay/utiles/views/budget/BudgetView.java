@@ -7,10 +7,13 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import java.util.Optional;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
@@ -18,10 +21,11 @@ import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Presupuestos")
-@Route(value = "budgets", layout = MainLayout.class)
+@Route(value = "budgets/:budgetID?/:action?(edit)", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
-public class BudgetView extends VerticalLayout {
+public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 
+	private final String BUDGET_ID = "budgetID";
 	private final Grid<Budget> grid = new Grid<>(Budget.class);
 	private final BudgetForm form;
 	private final BudgetService budgetService;
@@ -42,6 +46,17 @@ public class BudgetView extends VerticalLayout {
 		add(getToolbar(), content);
 		updateList();
 		closeEditor();
+	}
+
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		Optional<Long> budgetId = event.getRouteParameters().get(BUDGET_ID).map(Long::parseLong);
+		if (budgetId.isPresent()) {
+			Optional<Budget> budgetFromBackend = budgetService.get(budgetId.get());
+			if (budgetFromBackend.isPresent()) {
+				editBudget(budgetFromBackend.get());
+			}
+		}
 	}
 
 	private Component getContent() {
