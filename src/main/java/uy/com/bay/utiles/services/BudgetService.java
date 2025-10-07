@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.data.repository.BudgetRepository;
 
@@ -39,6 +41,10 @@ public class BudgetService {
 
 	public List<Budget> findAll() {
 		return repository.findAll();
+	}
+
+	public Optional<Budget> findByStudy(Study study) {
+		return repository.findByStudy(study);
 	}
 
 }

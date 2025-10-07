@@ -4,6 +4,7 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -31,6 +33,7 @@ import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetConceptService;
+import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
 
 public class BudgetForm extends VerticalLayout {
@@ -44,12 +47,14 @@ public class BudgetForm extends VerticalLayout {
 	private final Button close = new Button("Cerrar");
 	private final Binder<Budget> binder = new BeanValidationBinder<>(Budget.class);
 	private final BudgetConceptService budgetConceptService;
+	private final BudgetService budgetService;
 	private final Editor<BudgetEntry> editor;
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
 
-	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService) {
+	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService) {
 		this.budgetConceptService = budgetConceptService;
+		this.budgetService = budgetService;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
 		study.setItems(studyService.listAll());
@@ -150,6 +155,18 @@ public class BudgetForm extends VerticalLayout {
 
 	private void validateAndSave() {
 		if (binder.isValid()) {
+			Budget budget = binder.getBean();
+			if (budget.getStudy() != null) {
+				Optional<Budget> existingBudgetOpt = budgetService.findByStudy(budget.getStudy());
+				if (existingBudgetOpt.isPresent()) {
+					Budget existingBudget = existingBudgetOpt.get();
+					boolean isNewBudget = budget.getId() == null;
+					if (isNewBudget || !existingBudget.getId().equals(budget.getId())) {
+						Notification.show("El estudio ingresado tiene otro presupuesto: " + existingBudget.getName());
+						return;
+					}
+				}
+			}
 			if (binder.getBean().getCreated() == null)
 				binder.getBean().setCreated(LocalDate.now());
 			fireEvent(new SaveEvent(this, binder.getBean()));
