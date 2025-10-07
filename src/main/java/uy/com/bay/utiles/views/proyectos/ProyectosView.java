@@ -9,6 +9,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog; // Added import
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -37,6 +38,8 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.data.service.FieldworkService;
+import uy.com.bay.utiles.entities.Budget;
+import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
@@ -56,6 +59,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 	private TextField name;
 	private TextField odooId;
+	private ComboBox<Budget> budget;
 	private TextArea obs;
 	private Checkbox showSurveyor;
 	private TextField totalTransfered;
@@ -84,11 +88,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final ExpenseTransferFileService expenseTransferFileService;
 	private final FieldworkService fieldworkService;
 	private final uy.com.bay.utiles.services.ExcelExportService excelExportService;
+	private final BudgetService budgetService;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
 			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService,
-			FieldworkService fieldworkService, uy.com.bay.utiles.services.ExcelExportService excelExportService) {
+			FieldworkService fieldworkService, uy.com.bay.utiles.services.ExcelExportService excelExportService,
+			BudgetService budgetService) {
 		this.proyectoService = proyectoService;
 		this.journalEntryService = journalEntryService;
 		this.fieldworkService = fieldworkService;
@@ -96,6 +102,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.expenseReportFileService = expenseReportFileService;
 		this.expenseTransferFileService = expenseTransferFileService;
 		this.excelExportService = excelExportService;
+		this.budgetService = budgetService;
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
 
@@ -293,13 +300,16 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		FormLayout formLayout = new FormLayout();
 		name = new TextField("Name");
 		odooId = new TextField("Odoo Id");
+		budget = new ComboBox<>("Presupuesto");
+		budget.setItems(budgetService.findAll());
+		budget.setItemLabelGenerator(Budget::getName);
 		obs = new TextArea("Observaciones");
 		showSurveyor = new Checkbox("Mostrar a encuestador");
 		totalTransfered = new TextField("Total de gastos transferidos");
 		totalTransfered.setReadOnly(true);
 		totalReportedCost = new TextField("Total de gastos rendidos");
 		totalReportedCost.setReadOnly(true);
-		formLayout.add(name, odooId, obs, showSurveyor, totalTransfered, totalReportedCost);
+		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
