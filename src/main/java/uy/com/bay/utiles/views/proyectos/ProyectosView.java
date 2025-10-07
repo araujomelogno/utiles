@@ -237,26 +237,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 			refreshGrid();
 		});
 
-		save.addClickListener(e -> {
-			try {
-				if (this.proyecto == null) {
-					this.proyecto = new Study();
-				}
-				binder.writeBean(this.proyecto);
-				proyectoService.save(this.proyecto);
-				clearForm();
-				refreshGrid();
-				Notification.show("Data updated");
-				UI.getCurrent().navigate(ProyectosView.class);
-			} catch (ObjectOptimisticLockingFailureException exception) {
-				Notification n = Notification.show(
-						"Error updating the data. Somebody else has updated the record while you were making changes.");
-				n.setPosition(Position.MIDDLE);
-				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-			} catch (ValidationException validationException) {
-				Notification.show("Failed to update the data. Check again that all values are valid");
-			}
-		});
+		save.addClickListener(e -> validateAndSave());
 
 		viewMovementsButton.addClickListener(e -> {
 			if (this.proyecto != null) {
@@ -279,6 +260,37 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 				UI.getCurrent().navigate("budgets/" + this.proyecto.getBudget().getId() + "/edit");
 			}
 		});
+	}
+
+	private void validateAndSave() {
+		try {
+			if (this.proyecto == null) {
+				this.proyecto = new Study();
+			}
+			binder.writeBean(this.proyecto);
+
+			Optional<Study> conflictingStudy = proyectoService.isBudgetInUse(this.proyecto);
+			if (conflictingStudy.isPresent()) {
+				Notification.show(
+						"El presupuesto ingresado esta siendo utilizado por el estudio : "
+								+ conflictingStudy.get().getName(),
+						5000, Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+				return;
+			}
+
+			proyectoService.save(this.proyecto);
+			clearForm();
+			refreshGrid();
+			Notification.show("Data updated");
+			UI.getCurrent().navigate(ProyectosView.class);
+		} catch (ObjectOptimisticLockingFailureException exception) {
+			Notification n = Notification
+					.show("Error updating the data. Somebody else has updated the record while you were making changes.");
+			n.setPosition(Position.MIDDLE);
+			n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		} catch (ValidationException validationException) {
+			Notification.show("Failed to update the data. Check again that all values are valid");
+		}
 	}
 
 	@Override
