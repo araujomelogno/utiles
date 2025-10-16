@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@polymer/polymer": "3.5.2",
+    "@vaadin-component-factory/vcf-month-picker": "2.0.0",
     "@vaadin/bundles": "24.7.6",
     "@vaadin/common-frontend": "0.0.19",
     "@vaadin/polymer-legacy-adapter": "24.7.6",
@@ -48,6 +49,7 @@
   "vaadin": {
     "dependencies": {
       "@polymer/polymer": "3.5.2",
+      "@vaadin-component-factory/vcf-month-picker": "2.0.0",
       "@vaadin/bundles": "24.7.6",
       "@vaadin/common-frontend": "0.0.19",
       "@vaadin/polymer-legacy-adapter": "24.7.6",
@@ -89,7 +91,7 @@
       "workbox-core": "7.3.0",
       "workbox-precaching": "7.3.0"
     },
-    "hash": "31ee3b769fd628f4a3bd942057cc3edb752b1d8f54301fa0970b7aaba76cc1fd"
+    "hash": "3f380b7e6c2494639fc24998a738e545a427a952c6790b83050a8ebc022c3da2"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -111,6 +113,7 @@
     "@vaadin/vaadin-lumo-styles": "$@vaadin/vaadin-lumo-styles",
     "@vaadin/vaadin-material-styles": "$@vaadin/vaadin-material-styles",
     "tltv-timeline-element": "$tltv-timeline-element",
-    "tltv-gantt-element": "$tltv-gantt-element"
+    "tltv-gantt-element": "$tltv-gantt-element",
+    "@vaadin-component-factory/vcf-month-picker": "$@vaadin-component-factory/vcf-month-picker"
   }
 }
