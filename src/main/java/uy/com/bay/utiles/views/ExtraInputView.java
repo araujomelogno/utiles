@@ -24,6 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExtraConcept;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
@@ -35,7 +36,7 @@ import uy.com.bay.utiles.services.SurveyorService;
 
 @PageTitle("Ingresar Extras")
 @Route(value = "IngresarExtras", layout = MainLayout.class)
-@PermitAll
+@RolesAllowed("ADMIN")
 public class ExtraInputView extends VerticalLayout {
 
 	private final ExtraService extraService;
