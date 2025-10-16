@@ -146,6 +146,13 @@
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
+    
+    <dependency>
+   <groupId>org.vaadin.addons.componentfactory</groupId>
+   <artifactId>vcf-month-picker-flow</artifactId>
+   <version>2.0.0</version>
+</dependency>
+
 
     <!-- Force latest version of commons-io to resolve NoClassDefFoundError -->
     <dependency>
