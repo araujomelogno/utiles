@@ -19,6 +19,8 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -52,13 +54,15 @@ public class BudgetForm extends VerticalLayout {
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
 
-	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService) {
+	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService,
+			BudgetService budgetService) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(Study::getName);
+
 		editor = entriesGrid.getEditor();
 		configureGrid();
 		add(createFormLayout(), entriesGrid, addEntryButton, createButtonsLayout());
@@ -90,6 +94,7 @@ public class BudgetForm extends VerticalLayout {
 			entriesGrid.setItems(binder.getBean().getEntries());
 			updateTotal();
 		});
+
 		NumberField ammountField = new NumberField();
 		ammountField.setWidthFull();
 		entryBinder.forField(ammountField).bind(BudgetEntry::getAmmount, BudgetEntry::setAmmount);
@@ -162,26 +167,38 @@ public class BudgetForm extends VerticalLayout {
 					Budget existingBudget = existingBudgetOpt.get();
 					boolean isNewBudget = budget.getId() == null;
 					if (isNewBudget || !existingBudget.getId().equals(budget.getId())) {
-						Notification.show("El estudio ingresado tiene otro presupuesto: " + existingBudget.getName());
+						Notification.show("El estudio ingresado tiene otro presupuesto: " + existingBudget.getName(),
+								2500, Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+
 						return;
 					}
 				}
+			} else {
+				if (binder.getBean().getCreated() == null)
+					binder.getBean().setCreated(LocalDate.now());
+				fireEvent(new SaveEvent(this, binder.getBean()));
 			}
-			if (binder.getBean().getCreated() == null)
-				binder.getBean().setCreated(LocalDate.now());
-			fireEvent(new SaveEvent(this, binder.getBean()));
+
 		}
 	}
 
 	public void setBudget(Budget budget) {
 		binder.setBean(budget);
+
 		if (budget != null && budget.getEntries() != null) {
+			study.setValue(budget.getStudy());
 			entriesGrid.setItems(budget.getEntries());
 		} else if (budget != null) {
 			budget.setEntries(new ArrayList<>());
 			entriesGrid.setItems(budget.getEntries());
 		}
+
 		updateTotal();
+	}
+
+	public void clearStudy() {
+		study.clear();
+
 	}
 
 	private void updateTotal() {
@@ -226,6 +243,7 @@ public class BudgetForm extends VerticalLayout {
 
 	public static class CloseEvent extends BudgetFormEvent {
 		CloseEvent(BudgetForm source) {
+
 			super(source, null);
 		}
 	}

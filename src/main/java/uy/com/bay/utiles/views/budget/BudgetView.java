@@ -100,6 +100,7 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 	private void closeEditor() {
 		form.setBudget(null);
 		form.setVisible(false);
+		
 		removeClassName("editing");
 	}
 
