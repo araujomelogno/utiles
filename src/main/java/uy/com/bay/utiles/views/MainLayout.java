@@ -189,6 +189,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem extraConceptItem = new SideNavItem("Conceptos de extra", "extraconcepts");
 		extraConceptItem.setPrefixComponent(new Icon("vaadin", "list"));
 		extrasItem.addItem(extraConceptItem);
+		SideNavItem ingresarExtrasItem = new SideNavItem("Ingresar Extras", "IngresarExtras");
+		ingresarExtrasItem.setPrefixComponent(new Icon("vaadin", "edit"));
+		extrasItem.addItem(ingresarExtrasItem);
 		nav.addItem(extrasItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
