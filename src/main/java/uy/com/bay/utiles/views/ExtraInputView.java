@@ -60,20 +60,24 @@ public class ExtraInputView extends VerticalLayout {
 		createGrid();
 
 		Button addButton = new Button("Agregar", event -> {
-			Study selectedStudy = studyComboBox.getValue();
-			LocalDate selectedMonth = monthPicker.getValue().atEndOfMonth();
+			if (studyComboBox.getValue() != null && monthPicker.getValue() != null) {
 
-			if (selectedStudy == null || selectedMonth == null) {
-				Notification.show("Por favor, seleccione un estudio y un mes.");
-				return;
+				Study selectedStudy = studyComboBox.getValue();
+				LocalDate selectedMonth = monthPicker.getValue().atEndOfMonth();
+
+				if (selectedStudy == null || selectedMonth == null) {
+					Notification.show("Por favor, seleccione un estudio y un mes.");
+					return;
+				}
+
+				Extra newExtra = new Extra();
+				newExtra.setStudy(selectedStudy);
+				newExtra.setDate(selectedMonth.withDayOfMonth(1));
+				extras.add(newExtra);
+				grid.getDataProvider().refreshAll();
+				grid.getEditor().editItem(newExtra);
+
 			}
-
-			Extra newExtra = new Extra();
-			newExtra.setStudy(selectedStudy);
-			newExtra.setDate(selectedMonth.withDayOfMonth(1));
-			extras.add(newExtra);
-			grid.getDataProvider().refreshAll();
-			grid.getEditor().editItem(newExtra);
 		});
 
 		HorizontalLayout layout = new HorizontalLayout(studyComboBox, monthPicker, addButton);
@@ -102,8 +106,8 @@ public class ExtraInputView extends VerticalLayout {
 		Editor<Extra> editor = grid.getEditor().setBinder(binder);
 
 		// Columnas no editables
-		Grid.Column<Extra> dateColumn = grid.addColumn(Extra::getDate).setHeader("Fecha");
-		Grid.Column<Extra> amountColumn = grid.addColumn(Extra::getAmount).setHeader("Importe");
+		Grid.Column<Extra> dateColumn = grid.addColumn(Extra::getDate).setHeader("Fecha").setKey("date");
+		Grid.Column<Extra> amountColumn = grid.addColumn(Extra::getAmount).setHeader("Importe").setKey("amount");
 
 		// Columna Concepto (editable)
 		ComboBox<ExtraConcept> conceptComboBox = new ComboBox<>();
@@ -119,7 +123,8 @@ public class ExtraInputView extends VerticalLayout {
 		surveyorComboBox.setItemLabelGenerator(Surveyor::getName);
 		binder.forField(surveyorComboBox).bind(Extra::getSurveyor, Extra::setSurveyor);
 		grid.addColumn(extra -> extra.getSurveyor() != null ? extra.getSurveyor().getName() : "")
-				.setHeader("Encuestador").setEditorComponent(surveyorComboBox);
+				.setHeader("Encuestador").setEditorComponent(surveyorComboBox).setSortable(true)
+				.setComparator(extra -> extra.getSurveyor() != null ? extra.getSurveyor().getName() : "");
 
 		// Columna Cantidad (editable)
 		IntegerField quantityField = new IntegerField();
@@ -140,10 +145,19 @@ public class ExtraInputView extends VerticalLayout {
 		Grid.Column<Extra> saveColumn = grid.addComponentColumn(extra -> {
 			Button save = new Button(new Icon(VaadinIcon.DISC));
 			save.addClickListener(e -> {
-				extraService.save(extra);
-				grid.getDataProvider().refreshItem(extra);
-				Notification.show("Extra guardado.");
-
+				try {
+					binder.readBean(extra);
+					if (binder.writeBeanIfValid(extra)) {
+						extraService.save(extra);
+						System.out.println(extra.getAmount());
+						grid.getDataProvider().refreshAll();
+						updateFooter();
+						Notification.show("Extra guardado.");
+						editor.cancel();
+					}
+				} catch (Exception ex) {
+					Notification.show("Error al guardar el extra: " + ex.getMessage());
+				}
 			});
 			return save;
 		}).setHeader("Guardar");
@@ -168,11 +182,13 @@ public class ExtraInputView extends VerticalLayout {
 				}
 				extras.remove(extra);
 				grid.getDataProvider().refreshAll();
+				updateFooter();
 				Notification.show("Extra eliminado.");
 			});
 			return deleteButton;
 		}).setHeader("Eliminar");
 
+		updateFooter();
 	}
 
 	private void loadExtras() {
@@ -183,6 +199,16 @@ public class ExtraInputView extends VerticalLayout {
 			extras.clear();
 			extras.addAll(extraService.findByStudyAndMonth(selectedStudy, selectedMonth));
 			grid.getDataProvider().refreshAll();
+			updateFooter();
 		}
+	}
+
+	private void updateFooter() {
+		if (grid.getFooterRows().isEmpty()) {
+			grid.appendFooterRow();
+		}
+		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("date")).setText("TOTAL:");
+		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("amount"))
+				.setText("" + extras.stream().mapToDouble(Extra::getAmount).sum());
 	}
 }
