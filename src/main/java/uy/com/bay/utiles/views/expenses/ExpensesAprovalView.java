@@ -43,6 +43,7 @@ import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
@@ -60,6 +61,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 	private final Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
 
 	private ComboBox<Study> study;
+	private ComboBox<BudgetEntry> budgetEntry;
 	private ComboBox<Surveyor> surveyor;
 	private DatePicker requestDate;
 	private DatePicker aprovalDate;
@@ -210,6 +212,10 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 				if (this.expenseRequest.getStudy() == null) {
 					Notification.show("Debe asociarse estudio");
+					return;
+				}
+				if (this.expenseRequest.getBudgetEntry() == null) {
+					Notification.show("Debe seleccionar un concepto de presupuesto");
 					return;
 				}
 				binder.writeBean(this.expenseRequest);
@@ -399,6 +405,18 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
+		budgetEntry = new ComboBox<>("Concepto - Presupuesto");
+		budgetEntry.setItemLabelGenerator(
+				be -> be == null ? "" : be.getConcept().getName() + " - " + be.getBudget().getName());
+		study.addValueChangeListener(event -> {
+			Study selectedStudy = event.getValue();
+			if (selectedStudy != null && selectedStudy.getBudget() != null) {
+				budgetEntry.setItems(selectedStudy.getBudget().getEntries());
+			} else {
+				budgetEntry.clear();
+				budgetEntry.setItems(new ArrayList<>());
+			}
+		});
 		surveyor = new ComboBox<>("Encuestador");
 		surveyor.setItems(surveyorService.listAll());
 		surveyor.setItemLabelGenerator(s -> s == null ? "" : s.getName());
@@ -411,7 +429,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
-		formLayout.add(study, surveyor, requestDate, aprovalDate, amount, concept, obs);
+		formLayout.add(study, budgetEntry, surveyor, requestDate, aprovalDate, amount, concept, obs);
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
