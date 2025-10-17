@@ -6,9 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
-
+import uy.com.bay.utiles.entities.BudgetEntry;
 @Entity
 public class ExpenseRequest extends AbstractEntity {
+
+    @ManyToOne
+    private BudgetEntry budgetEntry;
 
     @ManyToOne
     private Study study;
@@ -110,5 +113,13 @@ public class ExpenseRequest extends AbstractEntity {
 
     public void setExpenseTransfer(ExpenseTransfer expenseTransfer) {
         this.expenseTransfer = expenseTransfer;
+    }
+
+    public BudgetEntry getBudgetEntry() {
+        return budgetEntry;
+    }
+
+    public void setBudgetEntry(BudgetEntry budgetEntry) {
+        this.budgetEntry = budgetEntry;
     }
 }

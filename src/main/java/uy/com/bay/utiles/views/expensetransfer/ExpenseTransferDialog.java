@@ -145,6 +145,13 @@ public class ExpenseTransferDialog extends Dialog {
 				}
 
 				fireEvent(new SaveEvent(this, expenseTransfer));
+
+
+				for (ExpenseRequest request : requestList) {
+					///ACAAAA.. BUSCAR EL ENTRY DE ESA REQUEST.. Y SPENT SUMARLE EL REQUEST.GET AMOUTN Y GUARDAR
+ 
+				}
+
 				close();
 			}
 		} catch (IOException e) {
