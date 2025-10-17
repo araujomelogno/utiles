@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.data.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -22,4 +23,9 @@ public interface BudgetRepository extends JpaRepository<Budget, Long>, JpaSpecif
 
 	Optional<Budget> findByStudy(Study study);
 
+	@Query("select b from Budget b left join fetch b.entries")
+	List<Budget> findAllWithEntries();
+
+	@Query("select b from Budget b left join fetch b.entries where b.study = :study")
+	Optional<Budget> findByStudyWithEntries(@Param("study") Study study);
 }

@@ -43,8 +43,9 @@ import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Study;
-import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.StudyService;
@@ -83,17 +84,20 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 	private final ExpenseRequestTypeService expenseRequestTypeService;
 	private final StudyService studyService;
 	private final SurveyorService surveyorService;
+	private final BudgetService budgetService;
+
 	private Div editorLayoutDiv;
 
 	private final Filters filters;
 
 	public ExpensesAprovalView(ExpenseRequestService expenseRequestService,
 			ExpenseRequestTypeService expenseRequestTypeService, StudyService studyService,
-			SurveyorService surveyorService) {
+			SurveyorService surveyorService, BudgetService budgetService) {
 		this.expenseRequestService = expenseRequestService;
 		this.expenseRequestTypeService = expenseRequestTypeService;
 		this.studyService = studyService;
 		this.surveyorService = surveyorService;
+		this.budgetService = budgetService;
 		this.filters = new Filters();
 
 		addClassName("expenses-aproval-view");
@@ -205,10 +209,12 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 		approve.addClickListener(e -> {
 			try {
+
 				if (this.expenseRequest == null) {
-					Notification.show("No expense request selected.");
-					return;
+					this.expenseRequest = new ExpenseRequest();
 				}
+				binder.writeBean(this.expenseRequest);
+				expenseRequestService.update(this.expenseRequest);
 
 				if (this.expenseRequest.getStudy() == null) {
 					Notification.show("Debe asociarse estudio");
@@ -218,7 +224,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 					Notification.show("Debe seleccionar un concepto de presupuesto");
 					return;
 				}
-				binder.writeBean(this.expenseRequest);
+
 				this.expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
 				this.expenseRequest.setAprovalDate(new Date());
 				expenseRequestService.update(this.expenseRequest);
@@ -411,7 +417,9 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		study.addValueChangeListener(event -> {
 			Study selectedStudy = event.getValue();
 			if (selectedStudy != null && selectedStudy.getBudget() != null) {
-				budgetEntry.setItems(selectedStudy.getBudget().getEntries());
+				budgetService.findByIdWithEntries(selectedStudy.getBudget().getId()).ifPresent(budget -> {
+					budgetEntry.setItems(budget.getEntries());
+				});
 			} else {
 				budgetEntry.clear();
 				budgetEntry.setItems(new ArrayList<>());

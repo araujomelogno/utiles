@@ -40,11 +40,15 @@ public class BudgetService {
 	}
 
 	public List<Budget> findAll() {
-		return repository.findAll();
+		return repository.findAllWithEntries();
 	}
 
 	public Optional<Budget> findByStudy(Study study) {
-		return repository.findByStudy(study);
+		return repository.findByStudyWithEntries(study);
+	}
+
+	public Optional<Budget> findByIdWithEntries(Long id) {
+		return repository.findByIdWithEntries(id);
 	}
 
 }
