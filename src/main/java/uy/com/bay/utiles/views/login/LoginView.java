@@ -17,30 +17,32 @@ import uy.com.bay.utiles.security.AuthenticatedUser;
 @Route(value = "login")
 public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
-    private final AuthenticatedUser authenticatedUser;
+	private final AuthenticatedUser authenticatedUser;
 
-    public LoginView(AuthenticatedUser authenticatedUser) {
-        this.authenticatedUser = authenticatedUser;
-        setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
+	public LoginView(AuthenticatedUser authenticatedUser) {
+		this.authenticatedUser = authenticatedUser;
+		setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
 
-        LoginI18n i18n = LoginI18n.createDefault();
-        i18n.setHeader(new LoginI18n.Header());
-        i18n.getHeader().setTitle("Útiles"); 
-        i18n.setAdditionalInformation(null);
-        
-        setI18n(i18n);
+		LoginI18n i18n = LoginI18n.createDefault();
+		i18n.setHeader(new LoginI18n.Header());
+		i18n.getHeader().setTitle("Útiles");
+		i18n.setAdditionalInformation(null);
 
-        setForgotPasswordButtonVisible(false);
-        setOpened(true);
-    }
+		setI18n(i18n);
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        if (authenticatedUser.get().isPresent()) {
-            // Already logged in
-            setOpened(false);
-        }
+		setForgotPasswordButtonVisible(false);
+		setOpened(true);
+	}
 
-        setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
-    }
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		if (authenticatedUser.get().isPresent()) {
+			// Already logged in
+
+//			authenticatedUser.logout();
+			setOpened(true);
+		}
+
+		setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
+	}
 }

@@ -53,6 +53,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private DatePicker initDate;
 	private DatePicker endDate;
 	private IntegerField goalQuantity;
+	private IntegerField budget;
 	private IntegerField completed;
 	private TextField obs;
 	private ComboBox<FieldworkStatus> status;
@@ -74,10 +75,13 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
+	private final uy.com.bay.utiles.services.AreaService areaService;
 
-	public FieldworksView(FieldworkService fieldworkService, StudyService studyService) {
+	public FieldworksView(FieldworkService fieldworkService, StudyService studyService,
+			uy.com.bay.utiles.services.AreaService areaService) {
 		this.fieldworkService = fieldworkService;
 		this.studyService = studyService;
+		this.areaService = areaService;
 		addClassNames("fieldworks-view");
 
 		// Create UI
@@ -97,6 +101,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
+		grid.addColumn("budget").setHeader("Presupuesto").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
@@ -186,13 +191,33 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				refreshGrid();
 				event.forwardTo(FieldworksView.class);
 			}
+		} else {
+			Optional.ofNullable(event.getLocation().getQueryParameters().getParameters().get("studyId"))
+					.flatMap(list -> list.stream().findFirst()).ifPresent(studyId -> {
+						try {
+							Optional<Study> study = studyService.get(Long.parseLong(studyId));
+							if (study.isPresent()) {
+								clearForm();
+								this.fieldwork = new Fieldwork();
+								this.fieldwork.setStudy(study.get());
+								binder.readBean(this.fieldwork);
+								this.editorLayoutDiv.setVisible(true);
+							} else {
+								Notification.show("El estudio no fue encontrado.", 3000,
+										Notification.Position.BOTTOM_START);
+							}
+						} catch (NumberFormatException e) {
+							Notification.show("Id de estudio invalido.", 3000, Notification.Position.BOTTOM_START);
+						}
+					});
 		}
 	}
 
 	private void createEditorLayout(SplitLayout splitLayout) {
 		this.editorLayoutDiv = new Div();
-		this.editorLayoutDiv.setClassName("editor-layout");
 
+		this.editorLayoutDiv.setClassName("editor-layout");
+		this.editorLayoutDiv.setWidth("30%");
 		Div editorDiv = new Div();
 		editorDiv.setClassName("editor");
 		this.editorLayoutDiv.add(editorDiv);
@@ -208,16 +233,19 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		initDate = new DatePicker("Fecha Inicio");
 		endDate = new DatePicker("Fecha Fin");
 		goalQuantity = new IntegerField("Cantidad Objetivo");
-		completed = new IntegerField("Completadas");
+		completed = new IntegerField("Completas");
+		completed.setReadOnly(true);
+		budget = new IntegerField("Presupuesto");
 		obs = new TextField("Observaciones");
 		status = new ComboBox<>("Estado");
 		status.setItems(FieldworkStatus.values());
 		type = new ComboBox<>("Tipo");
 		type.setItems(FieldworkType.values());
 		area = new ComboBox<>("Area");
-		area.setItems(Area.values());
-		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed, obs,
-				status, type, area);
+		area.setItems(areaService.listAll());
+		area.setItemLabelGenerator(Area::getNombre);
+		formLayout.add(study, budget, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed,
+				obs, status, type, area);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);

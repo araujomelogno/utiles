@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -20,6 +22,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -28,12 +31,14 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.CallbackDataProvider;
@@ -119,7 +124,6 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		createGridLayout(splitLayout);
 
 		add(splitLayout);
-
 		grid.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
 				.setSortProperty("study.name").setKey("study");
 		grid.addColumn(
@@ -139,6 +143,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				query -> expenseReportService
 						.list(VaadinSpringDataHelpers.toSpringPageRequest(query), createFilterSpecification()).stream(),
 				query -> (int) expenseReportService.count(createFilterSpecification())));
+
+		grid.appendFooterRow();
+		updateFooter();
 
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
@@ -314,18 +321,20 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 		wrapper.setSizeFull();
-		grid.setSizeFull();
+//		grid.setSizeFull();
 		HorizontalLayout filterLayout = new HorizontalLayout();
 		filterLayout.setWidthFull();
 
 		studyFilter = new TextField();
 		studyFilter.setPlaceholder("Estudio...");
 		studyFilter.setClearButtonVisible(true);
+		studyFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		studyFilter.addValueChangeListener(e -> refreshGrid());
 
 		surveyorFilter = new TextField();
 		surveyorFilter.setPlaceholder("Encuestador...");
 		surveyorFilter.setClearButtonVisible(true);
+		surveyorFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		surveyorFilter.addValueChangeListener(e -> refreshGrid());
 
 		dateFilter = new DatePicker();
@@ -336,11 +345,13 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		amountFilter = new NumberField();
 		amountFilter.setPlaceholder("Monto..");
 		amountFilter.setClearButtonVisible(true);
+		amountFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		amountFilter.addValueChangeListener(e -> refreshGrid());
 
 		conceptFilter = new TextField();
 		conceptFilter.setPlaceholder("Concepto...");
 		conceptFilter.setClearButtonVisible(true);
+		conceptFilter.setValueChangeMode(ValueChangeMode.LAZY);
 		conceptFilter.addValueChangeListener(e -> refreshGrid());
 
 		statusFilter = new ComboBox<>();
@@ -377,11 +388,15 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 						"%" + surveyorFilter.getValue().toLowerCase() + "%"));
 			}
 			if (dateFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("date"), dateFilter.getValue()));
+				LocalDate localDate = dateFilter.getValue();
+				Date startDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+				Date endDate = Date.from(localDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+				predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), startDate));
+				predicates.add(criteriaBuilder.lessThan(root.get("date"), endDate));
 			}
 
 			if (amountFilter.getValue() != null) {
-				predicates.add(criteriaBuilder.equal(root.get("amount"), dateFilter.getValue()));
+				predicates.add(criteriaBuilder.equal(root.get("amount"), amountFilter.getValue()));
 			}
 			if (conceptFilter.getValue() != null && !conceptFilter.getValue().isEmpty()) {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("concept").get("name")),
@@ -398,6 +413,19 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private void refreshGrid() {
 		grid.select(null);
 		grid.getDataProvider().refreshAll();
+		if (grid.getFooterRows().size() > 0) {
+			updateFooter();
+		}
+	}
+
+	private void updateFooter() {
+		FooterRow footerRow = grid.getFooterRows().get(0);
+		Grid.Column<ExpenseReport> studyColumn = grid.getColumnByKey("study");
+		Grid.Column<ExpenseReport> amountColumn = grid.getColumnByKey("amount");
+		Specification<ExpenseReport> spec = createFilterSpecification();
+		Double total = expenseReportService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
 	}
 
 	private void clearForm() {

@@ -30,9 +30,11 @@ import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseTransfer;
 import uy.com.bay.utiles.data.ExpenseTransferFile;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.services.BudgetEntryService;
 
 public class ExpenseTransferDialog extends Dialog {
 
+	private final BudgetEntryService budgetEntryService;
 	private DatePicker transferDate;
 	private NumberField amount;
 	private TextArea obs;
@@ -47,8 +49,9 @@ public class ExpenseTransferDialog extends Dialog {
 	protected ExpenseTransfer expenseTransfer;
 	protected Set<ExpenseRequest> selectedRequests;
 
-	public ExpenseTransferDialog(Set<ExpenseRequest> selectedRequests) {
+	public ExpenseTransferDialog(Set<ExpenseRequest> selectedRequests, BudgetEntryService budgetEntryService) {
 		this.selectedRequests = selectedRequests;
+		this.budgetEntryService = budgetEntryService;
 		this.expenseTransfer = new ExpenseTransfer();
 
 		setHeaderTitle("Crear Transferencia");
@@ -145,6 +148,15 @@ public class ExpenseTransferDialog extends Dialog {
 				}
 
 				fireEvent(new SaveEvent(this, expenseTransfer));
+
+				for (ExpenseRequest request : requestList) {
+					var budgetEntry = request.getBudgetEntry();
+					if (budgetEntry != null) {
+						budgetEntry.setSpent(budgetEntry.getSpent() + request.getAmount());
+						budgetEntryService.save(budgetEntry);
+					}
+				}
+
 				close();
 			}
 		} catch (IOException e) {

@@ -9,6 +9,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog; // Added import
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -36,8 +37,10 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
-import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.data.service.FieldworkService;
+import uy.com.bay.utiles.entities.Budget;
+import uy.com.bay.utiles.services.BudgetService;
+import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
@@ -45,7 +48,7 @@ import uy.com.bay.utiles.services.StudyService;
 @PageTitle("Proyectos")
 @Route("/:proyectoID?/:action?(edit)")
 @Menu(order = 0, icon = LineAwesomeIconUrl.BRIEFCASE_SOLID)
-@RouteAlias("")
+@RouteAlias("studies")
 @RolesAllowed("ADMIN")
 public class ProyectosView extends Div implements BeforeEnterObserver {
 
@@ -56,8 +59,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 	private TextField name;
 	private TextField odooId;
+	private ComboBox<Budget> budget;
 	private TextArea obs;
-	private TextField casosCompletos;
 	private Checkbox showSurveyor;
 	private TextField totalTransfered;
 	private TextField totalReportedCost;
@@ -72,6 +75,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private Button deleteButton; // Added deleteButton declaration
 	private Button viewMovementsButton;
 	private Button viewFieldworksButton;
+	private Button viewBudgetButton;
 
 	private final BeanValidationBinder<Study> binder;
 
@@ -84,17 +88,22 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final ExpenseReportFileService expenseReportFileService;
 	private final ExpenseTransferFileService expenseTransferFileService;
 	private final FieldworkService fieldworkService;
+	private final uy.com.bay.utiles.services.ExcelExportService excelExportService;
+	private final BudgetService budgetService;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
 			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService,
-			FieldworkService fieldworkService) {
+			FieldworkService fieldworkService, uy.com.bay.utiles.services.ExcelExportService excelExportService,
+			BudgetService budgetService) {
 		this.proyectoService = proyectoService;
 		this.journalEntryService = journalEntryService;
 		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseDataRepository = alchemerSurveyResponseDataRepository;
 		this.expenseReportFileService = expenseReportFileService;
 		this.expenseTransferFileService = expenseTransferFileService;
+		this.excelExportService = excelExportService;
+		this.budgetService = budgetService;
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
 
@@ -113,6 +122,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		viewFieldworksButton = new Button("Ver solicitudes de campo");
 		viewFieldworksButton.setEnabled(false);
+
+		viewBudgetButton = new Button("Ver presupuesto");
+		viewBudgetButton.setEnabled(false);
 
 		nameFilter = new TextField();
 		nameFilter.setPlaceholder("Nombre...");
@@ -225,31 +237,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 			refreshGrid();
 		});
 
-		save.addClickListener(e -> {
-			try {
-				if (this.proyecto == null) {
-					this.proyecto = new Study();
-				}
-				binder.writeBean(this.proyecto);
-				proyectoService.save(this.proyecto);
-				clearForm();
-				refreshGrid();
-				Notification.show("Data updated");
-				UI.getCurrent().navigate(ProyectosView.class);
-			} catch (ObjectOptimisticLockingFailureException exception) {
-				Notification n = Notification.show(
-						"Error updating the data. Somebody else has updated the record while you were making changes.");
-				n.setPosition(Position.MIDDLE);
-				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-			} catch (ValidationException validationException) {
-				Notification.show("Failed to update the data. Check again that all values are valid");
-			}
-		});
+		save.addClickListener(e -> validateAndSave());
 
 		viewMovementsButton.addClickListener(e -> {
 			if (this.proyecto != null) {
 				JournalEntryDialog dialog = new JournalEntryDialog(this.proyecto, journalEntryService,
-						expenseReportFileService, expenseTransferFileService);
+						excelExportService);
+
 				dialog.open();
 			}
 		});
@@ -260,6 +254,43 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 				dialog.open();
 			}
 		});
+
+		viewBudgetButton.addClickListener(e -> {
+			if (this.proyecto != null && this.proyecto.getBudget() != null) {
+				UI.getCurrent().navigate("budgets/" + this.proyecto.getBudget().getId() + "/edit");
+			}
+		});
+	}
+
+	private void validateAndSave() {
+		try {
+			if (this.proyecto == null) {
+				this.proyecto = new Study();
+			}
+			binder.writeBean(this.proyecto);
+
+			Optional<Study> conflictingStudy = proyectoService.isBudgetInUse(this.proyecto);
+			if (conflictingStudy.isPresent()) {
+				Notification
+						.show("El presupuesto ingresado esta siendo utilizado por el estudio : "
+								+ conflictingStudy.get().getName(), 5000, Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				return;
+			}
+
+			proyectoService.save(this.proyecto);
+			clearForm();
+			refreshGrid();
+			Notification.show("Data updated");
+			UI.getCurrent().navigate(ProyectosView.class);
+		} catch (ObjectOptimisticLockingFailureException exception) {
+			Notification n = Notification.show(
+					"Error updating the data. Somebody else has updated the record while you were making changes.");
+			n.setPosition(Position.MIDDLE);
+			n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		} catch (ValidationException validationException) {
+			Notification.show("Failed to update the data. Check again that all values are valid");
+		}
 	}
 
 	@Override
@@ -291,20 +322,21 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		FormLayout formLayout = new FormLayout();
 		name = new TextField("Name");
 		odooId = new TextField("Odoo Id");
+		budget = new ComboBox<>("Presupuesto");
+		budget.setItems(budgetService.findAll());
+		budget.setItemLabelGenerator(Budget::getName);
 		obs = new TextArea("Observaciones");
-		casosCompletos = new TextField("Casos completos");
-		casosCompletos.setReadOnly(true);
 		showSurveyor = new Checkbox("Mostrar a encuestador");
 		totalTransfered = new TextField("Total de gastos transferidos");
 		totalTransfered.setReadOnly(true);
 		totalReportedCost = new TextField("Total de gastos rendidos");
 		totalReportedCost.setReadOnly(true);
-		formLayout.add(name, odooId, obs, casosCompletos, showSurveyor, totalTransfered,
-				totalReportedCost);
+		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
 		editorDiv.add(viewFieldworksButton);
+		editorDiv.add(viewBudgetButton);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -325,12 +357,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		wrapper.setClassName("grid-wrapper");
 		wrapper.setWidthFull(); // Ensure wrapper takes full width
 
-		// Title Layout
-		H2 title = new H2("Proyectos");
-		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton);
+		HorizontalLayout titleLayout = new HorizontalLayout(addButton);
 		titleLayout.setWidthFull();
 		titleLayout.setAlignItems(Alignment.BASELINE); // Align items nicely
-		titleLayout.setFlexGrow(1, title); // Title takes available space
 
 		// Filter Layout
 		HorizontalLayout filterLayout = new HorizontalLayout();
@@ -356,8 +385,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.proyecto = value;
 		binder.readBean(this.proyecto);
 		if (value != null) {
-			totalTransfered.setValue(String.valueOf(value.getTotalTransfered()));
-			totalReportedCost.setValue(String.valueOf(value.getTotalReportedCost()));
+			totalTransfered.setValue(Double.valueOf(value.getTotalTransfered()).toString());
+			totalReportedCost.setValue(Double.valueOf(value.getTotalReportedCost()).toString());
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");
@@ -373,6 +402,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		}
 		if (this.viewFieldworksButton != null) {
 			this.viewFieldworksButton.setEnabled(value != null && value.getId() != null);
+		}
+		if (this.viewBudgetButton != null) {
+			this.viewBudgetButton.setEnabled(value != null && value.getBudget() != null);
 		}
 	}
 }

@@ -20,7 +20,6 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
-import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.security.AuthenticatedUser;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
@@ -33,7 +32,6 @@ import uy.com.bay.utiles.views.MainLayout;
 @RolesAllowed({ "ADMIN", "ENCUESTADORES" })
 public class SurveyorExpenseRequestEntry extends Div {
 
-	private ComboBox<Study> study;
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
 	private TextArea obs;
@@ -57,10 +55,6 @@ public class SurveyorExpenseRequestEntry extends Div {
 		addClassName("surveyor-expense-request-entry-view");
 
 		FormLayout formLayout = new FormLayout();
-		study = new ComboBox<>("Estudio");
-		study.setItems(studyService.findAllByShowSurveyor(true));
-		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
-		study.setRequired(true);
 
 		amount = new NumberField("Monto");
 		amount.setRequiredIndicatorVisible(true);
@@ -75,7 +69,7 @@ public class SurveyorExpenseRequestEntry extends Div {
 		Button saveButton = new Button("Guardar");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		formLayout.add(study, amount, concept, obs, saveButton);
+		formLayout.add(amount, concept, obs, saveButton);
 		add(formLayout);
 
 		binder = new BeanValidationBinder<>(ExpenseRequest.class);

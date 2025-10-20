@@ -8,19 +8,25 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.Surveyor;
 
 import java.util.Date;
 import java.util.List;
 
-public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, Long>, JpaSpecificationExecutor<ExpenseRequest> {
+public interface ExpenseRequestRepository extends JpaRepository<ExpenseRequest, Long>,
+		JpaSpecificationExecutor<ExpenseRequest>, ExpenseRequestRepositoryCustom {
 
-    List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable);
+	List<ExpenseRequest> findAllBySurveyorAndExpenseStatus(Surveyor surveyor, ExpenseStatus expenseStatus);
 
-    @Modifying
-    @Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
-    void approveRequests(@Param("ids") List<Long> ids, @Param("status") ExpenseStatus status, @Param("aprovalDate") Date aprovalDate);
-    
-    @Modifying
-    @Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
-    void revokeRequests(@Param("ids") List<Long> ids, @Param("status") ExpenseStatus status, @Param("aprovalDate") Date aprovalDate);
+	List<ExpenseRequest> findAllByExpenseStatus(ExpenseStatus expenseStatus, Pageable pageable);
+
+	@Modifying
+	@Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
+	void approveRequests(@Param("ids") List<Long> ids, @Param("status") ExpenseStatus status,
+			@Param("aprovalDate") Date aprovalDate);
+
+	@Modifying
+	@Query("update ExpenseRequest er set er.expenseStatus = :status, er.aprovalDate = :aprovalDate where er.id in :ids")
+	void revokeRequests(@Param("ids") List<Long> ids, @Param("status") ExpenseStatus status,
+			@Param("aprovalDate") Date aprovalDate);
 }

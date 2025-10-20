@@ -2,8 +2,10 @@ package uy.com.bay.utiles.views;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -87,9 +89,22 @@ public class MainLayout extends AppLayout {
 	private SideNav createNavigation() {
 		SideNav nav = new SideNav();
 
+		SideNavItem proyectosItem = new SideNavItem("Proyectos");
+		proyectosItem.setPrefixComponent(new Icon("vaadin", "briefcase"));
+		SideNavItem listarProeyctosItem = new SideNavItem("Listar proyectos", "studies");
+		listarProeyctosItem.setPrefixComponent(new Icon("vaadin", "list"));
+		proyectosItem.addItem(listarProeyctosItem);
+		SideNavItem listarSolicitudesItem = new SideNavItem("Solicitudes de campo", "fieldworks");
+		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
+		proyectosItem.addItem(listarSolicitudesItem);
+		SideNavItem ganttItem = new SideNavItem("Gantt", "gantt");
+		ganttItem.setPrefixComponent(new Icon("vaadin", "chart-timeline"));
+		proyectosItem.addItem(ganttItem);
+		nav.addItem(proyectosItem);
+
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
 		menuEntries.forEach(entry -> {
-			if (!entry.title().equals("Usuarios")) {
+			if (!entry.title().equals("Usuarios") && !entry.title().equals("Proyectos")) {
 				if (entry.icon() != null) {
 					nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
 				} else {
@@ -142,31 +157,52 @@ public class MainLayout extends AppLayout {
 		});
 		gastosItem.addItem(reportesNavItem);
 
+		SideNavItem presupuestosItem = new SideNavItem("Presupuestos");
+		presupuestosItem.setPrefixComponent(new Icon("vaadin", "archive"));
+		SideNavItem budgetConceptsItem = new SideNavItem("Conceptos de presupuesto", "budgetconcepts");
+		budgetConceptsItem.setPrefixComponent(new Icon("vaadin", "list"));
+		presupuestosItem.addItem(budgetConceptsItem);
+		SideNavItem crearPresupuestoItem = new SideNavItem("Listar", "budgets");
+		crearPresupuestoItem.setPrefixComponent(new Icon("vaadin", "plus"));
+		presupuestosItem.addItem(crearPresupuestoItem);
+		nav.addItem(presupuestosItem);
+
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
 		surveyorPortalItem.setPrefixComponent(new Icon("vaadin", "user-card"));
+
+		SideNavItem saldoGastoItem = new SideNavItem("Saldo de gastos", "surveyor-journal-entry");
+		saldoGastoItem.setPrefixComponent(new Icon("vaadin", "wallet"));
+		surveyorPortalItem.addItem(saldoGastoItem);
+
 		SideNavItem solicitarGastoItem = new SideNavItem("Solicitud de gastos", "surveyor-expense-request");
 		solicitarGastoItem.setPrefixComponent(new Icon("vaadin", "cash"));
 		surveyorPortalItem.addItem(solicitarGastoItem);
-		
+
 		SideNavItem rendirGastoItem = new SideNavItem("Rendir gasto", "surveyor-expense-report");
 		rendirGastoItem.setPrefixComponent(new Icon("vaadin", "file-add"));
 		surveyorPortalItem.addItem(rendirGastoItem);
-		
+
 		nav.addItem(surveyorPortalItem);
 
-		SideNavItem solicitudesCampoItem = new SideNavItem("Solicitudes de campo");
-		solicitudesCampoItem.setPrefixComponent(new Icon("vaadin", "clipboard-text"));
-		SideNavItem listarSolicitudesItem = new SideNavItem("Listar Solicitudes", "fieldworks");
-		listarSolicitudesItem.setPrefixComponent(new Icon("vaadin", "list"));
-		solicitudesCampoItem.addItem(listarSolicitudesItem);
-		nav.addItem(solicitudesCampoItem);
-
+		SideNavItem extrasItem = new SideNavItem("Extras");
+		extrasItem.setPrefixComponent(new Icon("vaadin", "plus"));
+		SideNavItem extraConceptItem = new SideNavItem("Conceptos de extra", "extraconcepts");
+		extraConceptItem.setPrefixComponent(new Icon("vaadin", "list"));
+		extrasItem.addItem(extraConceptItem);
+		SideNavItem ingresarExtrasItem = new SideNavItem("Ingresar Extras", "IngresarExtras");
+		ingresarExtrasItem.setPrefixComponent(new Icon("vaadin", "edit"));
+		extrasItem.addItem(ingresarExtrasItem);
+		nav.addItem(extrasItem);
 
 		SideNavItem settingsItem = new SideNavItem("Configuración");
 		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
 		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
 		usersItem.setPrefixComponent(new Icon("vaadin", "users"));
 		settingsItem.addItem(usersItem);
+
+		SideNavItem areasItem = new SideNavItem("Areas", "areas");
+		areasItem.setPrefixComponent(new Icon("vaadin", "list"));
+		settingsItem.addItem(areasItem);
 
 		SideNavItem tasksItem = new SideNavItem("Tareas", "tasks");
 		tasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
@@ -221,6 +257,13 @@ public class MainLayout extends AppLayout {
 	protected void afterNavigation() {
 		super.afterNavigation();
 		viewTitle.setText(getCurrentPageTitle());
+	}
+
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		attachEvent.getUI().setLocale(new Locale("es", "UY"));
+
 	}
 
 	private String getCurrentPageTitle() {

@@ -10,6 +10,8 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -33,6 +35,7 @@ import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.ExpenseTransferService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
@@ -50,24 +53,28 @@ public class ExpenseTransferView extends VerticalLayout {
 	private final JournalEntryService journalEntryService;
 	private final SurveyorService surveyorService;
 	private final StudyService studyService;
+	private final BudgetEntryService budgetEntryService;
 
 	private Grid<ExpenseRequest> grid;
 	private Button transferButton;
 
 	private TextField surveyorFilter;
 	private TextField studyFilter;
+	private DatePicker requestDateFilter;
 	private TextField conceptFilter;
 	private TextField obsFilter;
 
 	public ExpenseTransferView(ExpenseRequestService expenseRequestService,
 			ExpenseTransferService expenseTransferService, ExpenseTransferFileService expenseTransferFileService,
-			JournalEntryService journalEntryService, SurveyorService surveyorService, StudyService studyService) {
+			JournalEntryService journalEntryService, SurveyorService surveyorService, StudyService studyService,
+			BudgetEntryService budgetEntryService) {
 		this.expenseRequestService = expenseRequestService;
 		this.expenseTransferService = expenseTransferService;
 		this.expenseTransferFileService = expenseTransferFileService;
 		this.journalEntryService = journalEntryService;
 		this.surveyorService = surveyorService;
 		this.studyService = studyService;
+		this.budgetEntryService = budgetEntryService;
 		addClassName("expensetransfer-view");
 		setSizeFull();
 
@@ -95,8 +102,12 @@ public class ExpenseTransferView extends VerticalLayout {
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Proyecto")
 				.setSortable(true).setKey("study.name");
-		grid.addColumn(ExpenseRequest::getRequestDate).setHeader("Fecha Solicitud").setSortable(true)
-				.setKey("requestDate");
+		Grid.Column<ExpenseRequest> requestDateColumn = grid.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> {
+			if (er.getRequestDate() != null) {
+				return new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate());
+			}
+			return "";
+		})).setHeader("Fecha Solicitud").setSortable(true).setKey("requestDate");
 		grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
 				.addColumn(er -> er.getConcept() != null ? er.getConcept().getDescription() : "").setHeader("Concepto")
@@ -115,6 +126,11 @@ public class ExpenseTransferView extends VerticalLayout {
 		studyFilter.addValueChangeListener(e -> refreshGrid());
 		filterRow.getCell(studyColumn).setComponent(studyFilter);
 
+		requestDateFilter = new DatePicker();
+		requestDateFilter.setPlaceholder("Filtrar por fecha...");
+		requestDateFilter.addValueChangeListener(e -> refreshGrid());
+		filterRow.getCell(requestDateColumn).setComponent(requestDateFilter);
+
 		conceptFilter = new TextField();
 		conceptFilter.setPlaceholder("Filtrar por concepto...");
 		conceptFilter.addValueChangeListener(e -> refreshGrid());
@@ -129,6 +145,9 @@ public class ExpenseTransferView extends VerticalLayout {
 		grid.asMultiSelect().addValueChangeListener(event -> {
 			transferButton.setEnabled(!event.getValue().isEmpty());
 		});
+
+		FooterRow footerRow = grid.appendFooterRow();
+		updateFooter(footerRow, studyColumn, grid.getColumnByKey("amount"));
 	}
 
 	private void createTransferButton() {
@@ -137,7 +156,8 @@ public class ExpenseTransferView extends VerticalLayout {
 		transferButton.setEnabled(false);
 		transferButton.addClickListener(e -> {
 			if (!grid.getSelectedItems().isEmpty()) {
-				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems());
+				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems(),
+						budgetEntryService);
 				dialog.addListener(ExpenseTransferDialog.SaveEvent.class, this::saveTransfer);
 				dialog.open();
 			}
@@ -194,7 +214,7 @@ public class ExpenseTransferView extends VerticalLayout {
 			journalEntry.setTransfer(savedExpenseTransfer);
 			journalEntry.setDetail("transferencia realizada a encuestador por multiples conceptos");
 			journalEntry.setDate(new Date());
-			journalEntry.setOperation(Operation.CREDITO);
+			journalEntry.setOperation(Operation.DEBITO);
 			journalEntry.setAmount(totalAmount);
 			journalEntry.setSurveyor(surveyor);
 			journalEntry.setStudy(study);
@@ -232,6 +252,11 @@ public class ExpenseTransferView extends VerticalLayout {
 				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
 						"%" + studyFilter.getValue().toLowerCase() + "%"));
 			}
+			if (requestDateFilter != null && !requestDateFilter.isEmpty()) {
+				spec = spec.and((root, q, cb) -> cb.between(root.get("requestDate"),
+						Date.from(requestDateFilter.getValue().atStartOfDay().toInstant(java.time.ZoneOffset.UTC)),
+						Date.from(requestDateFilter.getValue().atTime(23, 59, 59).toInstant(java.time.ZoneOffset.UTC))));
+			}
 			if (conceptFilter != null && !conceptFilter.isEmpty()) {
 				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
 						"%" + conceptFilter.getValue().toLowerCase() + "%"));
@@ -243,5 +268,38 @@ public class ExpenseTransferView extends VerticalLayout {
 
 			return expenseRequestService.list(pageRequest, spec).stream();
 		});
+		FooterRow footerRow = grid.getFooterRows().get(0);
+		updateFooter(footerRow, grid.getColumnByKey("study.name"), grid.getColumnByKey("amount"));
+	}
+
+	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseRequest> studyColumn,
+			Grid.Column<ExpenseRequest> amountColumn) {
+		Specification<ExpenseRequest> spec = (root, q, cb) -> cb.equal(root.get("expenseStatus"),
+				ExpenseStatus.APROBADO);
+
+		if (surveyorFilter != null && !surveyorFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("surveyor").get("lastName")),
+					"%" + surveyorFilter.getValue().toLowerCase() + "%"));
+		}
+		if (studyFilter != null && !studyFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
+					"%" + studyFilter.getValue().toLowerCase() + "%"));
+		}
+		if (requestDateFilter != null && !requestDateFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.between(root.get("requestDate"),
+					Date.from(requestDateFilter.getValue().atStartOfDay().toInstant(java.time.ZoneOffset.UTC)),
+					Date.from(requestDateFilter.getValue().atTime(23, 59, 59).toInstant(java.time.ZoneOffset.UTC))));
+		}
+		if (conceptFilter != null && !conceptFilter.isEmpty()) {
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
+					"%" + conceptFilter.getValue().toLowerCase() + "%"));
+		}
+		if (obsFilter != null && !obsFilter.isEmpty()) {
+			spec = spec.and(
+					(root, q, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsFilter.getValue().toLowerCase() + "%"));
+		}
+		Double total = expenseRequestService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
 	}
 }

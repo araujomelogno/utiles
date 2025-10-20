@@ -1,18 +1,19 @@
 package uy.com.bay.utiles.services;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.repository.ExpenseRequestRepository;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ExpenseRequestService {
@@ -63,5 +64,13 @@ public class ExpenseRequestService {
 	@Transactional
 	public void revokeRequests(List<Long> ids) {
 		repository.revokeRequests(ids, ExpenseStatus.RECHAZADO, new Date());
+	}
+
+	public Double sumAmount(Specification<ExpenseRequest> spec) {
+		return repository.sumAmount(spec);
+	}
+
+	public List<ExpenseRequest> findAllBySurveyorAndStatus(Surveyor surveyor, ExpenseStatus status) {
+		return repository.findAllBySurveyorAndExpenseStatus(surveyor, status);
 	}
 }

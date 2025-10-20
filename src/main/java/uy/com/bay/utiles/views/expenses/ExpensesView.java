@@ -21,6 +21,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -147,6 +148,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				.setAutoWidth(true).setSortable(true).setSortProperty("concept.name");
 		Grid.Column<ExpenseRequest> statusColumn = grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado")
 				.setAutoWidth(true).setSortable(true).setSortProperty("expenseStatus");
+		FooterRow footerRow = grid.appendFooterRow();
 
 		grid.sort(List.of(new GridSortOrder<>(requestDateColumn, SortDirection.DESCENDING)));
 
@@ -159,6 +161,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 			Specification<ExpenseRequest> spec = createSpecification(filters);
 			return expenseRequestService.count(spec);
 		}));
+		updateFooter(footerRow, studyColumn, amountColumn);
 
 		HeaderRow headerRow = grid.appendHeaderRow();
 
@@ -169,6 +172,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		studyFilter.addValueChangeListener(e -> {
 			filters.setStudyName(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(studyColumn).setComponent(studyFilter);
 
@@ -179,6 +183,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		surveyorFilter.addValueChangeListener(e -> {
 			filters.setSurveyorName(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(surveyorColumn).setComponent(surveyorFilter);
 
@@ -187,6 +192,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		requestDateFilter.addValueChangeListener(e -> {
 			filters.setRequestDate(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(requestDateColumn).setComponent(requestDateFilter);
 
@@ -196,6 +202,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		aprovalDateFilter.addValueChangeListener(e -> {
 			filters.setAprovalDate(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(aprovalDateColumn).setComponent(aprovalDateFilter);
 
@@ -205,6 +212,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		transferDateFilter.addValueChangeListener(e -> {
 			filters.setTransferDate(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(transferDateColumn).setComponent(transferDateFilter);
 
@@ -215,6 +223,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		amountFilter.addValueChangeListener(e -> {
 			filters.setAmount(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(amountColumn).setComponent(amountFilter);
 
@@ -226,6 +235,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		conceptFilter.addValueChangeListener(e -> {
 			filters.setConcept(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(conceptColumn).setComponent(conceptFilter);
 
@@ -236,6 +246,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		statusFilter.addValueChangeListener(e -> {
 			filters.setExpenseStatus(e.getValue());
 			grid.getDataProvider().refreshAll();
+			updateFooter(footerRow, studyColumn, amountColumn);
 		});
 		headerRow.getCell(statusColumn).setComponent(statusFilter);
 
@@ -381,8 +392,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 			if (this.expenseRequest != null && this.expenseRequest.getExpenseTransfer() != null) {
 				uy.com.bay.utiles.data.ExpenseTransfer initializedTransfer = expenseTransferService
 						.findByIdAndInitialize(this.expenseRequest.getExpenseTransfer().getId());
-				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer,
-						expenseTransferFileService);
+				ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(initializedTransfer);
 				dialog.open();
 			} else {
 				Notification.show("No hay una transferencia asociada a esta solicitud.", 3000,
@@ -628,5 +638,13 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		public void setExpenseStatus(ExpenseStatus expenseStatus) {
 			this.expenseStatus = expenseStatus;
 		}
+	}
+
+	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseRequest> studyColumn,
+			Grid.Column<ExpenseRequest> amountColumn) {
+		Specification<ExpenseRequest> spec = createSpecification(filters);
+		Double total = expenseRequestService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
 	}
 }

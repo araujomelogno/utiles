@@ -47,7 +47,7 @@ public class SurveyToGoSurveyorRetriever {
 		this.restTemplate = new RestTemplate();
 	}
 
-	@Scheduled(cron = "0 * * * * ?") // Runs every hour
+	@Scheduled(cron = "0 0 * * * ?")
 	public void retrieveAndSaveSurveyors() {
 		System.out.println("Starting SurveyToGo Surveyor Retriever Task...");
 
@@ -92,11 +92,16 @@ public class SurveyToGoSurveyorRetriever {
 					User newUser = new User();
 					newUser.setUsername(surveyor.getFirstName());
 					newUser.setName(surveyor.getFirstName());
-					newUser.setPassword(passwordEncoder.encode(surveyor.getCi()));
+					newUser.setPassword(surveyor.getCi());
 					Set<Role> roles = new HashSet<>();
 					roles.add(Role.ENCUESTADORES);
 					newUser.setRoles(roles);
 					userService.save(newUser);
+				} else {
+					User existingUser = existingUserOpt.get();
+					existingUser.setPassword(user.getExternalRefID());
+					userService.save(existingUser);
+
 				}
 			}
 

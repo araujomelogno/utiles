@@ -20,6 +20,7 @@ public class Fieldwork extends AbstractEntity {
 	private LocalDate endDate;
 	private Integer goalQuantity;
 	private Integer completed;
+	private Integer budget;
 	private String obs;
 
 	@Enumerated(EnumType.STRING)
@@ -28,7 +29,8 @@ public class Fieldwork extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private FieldworkType type;
 
-	@Enumerated(EnumType.STRING)
+	@ManyToOne
+	@JoinColumn(name = "area_id")
 	private Area area;
 
 	private String doobloId;
@@ -99,7 +101,10 @@ public class Fieldwork extends AbstractEntity {
 	}
 
 	public Integer getGoalQuantity() {
-		return goalQuantity;
+		if (goalQuantity != null)
+			return goalQuantity;
+		else
+			return 0;
 	}
 
 	public void setGoalQuantity(Integer goalQuantity) {
@@ -136,5 +141,13 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setType(FieldworkType type) {
 		this.type = type;
+	}
+
+	public Integer getBudget() {
+		return budget;
+	}
+
+	public void setBudget(Integer budget) {
+		this.budget = budget;
 	}
 }

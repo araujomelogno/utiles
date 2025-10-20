@@ -7,84 +7,92 @@ import jakarta.persistence.Id;
 @Entity
 public class AlchemerAnswer {
 
-    @Id
-    private Long id;
-    private String type;
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String question;
-    private Integer sectionId;
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String answer;
-    private boolean shown;
-    private Integer surveyId;
-    private Integer responseId;
+	@Id
+	private Long id;
+	private String type;
+	@Column(columnDefinition = "MEDIUMTEXT")
+	private String question;
+	private Integer sectionId;
+	@Column(columnDefinition = "MEDIUMTEXT")
+	private String answer;
+	private boolean shown;
+	private Integer surveyId;
+	private Integer responseId;
+	private String studyName;
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public String getQuestion() {
-        return question;
-    }
+	public String getQuestion() {
+		return question;
+	}
 
-    public void setQuestion(String question) {
-        this.question = question;
-    }
+	public void setQuestion(String question) {
+		this.question = question;
+	}
 
-    public Integer getSectionId() {
-        return sectionId;
-    }
+	public Integer getSectionId() {
+		return sectionId;
+	}
 
-    public void setSectionId(Integer sectionId) {
-        this.sectionId = sectionId;
-    }
+	public void setSectionId(Integer sectionId) {
+		this.sectionId = sectionId;
+	}
 
-    public String getAnswer() {
-        return answer;
-    }
+	public String getAnswer() {
+		return answer;
+	}
 
-    public void setAnswer(String answer) {
-        this.answer = answer;
-    }
+	public void setAnswer(String answer) {
+		this.answer = answer;
+	}
 
-    public boolean isShown() {
-        return shown;
-    }
+	public boolean isShown() {
+		return shown;
+	}
 
-    public void setShown(boolean shown) {
-        this.shown = shown;
-    }
- 
-    
-    public String getSurveyId() {
-        return surveyId.toString();
-    }
+	public void setShown(boolean shown) {
+		this.shown = shown;
+	}
 
-    public void setSurveyId(Integer surveyId) {
-        this.surveyId = surveyId;
-    }
+	public String getSurveyId() {
+		return surveyId.toString();
+	}
 
-    public Integer getResponseId() {
-        return responseId;
-    }
+	public void setSurveyId(Integer surveyId) {
+		this.surveyId = surveyId;
+	}
 
-    public String getResponseIdString() {
-        return responseId.toString();
-    }
+	public Integer getResponseId() {
+		return responseId;
+	}
 
-    public void setResponseId(Integer responseId) {
-        this.responseId = responseId;
-    }
+	public String getResponseIdString() {
+		return responseId.toString();
+	}
+
+	public void setResponseId(Integer responseId) {
+		this.responseId = responseId;
+	}
+
+	public String getStudyName() {
+		return studyName;
+	}
+
+	public void setStudyName(String studyName) {
+		this.studyName = studyName;
+	}
 }

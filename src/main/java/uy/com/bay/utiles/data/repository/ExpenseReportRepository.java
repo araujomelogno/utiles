@@ -7,7 +7,7 @@ import uy.com.bay.utiles.data.ExpenseReportStatus;
 
 import java.util.List;
 
-public interface ExpenseReportRepository extends JpaRepository<ExpenseReport, Long>, JpaSpecificationExecutor<ExpenseReport> {
+public interface ExpenseReportRepository extends JpaRepository<ExpenseReport, Long>, JpaSpecificationExecutor<ExpenseReport>, ExpenseReportRepositoryCustom {
 
     List<ExpenseReport> findAllByExpenseStatus(ExpenseReportStatus status);
 }

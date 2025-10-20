@@ -43,7 +43,6 @@ import uy.com.bay.utiles.views.MainLayout;
 @RolesAllowed({ "ADMIN", "ENCUESTADORES" })
 public class SurveyorExpenseReportEntry extends Div {
 
-	private ComboBox<Study> study;
 	private NumberField amount;
 	private ComboBox<ExpenseRequestType> concept;
 	private TextArea obs;
@@ -70,10 +69,6 @@ public class SurveyorExpenseReportEntry extends Div {
 		addClassName("surveyor-expense-report-entry-view");
 
 		FormLayout formLayout = new FormLayout();
-		study = new ComboBox<>("Estudio");
-		study.setItems(studyService.findAllByShowSurveyor(true));
-		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
-		study.setRequired(true);
 
 		amount = new NumberField("Monto");
 		amount.setRequiredIndicatorVisible(true);
@@ -98,32 +93,13 @@ public class SurveyorExpenseReportEntry extends Div {
 		Button saveButton = new Button("Guardar");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		formLayout.add(study, amount, concept, obs, comprobantes, saveButton);
+		formLayout.add(amount, concept, obs, comprobantes, saveButton);
 		add(formLayout);
 
 		binder = new BeanValidationBinder<>(ExpenseReport.class);
 		binder.bindInstanceFields(this);
 
 		List<ExpenseReportFile> uploadedFiles = new ArrayList<>();
-//		MemoryBuffer buffer = new MemoryBuffer();
-//		comprobantes.setReceiver(buffer);
-//		comprobantes.addSucceededListener(event -> {
-//			try (InputStream inputStream = buffer.getInputStream()) {
-//				ExpenseReportFile file = new ExpenseReportFile();
-//				file.setName(event.getFileName());
-//				file.setType(event.getMIMEType());
-//				file.setContent(inputStream.readAllBytes());
-//				file.setCreated(new Date());
-//				uploadedFiles.add(file);
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		});
-
-//		comprobantes = new Upload();
-//		// files.setMaxFileSize(20480);
-//		comprobantes.setAcceptedFileTypes("image/jpeg", "image/png", "application/pdf");
-//
 		Map<String, ByteArrayOutputStream> fileBuffers = new HashMap<>();
 
 		comprobantes.setReceiver((MultiFileReceiver) (fileName, mimeType) -> {

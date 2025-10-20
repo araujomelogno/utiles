@@ -51,7 +51,7 @@
   <dependency>
    <groupId>org.vaadin.addons.tltv.gantt</groupId>
    <artifactId>gantt-flow-addon</artifactId>
-   <version>24.0.1</version>
+   <version>24.0.2</version>
 </dependency>
     <!-- Vaadin y Spring Boot -->
     <dependency>
@@ -146,6 +146,13 @@
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
+
+    <dependency>
+   <groupId>org.vaadin.addons.componentfactory</groupId>
+   <artifactId>vcf-month-picker-flow</artifactId>
+   <version>2.0.0</version>
+</dependency>
+
 
     <!-- Force latest version of commons-io to resolve NoClassDefFoundError -->
     <dependency>
@@ -246,17 +253,17 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.6.0</version>
         <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.basedir}/lib</outputDirectory>
-              <includeScope>runtime</includeScope>
-            </configuration>
-          </execution>
+<!--			<execution>-->
+<!--            <id>copy-dependencies</id>-->
+<!--            <phase>prepare-package</phase>-->
+<!--            <goals>-->
+<!--              <goal>copy-dependencies</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              <outputDirectory>${project.basedir}/lib</outputDirectory>-->
+<!--              <includeScope>runtime</includeScope>-->
+<!--            </configuration>-->
+<!--          </execution>-->
         </executions>
       </plugin>
 

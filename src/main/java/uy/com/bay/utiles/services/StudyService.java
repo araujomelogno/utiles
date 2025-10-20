@@ -23,6 +23,14 @@ public class StudyService {
         return repository.findById(id);
     }
 
+    public Optional<Study> isBudgetInUse(Study study) {
+        if (study.getBudget() == null) {
+            return Optional.empty();
+        }
+        return repository.findByBudget(study.getBudget())
+                .filter(existingStudy -> !existingStudy.getId().equals(study.getId()));
+    }
+
     public Study save(Study entity) {
         return repository.save(entity);
     }

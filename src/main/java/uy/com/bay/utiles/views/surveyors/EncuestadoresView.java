@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views.surveyors;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -13,6 +17,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
@@ -29,14 +34,15 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.services.ExcelReportGenerator;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
@@ -84,8 +90,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 	private final ExpenseReportFileService expenseReportFileService;
 
 	public EncuestadoresView(SurveyorService encuestadorService, JournalEntryService journalEntryService,
-			ExpenseTransferFileService expenseTransferFileService,
-			ExpenseReportFileService expenseReportFileService) {
+			ExpenseTransferFileService expenseTransferFileService, ExpenseReportFileService expenseReportFileService) {
 		this.encuestadorService = encuestadorService;
 		this.journalEntryService = journalEntryService;
 		this.expenseTransferFileService = expenseTransferFileService;
@@ -372,17 +377,38 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 			dialog.setWidth("80%");
 			dialog.setHeaderTitle("Movimientos de Gasto");
 
+			List<JournalEntry> journalEntries = journalEntryService.findBySurveyor(this.encuestador);
 			JournalEntryGrid grid = new JournalEntryGrid(expenseTransferFileService, expenseReportFileService);
-			grid.setJournalEntries(journalEntryService.findBySurveyor(this.encuestador));
+			grid.setJournalEntries(journalEntries);
 
 			dialog.add(grid);
 
 			Button closeButton = new Button("Cerrar", e -> dialog.close());
 			closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-			dialog.getFooter().add(closeButton);
+
+			Button exportButton = new Button("Exportar");
+			exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+			Anchor downloadLink = new Anchor(createExcelStreamResource(journalEntries), "");
+			downloadLink.getElement().setAttribute("download", true);
+			downloadLink.add(exportButton);
+
+			dialog.getFooter().add(downloadLink, closeButton);
 
 			dialog.open();
 		}
+	}
+
+	private StreamResource createExcelStreamResource(List<JournalEntry> journalEntries) {
+		return new StreamResource("movimientos_gasto.xlsx", () -> {
+			try {
+				ByteArrayOutputStream excelOutput = ExcelReportGenerator.generateExcel(journalEntries);
+				return new ByteArrayInputStream(excelOutput.toByteArray());
+			} catch (IOException e) {
+				Notification.show("Error al generar el archivo Excel", 3000, Notification.Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				return new ByteArrayInputStream(new byte[0]);
+			}
+		});
 	}
 
 	private void showLiquidationDialog() {
@@ -403,7 +429,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 			JournalEntry entry = new JournalEntry();
 			entry.setDetail("Liquidación total de gastos del encuestador");
 			entry.setDate(new Date());
-			entry.setOperation(Operation.DEBITO);
+			entry.setOperation(Operation.CREDITO);
 			entry.setAmount(encuestador.getBalance());
 			entry.setSurveyor(encuestador);
 			entry.setSource(Source.LIQUIDACION);
@@ -435,7 +461,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 				JournalEntry entry = new JournalEntry();
 				entry.setDetail("Liquidación parcial de gastos del encuestador");
 				entry.setDate(new Date());
-				entry.setOperation(Operation.DEBITO);
+				entry.setOperation(Operation.CREDITO);
 				entry.setAmount(amount);
 				entry.setSurveyor(encuestador);
 				journalEntryService.save(entry);

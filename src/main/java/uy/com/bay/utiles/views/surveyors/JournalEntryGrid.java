@@ -6,16 +6,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.component.grid.Grid;
+
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
+
 import uy.com.bay.utiles.views.expenses.ExpenseReportViewDialog;
 import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
@@ -39,29 +39,40 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 	private void setColumns() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		addColumn(entry -> sdf.format(entry.getDate())).setHeader("Fecha");
-		addComponentColumn(this::createDetailLink).setHeader("Detalle");
-		addColumn(JournalEntry::getAmount).setHeader("Monto");
-		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Estudio");
-		addColumn(JournalEntry::getOperation).setHeader("Movimiento");
+		addColumn(entry -> {
+			Double amount = entry.getAmount();
+			if (entry.getOperation() == Operation.CREDITO) {
+				amount *= -1;
+			}
+			return (amount.intValue());
+		}).setHeader("Monto");
 		addColumn(entry -> "").setHeader("Saldo").setKey("saldoColumn");
+
+		addComponentColumn(this::createDetailLink).setHeader("Detalle");
+
+		addColumn(entry -> entry.getStudy() != null ? entry.getStudy().getName() : "").setHeader("Estudio");
+
 	}
 
 	private Button createDetailLink(JournalEntry entry) {
-		Button link = new Button(entry.getDetail());
+		Button link = new Button();
 		link.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
 		if (entry.getSource() != null) {
 			if (entry.getSource() == Source.RENDICION && entry.getExpenseReport() != null) {
+				link.setText("Rendición");
 				link.addClickListener(e -> {
-					ExpenseReportViewDialog dialog = new ExpenseReportViewDialog(entry.getExpenseReport(),
-							expenseReportFileService);
+					ExpenseReportViewDialog dialog = new ExpenseReportViewDialog(entry.getExpenseReport());
 					dialog.open();
 				});
 			} else if (entry.getSource() == Source.TRANSFERENCIA && entry.getTransfer() != null) {
+				link.setText("Transferencia");
 				link.addClickListener(e -> {
-					ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(entry.getTransfer(),
-							expenseTransferFileService);
+					ExpenseTransferViewDialog dialog = new ExpenseTransferViewDialog(entry.getTransfer());
 					dialog.open();
 				});
+			} else if (entry.getSource() == Source.LIQUIDACION && entry.getTransfer() != null) {
+				link.setText("Liquidación");
+
 			}
 		}
 		return link;
@@ -70,23 +81,22 @@ public class JournalEntryGrid extends Grid<JournalEntry> {
 	public void setJournalEntries(Collection<JournalEntry> items) {
 		super.setItems(items);
 
-		java.util.Map<JournalEntry, Double> saldoMap = new java.util.HashMap<>();
+		java.util.Map<JournalEntry, Integer> saldoMap = new java.util.HashMap<>();
 		AtomicReference<Double> runningSaldo = new AtomicReference<>(0.0);
 
 		List<JournalEntry> sortedItems = new ArrayList<>(items);
 
 		for (JournalEntry entry : sortedItems) {
 			double amount = entry.getAmount();
-			if (entry.getOperation() == Operation.DEBITO) {
+			if (entry.getOperation() == Operation.CREDITO) {
 				runningSaldo.updateAndGet(v -> v - amount);
 			} else {
 				runningSaldo.updateAndGet(v -> v + amount);
 			}
-			saldoMap.put(entry, runningSaldo.get());
+			saldoMap.put(entry, runningSaldo.get().intValue());
 		}
 
-		getColumnByKey("saldoColumn").setRenderer(new com.vaadin.flow.data.renderer.TextRenderer<>(entry -> {
-			return String.format("%.2f", saldoMap.get(entry));
-		}));
+		getColumnByKey("saldoColumn").setRenderer(
+				new com.vaadin.flow.data.renderer.TextRenderer<>(entry -> (saldoMap.get(entry).toString())));
 	}
 }
