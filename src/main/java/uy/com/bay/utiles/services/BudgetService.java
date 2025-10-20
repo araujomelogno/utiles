@@ -56,7 +56,9 @@ public class BudgetService {
 	}
 
 	public Optional<Budget> findByIdWithEntries(Long id) {
-		return repository.findByIdWithEntries(id);
+		Optional<Budget> budget = repository.findByIdWithEntries(id);
+		budget.ifPresent(b -> b.getEntries().size());
+		return budget;
 	}
 
 }
