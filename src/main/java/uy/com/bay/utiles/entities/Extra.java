@@ -30,6 +30,10 @@ public class Extra extends AbstractEntity {
     @JoinColumn(name = "study_id")
     private Study study;
 
+    @ManyToOne
+    @JoinColumn(name = "budget_entry_id")
+    private BudgetEntry budgetEntry;
+
     private Integer quantity;
 
     private Double unitPrice;
@@ -90,6 +94,14 @@ public class Extra extends AbstractEntity {
 
     public void setObs(String obs) {
         this.obs = obs;
+    }
+
+    public BudgetEntry getBudgetEntry() {
+        return budgetEntry;
+    }
+
+    public void setBudgetEntry(BudgetEntry budgetEntry) {
+        this.budgetEntry = budgetEntry;
     }
 
     @Transient

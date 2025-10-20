@@ -23,13 +23,14 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExtraConcept;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.service.ExtraConceptService;
+import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.ExtraService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
@@ -43,18 +44,21 @@ public class ExtraInputView extends VerticalLayout {
 	private final StudyService studyService;
 	private final ExtraConceptService extraConceptService;
 	private final SurveyorService surveyorService;
+	private final BudgetEntryService budgetEntryService;
 
 	private ComboBox<Study> studyComboBox;
+	private ComboBox<BudgetEntry> budgetEntryComboBox;
 	private MonthPicker monthPicker;
 	private Grid<Extra> grid;
 	private List<Extra> extras;
 
 	public ExtraInputView(ExtraService extraService, StudyService studyService, ExtraConceptService extraConceptService,
-			SurveyorService surveyorService) {
+			SurveyorService surveyorService, BudgetEntryService budgetEntryService) {
 		this.extraService = extraService;
 		this.studyService = studyService;
 		this.extraConceptService = extraConceptService;
 		this.surveyorService = surveyorService;
+		this.budgetEntryService = budgetEntryService;
 
 		createFilters();
 		createGrid();
@@ -90,7 +94,10 @@ public class ExtraInputView extends VerticalLayout {
 		studyComboBox = new ComboBox<>("Estudio");
 		studyComboBox.setItems(studyService.findAll());
 		studyComboBox.setItemLabelGenerator(Study::getName);
-		studyComboBox.addValueChangeListener(event -> loadExtras());
+		studyComboBox.addValueChangeListener(event -> {
+			loadExtras();
+			updateBudgetEntryComboBox();
+		});
 
 		monthPicker = new MonthPicker();
 		monthPicker.setLabel("Fecha:");
@@ -110,12 +117,23 @@ public class ExtraInputView extends VerticalLayout {
 		Grid.Column<Extra> amountColumn = grid.addColumn(Extra::getAmount).setHeader("Importe").setKey("amount");
 
 		// Columna Concepto (editable)
-		ComboBox<ExtraConcept> conceptComboBox = new ComboBox<>();
-		conceptComboBox.setItems(extraConceptService.findAll());
-		conceptComboBox.setItemLabelGenerator(ExtraConcept::getDescription);
-		binder.forField(conceptComboBox).bind(Extra::getConcept, Extra::setConcept);
-		grid.addColumn(extra -> extra.getConcept() != null ? extra.getConcept().getDescription() : "")
-				.setHeader("Concepto").setEditorComponent(conceptComboBox);
+		budgetEntryComboBox = new ComboBox<>();
+		budgetEntryComboBox.setItemLabelGenerator(
+				budgetEntry -> budgetEntry.getConcept() != null ? budgetEntry.getConcept().getName() : "");
+		binder.forField(budgetEntryComboBox).bind(Extra::getBudgetEntry, Extra::setBudgetEntry);
+		grid.addColumn(extra -> extra.getBudgetEntry() != null && extra.getBudgetEntry().getConcept() != null
+				? extra.getBudgetEntry().getConcept().getName()
+				: "").setHeader("Concepto-Presupuesto").setEditorComponent(budgetEntryComboBox);
+
+
+		// Columna "Concepto-Presupuesto" (editable)
+		budgetEntryComboBox = new ComboBox<>();
+		budgetEntryComboBox.setItemLabelGenerator(
+				budgetEntry -> budgetEntry.getConcept() != null ? budgetEntry.getConcept().getName() : "");
+		binder.forField(budgetEntryComboBox).bind(Extra::getBudgetEntry, Extra::setBudgetEntry);
+		grid.addColumn(extra -> extra.getBudgetEntry() != null && extra.getBudgetEntry().getConcept() != null
+				? extra.getBudgetEntry().getConcept().getName()
+				: "").setHeader("Concepto-Presupuesto").setEditorComponent(budgetEntryComboBox);
 
 		// Columna Encuestador (editable)
 		ComboBox<Surveyor> surveyorComboBox = new ComboBox<>();
@@ -148,8 +166,14 @@ public class ExtraInputView extends VerticalLayout {
 				try {
 					binder.readBean(extra);
 					if (binder.writeBeanIfValid(extra)) {
+						if (extra.getBudgetEntry() == null) {
+							Notification.show("Debe seleccionar un Concepto-Presupuesto.");
+							return;
+						}
+						BudgetEntry budgetEntry = extra.getBudgetEntry();
+						budgetEntry.setSpent(budgetEntry.getSpent() + extra.getAmount());
+						budgetEntryService.save(budgetEntry);
 						extraService.save(extra);
-						System.out.println(extra.getAmount());
 						grid.getDataProvider().refreshAll();
 						updateFooter();
 						Notification.show("Extra guardado.");
@@ -167,6 +191,9 @@ public class ExtraInputView extends VerticalLayout {
 			editButton.addClickListener(e -> {
 				if (editor.isOpen()) {
 					editor.cancel();
+				}
+				if (studyComboBox.getValue() != null && studyComboBox.getValue().getBudget() != null) {
+					budgetEntryComboBox.setItems(studyComboBox.getValue().getBudget().getEntries());
 				}
 				grid.getEditor().editItem(extra);
 			});
@@ -210,5 +237,15 @@ public class ExtraInputView extends VerticalLayout {
 		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("date")).setText("TOTAL:");
 		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("amount"))
 				.setText("" + extras.stream().mapToDouble(Extra::getAmount).sum());
+	}
+
+	private void updateBudgetEntryComboBox() {
+		Study selectedStudy = studyComboBox.getValue();
+		if (selectedStudy != null && selectedStudy.getBudget() != null) {
+			budgetEntryComboBox.setItems(selectedStudy.getBudget().getEntries());
+		} else {
+			budgetEntryComboBox.clear();
+			budgetEntryComboBox.setItems(new ArrayList<>());
+		}
 	}
 }

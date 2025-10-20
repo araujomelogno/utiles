@@ -3,15 +3,17 @@ package uy.com.bay.utiles.entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import uy.com.bay.utiles.data.AbstractEntity;
+import java.util.List;
 
 @Entity
 public class BudgetEntry extends AbstractEntity {
 
 	private Double ammount;
 	private Integer quantity;
-	private Double spent;
+	private Double spent =0.0;
 
 	@ManyToOne
 	@JoinColumn(name = "budget_concept_id")
@@ -20,6 +22,9 @@ public class BudgetEntry extends AbstractEntity {
 	@ManyToOne
 	@JoinColumn(name = "budget_id")
 	private Budget budget;
+
+	@OneToMany(mappedBy = "budgetEntry")
+	private List<Extra> extras;
 
 	@Transient
 	private Double total;
@@ -71,5 +76,13 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setBudget(Budget budget) {
 		this.budget = budget;
+	}
+
+	public List<Extra> getExtras() {
+		return extras;
+	}
+
+	public void setExtras(List<Extra> extras) {
+		this.extras = extras;
 	}
 }
