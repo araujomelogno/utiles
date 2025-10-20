@@ -15,17 +15,17 @@ import uy.com.bay.utiles.entities.Budget;
 
 public interface BudgetRepository extends JpaRepository<Budget, Long>, JpaSpecificationExecutor<Budget> {
 
-	@Query(value = "select b from Budget b left join fetch b.entries", countQuery = "select count(b) from Budget b")
+	@Query(value = "select distinct b from Budget b left join fetch b.entries", countQuery = "select count(distinct b) from Budget b")
 	Page<Budget> findAllWithEntries(Pageable pageable);
 
-	@Query("select b from Budget b left join fetch b.entries where b.id = :id")
+	@Query("select distinct b from Budget b left join fetch b.entries where b.id = :id")
 	Optional<Budget> findByIdWithEntries(@Param("id") Long id);
 
 	Optional<Budget> findByStudy(Study study);
 
-	@Query("select b from Budget b left join fetch b.entries")
+	@Query("select distinct b from Budget b left join fetch b.entries")
 	List<Budget> findAllWithEntries();
 
-	@Query("select b from Budget b left join fetch b.entries where b.study = :study")
+	@Query("select distinct b from Budget b left join fetch b.entries where b.study = :study")
 	Optional<Budget> findByStudyWithEntries(@Param("study") Study study);
 }

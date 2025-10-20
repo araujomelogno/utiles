@@ -24,9 +24,7 @@ public class BudgetService {
 
 	@Transactional(readOnly = true)
 	public Optional<Budget> get(Long id) {
-		Optional<Budget> budget = repository.findByIdWithEntries(id);
-		budget.ifPresent(b -> b.getEntries().size());
-		return budget;
+		return repository.findByIdWithEntries(id);
 	}
 
 	@Transactional
@@ -46,9 +44,7 @@ public class BudgetService {
 
 	@Transactional(readOnly = true)
 	public Page<Budget> list(Pageable pageable) {
-		Page<Budget> budgets = repository.findAllWithEntries(pageable);
-		budgets.forEach(b -> b.getEntries().size());
-		return budgets;
+		return repository.findAllWithEntries(pageable);
 	}
 
 	public int count() {
@@ -57,23 +53,17 @@ public class BudgetService {
 
 	@Transactional(readOnly = true)
 	public List<Budget> findAll() {
-		List<Budget> budgets = repository.findAllWithEntries();
-		budgets.forEach(b -> b.getEntries().size());
-		return budgets;
+		return repository.findAllWithEntries();
 	}
 
 	@Transactional(readOnly = true)
 	public Optional<Budget> findByStudy(Study study) {
-		Optional<Budget> budget = repository.findByStudyWithEntries(study);
-		budget.ifPresent(b -> b.getEntries().size());
-		return budget;
+		return repository.findByStudyWithEntries(study);
 	}
 
 	@Transactional(readOnly = true)
 	public Optional<Budget> findByIdWithEntries(Long id) {
-		Optional<Budget> budget = repository.findByIdWithEntries(id);
-		budget.ifPresent(b -> b.getEntries().size());
-		return budget;
+		return repository.findByIdWithEntries(id);
 	}
 
 }
