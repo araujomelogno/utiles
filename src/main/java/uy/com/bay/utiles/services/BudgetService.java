@@ -20,7 +20,9 @@ public class BudgetService {
 	}
 
 	public Optional<Budget> get(Long id) {
-		return repository.findByIdWithEntries(id);
+		Optional<Budget> budget = repository.findByIdWithEntries(id);
+		budget.ifPresent(b -> b.getEntries().size());
+		return budget;
 	}
 
 	public Budget save(Budget entity) {
@@ -32,7 +34,9 @@ public class BudgetService {
 	}
 
 	public Page<Budget> list(Pageable pageable) {
-		return repository.findAllWithEntries(pageable);
+		Page<Budget> budgets = repository.findAllWithEntries(pageable);
+		budgets.forEach(b -> b.getEntries().size());
+		return budgets;
 	}
 
 	public int count() {
@@ -40,11 +44,15 @@ public class BudgetService {
 	}
 
 	public List<Budget> findAll() {
-		return repository.findAllWithEntries();
+		List<Budget> budgets = repository.findAllWithEntries();
+		budgets.forEach(b -> b.getEntries().size());
+		return budgets;
 	}
 
 	public Optional<Budget> findByStudy(Study study) {
-		return repository.findByStudyWithEntries(study);
+		Optional<Budget> budget = repository.findByStudyWithEntries(study);
+		budget.ifPresent(b -> b.getEntries().size());
+		return budget;
 	}
 
 	public Optional<Budget> findByIdWithEntries(Long id) {
