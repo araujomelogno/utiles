@@ -35,6 +35,7 @@ import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.ExpenseTransferService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
@@ -52,6 +53,7 @@ public class ExpenseTransferView extends VerticalLayout {
 	private final JournalEntryService journalEntryService;
 	private final SurveyorService surveyorService;
 	private final StudyService studyService;
+	private final BudgetEntryService budgetEntryService;
 
 	private Grid<ExpenseRequest> grid;
 	private Button transferButton;
@@ -64,13 +66,15 @@ public class ExpenseTransferView extends VerticalLayout {
 
 	public ExpenseTransferView(ExpenseRequestService expenseRequestService,
 			ExpenseTransferService expenseTransferService, ExpenseTransferFileService expenseTransferFileService,
-			JournalEntryService journalEntryService, SurveyorService surveyorService, StudyService studyService) {
+			JournalEntryService journalEntryService, SurveyorService surveyorService, StudyService studyService,
+			BudgetEntryService budgetEntryService) {
 		this.expenseRequestService = expenseRequestService;
 		this.expenseTransferService = expenseTransferService;
 		this.expenseTransferFileService = expenseTransferFileService;
 		this.journalEntryService = journalEntryService;
 		this.surveyorService = surveyorService;
 		this.studyService = studyService;
+		this.budgetEntryService = budgetEntryService;
 		addClassName("expensetransfer-view");
 		setSizeFull();
 
@@ -152,7 +156,8 @@ public class ExpenseTransferView extends VerticalLayout {
 		transferButton.setEnabled(false);
 		transferButton.addClickListener(e -> {
 			if (!grid.getSelectedItems().isEmpty()) {
-				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems());
+				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems(),
+						budgetEntryService);
 				dialog.addListener(ExpenseTransferDialog.SaveEvent.class, this::saveTransfer);
 				dialog.open();
 			}
