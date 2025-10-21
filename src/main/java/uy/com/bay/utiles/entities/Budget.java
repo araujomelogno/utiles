@@ -16,7 +16,7 @@ public class Budget extends AbstractEntity {
 
 	private LocalDate created;
 
-	@OneToMany(mappedBy = "budget", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(mappedBy = "budget", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	private List<BudgetEntry> entries;
 
 	@OneToOne

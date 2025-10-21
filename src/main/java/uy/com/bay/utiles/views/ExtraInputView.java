@@ -113,36 +113,31 @@ public class ExtraInputView extends VerticalLayout {
 		Editor<Extra> editor = grid.getEditor().setBinder(binder);
 
 		// Columnas no editables
-		Grid.Column<Extra> dateColumn = grid.addColumn(Extra::getDate).setHeader("Fecha").setKey("date");
-		Grid.Column<Extra> amountColumn = grid.addColumn(Extra::getAmount).setHeader("Importe").setKey("amount");
 
-		// Columna Concepto (editable)
-		budgetEntryComboBox = new ComboBox<>();
-		budgetEntryComboBox.setItemLabelGenerator(
-				budgetEntry -> budgetEntry.getConcept() != null ? budgetEntry.getConcept().getName() : "");
-		binder.forField(budgetEntryComboBox).bind(Extra::getBudgetEntry, Extra::setBudgetEntry);
-		grid.addColumn(extra -> extra.getBudgetEntry() != null && extra.getBudgetEntry().getConcept() != null
-				? extra.getBudgetEntry().getConcept().getName()
-				: "").setHeader("Concepto-Presupuesto").setEditorComponent(budgetEntryComboBox);
-
-
-		// Columna "Concepto-Presupuesto" (editable)
-		budgetEntryComboBox = new ComboBox<>();
-		budgetEntryComboBox.setItemLabelGenerator(
-				budgetEntry -> budgetEntry.getConcept() != null ? budgetEntry.getConcept().getName() : "");
-		binder.forField(budgetEntryComboBox).bind(Extra::getBudgetEntry, Extra::setBudgetEntry);
-		grid.addColumn(extra -> extra.getBudgetEntry() != null && extra.getBudgetEntry().getConcept() != null
-				? extra.getBudgetEntry().getConcept().getName()
-				: "").setHeader("Concepto-Presupuesto").setEditorComponent(budgetEntryComboBox);
-
-		// Columna Encuestador (editable)
 		ComboBox<Surveyor> surveyorComboBox = new ComboBox<>();
 		surveyorComboBox.setItems(surveyorService.findAll());
 		surveyorComboBox.setItemLabelGenerator(Surveyor::getName);
 		binder.forField(surveyorComboBox).bind(Extra::getSurveyor, Extra::setSurveyor);
 		grid.addColumn(extra -> extra.getSurveyor() != null ? extra.getSurveyor().getName() : "")
-				.setHeader("Encuestador").setEditorComponent(surveyorComboBox).setSortable(true)
+				.setHeader("Encuestador").setKey("surveyor").setEditorComponent(surveyorComboBox).setSortable(true)
 				.setComparator(extra -> extra.getSurveyor() != null ? extra.getSurveyor().getName() : "");
+
+		// Columna Concepto (editable)
+		ComboBox<ExtraConcept> conceptComboBox = new ComboBox<>();
+		conceptComboBox.setItems(extraConceptService.findAll());
+		conceptComboBox.setItemLabelGenerator(ExtraConcept::getDescription);
+		binder.forField(conceptComboBox).bind(Extra::getConcept, Extra::setConcept);
+		grid.addColumn(extra -> extra.getConcept() != null ? extra.getConcept().getDescription() : "")
+				.setHeader("Concepto").setEditorComponent(conceptComboBox);
+
+		// Presupuesto" (editable)
+		budgetEntryComboBox = new ComboBox<>();
+		budgetEntryComboBox.setItemLabelGenerator(
+				budgetEntry -> budgetEntry.getConcept() != null ? budgetEntry.getConcept().getName() : "");
+		binder.forField(budgetEntryComboBox).bind(Extra::getBudgetEntry, Extra::setBudgetEntry);
+		grid.addColumn(extra -> extra.getBudgetEntry() != null && extra.getBudgetEntry().getConcept() != null
+				? extra.getBudgetEntry().getConcept().getName()
+				: "").setHeader("Presupuesto").setEditorComponent(budgetEntryComboBox);
 
 		// Columna Cantidad (editable)
 		IntegerField quantityField = new IntegerField();
@@ -152,7 +147,10 @@ public class ExtraInputView extends VerticalLayout {
 		// Columna Precio Unitario (editable)
 		NumberField unitPriceField = new NumberField();
 		binder.forField(unitPriceField).bind(Extra::getUnitPrice, Extra::setUnitPrice);
-		grid.addColumn(Extra::getUnitPrice).setHeader("Precio Unitario").setEditorComponent(unitPriceField);
+		grid.addColumn(Extra::getUnitPrice).setHeader("Precio Unitario").setKey("unitPrice")
+				.setEditorComponent(unitPriceField);
+
+		Grid.Column<Extra> amountColumn = grid.addColumn(Extra::getAmount).setHeader("Importe").setKey("amount");
 
 		// Columna Observaciones (editable)
 		TextField obsField = new TextField();
@@ -185,25 +183,17 @@ public class ExtraInputView extends VerticalLayout {
 			});
 			return save;
 		}).setHeader("Guardar");
-		// Columna de edición
-		Grid.Column<Extra> editorColumn = grid.addComponentColumn(extra -> {
-			Button editButton = new Button(new Icon(VaadinIcon.PENCIL));
-			editButton.addClickListener(e -> {
-				if (editor.isOpen()) {
-					editor.cancel();
-				}
-				if (studyComboBox.getValue() != null && studyComboBox.getValue().getBudget() != null) {
-					budgetEntryComboBox.setItems(studyComboBox.getValue().getBudget().getEntries());
-				}
-				grid.getEditor().editItem(extra);
-			});
-			return editButton;
-		}).setHeader("Editar");
 
 		// Columna de borrado
 		grid.addComponentColumn(extra -> {
 			Button deleteButton = new Button(new Icon(VaadinIcon.TRASH));
 			deleteButton.addClickListener(e -> {
+				if (extra.getBudgetEntry() != null) {
+					BudgetEntry budgetEntry = extra.getBudgetEntry();
+					budgetEntry.setSpent(budgetEntry.getSpent() - extra.getAmount());
+					budgetEntryService.save(budgetEntry);
+				}
+
 				if (extra.getId() != null) {
 					extraService.delete(extra);
 				}
@@ -234,7 +224,7 @@ public class ExtraInputView extends VerticalLayout {
 		if (grid.getFooterRows().isEmpty()) {
 			grid.appendFooterRow();
 		}
-		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("date")).setText("TOTAL:");
+		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("unitPrice")).setText("TOTAL:");
 		grid.getFooterRows().get(0).getCell(grid.getColumnByKey("amount"))
 				.setText("" + extras.stream().mapToDouble(Extra::getAmount).sum());
 	}
