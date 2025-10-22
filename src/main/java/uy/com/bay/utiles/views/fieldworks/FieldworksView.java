@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views.fieldworks;
 
+import java.util.Optional;
+
+import org.springframework.data.jpa.domain.Specification;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -14,17 +18,17 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
+
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.data.jpa.domain.Specification;
 import uy.com.bay.utiles.data.Area;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.FieldworkStatus;
@@ -32,9 +36,6 @@ import uy.com.bay.utiles.data.FieldworkType;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.services.StudyService;
-
-import java.util.Optional;
-import java.util.stream.Stream;
 
 @Route("fieldworks/:fieldworkID?/:action?(edit)")
 @RolesAllowed("ADMIN")
@@ -55,6 +56,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private IntegerField goalQuantity;
 	private IntegerField completed;
 	private TextField obs;
+	private BigDecimalField unitCost;
 	private ComboBox<FieldworkStatus> status;
 	private ComboBox<FieldworkType> type;
 	private ComboBox<Area> area;
@@ -99,6 +101,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("initDate").setHeader("Fecha Inicio").setAutoWidth(true);
 		grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
+		grid.addColumn("unitCost").setHeader("Costo Unitario").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
 
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
@@ -232,6 +235,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		initDate = new DatePicker("Fecha Inicio");
 		endDate = new DatePicker("Fecha Fin");
 		goalQuantity = new IntegerField("Cantidad Objetivo");
+		unitCost = new BigDecimalField("Costo unitario");
 		completed = new IntegerField("Completas");
 		completed.setReadOnly(true);
 		obs = new TextField("Observaciones");
@@ -242,8 +246,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area = new ComboBox<>("Area");
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
-		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed, obs,
-				status, type, area);
+		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, unitCost, completed,
+				obs, status, type, area);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);

@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
@@ -21,7 +22,7 @@ public class Fieldwork extends AbstractEntity {
 	private LocalDate endDate;
 	private Integer goalQuantity;
 	private Integer completed;
-	
+
 	private String obs;
 
 	@Enumerated(EnumType.STRING)
@@ -29,6 +30,8 @@ public class Fieldwork extends AbstractEntity {
 
 	@Enumerated(EnumType.STRING)
 	private FieldworkType type;
+
+	private BigDecimal unitCost;
 
 	@ManyToOne
 	@JoinColumn(name = "area_id")
@@ -144,5 +147,11 @@ public class Fieldwork extends AbstractEntity {
 		this.type = type;
 	}
 
+	public BigDecimal getUnitCost() {
+		return unitCost;
+	}
 
+	public void setUnitCost(BigDecimal unitCost) {
+		this.unitCost = unitCost;
+	}
 }
