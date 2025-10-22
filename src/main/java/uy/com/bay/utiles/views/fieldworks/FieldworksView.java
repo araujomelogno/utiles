@@ -153,12 +153,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				if (this.fieldwork == null) {
 					this.fieldwork = new Fieldwork();
 				}
-				binder.writeBean(this.fieldwork);
+
 				if (this.fieldwork.getBudgetEntry() == null) {
-					Notification.show("Debe seleccionar un Concepto-Presupuesto.", 3000,
-							Notification.Position.BOTTOM_START);
+					Notification.show("Debe seleccionar un Presupuesto.", 3000, Notification.Position.BOTTOM_START);
 					return;
 				}
+				binder.writeBean(this.fieldwork);
 				fieldworkService.save(this.fieldwork);
 				if (this.fieldwork.getStudy() != null
 						&& !this.fieldwork.getStudy().getFieldworks().contains(this.fieldwork)) {
@@ -244,9 +244,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				budgetEntry.clear();
 			}
 		});
-		budgetEntry = new ComboBox<>("Concepto-Presupuesto");
-		budgetEntry.setItemLabelGenerator(
-				be -> be.getConcept() != null ? be.getConcept().getName() : "N/A");
+		budgetEntry = new ComboBox<>("Presupuesto");
+		budgetEntry.setItemLabelGenerator(be -> be.getConcept() != null ? be.getConcept().getName() : "N/A");
 		initPlannedDate = new DatePicker("Fecha Planificada Inicio");
 		endPlannedDate = new DatePicker("Fecha Planificada Fin");
 		initDate = new DatePicker("Fecha Inicio");
@@ -263,8 +262,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area = new ComboBox<>("Area");
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
-		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, unitCost, completed,
-				obs, status, type, area);
+		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity,
+				unitCost, completed, obs, status, type, area);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);
@@ -334,6 +333,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(Fieldwork value) {
 		this.fieldwork = value;
+		budgetEntry.clear();
+		if (value != null && value.getStudy() != null && value.getStudy().getBudget() != null) {
+			budgetEntry.setItems(value.getStudy().getBudget().getEntries());
+			budgetEntry.setValue(value.getBudgetEntry());
+
+		}
 		binder.readBean(this.fieldwork);
 		this.editorLayoutDiv.setVisible(value != null);
 	}

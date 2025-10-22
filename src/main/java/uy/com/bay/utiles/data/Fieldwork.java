@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import uy.com.bay.utiles.entities.BudgetEntry;
 
 @Entity
 public class Fieldwork extends AbstractEntity {
@@ -39,7 +40,7 @@ public class Fieldwork extends AbstractEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "budget_entry_id")
-	private uy.com.bay.utiles.entities.BudgetEntry budgetEntry;
+	private BudgetEntry budgetEntry;
 
 	private String doobloId;
 	private String alchemerId;
@@ -159,11 +160,11 @@ public class Fieldwork extends AbstractEntity {
 		this.unitCost = unitCost;
 	}
 
-	public uy.com.bay.utiles.entities.BudgetEntry getBudgetEntry() {
+	public BudgetEntry getBudgetEntry() {
 		return budgetEntry;
 	}
 
-	public void setBudgetEntry(uy.com.bay.utiles.entities.BudgetEntry budgetEntry) {
+	public void setBudgetEntry(BudgetEntry budgetEntry) {
 		this.budgetEntry = budgetEntry;
 	}
 }
