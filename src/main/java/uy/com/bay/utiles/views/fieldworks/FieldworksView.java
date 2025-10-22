@@ -49,6 +49,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private TextField doobloId;
 	private TextField alchemerId;
 	private ComboBox<Study> study;
+	private ComboBox<uy.com.bay.utiles.entities.BudgetEntry> budgetEntry;
 	private DatePicker initPlannedDate;
 	private DatePicker endPlannedDate;
 	private DatePicker initDate;
@@ -139,6 +140,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		binder = new BeanValidationBinder<>(Fieldwork.class);
 		binder.forField(doobloId).bind(Fieldwork::getDoobloId, Fieldwork::setDoobloId);
 		binder.forField(alchemerId).bind(Fieldwork::getAlchemerId, Fieldwork::setAlchemerId);
+		binder.forField(budgetEntry).bind(Fieldwork::getBudgetEntry, Fieldwork::setBudgetEntry);
 		binder.bindInstanceFields(this);
 
 		cancel.addClickListener(e -> {
@@ -152,6 +154,11 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 					this.fieldwork = new Fieldwork();
 				}
 				binder.writeBean(this.fieldwork);
+				if (this.fieldwork.getBudgetEntry() == null) {
+					Notification.show("Debe seleccionar un Concepto-Presupuesto.", 3000,
+							Notification.Position.BOTTOM_START);
+					return;
+				}
 				fieldworkService.save(this.fieldwork);
 				if (this.fieldwork.getStudy() != null
 						&& !this.fieldwork.getStudy().getFieldworks().contains(this.fieldwork)) {
@@ -230,6 +237,16 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(Study::getName);
+		study.addValueChangeListener(event -> {
+			if (event.getValue() != null && event.getValue().getBudget() != null) {
+				budgetEntry.setItems(event.getValue().getBudget().getEntries());
+			} else {
+				budgetEntry.clear();
+			}
+		});
+		budgetEntry = new ComboBox<>("Concepto-Presupuesto");
+		budgetEntry.setItemLabelGenerator(
+				be -> be.getConcept() != null ? be.getConcept().getName() : "N/A");
 		initPlannedDate = new DatePicker("Fecha Planificada Inicio");
 		endPlannedDate = new DatePicker("Fecha Planificada Fin");
 		initDate = new DatePicker("Fecha Inicio");
@@ -246,7 +263,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area = new ComboBox<>("Area");
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
-		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, unitCost, completed,
+		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, unitCost, completed,
 				obs, status, type, area);
 
 		editorDiv.add(formLayout);

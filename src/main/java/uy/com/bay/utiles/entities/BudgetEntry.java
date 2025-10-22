@@ -26,6 +26,9 @@ public class BudgetEntry extends AbstractEntity {
 	@OneToMany(mappedBy = "budgetEntry")
 	private List<Extra> extras;
 
+	@OneToMany(mappedBy = "budgetEntry")
+	private List<uy.com.bay.utiles.data.Fieldwork> fieldworks;
+
 	@Transient
 	private Double total;
 
@@ -84,5 +87,13 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setExtras(List<Extra> extras) {
 		this.extras = extras;
+	}
+
+	public List<uy.com.bay.utiles.data.Fieldwork> getFieldworks() {
+		return fieldworks;
+	}
+
+	public void setFieldworks(List<uy.com.bay.utiles.data.Fieldwork> fieldworks) {
+		this.fieldworks = fieldworks;
 	}
 }

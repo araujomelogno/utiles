@@ -37,6 +37,10 @@ public class Fieldwork extends AbstractEntity {
 	@JoinColumn(name = "area_id")
 	private Area area;
 
+	@ManyToOne
+	@JoinColumn(name = "budget_entry_id")
+	private uy.com.bay.utiles.entities.BudgetEntry budgetEntry;
+
 	private String doobloId;
 	private String alchemerId;
 
@@ -153,5 +157,13 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setUnitCost(BigDecimal unitCost) {
 		this.unitCost = unitCost;
+	}
+
+	public uy.com.bay.utiles.entities.BudgetEntry getBudgetEntry() {
+		return budgetEntry;
+	}
+
+	public void setBudgetEntry(uy.com.bay.utiles.entities.BudgetEntry budgetEntry) {
+		this.budgetEntry = budgetEntry;
 	}
 }
