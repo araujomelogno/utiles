@@ -53,7 +53,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private DatePicker initDate;
 	private DatePicker endDate;
 	private IntegerField goalQuantity;
-	private IntegerField budget;
 	private IntegerField completed;
 	private TextField obs;
 	private ComboBox<FieldworkStatus> status;
@@ -101,7 +100,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
-		grid.addColumn("budget").setHeader("Presupuesto").setAutoWidth(true);
+
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
@@ -235,7 +234,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		goalQuantity = new IntegerField("Cantidad Objetivo");
 		completed = new IntegerField("Completas");
 		completed.setReadOnly(true);
-		budget = new IntegerField("Presupuesto");
 		obs = new TextField("Observaciones");
 		status = new ComboBox<>("Estado");
 		status.setItems(FieldworkStatus.values());
@@ -244,8 +242,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area = new ComboBox<>("Area");
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
-		formLayout.add(study, budget, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed,
-				obs, status, type, area);
+		formLayout.add(study, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity, completed, obs,
+				status, type, area);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);

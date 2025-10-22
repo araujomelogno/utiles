@@ -41,9 +41,12 @@ public class ExcelExportService {
 				Row row = sheet.createRow(rowIdx++);
 				row.createCell(0).setCellValue(extra.getDate());
 				row.getCell(0).setCellStyle(dateCellStyle);
-				row.createCell(1).setCellValue(extra.getSurveyor().getFirstName());
-				row.createCell(2).setCellValue(extra.getStudy().getName());
-				row.createCell(3).setCellValue(extra.getConcept().getDescription());
+				if (extra.getSurveyor() != null)
+					row.createCell(1).setCellValue(extra.getSurveyor().getFirstName());
+				if (extra.getStudy() != null)
+					row.createCell(2).setCellValue(extra.getStudy().getName());
+				if (extra.getConcept() != null)
+					row.createCell(3).setCellValue(extra.getConcept().getDescription());
 				row.createCell(4).setCellValue(extra.getAmount());
 			}
 

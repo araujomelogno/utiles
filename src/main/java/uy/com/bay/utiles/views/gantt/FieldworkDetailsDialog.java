@@ -65,16 +65,13 @@ public class FieldworkDetailsDialog extends Dialog {
 		completed.setValue(fieldwork.getCompleted() != null ? fieldwork.getCompleted().toString() : "");
 		completed.setReadOnly(true);
 
-		TextField budget = new TextField("Presupuesto");
-		budget.setValue(fieldwork.getBudget() != null ? fieldwork.getBudget().toString() : "");
-		budget.setReadOnly(true);
-
+ 
 		TextArea obs = new TextArea("Observaciones");
 		obs.setValue(fieldwork.getObs() != null ? fieldwork.getObs() : "");
 		obs.setReadOnly(true);
 
 		formLayout.add(study, type, status, area, doobloId, alchemerId, initPlannedDate, endPlannedDate, initDate,
-				endDate, goalQuantity, completed, budget, obs);
+				endDate, goalQuantity, completed, obs);
 		add(formLayout);
 
 		Button editButton = new Button("Editar");

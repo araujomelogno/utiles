@@ -1,11 +1,12 @@
 package uy.com.bay.utiles.data;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import java.time.LocalDate;
 
 @Entity
 public class Fieldwork extends AbstractEntity {
@@ -20,7 +21,7 @@ public class Fieldwork extends AbstractEntity {
 	private LocalDate endDate;
 	private Integer goalQuantity;
 	private Integer completed;
-	private Integer budget;
+	
 	private String obs;
 
 	@Enumerated(EnumType.STRING)
@@ -143,11 +144,5 @@ public class Fieldwork extends AbstractEntity {
 		this.type = type;
 	}
 
-	public Integer getBudget() {
-		return budget;
-	}
 
-	public void setBudget(Integer budget) {
-		this.budget = budget;
-	}
 }
