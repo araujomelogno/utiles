@@ -333,11 +333,11 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private void populateForm(Fieldwork value) {
 		this.fieldwork = value;
-		budgetEntry.clear();
-		if (value != null && value.getStudy() != null && value.getStudy().getBudget() != null) {
-			budgetEntry.setItems(value.getStudy().getBudget().getEntries());
-			budgetEntry.setValue(value.getBudgetEntry());
-
+		if (value != null) {
+			this.study.setValue(value.getStudy());
+			if (value.getStudy() != null && value.getStudy().getBudget() != null) {
+				this.budgetEntry.setItems(value.getStudy().getBudget().getEntries());
+			}
 		}
 		binder.readBean(this.fieldwork);
 		this.editorLayoutDiv.setVisible(value != null);

@@ -289,11 +289,19 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				dialog.setConfirmButtonTheme("error primary");
 				dialog.addConfirmListener(event -> {
 					try {
-						expenseRequestService.delete(this.expenseRequest.getId());
-						clearForm();
-						refreshGrid();
-						Notification.show("Solicitud de gasto borrada exitosamente.", 3000,
-								Notification.Position.BOTTOM_START);
+						if (!this.expenseRequest.getExpenseStatus().equals(ExpenseStatus.TRANSFERIDO)) {
+							expenseRequestService.delete(this.expenseRequest.getId());
+							clearForm();
+							refreshGrid();
+							Notification.show("Solicitud de gasto borrada exitosamente.", 3000,
+									Notification.Position.BOTTOM_START);
+						} else {
+							Notification
+									.show("No se puede borrar un gasto ya transferido: ", 5000,
+											Notification.Position.MIDDLE)
+									.addThemeVariants(NotificationVariant.LUMO_ERROR);
+						}
+
 					} catch (Exception ex) {
 						Notification.show("Error al borrar el concepto: " + ex.getMessage(), 5000,
 								Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);

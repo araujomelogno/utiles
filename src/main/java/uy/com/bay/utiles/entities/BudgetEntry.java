@@ -1,19 +1,21 @@
 package uy.com.bay.utiles.entities;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import uy.com.bay.utiles.data.AbstractEntity;
-import java.util.List;
+import uy.com.bay.utiles.data.ExpenseRequest;
 
 @Entity
 public class BudgetEntry extends AbstractEntity {
 
 	private Double ammount;
 	private Integer quantity;
-	private Double spent =0.0;
+	private Double spent = 0.0;
 
 	@ManyToOne
 	@JoinColumn(name = "budget_concept_id")
@@ -25,6 +27,9 @@ public class BudgetEntry extends AbstractEntity {
 
 	@OneToMany(mappedBy = "budgetEntry")
 	private List<Extra> extras;
+
+	@OneToMany(mappedBy = "budgetEntry")
+	private List<ExpenseRequest> expenseRequests;
 
 	@OneToMany(mappedBy = "budgetEntry")
 	private List<uy.com.bay.utiles.data.Fieldwork> fieldworks;
@@ -96,4 +101,17 @@ public class BudgetEntry extends AbstractEntity {
 	public void setFieldworks(List<uy.com.bay.utiles.data.Fieldwork> fieldworks) {
 		this.fieldworks = fieldworks;
 	}
+
+	public List<ExpenseRequest> getExpenseRequests() {
+		return expenseRequests;
+	}
+
+	public void setExpenseRequests(List<ExpenseRequest> expenseRequests) {
+		this.expenseRequests = expenseRequests;
+	}
+
+	public void setTotal(Double total) {
+		this.total = total;
+	}
+
 }

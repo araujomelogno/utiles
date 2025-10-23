@@ -191,6 +191,7 @@ public class ExtraInputView extends VerticalLayout {
 				if (extra.getBudgetEntry() != null) {
 					BudgetEntry budgetEntry = extra.getBudgetEntry();
 					budgetEntry.setSpent(budgetEntry.getSpent() - extra.getAmount());
+					budgetEntry.getExtras().remove(extra);
 					budgetEntryService.save(budgetEntry);
 				}
 
