@@ -1,28 +1,29 @@
 package uy.com.bay.utiles.tasks;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import uy.com.bay.utiles.data.Fieldwork;
-import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
-import uy.com.bay.utiles.data.repository.FieldworkRepository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import uy.com.bay.utiles.data.Fieldwork;
+import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
+import uy.com.bay.utiles.data.repository.FieldworkRepository;
+
 @Component
 public class AlchemerCompletedSurveyCounter {
 
-    private static final Logger LOGGER = Logger.getLogger(AlchemerCompletedSurveyCounter.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(AlchemerCompletedSurveyCounter.class.getName());
 
-    @Autowired
-    private FieldworkRepository fieldworkRepository;
+	@Autowired
+	private FieldworkRepository fieldworkRepository;
 
-    @Autowired
-    private AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
+	@Autowired
+	private AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository;
 
-    @Scheduled(cron = "0 0 */2 * * *") // "At minute 0 past every 2nd hour."
+	@Scheduled(cron = "0 0 */2 * * *") // "At minute 0 past every 2nd hour."
     public void countAlchemerCompletedSurveys() {
         LOGGER.info("Starting AlchemerCompletedSurveyCounter task...");
 
@@ -39,6 +40,9 @@ public class AlchemerCompletedSurveyCounter {
 					int newCompleted = (int) count;
 
                     fieldwork.setCompleted(newCompleted);
+
+                    
+//                    //diferencia casos para impactar sobre el presupuesto 
 
                     if (previousCompleted == 0 && newCompleted > 0) {
                         fieldwork.setInitDate(LocalDate.now());

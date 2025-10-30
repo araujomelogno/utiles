@@ -3,13 +3,12 @@ package uy.com.bay.utiles.views.gantt;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 
@@ -48,7 +47,6 @@ public class StudyDetailsDialog extends Dialog {
 		fieldworkGrid.addColumn("endPlannedDate").setHeader("Fin planificado");
 		fieldworkGrid.addColumn("goalQuantity").setHeader("Cantidad objetivo");
 		fieldworkGrid.addColumn("completed").setHeader("Completas");
-		fieldworkGrid.addColumn("budget").setHeader("Presupuesto");
 		fieldworkGrid.setItems(study.getFieldworks());
 		fieldworkGrid.setAllRowsVisible(true);
 

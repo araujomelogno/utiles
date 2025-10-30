@@ -31,6 +31,8 @@ import uy.com.bay.utiles.data.Task;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseRepository;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
 import uy.com.bay.utiles.data.repository.TaskRepository;
+import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.services.BudgetEntryService;
 
 @RestController
 @RequestMapping("/api/webhook")
@@ -43,6 +45,9 @@ public class AlchemerController {
 
 	@Autowired
 	private FieldworkRepository fieldworkRepository;
+
+	@Autowired
+	private BudgetEntryService budgetEntryService;
 
 	@Autowired
 	private TaskRepository taskRepository;
@@ -132,6 +137,16 @@ public class AlchemerController {
 		Optional<Fieldwork> optionalFieldwork = fieldworkRepository
 				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
 		optionalFieldwork.ifPresent(response::setFieldwork);
+
+		// si tenemos fieldowrk también afectamos el Budget en caso de que tenga
+
+		if (response.getFieldwork() != null && response.getFieldwork().getBudgetEntry() != null
+				&& response.getFieldwork().getUnitCost() != null) {
+			BudgetEntry budgetEntry = response.getFieldwork().getBudgetEntry();
+			budgetEntry.setSpent(budgetEntry.getSpent() + response.getFieldwork().getUnitCost().doubleValue());
+			budgetEntryService.save(budgetEntry);
+
+		}
 
 		response.getData().setSurveyResponse(response);
 

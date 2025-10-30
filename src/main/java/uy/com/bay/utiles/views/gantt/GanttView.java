@@ -136,8 +136,11 @@ public class GanttView extends VerticalLayout {
 				}
 			});
 
-			if (totalgoal != 0)
+			if (totalgoal != 0) {
 				gantt.getStepElement(studyStep.getUid()).add(createProgressBar(100 * totalCompleted / totalgoal));
+				gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100 * 0.5));
+			}
+
 			totalgoal = 0;
 			totalCompleted = 0;
 		});
@@ -219,6 +222,20 @@ public class GanttView extends VerticalLayout {
 		bar.getStyle().setPosition(Position.ABSOLUTE);
 		bar.getStyle().setMargin("0");
 		bar.setValue(initialProgress);
+		return bar;
+	}
+
+	private ProgressBar createBudgetBar(double actualCost) {
+		ProgressBar bar = new ProgressBar(0, 100);
+		bar.setHeight("20%");
+		bar.setWidth("100%");
+		bar.getStyle().setDisplay(Display.INLINE_BLOCK);
+		bar.getStyle().setBackground("#93ad6f");
+
+		bar.getStyle().setTop("0");
+		bar.getStyle().setPosition(Position.ABSOLUTE);
+		bar.getStyle().setMargin("0");
+		bar.setValue(actualCost);
 		return bar;
 	}
 

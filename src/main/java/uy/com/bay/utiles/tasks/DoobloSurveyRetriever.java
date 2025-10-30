@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -22,14 +23,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import uy.com.bay.utiles.data.DoobloResponse;
-import uy.com.bay.utiles.data.DoobloResponse;
 import uy.com.bay.utiles.data.Fieldwork;
-import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.StudyRepository;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.SurveyorRepository;
 import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
+import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.services.BudgetEntryService;
 
 @Component
 public class DoobloSurveyRetriever {
@@ -51,12 +52,17 @@ public class DoobloSurveyRetriever {
 	@Value("${surveyToGo.activeSurveyDaysBack}")
 	private int activeSurveyDaysBack;
 
+	@Autowired
+	private BudgetEntryService budgetEntryService;
+
 	public DoobloSurveyRetriever(DoobloResponseRepository doobloResponseRepository, StudyRepository studyRepository,
-			SurveyorRepository surveyorRepository, FieldworkRepository fieldworkRepository) {
+			SurveyorRepository surveyorRepository, FieldworkRepository fieldworkRepository,
+			BudgetEntryService budgetEntryService) {
 		this.doobloResponseRepository = doobloResponseRepository;
 		this.studyRepository = studyRepository;
 		this.surveyorRepository = surveyorRepository;
 		this.fieldworkRepository = fieldworkRepository;
+		this.budgetEntryService = budgetEntryService;
 		this.restTemplate = new RestTemplate();
 	}
 
@@ -155,6 +161,15 @@ public class DoobloSurveyRetriever {
 				doobloResponse.setFieldwork(fw);
 				fw.setCompleted(fw.getCompleted() + 1);
 				fieldworkRepository.save(fw);
+
+				// Se afecta elbudget si ya tiene asignado
+				if (fw != null && fw.getBudgetEntry() != null && fw.getUnitCost() != null) {
+					BudgetEntry budgetEntry = fw.getBudgetEntry();
+					budgetEntry.setSpent(budgetEntry.getSpent() + fw.getUnitCost().doubleValue());
+					budgetEntryService.save(budgetEntry);
+
+				}
+
 			}
 			doobloResponseRepository.save(doobloResponse);
 			LOGGER.info("Successfully saved DoobloResponse for interview ID {}", interviewId);
