@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
@@ -41,6 +42,7 @@ public class StudyDetailsDialog extends Dialog {
 		layout.add(formLayout);
 
 		Grid<Fieldwork> fieldworkGrid = new Grid<>(Fieldwork.class, false);
+
 		fieldworkGrid.addColumn("status").setHeader("Estado");
 		fieldworkGrid.addColumn("type").setHeader("Tipo");
 		fieldworkGrid.addColumn("initPlannedDate").setHeader("Inicio planificado");
@@ -50,6 +52,7 @@ public class StudyDetailsDialog extends Dialog {
 		fieldworkGrid.setItems(study.getFieldworks());
 		fieldworkGrid.setAllRowsVisible(true);
 
+		layout.add(new Label("Campos"));
 		layout.add(fieldworkGrid);
 
 		Button editButton = new Button("Editar");

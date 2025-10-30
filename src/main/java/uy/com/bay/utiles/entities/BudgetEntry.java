@@ -9,6 +9,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import uy.com.bay.utiles.data.AbstractEntity;
 import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.Fieldwork;
 
 @Entity
 public class BudgetEntry extends AbstractEntity {
@@ -32,7 +33,7 @@ public class BudgetEntry extends AbstractEntity {
 	private List<ExpenseRequest> expenseRequests;
 
 	@OneToMany(mappedBy = "budgetEntry")
-	private List<uy.com.bay.utiles.data.Fieldwork> fieldworks;
+	private List<Fieldwork> fieldworks;
 
 	@Transient
 	private Double total;
@@ -94,11 +95,11 @@ public class BudgetEntry extends AbstractEntity {
 		this.extras = extras;
 	}
 
-	public List<uy.com.bay.utiles.data.Fieldwork> getFieldworks() {
+	public List<Fieldwork> getFieldworks() {
 		return fieldworks;
 	}
 
-	public void setFieldworks(List<uy.com.bay.utiles.data.Fieldwork> fieldworks) {
+	public void setFieldworks(List<Fieldwork> fieldworks) {
 		this.fieldworks = fieldworks;
 	}
 
