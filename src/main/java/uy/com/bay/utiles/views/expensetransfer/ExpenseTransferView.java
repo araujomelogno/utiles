@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views.expensetransfer;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -170,7 +171,7 @@ public class ExpenseTransferView extends VerticalLayout {
 		Date now = new Date();
 
 		expenseTransfer.setTransferDate(now);
-		expenseTransfer.setExpenseRequests(new ArrayList<>());
+		expenseTransfer.setExpenseRequests(new HashSet<>());
 		final ExpenseTransfer savedExpenseTransfer = expenseTransferService.save(expenseTransfer);
 
 		double totalAmount = 0;

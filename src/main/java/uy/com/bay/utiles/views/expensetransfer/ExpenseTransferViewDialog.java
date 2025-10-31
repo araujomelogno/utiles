@@ -3,6 +3,7 @@ package uy.com.bay.utiles.views.expensetransfer;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -59,7 +60,7 @@ public class ExpenseTransferViewDialog extends Dialog {
 			add(obs);
 		}
 
-		List<ExpenseRequest> expenseRequests = expenseTransfer.getExpenseRequests();
+		Set<ExpenseRequest> expenseRequests = expenseTransfer.getExpenseRequests();
 		if (expenseRequests != null && !expenseRequests.isEmpty()) {
 			VerticalLayout expenseRequestsLayout = new VerticalLayout();
 			expenseRequestsLayout.setSpacing(false);
