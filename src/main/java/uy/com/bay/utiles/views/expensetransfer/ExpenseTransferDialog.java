@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -140,7 +141,7 @@ public class ExpenseTransferDialog extends Dialog {
 				}
 				expenseTransfer.setFiles(files);
 
-				List<ExpenseRequest> requestList = new ArrayList<>(selectedRequests);
+				Set<ExpenseRequest> requestList = new HashSet<>(selectedRequests);
 				expenseTransfer.setExpenseRequests(requestList);
 
 				for (ExpenseRequest request : requestList) {

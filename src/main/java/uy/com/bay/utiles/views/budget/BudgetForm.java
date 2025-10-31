@@ -2,7 +2,7 @@ package uy.com.bay.utiles.views.budget;
 
 import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -69,7 +69,8 @@ public class BudgetForm extends VerticalLayout {
 		addEntryButton.addClickListener(click -> {
 			BudgetEntry newEntry = new BudgetEntry();
 			if (binder.getBean().getEntries() == null) {
-				binder.getBean().setEntries(new ArrayList<>());
+				binder.getBean().setEntries(new HashSet
+						<>());
 			}
 			binder.getBean().getEntries().add(newEntry);
 			entriesGrid.setItems(binder.getBean().getEntries());
@@ -189,7 +190,7 @@ public class BudgetForm extends VerticalLayout {
 			study.setValue(budget.getStudy());
 			entriesGrid.setItems(budget.getEntries());
 		} else if (budget != null) {
-			budget.setEntries(new ArrayList<>());
+			budget.setEntries(new HashSet<>());
 			entriesGrid.setItems(budget.getEntries());
 		}
 

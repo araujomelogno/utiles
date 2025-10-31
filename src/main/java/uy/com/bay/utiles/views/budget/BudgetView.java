@@ -1,5 +1,8 @@
 package uy.com.bay.utiles.views.budget;
 
+import java.util.HashSet;
+import java.util.Optional;
+
 import org.springframework.data.domain.Pageable;
 
 import com.vaadin.flow.component.Component;
@@ -13,7 +16,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
-import java.util.Optional;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
@@ -107,7 +109,7 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 	private void addBudget() {
 		grid.asSingleSelect().clear();
 		Budget newBudget = new Budget();
-		newBudget.setEntries(new java.util.ArrayList<>());
+		newBudget.setEntries(new HashSet<>());
 		newBudget.setCreated(java.time.LocalDate.now());
 		editBudget(newBudget);
 	}
