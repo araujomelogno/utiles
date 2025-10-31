@@ -1,5 +1,11 @@
 package uy.com.bay.utiles.views.gantt;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -7,17 +13,12 @@ import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.function.SerializableToDoubleFunction;
+
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.dto.BudgetEntryDetailItem;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
-
-import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 public class BudgetEntryDetailsDialog extends Dialog {
 
