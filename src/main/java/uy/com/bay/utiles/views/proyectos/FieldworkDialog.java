@@ -28,7 +28,6 @@ public class FieldworkDialog extends Dialog {
 		grid.addColumn("endPlannedDate").setHeader("Fin planificado").setAutoWidth(true);
 		grid.addColumn("goalQuantity").setHeader("Objetivo").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completas").setAutoWidth(true);
-		grid.addColumn("budget").setHeader("Presupuesto").setAutoWidth(true);
 
 		grid.setItems(fieldworkService.findAllByStudy(study));
 		grid.addItemClickListener(event -> {

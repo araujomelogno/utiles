@@ -12,7 +12,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.NumberRenderer;
-import com.vaadin.flow.function.SerializableToDoubleFunction;
 
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.Fieldwork;
@@ -80,7 +79,6 @@ public class BudgetEntryDetailsDialog extends Dialog {
 
         // Footer for Total sum
         var footerRow = grid.appendFooterRow();
-        SerializableToDoubleFunction<BudgetEntryDetailItem> totalSum = item -> item.getTotal().doubleValue();
         BigDecimal total = dataView.getItems().map(BudgetEntryDetailItem::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
         footerRow.getCell(totalColumn).setText(String.format("$%.2f", total));
 
