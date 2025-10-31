@@ -1,6 +1,7 @@
 package uy.com.bay.utiles.entities;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -27,13 +28,13 @@ public class BudgetEntry extends AbstractEntity {
 	private Budget budget;
 
 	@OneToMany(mappedBy = "budgetEntry")
-	private List<Extra> extras;
+	private Set<Extra> extras = new HashSet<>();
 
 	@OneToMany(mappedBy = "budgetEntry")
-	private List<ExpenseRequest> expenseRequests;
+	private Set<ExpenseRequest> expenseRequests = new HashSet<>();
 
 	@OneToMany(mappedBy = "budgetEntry")
-	private List<Fieldwork> fieldworks;
+	private Set<Fieldwork> fieldworks = new HashSet<>();
 
 	@Transient
 	private Double total;
@@ -87,27 +88,27 @@ public class BudgetEntry extends AbstractEntity {
 		this.budget = budget;
 	}
 
-	public List<Extra> getExtras() {
+	public Set<Extra> getExtras() {
 		return extras;
 	}
 
-	public void setExtras(List<Extra> extras) {
+	public void setExtras(Set<Extra> extras) {
 		this.extras = extras;
 	}
 
-	public List<Fieldwork> getFieldworks() {
+	public Set<Fieldwork> getFieldworks() {
 		return fieldworks;
 	}
 
-	public void setFieldworks(List<Fieldwork> fieldworks) {
+	public void setFieldworks(Set<Fieldwork> fieldworks) {
 		this.fieldworks = fieldworks;
 	}
 
-	public List<ExpenseRequest> getExpenseRequests() {
+	public Set<ExpenseRequest> getExpenseRequests() {
 		return expenseRequests;
 	}
 
-	public void setExpenseRequests(List<ExpenseRequest> expenseRequests) {
+	public void setExpenseRequests(Set<ExpenseRequest> expenseRequests) {
 		this.expenseRequests = expenseRequests;
 	}
 

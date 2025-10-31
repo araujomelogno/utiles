@@ -1,7 +1,8 @@
 package uy.com.bay.utiles.entities;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -17,7 +18,7 @@ public class Budget extends AbstractEntity {
 	private LocalDate created;
 
 	@OneToMany(mappedBy = "budget", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-	private List<BudgetEntry> entries;
+	private Set<BudgetEntry> entries = new HashSet<>();
 
 	@OneToOne
 	private Study study;
@@ -32,11 +33,11 @@ public class Budget extends AbstractEntity {
 		this.created = created;
 	}
 
-	public List<BudgetEntry> getEntries() {
+	public Set<BudgetEntry> getEntries() {
 		return entries;
 	}
 
-	public void setEntries(List<BudgetEntry> entries) {
+	public void setEntries(Set<BudgetEntry> entries) {
 		this.entries = entries;
 	}
 

@@ -1,7 +1,9 @@
 package uy.com.bay.utiles.data;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -19,7 +21,7 @@ public class ExpenseTransfer extends AbstractEntity {
     private Surveyor surveyor;
 
     @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<ExpenseRequest> expenseRequests;
+    private Set<ExpenseRequest> expenseRequests = new HashSet<>();
 
     @OneToMany(mappedBy = "expenseTransfer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ExpenseTransferFile> files;
@@ -50,11 +52,11 @@ public class ExpenseTransfer extends AbstractEntity {
         this.amount = amount;
     }
 
-    public List<ExpenseRequest> getExpenseRequests() {
+    public Set<ExpenseRequest> getExpenseRequests() {
         return expenseRequests;
     }
 
-    public void setExpenseRequests(List<ExpenseRequest> expenseRequests) {
+    public void setExpenseRequests(Set<ExpenseRequest> expenseRequests) {
         this.expenseRequests = expenseRequests;
     }
 
