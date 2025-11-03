@@ -23,6 +23,8 @@ public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, Jpa
 			"LEFT JOIN FETCH s.budget b " +
 			"LEFT JOIN FETCH b.entries be " +
 			"LEFT JOIN FETCH be.extras " +
+			"LEFT JOIN FETCH be.fieldworks " +
+			"LEFT JOIN FETCH be.expenseRequests " +
 			"WHERE f.initPlannedDate < :endDate AND f.endPlannedDate > :startDate")
 	List<Fieldwork> findAllByInitPlannedDateLessThanAndEndPlannedDateGreaterThan(
 			@Param("endDate") LocalDate endDate,

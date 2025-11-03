@@ -18,6 +18,7 @@ import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -28,6 +29,7 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.shared.Registration;
 
 import uy.com.bay.utiles.data.Study;
@@ -37,6 +39,7 @@ import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.views.gantt.BudgetEntryDetailsDialog;
 
 public class BudgetForm extends VerticalLayout {
 
@@ -69,8 +72,7 @@ public class BudgetForm extends VerticalLayout {
 		addEntryButton.addClickListener(click -> {
 			BudgetEntry newEntry = new BudgetEntry();
 			if (binder.getBean().getEntries() == null) {
-				binder.getBean().setEntries(new HashSet
-						<>());
+				binder.getBean().setEntries(new HashSet<>());
 			}
 			binder.getBean().getEntries().add(newEntry);
 			entriesGrid.setItems(binder.getBean().getEntries());
@@ -118,19 +120,35 @@ public class BudgetForm extends VerticalLayout {
 		actions.setPadding(false);
 
 		Grid.Column<BudgetEntry> spentColumn = entriesGrid.addColumn(BudgetEntry::getSpent).setHeader("Gastado");
+
 		Grid.Column<BudgetEntry> editorColumn = entriesGrid.addComponentColumn(entry -> {
-			Button editButton = new Button("Editar");
+			HorizontalLayout hl = new HorizontalLayout();
+			Button detailsButton = new Button();
+			detailsButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+			detailsButton.setIcon(VaadinIcon.SEARCH.create());
+			detailsButton.addClickListener(e -> new BudgetEntryDetailsDialog(entry).open());
+
+			Button editButton = new Button();
+			editButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+			editButton.setIcon(VaadinIcon.PENCIL.create());
 			editButton.addClickListener(e -> {
 				if (editor.isOpen()) {
 					editor.cancel();
 				}
 				entriesGrid.getEditor().editItem(entry);
 			});
-			return editButton;
+
+			hl.add(detailsButton);
+			hl.add(editButton);
+
+			return hl;
 		});
 		editorColumn.setEditorComponent(actions);
+
 		entriesGrid.addComponentColumn(entry -> {
-			Button removeButton = new Button("Borrar");
+			Button removeButton = new Button();
+			removeButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
+			removeButton.setIcon(VaadinIcon.TRASH.create());
 			removeButton.addClickListener(e -> {
 				if (binder.getBean().getEntries() != null) {
 					binder.getBean().getEntries().remove(entry);
@@ -139,7 +157,8 @@ public class BudgetForm extends VerticalLayout {
 				}
 			});
 			return removeButton;
-		}).setWidth("150px").setFlexGrow(0);
+		});
+
 		FooterRow footerRow = entriesGrid.appendFooterRow();
 		footerRow.getCell(quantityColumn).setText("Total");
 		totalAmountLabel = new Span();

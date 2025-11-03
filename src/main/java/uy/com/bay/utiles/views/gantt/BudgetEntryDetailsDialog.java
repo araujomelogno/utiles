@@ -21,71 +21,71 @@ import uy.com.bay.utiles.entities.Extra;
 
 public class BudgetEntryDetailsDialog extends Dialog {
 
-    public BudgetEntryDetailsDialog(BudgetEntry budgetEntry) {
-        setHeaderTitle("Detalle de la Entrada del Presupuesto: " + budgetEntry.getConcept().getName());
-        setWidth("1000px");
+	public BudgetEntryDetailsDialog(BudgetEntry budgetEntry) {
+		setHeaderTitle("Detalle de la Entrada del Presupuesto: " + budgetEntry.getConcept().getName());
+		setWidth("1000px");
 
-        VerticalLayout layout = new VerticalLayout();
-        add(layout);
+		VerticalLayout layout = new VerticalLayout();
+		add(layout);
 
-        Grid<BudgetEntryDetailItem> grid = new Grid<>();
-        List<BudgetEntryDetailItem> items = new ArrayList<>();
+		Grid<BudgetEntryDetailItem> grid = new Grid<>();
+		List<BudgetEntryDetailItem> items = new ArrayList<>();
 
-        // Process Extras
-        if (budgetEntry.getExtras() != null) {
-            for (Extra extra : budgetEntry.getExtras()) {
-                items.add(new BudgetEntryDetailItem(
-                        "Extras",
-                        extra.getConcept() != null ? extra.getConcept().getDescription() : "",
-                        extra.getQuantity(),
-                        extra.getUnitPrice()
-                ));
-            }
-        }
+		// Process Extras
+		if (budgetEntry.getExtras() != null) {
+			for (Extra extra : budgetEntry.getExtras()) {
+				items.add(new BudgetEntryDetailItem("Extras",
+						extra.getConcept() != null ? extra.getConcept().getDescription() : "", extra.getQuantity(),
+						extra.getUnitPrice()));
+			}
+		}
 
-        // Process Fieldworks
-        if (budgetEntry.getFieldworks() != null) {
-            for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
-                items.add(new BudgetEntryDetailItem(
-                        "Campo",
-                        fieldwork.getType() != null ? fieldwork.getType().toString() : "",
-                        fieldwork.getCompleted(),
-                        fieldwork.getUnitCost()
-                ));
-            }
-        }
+		// Process Fieldworks
+		if (budgetEntry.getFieldworks() != null) {
+			for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
+				items.add(new BudgetEntryDetailItem("Campo",
+						fieldwork.getType() != null ? fieldwork.getType().toString() : "", fieldwork.getCompleted(),
+						fieldwork.getUnitCost()));
+			}
+		}
 
-        // Process ExpenseRequests
-        if (budgetEntry.getExpenseRequests() != null) {
-            for (ExpenseRequest expenseRequest : budgetEntry.getExpenseRequests()) {
-                items.add(new BudgetEntryDetailItem(
-                        "Gastos",
-                        expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "",
-                        1,
-                        expenseRequest.getAmount()
-                ));
-            }
-        }
+		// Process ExpenseRequests
+		if (budgetEntry.getExpenseRequests() != null) {
+			for (ExpenseRequest expenseRequest : budgetEntry.getExpenseRequests()) {
+				items.add(new BudgetEntryDetailItem("Gastos",
+						expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "", 1,
+						expenseRequest.getAmount()));
+			}
+		}
 
-        GridListDataView<BudgetEntryDetailItem> dataView = grid.setItems(items);
+		GridListDataView<BudgetEntryDetailItem> dataView = grid.setItems(items);
 
-        grid.addColumn(BudgetEntryDetailItem::getTipo).setHeader("Tipo");
-        grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle");
-        grid.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, NumberFormat.getIntegerInstance(Locale.US))).setHeader("Cantidad");
-        grid.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCostoUnitario, NumberFormat.getCurrencyInstance(Locale.US))).setHeader("Costo U.");
+		grid.addColumn(BudgetEntryDetailItem::getTipo).setHeader("Tipo");
+		grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle");
+		grid.addColumn(
+				new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, NumberFormat.getIntegerInstance(Locale.US)))
+				.setHeader("Cantidad");
+		Grid.Column<BudgetEntryDetailItem> ucolumn = grid
+				.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCostoUnitario,
+						NumberFormat.getCurrencyInstance(Locale.US)))
+				.setHeader("Costo U.");
 
-        Grid.Column<BudgetEntryDetailItem> totalColumn = grid.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getTotal, NumberFormat.getCurrencyInstance(Locale.US)))
-                .setHeader("Total");
+		Grid.Column<BudgetEntryDetailItem> totalColumn = grid.addColumn(
+				new NumberRenderer<>(BudgetEntryDetailItem::getTotal, NumberFormat.getCurrencyInstance(Locale.US)))
+				.setHeader("Total");
 
-        // Footer for Total sum
-        var footerRow = grid.appendFooterRow();
-        BigDecimal total = dataView.getItems().map(BudgetEntryDetailItem::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
-        footerRow.getCell(totalColumn).setText(String.format("$%.2f", total));
+		// Footer for Total sum
+		var footerRow = grid.appendFooterRow();
+		BigDecimal total = dataView.getItems().map(BudgetEntryDetailItem::getTotal).reduce(BigDecimal.ZERO,
+				BigDecimal::add);
 
-        grid.setAllRowsVisible(true);
-        layout.add(grid);
+		footerRow.getCell(totalColumn).setText(String.format("$%,.2f", total));
+		footerRow.getCell(ucolumn).setText("Total");
 
-        Button closeButton = new Button("Cerrar", e -> close());
-        getFooter().add(closeButton);
-    }
+		grid.setAllRowsVisible(true);
+		layout.add(grid);
+
+		Button closeButton = new Button("Cerrar", e -> close());
+		getFooter().add(closeButton);
+	}
 }
