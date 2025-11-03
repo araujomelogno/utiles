@@ -52,6 +52,8 @@ public class GanttView extends VerticalLayout {
 	private DatePicker startDateField;
 	private DatePicker endDateField;
 	private Button filterbutton;
+	private Double totalAmount = 0d;
+	private Double totalSpent = 0d;
 
 	private int clickedBackgroundIndex;
 	private int totalgoal = 0;
@@ -136,16 +138,27 @@ public class GanttView extends VerticalLayout {
 				}
 			});
 
+			totalSpent = 0d;
+			totalAmount = 0d;
+			study.getBudget().getEntries().forEach(entry -> {
+				totalSpent = totalSpent + entry.getSpent();
+				totalAmount = totalAmount + entry.getAmmount();
+			});
+			if (totalAmount != 0d) {
+				gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100 * totalSpent / totalAmount));
+			}
 			if (totalgoal != 0) {
 				gantt.getStepElement(studyStep.getUid()).add(createProgressBar(100 * totalCompleted / totalgoal));
-				gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100 * 0.5));
+
 			}
 
 			totalgoal = 0;
 			totalCompleted = 0;
 		});
 
-		if (startDateField.getValue() != null && endDateField.getValue() != null) {
+		if (startDateField.getValue() != null && endDateField.getValue() != null)
+
+		{
 			if (startDateField.getValue().plusMonths(1).isBefore(endDateField.getValue())) {
 				Step totalCasosCalleStep = new Step();
 				totalCasosCalleStep.setCaption("Total Casos Calle");

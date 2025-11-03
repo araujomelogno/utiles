@@ -12,14 +12,17 @@ import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.BudgetRepository;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.repo.BudgetEntryRepository;
 
 @Service
 public class BudgetService {
 
 	private final BudgetRepository repository;
+	private final BudgetEntryRepository budgetEntryRepository;
 
-	public BudgetService(BudgetRepository repository) {
+	public BudgetService(BudgetRepository repository, BudgetEntryRepository budgetEntryRepository) {
 		this.repository = repository;
+		this.budgetEntryRepository = budgetEntryRepository;
 	}
 
 	@Transactional(readOnly = true)
@@ -64,6 +67,11 @@ public class BudgetService {
 	@Transactional(readOnly = true)
 	public Optional<Budget> findByIdWithEntries(Long id) {
 		return repository.findByIdWithEntries(id);
+	}
+
+	@Transactional(readOnly = true)
+	public Optional<BudgetEntry> getEntryByIdWithExtras(Long id) {
+		return budgetEntryRepository.findByIdWithExtras(id);
 	}
 
 }

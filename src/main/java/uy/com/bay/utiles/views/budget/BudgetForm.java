@@ -126,7 +126,11 @@ public class BudgetForm extends VerticalLayout {
 			Button detailsButton = new Button();
 			detailsButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
 			detailsButton.setIcon(VaadinIcon.SEARCH.create());
-			detailsButton.addClickListener(e -> new BudgetEntryDetailsDialog(entry).open());
+			detailsButton.addClickListener(e -> {
+				budgetService.getEntryByIdWithExtras(entry.getId()).ifPresent(entryWithExtras -> {
+					new BudgetEntryDetailsDialog(entryWithExtras).open();
+				});
+			});
 
 			Button editButton = new Button();
 			editButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
