@@ -22,7 +22,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router": "7.5.2",
-    "tltv-gantt-element": "1.0.28",
+    "tltv-gantt-element": "1.0.30",
     "tltv-timeline-element": "1.0.20"
   },
   "devDependencies": {
@@ -67,7 +67,7 @@
       "react": "18.3.1",
       "react-dom": "18.3.1",
       "react-router": "7.5.2",
-      "tltv-gantt-element": "1.0.28",
+      "tltv-gantt-element": "1.0.30",
       "tltv-timeline-element": "1.0.20"
     },
     "devDependencies": {
@@ -91,7 +91,7 @@
       "workbox-core": "7.3.0",
       "workbox-precaching": "7.3.0"
     },
-    "hash": "3e3ce2c20ecef5565112256468d2e3e194af52ea87ab1888910e777b7ed1f9ce"
+    "hash": "3f380b7e6c2494639fc24998a738e545a427a952c6790b83050a8ebc022c3da2"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
