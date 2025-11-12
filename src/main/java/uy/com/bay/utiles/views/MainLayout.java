@@ -230,6 +230,10 @@ public class MainLayout extends AppLayout {
 		tasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
 		settingsItem.addItem(tasksItem);
 
+		SideNavItem conceptsItem = new SideNavItem("Conceptos", "concepts");
+		conceptsItem.setPrefixComponent(new Icon("vaadin", "list"));
+		settingsItem.addItem(conceptsItem);
+
 		nav.addItem(settingsItem);
 
 		return nav;
