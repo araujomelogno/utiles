@@ -104,7 +104,7 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
         Button addButton = new Button("Crear");
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addButton.addClickListener(click -> {
-            clearForm();
+            populateForm(new Concept());
             form.setVisible(true);
         });
 
