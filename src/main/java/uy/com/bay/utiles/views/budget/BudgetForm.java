@@ -200,8 +200,8 @@ public class BudgetForm extends VerticalLayout {
 			} else {
 				if (binder.getBean().getCreated() == null)
 					binder.getBean().setCreated(LocalDate.now());
-				fireEvent(new SaveEvent(this, binder.getBean()));
 			}
+			fireEvent(new SaveEvent(this, binder.getBean()));
 
 		}
 	}

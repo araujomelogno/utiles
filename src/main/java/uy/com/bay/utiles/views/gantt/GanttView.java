@@ -52,7 +52,7 @@ public class GanttView extends VerticalLayout {
 	private DatePicker startDateField;
 	private DatePicker endDateField;
 	private Button filterbutton;
-	private Double totalAmount = 0d;
+	private Double budgetTotal = 0d;
 	private Double totalSpent = 0d;
 
 	private int clickedBackgroundIndex;
@@ -139,13 +139,16 @@ public class GanttView extends VerticalLayout {
 			});
 
 			totalSpent = 0d;
-			totalAmount = 0d;
+			budgetTotal = 0d;
 			study.getBudget().getEntries().forEach(entry -> {
 				totalSpent = totalSpent + entry.getSpent();
-				totalAmount = totalAmount + entry.getAmmount();
+				budgetTotal = budgetTotal + entry.getTotal();
 			});
-			if (totalAmount != 0d) {
-				gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100 * totalSpent / totalAmount));
+			if (budgetTotal != 0d) {
+				if (totalSpent > budgetTotal)
+					gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100d));
+				else
+					gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100 * totalSpent / budgetTotal));
 			}
 			if (totalgoal != 0) {
 				gantt.getStepElement(studyStep.getUid()).add(createProgressBar(100 * totalCompleted / totalgoal));

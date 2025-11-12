@@ -11,6 +11,6 @@ import uy.com.bay.utiles.entities.BudgetEntry;
 @Repository
 public interface BudgetEntryRepository extends JpaRepository<BudgetEntry, Long> {
 
-	@Query("SELECT be FROM BudgetEntry be LEFT JOIN FETCH be.extras LEFT JOIN FETCH be.fieldworks WHERE be.id = :id")
+	@Query("SELECT be FROM BudgetEntry be LEFT JOIN FETCH be.extras LEFT JOIN FETCH be.fieldworks LEFT JOIN FETCH be.expenseRequests WHERE be.id = :id")
 	Optional<BudgetEntry> findByIdWithExtras(@Param("id") Long id);
 }

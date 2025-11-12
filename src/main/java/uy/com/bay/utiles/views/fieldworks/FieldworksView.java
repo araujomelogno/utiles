@@ -154,11 +154,16 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 					this.fieldwork = new Fieldwork();
 				}
 
+				binder.writeBean(this.fieldwork);
 				if (this.fieldwork.getBudgetEntry() == null) {
 					Notification.show("Debe seleccionar un Presupuesto.", 3000, Notification.Position.BOTTOM_START);
 					return;
 				}
-				binder.writeBean(this.fieldwork);
+
+				if (this.fieldwork.getType() == null) {
+					Notification.show("Debe seleccionar el tipo campo.", 3000, Notification.Position.BOTTOM_START);
+					return;
+				}
 				fieldworkService.save(this.fieldwork);
 				if (this.fieldwork.getStudy() != null
 						&& !this.fieldwork.getStudy().getFieldworks().contains(this.fieldwork)) {
