@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import uy.com.bay.utiles.data.AbstractEntity;
 import uy.com.bay.utiles.enums.ConceptType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Concept extends AbstractEntity {
@@ -16,7 +16,7 @@ public class Concept extends AbstractEntity {
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "concept_type")
     @Column(name = "type")
-    private List<ConceptType> type = new ArrayList<>();
+    private Set<ConceptType> type = new HashSet<>();
 
     public String getName() {
         return name;
@@ -34,11 +34,11 @@ public class Concept extends AbstractEntity {
         this.description = description;
     }
 
-    public List<ConceptType> getType() {
+    public Set<ConceptType> getType() {
         return type;
     }
 
-    public void setType(List<ConceptType> type) {
+    public void setType(Set<ConceptType> type) {
         this.type = type;
     }
 }
