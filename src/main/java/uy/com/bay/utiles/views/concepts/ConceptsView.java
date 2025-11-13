@@ -38,6 +38,7 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
     private final BeanValidationBinder<Concept> binder;
     private final ConceptService conceptService;
 
+    private Div editorLayoutDiv;
     private ConceptForm form;
     private Concept concept;
 
@@ -58,6 +59,7 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
 
         grid.addColumn("name").setAutoWidth(true).setHeader("Nombre");
         grid.addColumn("description").setAutoWidth(true).setHeader("Descripción");
+        grid.addColumn(concept -> concept.getType() != null ? concept.getType().toString() : "").setAutoWidth(true).setHeader("Tipo");
         grid.setItems(query -> conceptService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         grid.setHeightFull();
@@ -75,11 +77,12 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
+        editorLayoutDiv = new Div();
+        editorLayoutDiv.setClassName("editor-layout");
+
         form = new ConceptForm();
         binder.bindInstanceFields(form);
-
-        Div editorLayoutDiv = new Div(form);
-        editorLayoutDiv.setClassName("editor-layout");
+        editorLayoutDiv.add(form);
 
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setClassName("button-layout");
@@ -92,7 +95,7 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
 
         editorLayoutDiv.add(buttonLayout);
         splitLayout.addToSecondary(editorLayoutDiv);
-        form.setVisible(false);
+        editorLayoutDiv.setVisible(false);
     }
 
     private void createGridLayout(SplitLayout splitLayout) {
@@ -105,7 +108,7 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addButton.addClickListener(click -> {
             populateForm(new Concept());
-            form.setVisible(true);
+            editorLayoutDiv.setVisible(true);
         });
 
         wrapper.add(addButton, grid);
@@ -163,11 +166,7 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
     private void populateForm(Concept value) {
         this.concept = value;
         binder.readBean(this.concept);
-        if (value == null) {
-            form.setVisible(false);
-        } else {
-            form.setVisible(true);
-        }
+        editorLayoutDiv.setVisible(value != null);
     }
 
     @Override
