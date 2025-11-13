@@ -104,7 +104,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
 		grid.addColumn("unitCost").setHeader("Costo Unitario").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
-
+		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
