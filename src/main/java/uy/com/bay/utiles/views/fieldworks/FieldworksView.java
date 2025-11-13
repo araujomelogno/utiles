@@ -20,6 +20,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -56,7 +57,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private DatePicker endDate;
 	private IntegerField goalQuantity;
 	private IntegerField completed;
-	private TextField obs;
+	private TextArea obs;
 	private BigDecimalField unitCost;
 	private ComboBox<FieldworkStatus> status;
 	private ComboBox<FieldworkType> type;
@@ -97,6 +98,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		// Configure Grid
 		grid.addColumn(fieldwork -> fieldwork.getStudy() != null ? fieldwork.getStudy().getName() : "")
 				.setHeader("Estudio").setAutoWidth(true);
+		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 		grid.addColumn("initPlannedDate").setHeader("Fecha Planificada Inicio").setAutoWidth(true);
 		grid.addColumn("endPlannedDate").setHeader("Fecha Planificada Fin").setAutoWidth(true);
 		grid.addColumn("initDate").setHeader("Fecha Inicio").setAutoWidth(true);
@@ -104,10 +106,10 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
 		grid.addColumn("unitCost").setHeader("Costo Unitario").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
-		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
+		
 
 		grid.setItems(query -> {
 			Specification<Fieldwork> spec = (root, q, cb) -> {
@@ -259,7 +261,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		unitCost = new BigDecimalField("Costo unitario");
 		completed = new IntegerField("Completas");
 		completed.setReadOnly(true);
-		obs = new TextField("Observaciones");
+		obs = new TextArea("Observaciones");
 		status = new ComboBox<>("Estado");
 		status.setItems(FieldworkStatus.values());
 		type = new ComboBox<>("Tipo");
@@ -268,7 +270,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
 		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity,
-				unitCost, completed, obs, status, type, area);
+				unitCost, completed, area, status, type, obs);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);
