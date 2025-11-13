@@ -182,6 +182,8 @@ public class ConceptsView extends Div implements BeforeEnterObserver {
                 refreshGrid();
                 event.forwardTo(ConceptsView.class);
             }
+        } else {
+            clearForm();
         }
     }
 }
