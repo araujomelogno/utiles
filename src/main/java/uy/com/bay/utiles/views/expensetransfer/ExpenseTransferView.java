@@ -21,6 +21,16 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.QuerySortOrder;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.server.StreamResource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -57,7 +67,7 @@ public class ExpenseTransferView extends VerticalLayout {
 	private final BudgetEntryService budgetEntryService;
 
 	private Grid<ExpenseRequest> grid;
-	private Button transferButton;
+	private Button transferButton, exportButton;
 
 	private TextField surveyorFilter;
 	private TextField studyFilter;
@@ -82,7 +92,8 @@ public class ExpenseTransferView extends VerticalLayout {
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setWidthFull();
 		createTransferButton();
-		buttonLayout.add(transferButton);
+		createExportButton();
+		buttonLayout.add(transferButton, exportButton);
 
 		createGrid();
 
@@ -149,6 +160,61 @@ public class ExpenseTransferView extends VerticalLayout {
 
 		FooterRow footerRow = grid.appendFooterRow();
 		updateFooter(footerRow, studyColumn, grid.getColumnByKey("amount"));
+	}
+
+	private void createExportButton() {
+		exportButton = new Button("Exportar");
+		exportButton.addClickListener(e -> {
+			try {
+				exportToExcel();
+			} catch (IOException ex) {
+				Notification.show("Error al exportar a Excel: " + ex.getMessage(), 3000,
+						Notification.Position.BOTTOM_START);
+			}
+		});
+	}
+
+	public void exportToExcel() throws IOException {
+		Workbook workbook = new XSSFWorkbook();
+		Sheet sheet = workbook.createSheet("Solicitudes de Gasto");
+
+		Row headerRow = sheet.createRow(0);
+		String[] columns = { "Encuestador", "Proyecto", "Fecha Solicitud", "Monto", "Concepto", "Observaciones" };
+		for (int i = 0; i < columns.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(columns[i]);
+		}
+
+		Specification<ExpenseRequest> spec = createSpecification();
+		List<ExpenseRequest> expenseRequests = expenseRequestService.list(spec);
+
+		int rowNum = 1;
+		for (ExpenseRequest expenseRequest : expenseRequests) {
+			Row row = sheet.createRow(rowNum++);
+			row.createCell(0).setCellValue(
+					expenseRequest.getSurveyor() != null ? expenseRequest.getSurveyor().getName() : "");
+			row.createCell(1)
+					.setCellValue(expenseRequest.getStudy() != null ? expenseRequest.getStudy().getName() : "");
+			row.createCell(2).setCellValue(expenseRequest.getRequestDate() != null
+					? new java.text.SimpleDateFormat("dd/MM/yyyy").format(expenseRequest.getRequestDate())
+					: "");
+			row.createCell(3).setCellValue(expenseRequest.getAmount());
+			row.createCell(4).setCellValue(
+					expenseRequest.getConcept() != null ? expenseRequest.getConcept().getDescription() : "");
+			row.createCell(5).setCellValue(expenseRequest.getObs());
+		}
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		workbook.write(outputStream);
+		workbook.close();
+
+		StreamResource resource = new StreamResource("solicitudes_de_gasto.xlsx",
+				() -> new ByteArrayInputStream(outputStream.toByteArray()));
+		Anchor downloadLink = new Anchor(resource, "Download");
+		downloadLink.getElement().setAttribute("download", true);
+		downloadLink.getStyle().set("display", "none");
+		add(downloadLink);
+		downloadLink.getElement().callJsFunction("click");
 	}
 
 	private void createTransferButton() {
@@ -242,30 +308,7 @@ public class ExpenseTransferView extends VerticalLayout {
 
 			PageRequest pageRequest = PageRequest.of(query.getPage(), query.getPageSize(), sort);
 
-			Specification<ExpenseRequest> spec = (root, q, cb) -> cb.equal(root.get("expenseStatus"),
-					ExpenseStatus.APROBADO);
-
-			if (surveyorFilter != null && !surveyorFilter.isEmpty()) {
-				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("surveyor").get("lastName")),
-						"%" + surveyorFilter.getValue().toLowerCase() + "%"));
-			}
-			if (studyFilter != null && !studyFilter.isEmpty()) {
-				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("study").get("name")),
-						"%" + studyFilter.getValue().toLowerCase() + "%"));
-			}
-			if (requestDateFilter != null && !requestDateFilter.isEmpty()) {
-				spec = spec.and((root, q, cb) -> cb.between(root.get("requestDate"),
-						Date.from(requestDateFilter.getValue().atStartOfDay().toInstant(java.time.ZoneOffset.UTC)),
-						Date.from(requestDateFilter.getValue().atTime(23, 59, 59).toInstant(java.time.ZoneOffset.UTC))));
-			}
-			if (conceptFilter != null && !conceptFilter.isEmpty()) {
-				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("concept").get("description")),
-						"%" + conceptFilter.getValue().toLowerCase() + "%"));
-			}
-			if (obsFilter != null && !obsFilter.isEmpty()) {
-				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("obs")),
-						"%" + obsFilter.getValue().toLowerCase() + "%"));
-			}
+			Specification<ExpenseRequest> spec = createSpecification();
 
 			return expenseRequestService.list(pageRequest, spec).stream();
 		});
@@ -275,6 +318,13 @@ public class ExpenseTransferView extends VerticalLayout {
 
 	private void updateFooter(FooterRow footerRow, Grid.Column<ExpenseRequest> studyColumn,
 			Grid.Column<ExpenseRequest> amountColumn) {
+		Specification<ExpenseRequest> spec = createSpecification();
+		Double total = expenseRequestService.sumAmount(spec);
+		footerRow.getCell(studyColumn).setText("TOTAL");
+		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
+	}
+
+	private Specification<ExpenseRequest> createSpecification() {
 		Specification<ExpenseRequest> spec = (root, q, cb) -> cb.equal(root.get("expenseStatus"),
 				ExpenseStatus.APROBADO);
 
@@ -299,8 +349,6 @@ public class ExpenseTransferView extends VerticalLayout {
 			spec = spec.and(
 					(root, q, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsFilter.getValue().toLowerCase() + "%"));
 		}
-		Double total = expenseRequestService.sumAmount(spec);
-		footerRow.getCell(studyColumn).setText("TOTAL");
-		footerRow.getCell(amountColumn).setText(String.format("$%.2f", total));
+		return spec;
 	}
 }
