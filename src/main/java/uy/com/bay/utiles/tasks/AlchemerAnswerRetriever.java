@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.tasks;
 
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -53,17 +54,6 @@ public class AlchemerAnswerRetriever {
 			try {
 				LOGGER.info("Processing task ID: {}", task.getId());
 
-				String urlStudy = String.format(
-						"https://api.alchemer.com/v5/survey/%d?api_token=%s&api_token_secret=%s", task.getSurveyId(),
-						apiToken, apiTokenSecret);
-
-				String responsesTudy = restTemplate.getForObject(urlStudy, String.class);
-
-				ObjectMapper mapperStudy = new ObjectMapper();
-				JsonNode rootStudy = mapperStudy.readTree(responsesTudy);
-
-				String surveyTitle = rootStudy.path("data").path("internal_title").asText();
-
 				String url = String.format(
 						"https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
 						task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
@@ -84,6 +74,8 @@ public class AlchemerAnswerRetriever {
 						switch (type) {
 						case "RADIO":
 						case "MENU":
+						case "HIDDEN":
+						case "ESSAY":
 						case "TEXTBOX":
 							AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
 							alchemerAnswer.setId(answerNode.path("id").asLong());
@@ -93,13 +85,14 @@ public class AlchemerAnswerRetriever {
 							alchemerAnswer.setAnswer(answerNode.path("answer").asText());
 							alchemerAnswer.setShown(true);
 							alchemerAnswer.setSurveyId(task.getSurveyId());
-							alchemerAnswer.setStudyName(surveyTitle);
+							alchemerAnswer.setStudyName(task.getStudyName());
 							alchemerAnswer.setResponseId(task.getResponseId());
+							alchemerAnswer.setCreated(LocalDate.now());
 							alchemerAnswerRepository.save(alchemerAnswer);
 
 							break;
 						case "parent":
-							processParentAnswer(answerNode, task, surveyTitle);
+							processParentAnswer(answerNode, task, task.getStudyName());
 							break;
 						default:
 							LOGGER.warn("Unknown answer type: {}", type);
@@ -138,6 +131,7 @@ public class AlchemerAnswerRetriever {
 					alchemerAnswer.setSurveyId(task.getSurveyId());
 					alchemerAnswer.setStudyName(surveyTitle);
 					alchemerAnswer.setResponseId(task.getResponseId());
+					alchemerAnswer.setCreated(LocalDate.now());
 					alchemerAnswerRepository.save(alchemerAnswer);
 					LOGGER.info("Saved answer for parent question ID: {}, option ID: {}",
 							answerNode.path("id").asLong(), alchemerAnswer.getId());
@@ -165,7 +159,7 @@ public class AlchemerAnswerRetriever {
 						alchemerAnswer.setSurveyId(task.getSurveyId());
 						alchemerAnswer.setResponseId(task.getResponseId());
 						alchemerAnswer.setStudyName(surveyTitle);
-
+						alchemerAnswer.setCreated(LocalDate.now());
 						alchemerAnswerRepository.save(alchemerAnswer);
 						LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}",
 								answerNode.path("id").asLong(), alchemerAnswer.getId());

@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.data;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +44,21 @@ public class AlchemerSurveyResponseData extends AbstractEntity {
 
     @OneToOne(mappedBy = "data")
     private AlchemerSurveyResponse surveyResponse;
+    
+    
+    @JsonIgnore
+    private LocalDate created = LocalDate.now();
+    
+    
+    public LocalDate getCreated() {
+		return created;
+	}
 
-    public boolean isTest() {
+	public void setCreated(LocalDate created) {
+		this.created = created;
+	}
+
+	public boolean isTest() {
         return isTest;
     }
 

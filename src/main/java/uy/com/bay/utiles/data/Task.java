@@ -27,6 +27,8 @@ public class Task {
 
 	private Integer responseId;
 
+	private String studyName;
+
 	public Long getId() {
 		return id;
 	}
@@ -73,5 +75,13 @@ public class Task {
 
 	public void setResponseId(Integer responseId) {
 		this.responseId = responseId;
+	}
+
+	public String getStudyName() {
+		return studyName;
+	}
+
+	public void setStudyName(String studyName) {
+		this.studyName = studyName;
 	}
 }

@@ -1,5 +1,8 @@
 package uy.com.bay.utiles.data;
 
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
@@ -12,43 +15,52 @@ import jakarta.persistence.Table;
 @Table(name = "alchemer_survey_response")
 public class AlchemerSurveyResponse extends AbstractEntity {
 
-	
-	private String  studyName;
-    @JsonProperty("webhook_name")
-    private String webhookName;
+	private String studyName;
+	@JsonProperty("webhook_name")
+	private String webhookName;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private AlchemerSurveyResponseData data;
+	@OneToOne(cascade = CascadeType.ALL)
+	private AlchemerSurveyResponseData data;
 
-    @ManyToOne
-    private Fieldwork fieldwork;
+	@ManyToOne
+	private Fieldwork fieldwork;
+	@JsonIgnore
+	private LocalDate created = LocalDate.now();
 
-    public String getWebhookName() {
-        return webhookName;
-    }
+	public LocalDate getCreated() {
+		return created;
+	}
 
-    public void setWebhookName(String webhookName) {
-        this.webhookName = webhookName;
-    }
+	public void setCreated(LocalDate created) {
+		this.created = created;
+	}
 
-    public AlchemerSurveyResponseData getData() {
-        return data;
-    }
+	public String getWebhookName() {
+		return webhookName;
+	}
 
-    public void setData(AlchemerSurveyResponseData data) {
-        if (data != null) {
-            data.setSurveyResponse(this);
-        }
-        this.data = data;
-    }
+	public void setWebhookName(String webhookName) {
+		this.webhookName = webhookName;
+	}
 
-    public Fieldwork getFieldwork() {
-        return fieldwork;
-    }
+	public AlchemerSurveyResponseData getData() {
+		return data;
+	}
 
-    public void setFieldwork(Fieldwork fieldwork) {
-        this.fieldwork = fieldwork;
-    }
+	public void setData(AlchemerSurveyResponseData data) {
+		if (data != null) {
+			data.setSurveyResponse(this);
+		}
+		this.data = data;
+	}
+
+	public Fieldwork getFieldwork() {
+		return fieldwork;
+	}
+
+	public void setFieldwork(Fieldwork fieldwork) {
+		this.fieldwork = fieldwork;
+	}
 
 	public String getStudyName() {
 		return studyName;

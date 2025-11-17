@@ -176,7 +176,8 @@ public class AlchemerController {
 			String surveyTitle = rootStudy.path("data").path("internal_title").asText();
 
 			response.setStudyName(surveyTitle);
-
+			task.setStudyName(surveyTitle);
+			taskRepository.save(task);
 			alchemerSurveyResponseRepository.save(response);
 
 		} catch (JsonMappingException e) {

@@ -1,5 +1,7 @@
 package uy.com.bay.utiles.data;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,6 +21,16 @@ public class AlchemerAnswer {
 	private Integer surveyId;
 	private Integer responseId;
 	private String studyName;
+
+	private LocalDate created = LocalDate.now();
+
+	public LocalDate getCreated() {
+		return created;
+	}
+
+	public void setCreated(LocalDate created) {
+		this.created = created;
+	}
 
 	public Long getId() {
 		return id;
