@@ -79,7 +79,7 @@ public class AlchemerAnswerRetriever {
 							case "ESSAY":
 							case "TEXTBOX":
 								AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-								alchemerAnswer.setId(answerNode.path("id").asLong());
+								alchemerAnswer.setAlchemerId(answerNode.path("id").asLong());
 								alchemerAnswer.setType(type);
 								alchemerAnswer.setQuestion(answerNode.path("question").asText());
 								alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
@@ -124,7 +124,7 @@ public class AlchemerAnswerRetriever {
 				JsonNode optionNode = optionEntry.getValue();
 				if (optionNode.path("shown").asBoolean(true)) { // Assume shown if not present
 					AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-					alchemerAnswer.setId(optionNode.path("id").asLong());
+					alchemerAnswer.setAlchemerId(optionNode.path("id").asLong());
 					alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
 					alchemerAnswer.setQuestion(answerNode.path("question").asText());
 					alchemerAnswer.setAnswer(optionNode.path("answer").asText());
@@ -152,7 +152,7 @@ public class AlchemerAnswerRetriever {
 					JsonNode answer = answerEntry.getValue();
 					if (answer.path("shown").asBoolean(true)) { // Assume shown if not present
 						AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-						alchemerAnswer.setId(answer.path("id").asLong());
+						alchemerAnswer.setAlchemerId(answer.path("id").asLong());
 						alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
 						alchemerAnswer.setQuestion(answer.path("question").asText());
 						alchemerAnswer.setAnswer(answer.path("answer").asText());

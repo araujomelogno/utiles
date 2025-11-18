@@ -4,13 +4,17 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity
 public class AlchemerAnswer {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	private Long alchemerId;
 	private String type;
 	@Column(columnDefinition = "MEDIUMTEXT")
 	private String question;
@@ -38,6 +42,14 @@ public class AlchemerAnswer {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public Long getAlchemerId() {
+		return alchemerId;
+	}
+
+	public void setAlchemerId(Long alchemerId) {
+		this.alchemerId = alchemerId;
 	}
 
 	public String getType() {
