@@ -1,5 +1,7 @@
 package uy.com.bay.utiles.views.gantt;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.Collections;
 import java.util.Locale;
@@ -11,22 +13,28 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
+import com.vaadin.flow.server.StreamResource;
 
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.services.BudgetExporter;
 
 public class StudyDetailsDialog extends Dialog {
 
+
 	public StudyDetailsDialog(Study study) {
 		setHeaderTitle("Detalles del Estudio: " + study.getName());
-		setWidth("1200px");
+		setWidth("1200px"); 
 
 		VerticalLayout layout = new VerticalLayout();
 		add(layout);
@@ -82,7 +90,26 @@ public class StudyDetailsDialog extends Dialog {
 			footerRow.getCell(spentColumn).setText(String.format("$%,.2f", totalSpent));
 
 			budgetGrid.setAllRowsVisible(true);
-			layout.add(new Label("Presupuesto"));
+			HorizontalLayout budgetHeader = new HorizontalLayout();
+			budgetHeader.setAlignItems(Alignment.BASELINE);
+			Label budgetLabel = new Label("Presupuesto");
+			Anchor downloadLink = new Anchor();
+			downloadLink.getStyle().set("display", "none");
+			Button exportButton = new Button("Exportar");
+			exportButton.addClickListener(event -> {
+				try {
+					BudgetExporter budgetExporter = new BudgetExporter();
+					InputStream excelStream = budgetExporter.export(study);
+					StreamResource resource = new StreamResource("presupuesto.xlsx", () -> excelStream);
+					downloadLink.setHref(resource);
+					downloadLink.getElement().callJsFunction("click");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+
+			budgetHeader.add(budgetLabel, exportButton, downloadLink);
+			layout.add(budgetHeader);
 			layout.add(budgetGrid);
 		}
 

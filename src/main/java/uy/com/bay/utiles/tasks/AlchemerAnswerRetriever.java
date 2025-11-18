@@ -64,46 +64,48 @@ public class AlchemerAnswerRetriever {
 				JsonNode root = mapper.readTree(response);
 				JsonNode surveyData = root.path("data").path("survey_data");
 
-				Iterator<Map.Entry<String, JsonNode>> fields = surveyData.fields();
-				while (fields.hasNext()) {
-					Map.Entry<String, JsonNode> entry = fields.next();
-					JsonNode answerNode = entry.getValue();
+				if (root.path("result_ok").asBoolean()) {
+					Iterator<Map.Entry<String, JsonNode>> fields = surveyData.fields();
+					while (fields.hasNext()) {
+						Map.Entry<String, JsonNode> entry = fields.next();
+						JsonNode answerNode = entry.getValue();
 
-					String type = answerNode.path("type").asText();
-					if (answerNode.path("shown").asBoolean()) {
-						switch (type) {
-						case "RADIO":
-						case "MENU":
-						case "HIDDEN":
-						case "ESSAY":
-						case "TEXTBOX":
-							AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-							alchemerAnswer.setId(answerNode.path("id").asLong());
-							alchemerAnswer.setType(type);
-							alchemerAnswer.setQuestion(answerNode.path("question").asText());
-							alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-							alchemerAnswer.setAnswer(answerNode.path("answer").asText());
-							alchemerAnswer.setShown(true);
-							alchemerAnswer.setSurveyId(task.getSurveyId());
-							alchemerAnswer.setStudyName(task.getStudyName());
-							alchemerAnswer.setResponseId(task.getResponseId());
-							alchemerAnswer.setCreated(LocalDate.now());
-							alchemerAnswerRepository.save(alchemerAnswer);
-
-							break;
-						case "parent":
-							processParentAnswer(answerNode, task, task.getStudyName());
-							break;
-						default:
-							LOGGER.warn("Unknown answer type: {}", type);
-							break;
+						String type = answerNode.path("type").asText();
+						if (answerNode.path("shown").asBoolean()) {
+							switch (type) {
+							case "RADIO":
+							case "MENU":
+							case "HIDDEN":
+							case "ESSAY":
+							case "TEXTBOX":
+								AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+								alchemerAnswer.setId(answerNode.path("id").asLong());
+								alchemerAnswer.setType(type);
+								alchemerAnswer.setQuestion(answerNode.path("question").asText());
+								alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+								alchemerAnswer.setAnswer(answerNode.path("answer").asText());
+								alchemerAnswer.setShown(true);
+								alchemerAnswer.setSurveyId(task.getSurveyId());
+								alchemerAnswer.setStudyName(task.getStudyName());
+								alchemerAnswer.setResponseId(task.getResponseId());
+								alchemerAnswer.setCreated(LocalDate.now());
+								alchemerAnswerRepository.save(alchemerAnswer);
+								break;
+							case "parent":
+								processParentAnswer(answerNode, task, task.getStudyName());
+								break;
+							default:
+								LOGGER.warn("Unknown answer type: {}", type);
+								break;
+							}
 						}
 					}
+					task.setStatus(Status.DONE);
+					taskRepository.save(task);
+					LOGGER.info("Task ID: {} processed successfully.", task.getId());
+				} else {
+					LOGGER.warn("Task ID: {} not processed successfully, se mantiene en PENDING.", task.getId());
 				}
-
-				task.setStatus(Status.DONE);
-				taskRepository.save(task);
-				LOGGER.info("Task ID: {} processed successfully.", task.getId());
 
 			} catch (Exception e) {
 				task.setStatus(Status.ERROR);
