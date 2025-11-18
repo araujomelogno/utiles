@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -186,7 +187,7 @@ public class ExpenseTransferView extends VerticalLayout {
 		}
 
 		Specification<ExpenseRequest> spec = createSpecification();
-		List<ExpenseRequest> expenseRequests = expenseRequestService.list(spec);
+		List<ExpenseRequest> expenseRequests = expenseRequestService.list(Pageable.unpaged(), spec).getContent();
 
 		int rowNum = 1;
 		for (ExpenseRequest expenseRequest : expenseRequests) {
