@@ -78,18 +78,21 @@ public class AlchemerAnswerRetriever {
 							case "HIDDEN":
 							case "ESSAY":
 							case "TEXTBOX":
-								AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-								alchemerAnswer.setId(answerNode.path("id").asLong());
-								alchemerAnswer.setType(type);
-								alchemerAnswer.setQuestion(answerNode.path("question").asText());
-								alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-								alchemerAnswer.setAnswer(answerNode.path("answer").asText());
-								alchemerAnswer.setShown(true);
-								alchemerAnswer.setSurveyId(task.getSurveyId());
-								alchemerAnswer.setStudyName(task.getStudyName());
-								alchemerAnswer.setResponseId(task.getResponseId());
-								alchemerAnswer.setCreated(LocalDate.now());
-								alchemerAnswerRepository.save(alchemerAnswer);
+								Long alchemerId = answerNode.path("id").asLong();
+								if (alchemerAnswerRepository.findByAlchemerId(alchemerId).isEmpty()) {
+									AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+									alchemerAnswer.setAlchemerId(alchemerId);
+									alchemerAnswer.setType(type);
+									alchemerAnswer.setQuestion(answerNode.path("question").asText());
+									alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+									alchemerAnswer.setAnswer(answerNode.path("answer").asText());
+									alchemerAnswer.setShown(true);
+									alchemerAnswer.setSurveyId(task.getSurveyId());
+									alchemerAnswer.setStudyName(task.getStudyName());
+									alchemerAnswer.setResponseId(task.getResponseId());
+									alchemerAnswer.setCreated(LocalDate.now());
+									alchemerAnswerRepository.save(alchemerAnswer);
+								}
 								break;
 							case "parent":
 								processParentAnswer(answerNode, task, task.getStudyName());
@@ -123,20 +126,23 @@ public class AlchemerAnswerRetriever {
 				Map.Entry<String, JsonNode> optionEntry = options.next();
 				JsonNode optionNode = optionEntry.getValue();
 				if (optionNode.path("shown").asBoolean(true)) { // Assume shown if not present
-					AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-					alchemerAnswer.setId(optionNode.path("id").asLong());
-					alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
-					alchemerAnswer.setQuestion(answerNode.path("question").asText());
-					alchemerAnswer.setAnswer(optionNode.path("answer").asText());
-					alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-					alchemerAnswer.setShown(true);
-					alchemerAnswer.setSurveyId(task.getSurveyId());
-					alchemerAnswer.setStudyName(surveyTitle);
-					alchemerAnswer.setResponseId(task.getResponseId());
-					alchemerAnswer.setCreated(LocalDate.now());
-					alchemerAnswerRepository.save(alchemerAnswer);
-					LOGGER.info("Saved answer for parent question ID: {}, option ID: {}",
-							answerNode.path("id").asLong(), alchemerAnswer.getId());
+					Long alchemerId = optionNode.path("id").asLong();
+					if (alchemerAnswerRepository.findByAlchemerId(alchemerId).isEmpty()) {
+						AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+						alchemerAnswer.setAlchemerId(alchemerId);
+						alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
+						alchemerAnswer.setQuestion(answerNode.path("question").asText());
+						alchemerAnswer.setAnswer(optionNode.path("answer").asText());
+						alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+						alchemerAnswer.setShown(true);
+						alchemerAnswer.setSurveyId(task.getSurveyId());
+						alchemerAnswer.setStudyName(surveyTitle);
+						alchemerAnswer.setResponseId(task.getResponseId());
+						alchemerAnswer.setCreated(LocalDate.now());
+						alchemerAnswerRepository.save(alchemerAnswer);
+						LOGGER.info("Saved answer for parent question ID: {}, option ID: {}",
+								answerNode.path("id").asLong(), alchemerId);
+					}
 				}
 			}
 		}
@@ -151,20 +157,23 @@ public class AlchemerAnswerRetriever {
 					Map.Entry<String, JsonNode> answerEntry = answers.next();
 					JsonNode answer = answerEntry.getValue();
 					if (answer.path("shown").asBoolean(true)) { // Assume shown if not present
-						AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-						alchemerAnswer.setId(answer.path("id").asLong());
-						alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
-						alchemerAnswer.setQuestion(answer.path("question").asText());
-						alchemerAnswer.setAnswer(answer.path("answer").asText());
-						alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-						alchemerAnswer.setShown(true);
-						alchemerAnswer.setSurveyId(task.getSurveyId());
-						alchemerAnswer.setResponseId(task.getResponseId());
-						alchemerAnswer.setStudyName(surveyTitle);
-						alchemerAnswer.setCreated(LocalDate.now());
-						alchemerAnswerRepository.save(alchemerAnswer);
-						LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}",
-								answerNode.path("id").asLong(), alchemerAnswer.getId());
+						Long alchemerId = answer.path("id").asLong();
+						if (alchemerAnswerRepository.findByAlchemerId(alchemerId).isEmpty()) {
+							AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+							alchemerAnswer.setAlchemerId(alchemerId);
+							alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
+							alchemerAnswer.setQuestion(answer.path("question").asText());
+							alchemerAnswer.setAnswer(answer.path("answer").asText());
+							alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+							alchemerAnswer.setShown(true);
+							alchemerAnswer.setSurveyId(task.getSurveyId());
+							alchemerAnswer.setResponseId(task.getResponseId());
+							alchemerAnswer.setStudyName(surveyTitle);
+							alchemerAnswer.setCreated(LocalDate.now());
+							alchemerAnswerRepository.save(alchemerAnswer);
+							LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}",
+									answerNode.path("id").asLong(), alchemerId);
+						}
 					}
 				}
 			}

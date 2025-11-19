@@ -1,6 +1,7 @@
 package uy.com.bay.utiles.data.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -11,5 +12,7 @@ public interface AlchemerAnswerRepository
 		extends JpaRepository<AlchemerAnswer, Long>, JpaSpecificationExecutor<AlchemerAnswer> {
 
 	List<AlchemerAnswer> findByResponseIdAndSurveyId(Long responseId, Integer surveyId);
+
+	Optional<AlchemerAnswer> findByAlchemerId(Long alchemerId);
 
 }
