@@ -12,8 +12,8 @@ import jakarta.persistence.Id;
 public class AlchemerAnswer {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	@GeneratedValue(strategy = GenerationType.TABLE)
+	private String id;
 	private Long alchemerId;
 	private String type;
 	@Column(columnDefinition = "MEDIUMTEXT")
@@ -36,11 +36,11 @@ public class AlchemerAnswer {
 		this.created = created;
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
