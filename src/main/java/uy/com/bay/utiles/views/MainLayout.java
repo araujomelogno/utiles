@@ -194,6 +194,10 @@ public class MainLayout extends AppLayout {
 		rendirGastoItem.setPrefixComponent(new Icon("vaadin", "file-add"));
 		surveyorPortalItem.addItem(rendirGastoItem);
 
+		SideNavItem completedSurveysItem = new SideNavItem("Encuestas completas", "completed-surveys");
+		completedSurveysItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
+		surveyorPortalItem.addItem(completedSurveysItem);
+
 		nav.addItem(surveyorPortalItem);
 
 		SideNavItem extrasItem = new SideNavItem("Extras");
