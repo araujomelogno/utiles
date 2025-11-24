@@ -1,29 +1,5 @@
 package uy.com.bay.utiles.views;
 
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.data.renderer.LocalDateRenderer;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.PermitAll;
-import uy.com.bay.utiles.data.Surveyor;
-import uy.com.bay.utiles.data.User;
-import uy.com.bay.utiles.data.repository.AlchemerAnswerRepository;
-import uy.com.bay.utiles.data.SurveyorRepository;
-import uy.com.bay.utiles.dto.CompletedSurveyDTO;
-import uy.com.bay.utiles.security.AuthenticatedUser;
-import uy.com.bay.utiles.util.ExcelExporter;
-import uy.com.bay.utiles.views.MainLayout;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.server.StreamResource;
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -34,7 +10,30 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.vaadin.componentfactory.addons.monthpicker.MonthPicker;
+import org.vaadin.addons.componentfactory.monthpicker.MonthPicker;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.LocalDateRenderer;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
+
+import jakarta.annotation.security.PermitAll;
+import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.data.SurveyorRepository;
+import uy.com.bay.utiles.data.User;
+import uy.com.bay.utiles.data.repository.AlchemerAnswerRepository;
+import uy.com.bay.utiles.dto.CompletedSurveyDTO;
+import uy.com.bay.utiles.security.AuthenticatedUser;
+import uy.com.bay.utiles.util.ExcelExporter;
 
 @PageTitle("Encuestas Completas")
 @Route(value = "completed-surveys", layout = MainLayout.class)
@@ -45,7 +44,7 @@ public class CompletedSurveysView extends VerticalLayout {
 	private final SurveyorRepository surveyorRepository;
 
 	private final MultiSelectComboBox<Surveyor> surveyorComboBox = new MultiSelectComboBox<>("Encuestador");
-	private final MonthPicker monthPicker = new MonthPicker("Mes");
+	private final MonthPicker monthPicker = new MonthPicker();
 	private final Button exportButton = new Button("Exportar", VaadinIcon.DOWNLOAD.create());
 	private final Grid<CompletedSurveyDTO> grid = new Grid<>(CompletedSurveyDTO.class);
 	private List<CompletedSurveyDTO> results = new ArrayList<>();
