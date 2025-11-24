@@ -13,4 +13,5 @@ public interface SurveyorRepository extends JpaRepository<Surveyor, Long>, JpaSp
     Optional<Surveyor> findByFirstName(String firstName);
     @Query("SELECT s FROM Surveyor s WHERE s.firstName = :name")
     Optional<Surveyor> findByName(@Param("name") String name);
+    Optional<Surveyor> findByLogin(String login);
 }
