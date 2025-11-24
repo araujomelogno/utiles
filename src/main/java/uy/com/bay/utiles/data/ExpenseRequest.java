@@ -79,6 +79,7 @@ public class ExpenseRequest extends AbstractEntity {
 	}
 
 	public Date getTransferDate() {
+
 		return transferDate;
 	}
 

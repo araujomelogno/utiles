@@ -39,6 +39,8 @@ public class Extra extends AbstractEntity {
     private Double unitPrice;
 
     private String obs;
+    
+    
 
     public LocalDate getDate() {
         return date;

@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 public class Surveyor extends AbstractEntity {
 
 	private String firstName;
+	private String login;
 	private String lastName;
 	private String ci;
 	private String surveyToGoId;
@@ -54,5 +55,13 @@ public class Surveyor extends AbstractEntity {
 	@jakarta.persistence.Transient
 	public String getName() {
 		return (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+	}
+
+	public String getLogin() {
+		return login;
+	}
+
+	public void setLogin(String login) {
+		this.login = login;
 	}
 }

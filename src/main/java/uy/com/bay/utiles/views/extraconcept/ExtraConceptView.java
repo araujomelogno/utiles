@@ -182,7 +182,14 @@ public class ExtraConceptView extends Div implements BeforeEnterObserver {
 			populateForm(new ExtraConcept());
 		});
 
-		HorizontalLayout topLayout = new HorizontalLayout(createButton);
+		Button helloButton = new Button("hola");
+		helloButton.addClickListener(e -> {
+			com.vaadin.flow.component.dialog.Dialog dialog = new com.vaadin.flow.component.dialog.Dialog();
+			dialog.add(new com.vaadin.flow.component.Text("Hola mundo"));
+			dialog.open();
+		});
+
+		HorizontalLayout topLayout = new HorizontalLayout(createButton, helloButton);
 		topLayout.setWidthFull();
 		topLayout.setAlignItems(Alignment.BASELINE);
 

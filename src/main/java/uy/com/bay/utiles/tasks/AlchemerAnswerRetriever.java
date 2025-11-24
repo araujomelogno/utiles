@@ -49,37 +49,45 @@ public class AlchemerAnswerRetriever {
 		List<Task> pendingTasks = taskRepository.findByJobTypeAndStatus(JobType.ALCHEMERANSWERRETRIEVAL,
 				Status.PENDING);
 		LOGGER.info("Found {} pending tasks.", pendingTasks.size());
-
 		for (Task task : pendingTasks) {
-			try {
-				LOGGER.info("Processing task ID: {}", task.getId());
+			if (alchemerAnswerRepository
+					.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId()).isEmpty()) {
+				try {
+					LOGGER.info("Processing task ID: {}", task.getId());
 
-				String url = String.format(
-						"https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
-						task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
+					String url = String.format(
+							"https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
+							task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
 
-				String response = restTemplate.getForObject(url, String.class);
+					String response = restTemplate.getForObject(url, String.class);
+					String surveyor = "";
+					ObjectMapper mapper = new ObjectMapper();
+					JsonNode root = mapper.readTree(response);
+					JsonNode surveyData = root.path("data").path("survey_data");
+					JsonNode urlData = root.path("data").path("url_variables");
+					if (urlData != null) {
+						JsonNode surveyorNode = urlData.path("agente");
+						if (surveyorNode.get("value") != null)
+							surveyor = surveyorNode.get("value").asText();
+					}
 
-				ObjectMapper mapper = new ObjectMapper();
-				JsonNode root = mapper.readTree(response);
-				JsonNode surveyData = root.path("data").path("survey_data");
+					if (root.path("result_ok").asBoolean()) {
+						Iterator<Map.Entry<String, JsonNode>> fields = surveyData.fields();
+						while (fields.hasNext()) {
+							Map.Entry<String, JsonNode> entry = fields.next();
+							JsonNode answerNode = entry.getValue();
 
-				if (root.path("result_ok").asBoolean()) {
-					Iterator<Map.Entry<String, JsonNode>> fields = surveyData.fields();
-					while (fields.hasNext()) {
-						Map.Entry<String, JsonNode> entry = fields.next();
-						JsonNode answerNode = entry.getValue();
+							String type = answerNode.path("type").asText();
+							if (answerNode.path("shown").asBoolean()) {
+								switch (type) {
+								case "RADIO":
+								case "MENU":
+								case "HIDDEN":
+								case "ESSAY":
+								case "NPS":
+								case "TEXTBOX":
 
-						String type = answerNode.path("type").asText();
-						if (answerNode.path("shown").asBoolean()) {
-							switch (type) {
-							case "RADIO":
-							case "MENU":
-							case "HIDDEN":
-							case "ESSAY":
-							case "TEXTBOX":
-								Long alchemerId = answerNode.path("id").asLong();
-								if (alchemerAnswerRepository.findByAlchemerId(alchemerId).isEmpty()) {
+									Long alchemerId = answerNode.path("id").asLong();
 									AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
 									alchemerAnswer.setAlchemerId(alchemerId);
 									alchemerAnswer.setType(type);
@@ -91,35 +99,40 @@ public class AlchemerAnswerRetriever {
 									alchemerAnswer.setStudyName(task.getStudyName());
 									alchemerAnswer.setResponseId(task.getResponseId());
 									alchemerAnswer.setCreated(LocalDate.now());
+									alchemerAnswer.setSurveyor(surveyor);
 									alchemerAnswerRepository.save(alchemerAnswer);
+									break;
+								case "parent":
+									processParentAnswer(answerNode, task, task.getStudyName(), surveyor);
+									break;
+								default:
+									LOGGER.warn("Unknown answer type: {}", type);
+									break;
 								}
-								break;
-							case "parent":
-								processParentAnswer(answerNode, task, task.getStudyName());
-								break;
-							default:
-								LOGGER.warn("Unknown answer type: {}", type);
-								break;
 							}
 						}
+						task.setStatus(Status.DONE);
+						taskRepository.save(task);
+						LOGGER.info("Task ID: {} processed successfully.", task.getId());
+					} else {
+						LOGGER.warn("Task ID: {} not processed successfully, se mantiene en PENDING.", task.getId());
 					}
-					task.setStatus(Status.DONE);
-					taskRepository.save(task);
-					LOGGER.info("Task ID: {} processed successfully.", task.getId());
-				} else {
-					LOGGER.warn("Task ID: {} not processed successfully, se mantiene en PENDING.", task.getId());
-				}
 
-			} catch (Exception e) {
-				task.setStatus(Status.ERROR);
+				} catch (Exception e) {
+					task.setStatus(Status.ERROR);
+					taskRepository.save(task);
+					LOGGER.error("Error processing task ID: {}", task.getId(), e);
+				}
+			} else {
+				task.setStatus(Status.DONE);
 				taskRepository.save(task);
-				LOGGER.error("Error processing task ID: {}", task.getId(), e);
 			}
+
 		}
 		LOGGER.info("Alchemer Answer Retriever task finished.");
 	}
 
-	private void processParentAnswer(JsonNode answerNode, Task task, String surveyTitle) {
+	private void processParentAnswer(JsonNode answerNode, Task task, String surveyTitle, String surveyor) {
 		if (answerNode.has("options")) {
 			Iterator<Map.Entry<String, JsonNode>> options = answerNode.path("options").fields();
 			while (options.hasNext()) {
@@ -138,6 +151,7 @@ public class AlchemerAnswerRetriever {
 						alchemerAnswer.setSurveyId(task.getSurveyId());
 						alchemerAnswer.setStudyName(surveyTitle);
 						alchemerAnswer.setResponseId(task.getResponseId());
+						alchemerAnswer.setSurveyor(surveyor);
 						alchemerAnswer.setCreated(LocalDate.now());
 						alchemerAnswerRepository.save(alchemerAnswer);
 						LOGGER.info("Saved answer for parent question ID: {}, option ID: {}",
@@ -169,6 +183,7 @@ public class AlchemerAnswerRetriever {
 							alchemerAnswer.setSurveyId(task.getSurveyId());
 							alchemerAnswer.setResponseId(task.getResponseId());
 							alchemerAnswer.setStudyName(surveyTitle);
+							alchemerAnswer.setSurveyor(surveyor);
 							alchemerAnswer.setCreated(LocalDate.now());
 							alchemerAnswerRepository.save(alchemerAnswer);
 							LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}",

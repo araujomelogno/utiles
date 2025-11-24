@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.entities;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,6 +19,12 @@ public class BudgetEntry extends AbstractEntity {
 	private Double ammount;
 	private Integer quantity;
 	private Double spent = 0.0;
+	private LocalDate created;
+
+	public BudgetEntry() {
+		this.created = LocalDate.now();
+
+	}
 
 	@ManyToOne
 	@JoinColumn(name = "budget_concept_id")
@@ -114,6 +121,16 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setTotal(Double total) {
 		this.total = total;
+	}
+
+	public LocalDate getCreated() {
+		if (created == null)
+			return LocalDate.now();
+		return created;
+	}
+
+	public void setCreated(LocalDate created) {
+		this.created = created;
 	}
 
 }

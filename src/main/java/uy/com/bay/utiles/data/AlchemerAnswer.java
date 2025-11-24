@@ -4,16 +4,10 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 @Entity
-public class AlchemerAnswer {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.TABLE)
-	private String id;
+public class AlchemerAnswer extends AbstractEntity {
+ 
 	private Long alchemerId;
 	private String type;
 	@Column(columnDefinition = "MEDIUMTEXT")
@@ -25,6 +19,7 @@ public class AlchemerAnswer {
 	private Integer surveyId;
 	private Integer responseId;
 	private String studyName;
+	private String surveyor;
 
 	private LocalDate created = LocalDate.now();
 
@@ -35,15 +30,7 @@ public class AlchemerAnswer {
 	public void setCreated(LocalDate created) {
 		this.created = created;
 	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
+ 
 	public Long getAlchemerId() {
 		return alchemerId;
 	}
@@ -118,5 +105,13 @@ public class AlchemerAnswer {
 
 	public void setStudyName(String studyName) {
 		this.studyName = studyName;
+	}
+
+	public String getSurveyor() {
+		return surveyor;
+	}
+
+	public void setSurveyor(String surveyor) {
+		this.surveyor = surveyor;
 	}
 }
