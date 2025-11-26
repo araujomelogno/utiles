@@ -19,11 +19,10 @@ public interface AlchemerAnswerRepository
 
 	Optional<AlchemerAnswer> findByAlchemerId(Long alchemerId);
 
-	@Query("SELECT new uy.com.bay.utiles.dto.CompletedSurveyDTO(a.surveyor, a.studyName, a.created, COUNT(a)) " +
-			"FROM AlchemerAnswer a " +
-			"WHERE a.surveyor IN :surveyors AND a.created >= :startDate AND a.created <= :endDate " +
-			"GROUP BY a.surveyor, a.studyName, a.created " +
-			"ORDER BY a.created DESC, a.surveyor")
+	@Query("SELECT new uy.com.bay.utiles.dto.CompletedSurveyDTO(a.surveyor, a.studyName, a.created, COUNT(distinct(a.responseId))) "
+			+ "FROM AlchemerAnswer a "
+			+ "WHERE a.surveyor IN :surveyors AND a.created >= :startDate AND a.created <= :endDate "
+			+ "GROUP BY a.surveyor, a.studyName, a.created " + "ORDER BY  a.surveyor, a.created DESC")
 	List<CompletedSurveyDTO> findCompletedSurveys(@Param("surveyors") List<String> surveyors,
 			@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 

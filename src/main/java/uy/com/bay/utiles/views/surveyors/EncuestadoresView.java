@@ -66,6 +66,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 	private TextField ci;
 	private TextField SurveyToGoId;
 	private TextField balance;
+	private TextField login;
 
 	private Button addButton;
 	private TextField firstNameFilter;
@@ -295,10 +296,11 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		firstName = new TextField("First Name");
 		lastName = new TextField("Last Name");
 		ci = new TextField("Ci");
+		login = new TextField("Usuario Ucontact/Dooblo");
 		SurveyToGoId = new TextField("Survey To Go Id");
 		balance = new TextField("Balance");
 		balance.setReadOnly(true);
-		formLayout.add(firstName, lastName, ci, SurveyToGoId, balance);
+		formLayout.add(firstName, lastName, ci, SurveyToGoId,login, balance);
 
 		editorDiv.add(formLayout);
 		viewMovements.addThemeVariants(ButtonVariant.LUMO_CONTRAST);

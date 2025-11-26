@@ -58,9 +58,6 @@ public class CompletedSurveysView extends VerticalLayout {
 		setSpacing(false);
 		setAlignItems(Alignment.CENTER);
 
-		H2 header = new H2("Encuestas Completas");
-		header.addClassName("text-l");
-
 		surveyorComboBox.setItems(surveyorRepository.findAll());
 		surveyorComboBox.setItemLabelGenerator(Surveyor::getName);
 		monthPicker.setValue(YearMonth.now());
@@ -86,27 +83,26 @@ public class CompletedSurveysView extends VerticalLayout {
 		grid.removeAllColumns();
 		grid.addColumn(CompletedSurveyDTO::getSurveyor).setHeader("Encuestador");
 		grid.addColumn(CompletedSurveyDTO::getStudyName).setHeader("Estudio");
-		grid.addColumn(new LocalDateRenderer<>(CompletedSurveyDTO::getCreated, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-				.setHeader("Fecha");
+		grid.addColumn(new LocalDateRenderer<>(CompletedSurveyDTO::getCreated,
+				() -> DateTimeFormatter.ofPattern("dd/MM/yyyy"))).setHeader("Fecha");
 		grid.addColumn(CompletedSurveyDTO::getCount).setHeader("Cantidad");
 
 		exportButton.addClickListener(e -> exportToExcel());
 
-		add(header, filtersLayout, grid);
+		add(filtersLayout, grid);
 		fetchData();
 	}
 
 	private void exportToExcel() {
 		try {
-			StreamResource sr = new StreamResource("completed-surveys.xlsx",
-					() -> {
-						try {
-							return ExcelExporter.exportToExcel(results);
-						} catch (IOException e) {
-							Notification.show("Error al generar el archivo Excel.", 3000, Notification.Position.TOP_CENTER);
-							return null;
-						}
-					});
+			StreamResource sr = new StreamResource("completed-surveys.xlsx", () -> {
+				try {
+					return ExcelExporter.exportToExcel(results);
+				} catch (IOException e) {
+					Notification.show("Error al generar el archivo Excel.", 3000, Notification.Position.TOP_CENTER);
+					return null;
+				}
+			});
 			Anchor anchor = new Anchor(sr, "");
 			anchor.getElement().setAttribute("download", true);
 			anchor.getStyle().set("display", "none");
