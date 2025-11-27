@@ -187,9 +187,9 @@ public class QuestionCodingView extends VerticalLayout {
 		processButton.addClickListener(event -> {
 			ProgressDialog dialog = new ProgressDialog();
 			dialog.open();
-
+			Workbook surveyWorkbook = null;
 			try {
-				Workbook surveyWorkbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
+				surveyWorkbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
 				Workbook codeMappingWorkbook = new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
 
 				List<ColumnMapping> selected = columnMappings.stream().filter(ColumnMapping::isToCode)
@@ -214,7 +214,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 					processed++;
 					int percentage = (int) (((double) processed / total) * 100);
-					dialog.getProgressBar().setValue(percentage);
+					dialog.getProgressBar().setValue(percentage / 100.0);
 					dialog.getHeader().setText("Procesando: " + processed + "/" + total);
 				}
 			} catch (IOException e) {
@@ -224,7 +224,9 @@ public class QuestionCodingView extends VerticalLayout {
 
 			dialog.getHeader().setText("Proceso completado");
 			downloadButton.setVisible(true);
-			downloadLink.setHref(createExcelStreamResource(surveyWorkbook));
+			if (surveyWorkbook != null) {
+				downloadLink.setHref(createExcelStreamResource(surveyWorkbook));
+			}
 		});
 
 		prevButton.addClickListener(event -> showStep(3));

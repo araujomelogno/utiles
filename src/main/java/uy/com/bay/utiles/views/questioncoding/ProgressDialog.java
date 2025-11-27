@@ -1,29 +1,31 @@
 package uy.com.bay.utiles.views.questioncoding;
 
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 
 public class ProgressDialog extends Dialog {
 
-	private final H2 header;
-	private final ProgressBar progressBar;
+    private final ProgressBar progressBar;
+    private final H3 header;
 
-	public ProgressDialog() {
-		header = new H2("Procesando...");
-		progressBar = new ProgressBar();
-		progressBar.setIndeterminate(true);
+    public ProgressDialog() {
+        this.progressBar = new ProgressBar();
+        this.header = new H3("Procesando...");
+        VerticalLayout layout = new VerticalLayout(header, progressBar);
+        layout.setPadding(true);
+        layout.setSpacing(true);
+        layout.setAlignItems(VerticalLayout.Alignment.CENTER);
+        add(layout);
+    }
 
-		VerticalLayout layout = new VerticalLayout(header, progressBar);
-		layout.setPadding(false);
-		layout.setSpacing(false);
-		layout.setAlignItems(VerticalLayout.Alignment.CENTER);
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
 
-		add(layout);
-	}
+    public H3 getHeader() {
+        return header;
+    }
 
-	public ProgressBar getProgressBar() {
-		return progressBar;
-	}
 }
