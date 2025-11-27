@@ -14,9 +14,9 @@ import org.vaadin.addons.componentfactory.monthpicker.MonthPicker;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -37,6 +37,7 @@ import uy.com.bay.utiles.util.ExcelExporter;
 
 @PageTitle("Encuestas Completas")
 @Route(value = "completed-surveys", layout = MainLayout.class)
+@Uses(MonthPicker.class)
 @PermitAll
 public class CompletedSurveysView extends VerticalLayout {
 
