@@ -1,0 +1,27 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ----------------------< uy.com.bay.utiles:utiles >----------------------
+[INFO] Building utiles 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ war ]---------------------------------
+[INFO]
+[INFO] >>> spring-boot:3.4.5:run (default-cli) > test-compile @ utiles >>>
+[WARNING] The POM for org.vaadin.addons.tltv.gantt:gantt-flow-addon:jar:24.0.2 is missing, no dependency information available
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.711 s
+[INFO] Finished at: 2025-11-26T02:39:52Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal on project utiles: Could not resolve dependencies for project uy.com.bay.utiles:utiles:war:1.0-SNAPSHOT
+[ERROR] dependency: org.vaadin.addons.tltv.gantt:gantt-flow-addon:jar:24.0.2 (compile)
+[ERROR] 	org.vaadin.addons.tltv.gantt:gantt-flow-addon:jar:24.0.2 was not found in https://repo.maven.apache.org/maven2 during a previous attempt. This failure was cached in the local repository and resolution is not reattempted until the update interval of central has elapsed or updates are forced
+[ERROR] 	org.vaadin.addons.tltv.gantt:gantt-flow-addon:jar:24.0.2 was not found in https://maven.vaadin.com/vaadin-addons during a previous attempt. This failure was cached in the local repository and resolution is not reattempted until the update interval of vaadin-addons has elapsed or updates are forced
+[ERROR]
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException

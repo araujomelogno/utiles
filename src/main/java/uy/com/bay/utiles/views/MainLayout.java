@@ -240,6 +240,13 @@ public class MainLayout extends AppLayout {
 
 		nav.addItem(settingsItem);
 
+		SideNavItem toolsItem = new SideNavItem("Herramientas");
+		toolsItem.setPrefixComponent(new Icon("vaadin", "tools"));
+		SideNavItem questionCodingItem = new SideNavItem("Codificación de preguntas", "question-coding");
+		questionCodingItem.setPrefixComponent(new Icon("vaadin", "cogs"));
+		toolsItem.addItem(questionCodingItem);
+		nav.addItem(toolsItem);
+
 		return nav;
 	}
 
