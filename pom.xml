@@ -14,6 +14,8 @@
  <properties>
     <java.version>21</java.version>
     <vaadin.version>24.7.5</vaadin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
   <parent>
@@ -208,6 +210,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
         <executions>
           <execution>
             <id>copy-vaadin-theme</id>

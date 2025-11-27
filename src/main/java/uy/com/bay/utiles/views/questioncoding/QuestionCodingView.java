@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -21,6 +23,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
@@ -30,23 +33,29 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
+import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.views.MainLayout;
 
-@PageTitle("Question Coding")
+@PageTitle("Codificación")
 @Route(value = "question-coding", layout = MainLayout.class)
+@RolesAllowed("ADMIN")
 public class QuestionCodingView extends VerticalLayout {
 
 	private final VerticalLayout step1;
-	private final VerticalLayout step2;
+	private VerticalLayout step2;
 	private final VerticalLayout step3;
 	private final VerticalLayout step4;
 	private List<ColumnMapping> columnMappings;
 	private final ChatClient chatClient;
 	private byte[] surveyFileContent;
 	private byte[] codeMappingFileContent;
+	@Value("${app.openai.prompt}")
+	private String basePrompt;
+	Grid<ColumnMapping> grid;
 
 	public QuestionCodingView(ChatClient.Builder chatClientBuilder) {
 		this.chatClient = chatClientBuilder.build();
+		grid = new Grid();
 		step1 = createStep1();
 		step2 = createStep2();
 		step3 = createStep3();
@@ -57,7 +66,7 @@ public class QuestionCodingView extends VerticalLayout {
 	}
 
 	private VerticalLayout createStep1() {
-		H2 header = new H2("Paso 1: Cargar archivo de encuesta");
+		H2 header = new H2("Paso 1: Cargar archivo de estudio");
 		MemoryBuffer buffer = new MemoryBuffer();
 		Upload upload = new Upload(buffer);
 		Button nextButton = new Button("Siguiente");
@@ -72,12 +81,13 @@ public class QuestionCodingView extends VerticalLayout {
 				for (Cell cell : headerRow) {
 					columnMappings.add(new ColumnMapping(cell.getStringCellValue()));
 				}
+				grid.setItems(columnMappings);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});
 
-		nextButton.addClickListener(event -> showStep(2));
+		nextButton.addClickListener(event -> this.showStep(2));
 
 		VerticalLayout layout = new VerticalLayout(header, upload, nextButton);
 		layout.setSizeFull();
@@ -89,7 +99,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 	private VerticalLayout createStep2() {
 		H2 header = new H2("Paso 2: Seleccionar columnas a codificar");
-		Grid<ColumnMapping> grid = new Grid<>();
+
 		Button prevButton = new Button("Anterior");
 		Button nextButton = new Button("Siguiente");
 
@@ -106,12 +116,12 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(mapping.getNewName() != null ? mapping.getNewName() : "");
 			textField.addValueChangeListener(event -> mapping.setNewName(event.getValue()));
 			return textField;
-		})).setHeader("Nuevo nombre");
+		})).setHeader("Nombre alternativo (opcional)");
 
 		prevButton.addClickListener(event -> showStep(1));
 		nextButton.addClickListener(event -> showStep(3));
 
-		VerticalLayout layout = new VerticalLayout(header, grid, prevButton, nextButton);
+		VerticalLayout layout = new VerticalLayout(header, grid, new HorizontalLayout(prevButton, nextButton));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -165,7 +175,7 @@ public class QuestionCodingView extends VerticalLayout {
 		prevButton.addClickListener(event -> showStep(2));
 		nextButton.addClickListener(event -> showStep(4));
 
-		VerticalLayout layout = new VerticalLayout(header, upload, prevButton, nextButton);
+		VerticalLayout layout = new VerticalLayout(header, upload, new HorizontalLayout(prevButton, nextButton));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -207,22 +217,24 @@ public class QuestionCodingView extends VerticalLayout {
 					List<String> codeLabels = getColumnData(codeMappingWorkbook, columnName + "-ETIQUETA");
 					List<String> codeValues = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
 
-					String prompt = buildPrompt(surveyResponses, codeLabels, codeValues);
-					String response = chatClient.prompt(prompt).call().content();
+					String prompt = buildPrompt(mapping.getOriginalName(), surveyResponses, codeLabels, codeValues);
+					System.out.println("PROMPT" + prompt);
 
+					String response = chatClient.prompt(prompt).call().content();
+					System.out.println("RESPONSE" + response);
 					updateSurveyWithCodedResponses(surveyWorkbook, mapping.getOriginalName(), response);
 
 					processed++;
 					int percentage = (int) (((double) processed / total) * 100);
 					dialog.getProgressBar().setValue(percentage / 100.0);
-					dialog.getHeader().setText("Procesando: " + processed + "/" + total);
+					dialog.getHeaderComponent().setText("Procesando: " + processed + "/" + total);
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-				Notification.show("Error al procesar los archivos.");
+				Notification.show("Error al procesar los archivos. ");
 			}
 
-			dialog.getHeader().setText("Proceso completado");
+			dialog.getHeaderComponent().setText("Proceso completado");
 			downloadButton.setVisible(true);
 			if (surveyWorkbook != null) {
 				downloadLink.setHref(createExcelStreamResource(surveyWorkbook));
@@ -231,7 +243,8 @@ public class QuestionCodingView extends VerticalLayout {
 
 		prevButton.addClickListener(event -> showStep(3));
 
-		VerticalLayout layout = new VerticalLayout(header, prevButton, processButton, downloadLink);
+		VerticalLayout layout = new VerticalLayout(header,
+				new HorizontalLayout(prevButton, processButton, downloadLink));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -265,7 +278,7 @@ public class QuestionCodingView extends VerticalLayout {
 		Row headerRow = sheet.getRow(0);
 		int newColumnIndex = headerRow.getLastCellNum();
 		Cell newHeaderCell = headerRow.createCell(newColumnIndex);
-		newHeaderCell.setCellValue(originalColumnName + "_CODED");
+		newHeaderCell.setCellValue(originalColumnName + "_CODIFICADA");
 
 		String[] responses = codedResponses.split("\n");
 		for (int i = 0; i < responses.length; i++) {
@@ -295,7 +308,10 @@ public class QuestionCodingView extends VerticalLayout {
 				if (row != null) {
 					Cell cell = row.getCell(columnIndex);
 					if (cell != null) {
-						data.add(cell.getStringCellValue());
+						if (cell.getCellType().equals(CellType.NUMERIC))
+							data.add(Double.valueOf(cell.getNumericCellValue()).toString());
+						else
+							data.add(cell.getStringCellValue());
 					}
 				}
 			}
@@ -303,10 +319,13 @@ public class QuestionCodingView extends VerticalLayout {
 		return data;
 	}
 
-	private String buildPrompt(List<String> surveyResponses, List<String> codeLabels, List<String> codeValues) {
+	private String buildPrompt(String question, List<String> surveyResponses, List<String> codeLabels,
+			List<String> codeValues) {
 		StringBuilder prompt = new StringBuilder();
-		prompt.append(System.getProperty("app.openai.prompt"));
-		prompt.append("\n\nRespuestas a codificar:\n");
+		prompt.append(basePrompt);
+		prompt.append("\n\nPregunta:\n");
+		prompt.append(question + "\n");
+		prompt.append("\n\nRespuesta a codificar:\n");
 		surveyResponses.forEach(response -> prompt.append("- ").append(response).append("\n"));
 		prompt.append("\n\nCódigos:\n");
 		for (int i = 0; i < codeLabels.size(); i++) {

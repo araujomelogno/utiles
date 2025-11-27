@@ -14,6 +14,8 @@ import org.vaadin.addons.componentfactory.monthpicker.MonthPicker;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
@@ -45,7 +47,7 @@ public class CompletedSurveysView extends VerticalLayout {
 	private final SurveyorRepository surveyorRepository;
 
 	private final MultiSelectComboBox<Surveyor> surveyorComboBox = new MultiSelectComboBox<>("Encuestador");
-	private final MonthPicker monthPicker = new MonthPicker();
+	private final MonthPicker monthPicker;
 	private final Button exportButton = new Button("Exportar", VaadinIcon.DOWNLOAD.create());
 	private final Grid<CompletedSurveyDTO> grid = new Grid<>(CompletedSurveyDTO.class);
 	private List<CompletedSurveyDTO> results = new ArrayList<>();
@@ -61,6 +63,8 @@ public class CompletedSurveysView extends VerticalLayout {
 
 		surveyorComboBox.setItems(surveyorRepository.findAll());
 		surveyorComboBox.setItemLabelGenerator(Surveyor::getName);
+		monthPicker = new MonthPicker();
+		monthPicker.setLabel("Fecha:");
 		monthPicker.setValue(YearMonth.now());
 
 		Optional<User> maybeUser = authenticatedUser.get();

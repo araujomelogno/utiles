@@ -24,8 +24,11 @@ public class ProgressDialog extends Dialog {
         return progressBar;
     }
 
-    public H3 getHeader() {
+    public H3 getHeaderComponent() {
         return header;
     }
 
+    public void setHeaderText(String text) {
+        this.header.setText(text);
+    }
 }
