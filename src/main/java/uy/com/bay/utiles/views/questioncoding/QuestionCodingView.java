@@ -25,6 +25,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
@@ -116,7 +117,14 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(mapping.getNewName() != null ? mapping.getNewName() : "");
 			textField.addValueChangeListener(event -> mapping.setNewName(event.getValue()));
 			return textField;
-		})).setHeader("Nombre alternativo (opcional)");
+		})).setHeader("Código alternativo (opcional)");
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			TextArea textField = new TextArea();
+			textField.setValue(mapping.getFineTuning() != null ? mapping.getFineTuning() : "");
+			textField.addValueChangeListener(event -> mapping.setFineTuning(event.getValue()));
+			return textField;
+		})).setHeader("Fine Tuning ");
 
 		prevButton.addClickListener(event -> showStep(1));
 		nextButton.addClickListener(event -> showStep(3));
@@ -337,6 +345,7 @@ public class QuestionCodingView extends VerticalLayout {
 	public static class ColumnMapping {
 		private final String originalName;
 		private boolean toCode;
+		private String fineTuning;
 		private String newName;
 
 		public ColumnMapping(String originalName) {
@@ -361,6 +370,14 @@ public class QuestionCodingView extends VerticalLayout {
 
 		public void setNewName(String newName) {
 			this.newName = newName;
+		}
+
+		public String getFineTuning() {
+			return fineTuning;
+		}
+
+		public void setFineTuning(String fineTuning) {
+			this.fineTuning = fineTuning;
 		}
 	}
 }
