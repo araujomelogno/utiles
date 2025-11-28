@@ -40,6 +40,7 @@ import uy.com.bay.utiles.util.ExcelExporter;
 @PageTitle("Encuestas Completas")
 @Route(value = "completed-surveys", layout = MainLayout.class)
 @Uses(MonthPicker.class)
+@JsModule("@vaadin-component-factory/vcf-month-picker/vcf-month-picker.js")
 @PermitAll
 public class CompletedSurveysView extends VerticalLayout {
 
