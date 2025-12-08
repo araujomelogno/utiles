@@ -245,14 +245,14 @@ public class QuestionCodingView extends VerticalLayout {
 					aiInput.getQuestions().add(question);
 
 				}
-				String prompt = "hola %s";
-				prompt.formatted("pepe");
+				String json = "hola %s";
+				basePrompt.formatted("pepe");
 
 				// ACA CON LA AIINPUUT HAGO UN JSON Y LO PONGO EN EL PROMPT
 				// LUEGO PROCESO EL JSON DEL OUTPUY UY L O PONGO EN EL EXCEL DE SALIDA
 
-				System.out.println("PROMPT" + prompt);
-				String response = chatClient.prompt(prompt).call().content();
+				System.out.println("PROMPT" + basePrompt);
+				String response = chatClient.prompt(basePrompt).call().content();
 				System.out.println("RESPONSE" + response);
 //				updateSurveyWithCodedResponses(surveyWorkbook, mapping.getOriginalName(), response);
 //
