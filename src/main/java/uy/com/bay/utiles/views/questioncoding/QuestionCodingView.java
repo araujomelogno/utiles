@@ -26,7 +26,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -35,6 +34,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.dto.aiencoding.QuestionAIAnswer;
+import uy.com.bay.utiles.dto.aiencoding.QuestionAICode;
+import uy.com.bay.utiles.dto.aiencoding.QuestionAIInput;
+import uy.com.bay.utiles.dto.aiencoding.QuestionEncodingAIInput;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Codificación")
@@ -104,7 +107,7 @@ public class QuestionCodingView extends VerticalLayout {
 		Button prevButton = new Button("Anterior");
 		Button nextButton = new Button("Siguiente");
 
-		grid.addColumn(ColumnMapping::getOriginalName).setHeader("Encabezado");
+		grid.addColumn(ColumnMapping::getQuestionVariable).setHeader("Encabezado");
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			Checkbox checkbox = new Checkbox();
 			checkbox.setValue(mapping.isToCode());
@@ -113,11 +116,11 @@ public class QuestionCodingView extends VerticalLayout {
 		})).setHeader("Codificar");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
-			TextField textField = new TextField();
-			textField.setValue(mapping.getNewName() != null ? mapping.getNewName() : "");
-			textField.addValueChangeListener(event -> mapping.setNewName(event.getValue()));
+			TextArea textField = new TextArea();
+			textField.setValue(mapping.getQuestion() != null ? mapping.getQuestion() : "");
+			textField.addValueChangeListener(event -> mapping.setQuestion(event.getValue()));
 			return textField;
-		})).setHeader("Código alternativo (opcional)");
+		})).setHeader("Pregunta");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
@@ -159,10 +162,8 @@ public class QuestionCodingView extends VerticalLayout {
 						.collect(Collectors.toList());
 				boolean allHeadersValid = true;
 				for (ColumnMapping mapping : selected) {
-					String originalName = mapping.getNewName() != null && !mapping.getNewName().isEmpty()
-							? mapping.getNewName()
-							: mapping.getOriginalName();
-					if (!headers.contains(originalName + "-ETIQUETA") || !headers.contains(originalName + "-CODIGO")) {
+					String originalName = mapping.getQuestionVariable() != null ? mapping.getQuestionVariable() : "";
+					if (!headers.contains(originalName + "-CODIGO")) {
 						allHeadersValid = false;
 						break;
 					}
@@ -214,29 +215,51 @@ public class QuestionCodingView extends VerticalLayout {
 						.collect(Collectors.toList());
 				int total = selected.size();
 				int processed = 0;
+				QuestionEncodingAIInput aiInput = new QuestionEncodingAIInput();
 
 				for (ColumnMapping mapping : selected) {
-					String columnName = mapping.getNewName() != null && !mapping.getNewName().isEmpty()
-							? mapping.getNewName()
-							: mapping.getOriginalName();
+					QuestionAIInput question = new QuestionAIInput();
+					question.setQuestion(mapping.getQuestion());
+					question.setQuestion_fineTunning(mapping.getFineTuning());
+
+					String columnName = mapping.getQuestionVariable();
 
 					// Extract data for the prompt
-					List<String> surveyResponses = getColumnData(surveyWorkbook, mapping.getOriginalName());
-					List<String> codeLabels = getColumnData(codeMappingWorkbook, columnName + "-ETIQUETA");
-					List<String> codeValues = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
+					List<String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
+					Integer row = 1;
+					for (String answer : questionResponses) {
+						QuestionAIAnswer aianswer = new QuestionAIAnswer();
+						aianswer.setAnswer(answer);
+						aianswer.setResponse_id(row.toString());
+						question.getResponses().add(aianswer);
+						row++;
 
-					String prompt = buildPrompt(mapping.getOriginalName(), surveyResponses, codeLabels, codeValues);
-					System.out.println("PROMPT" + prompt);
+					}
 
-					String response = chatClient.prompt(prompt).call().content();
-					System.out.println("RESPONSE" + response);
-					updateSurveyWithCodedResponses(surveyWorkbook, mapping.getOriginalName(), response);
+					List<String> questionCodes = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
+					for (String questionCode : questionCodes) {
+						QuestionAICode qCode = new QuestionAICode();
+						qCode.setCode(questionCode);
+						question.getCodes().add(qCode);
+					}
+					aiInput.getQuestions().add(question);
 
-					processed++;
-					int percentage = (int) (((double) processed / total) * 100);
-					dialog.getProgressBar().setValue(percentage / 100.0);
-					dialog.getHeaderComponent().setText("Procesando: " + processed + "/" + total);
 				}
+				String prompt = "hola %s";
+				prompt.formatted("pepe");
+
+				// ACA CON LA AIINPUUT HAGO UN JSON Y LO PONGO EN EL PROMPT
+				// LUEGO PROCESO EL JSON DEL OUTPUY UY L O PONGO EN EL EXCEL DE SALIDA
+
+				System.out.println("PROMPT" + prompt);
+				String response = chatClient.prompt(prompt).call().content();
+				System.out.println("RESPONSE" + response);
+//				updateSurveyWithCodedResponses(surveyWorkbook, mapping.getOriginalName(), response);
+//
+//				processed++;
+//				int percentage = (int) (((double) processed / total) * 100);
+//				dialog.getProgressBar().setValue(percentage / 100.0);
+//				dialog.getHeaderComponent().setText("Procesando: " + processed + "/" + total);
 			} catch (Exception e) {
 				e.printStackTrace();
 				Notification.show("Error al procesar los archivos. ");
@@ -327,8 +350,7 @@ public class QuestionCodingView extends VerticalLayout {
 		return data;
 	}
 
-	private String buildPrompt(String question, List<String> surveyResponses, List<String> codeLabels,
-			List<String> codeValues) {
+	private String buildPrompt(String question, List<String> surveyResponses, List<String> codes) {
 		StringBuilder prompt = new StringBuilder();
 		prompt.append(basePrompt);
 		prompt.append("\n\nPregunta:\n");
@@ -336,24 +358,24 @@ public class QuestionCodingView extends VerticalLayout {
 		prompt.append("\n\nRespuesta a codificar:\n");
 		surveyResponses.forEach(response -> prompt.append("- ").append(response).append("\n"));
 		prompt.append("\n\nCódigos:\n");
-		for (int i = 0; i < codeLabels.size(); i++) {
-			prompt.append("- ").append(codeLabels.get(i)).append(": ").append(codeValues.get(i)).append("\n");
+		for (int i = 0; i < codes.size(); i++) {
+			prompt.append(codes.get(i)).append("\n");
 		}
 		return prompt.toString();
 	}
 
 	public static class ColumnMapping {
-		private final String originalName;
+		private final String questionVariable;
 		private boolean toCode;
 		private String fineTuning;
-		private String newName;
+		private String question;
 
 		public ColumnMapping(String originalName) {
-			this.originalName = originalName;
+			this.questionVariable = originalName;
 		}
 
-		public String getOriginalName() {
-			return originalName;
+		public String getQuestionVariable() {
+			return questionVariable;
 		}
 
 		public boolean isToCode() {
@@ -364,20 +386,20 @@ public class QuestionCodingView extends VerticalLayout {
 			this.toCode = toCode;
 		}
 
-		public String getNewName() {
-			return newName;
-		}
-
-		public void setNewName(String newName) {
-			this.newName = newName;
-		}
-
 		public String getFineTuning() {
 			return fineTuning;
 		}
 
 		public void setFineTuning(String fineTuning) {
 			this.fineTuning = fineTuning;
+		}
+
+		public String getQuestion() {
+			return question;
+		}
+
+		public void setQuestion(String question) {
+			this.question = question;
 		}
 	}
 }
