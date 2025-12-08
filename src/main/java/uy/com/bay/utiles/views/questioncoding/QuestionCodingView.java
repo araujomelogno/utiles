@@ -15,8 +15,9 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Value;
-
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import org.springframework.util.FileCopyUtils;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
@@ -32,7 +33,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIAnswer;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAICode;
@@ -53,12 +54,17 @@ public class QuestionCodingView extends VerticalLayout {
 	private final ChatClient chatClient;
 	private byte[] surveyFileContent;
 	private byte[] codeMappingFileContent;
-	@Value("${app.openai.prompt}")
 	private String basePrompt;
 	Grid<ColumnMapping> grid;
 
 	public QuestionCodingView(ChatClient.Builder chatClientBuilder) {
 		this.chatClient = chatClientBuilder.build();
+		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/questionEncoding.txt")) {
+			byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
+			this.basePrompt = new String(byteArray, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		grid = new Grid();
 		step1 = createStep1();
 		step2 = createStep2();
@@ -245,14 +251,11 @@ public class QuestionCodingView extends VerticalLayout {
 					aiInput.getQuestions().add(question);
 
 				}
-				String json = "hola %s";
-				basePrompt.formatted("pepe");
-
-				// ACA CON LA AIINPUUT HAGO UN JSON Y LO PONGO EN EL PROMPT
-				// LUEGO PROCESO EL JSON DEL OUTPUY UY L O PONGO EN EL EXCEL DE SALIDA
-
+				ObjectMapper objectMapper = new ObjectMapper();
+				String json = objectMapper.writeValueAsString(aiInput);
+				basePrompt = basePrompt.formatted(json);
 				System.out.println("PROMPT" + basePrompt);
-				String response = chatClient.prompt(basePrompt).call().content();
+				String response = chatClient.prompt().user(basePrompt).call().content();
 				System.out.println("RESPONSE" + response);
 //				updateSurveyWithCodedResponses(surveyWorkbook, mapping.getOriginalName(), response);
 //
