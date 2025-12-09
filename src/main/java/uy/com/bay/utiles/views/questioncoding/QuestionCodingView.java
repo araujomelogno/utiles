@@ -33,12 +33,16 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIAnswer;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAICode;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIInput;
 import uy.com.bay.utiles.dto.aiencoding.QuestionEncodingAIInput;
+import uy.com.bay.utiles.dto.aiencoding.response.CodedResponse;
+import uy.com.bay.utiles.dto.aiencoding.response.Coding;
+import uy.com.bay.utiles.dto.aiencoding.response.Question;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Codificación")
@@ -303,10 +307,44 @@ public class QuestionCodingView extends VerticalLayout {
 	}
 
 	private void updateSurveyWithCodedResponses(Workbook workbook, String codedResponses) {
-		Sheet sheet = workbook.getSheetAt(0);
-		Row headerRow = sheet.getRow(0);
-		int newColumnIndex = headerRow.getLastCellNum();
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			CodedResponse codedResponse = objectMapper.readValue(codedResponses, CodedResponse.class);
+			Sheet sheet = workbook.getSheetAt(0);
+			Row headerRow = sheet.getRow(0);
 
+			for (Question question : codedResponse.getQuestions()) {
+				// Create new headers for code and comment
+				int codeColumnIndex = headerRow.getLastCellNum();
+				Cell codeHeaderCell = headerRow.createCell(codeColumnIndex);
+				codeHeaderCell.setCellValue(question.getQuestionId() + "CODIGO");
+
+				int commentColumnIndex = headerRow.getLastCellNum();
+				Cell commentHeaderCell = headerRow.createCell(commentColumnIndex);
+				commentHeaderCell.setCellValue(question.getQuestionId() + "COMENTARIO");
+
+				for (Coding coding : question.getCodings()) {
+					try {
+						int responseId = Integer.parseInt(coding.getResponseId());
+						Row dataRow = sheet.getRow(responseId);
+						if (dataRow == null) {
+							dataRow = sheet.createRow(responseId);
+						}
+
+						Cell codeCell = dataRow.createCell(codeColumnIndex);
+						codeCell.setCellValue(coding.getAssignedCode());
+
+						Cell commentCell = dataRow.createCell(commentColumnIndex);
+						commentCell.setCellValue(coding.getComment());
+					} catch (NumberFormatException e) {
+						System.err.println("Invalid response_id format: " + coding.getResponseId());
+					}
+				}
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			Notification.show("Error al parsear la respuesta JSON.");
+		}
 	}
 
 	private List<String> getColumnData(Workbook workbook, String columnName) {
