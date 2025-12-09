@@ -257,12 +257,7 @@ public class QuestionCodingView extends VerticalLayout {
 				System.out.println("PROMPT" + basePrompt);
 				String response = chatClient.prompt().user(basePrompt).call().content();
 				System.out.println("RESPONSE" + response);
-//				updateSurveyWithCodedResponses(surveyWorkbook, mapping.getOriginalName(), response);
-//
-//				processed++;
-//				int percentage = (int) (((double) processed / total) * 100);
-//				dialog.getProgressBar().setValue(percentage / 100.0);
-//				dialog.getHeaderComponent().setText("Procesando: " + processed + "/" + total);
+				this.updateSurveyWithCodedResponses(surveyWorkbook, response);
 			} catch (Exception e) {
 				e.printStackTrace();
 				Notification.show("Error al procesar los archivos. ");
@@ -307,21 +302,11 @@ public class QuestionCodingView extends VerticalLayout {
 		step4.setVisible(step == 4);
 	}
 
-	private void updateSurveyWithCodedResponses(Workbook workbook, String originalColumnName, String codedResponses) {
+	private void updateSurveyWithCodedResponses(Workbook workbook, String codedResponses) {
 		Sheet sheet = workbook.getSheetAt(0);
 		Row headerRow = sheet.getRow(0);
 		int newColumnIndex = headerRow.getLastCellNum();
-		Cell newHeaderCell = headerRow.createCell(newColumnIndex);
-		newHeaderCell.setCellValue(originalColumnName + "_CODIFICADA");
 
-		String[] responses = codedResponses.split("\n");
-		for (int i = 0; i < responses.length; i++) {
-			Row row = sheet.getRow(i + 1);
-			if (row != null) {
-				Cell cell = row.createCell(newColumnIndex);
-				cell.setCellValue(responses[i]);
-			}
-		}
 	}
 
 	private List<String> getColumnData(Workbook workbook, String columnName) {
