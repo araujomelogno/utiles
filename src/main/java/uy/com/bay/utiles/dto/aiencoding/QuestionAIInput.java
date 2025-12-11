@@ -4,18 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuestionAIInput {
-	private String question;
-	private String question_fineTunning;
+	private String question_text = "";
+	private String question_id =  "";
+	private String question_fineTunning = "";
 	private List<QuestionAICode> codes = new ArrayList();
 	private List<QuestionAIAnswer> responses = new ArrayList();
 
-	public String getQuestion() {
-		return question;
-	}
-
-	public void setQuestion(String question) {
-		this.question = question;
-	}
 
 	public String getQuestion_fineTunning() {
 		return question_fineTunning;
@@ -39,6 +33,22 @@ public class QuestionAIInput {
 
 	public void setResponses(List<QuestionAIAnswer> responses) {
 		this.responses = responses;
+	}
+
+	public String getQuestion_text() {
+		return question_text;
+	}
+
+	public void setQuestion_text(String question_text) {
+		this.question_text = question_text;
+	}
+
+	public String getQuestion_id() {
+		return question_id;
+	}
+
+	public void setQuestion_id(String question_id) {
+		this.question_id = question_id;
 	}
 
 }

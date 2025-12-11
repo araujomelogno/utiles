@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,9 +16,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.ai.chat.client.ChatClient;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import org.springframework.util.FileCopyUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
@@ -33,12 +35,15 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIAnswer;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAICode;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIInput;
 import uy.com.bay.utiles.dto.aiencoding.QuestionEncodingAIInput;
+import uy.com.bay.utiles.dto.aiencoding.response.CodedResponse;
+import uy.com.bay.utiles.dto.aiencoding.response.Coding;
+import uy.com.bay.utiles.dto.aiencoding.response.Question;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Codificación")
@@ -54,6 +59,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private final ChatClient chatClient;
 	private byte[] surveyFileContent;
 	private byte[] codeMappingFileContent;
+	private String fileName;
 	private String basePrompt;
 	Grid<ColumnMapping> grid;
 
@@ -83,6 +89,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 		upload.addSucceededListener(event -> {
 			try (InputStream inputStream = buffer.getInputStream()) {
+				fileName = event.getFileName();
 				surveyFileContent = inputStream.readAllBytes();
 				Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
 				Sheet sheet = workbook.getSheetAt(0);
@@ -225,7 +232,8 @@ public class QuestionCodingView extends VerticalLayout {
 
 				for (ColumnMapping mapping : selected) {
 					QuestionAIInput question = new QuestionAIInput();
-					question.setQuestion(mapping.getQuestion());
+					question.setQuestion_text(mapping.getQuestion());
+					question.setQuestion_id(mapping.getQuestionVariable());
 					question.setQuestion_fineTunning(mapping.getFineTuning());
 
 					String columnName = mapping.getQuestionVariable();
@@ -255,7 +263,8 @@ public class QuestionCodingView extends VerticalLayout {
 				String json = objectMapper.writeValueAsString(aiInput);
 				basePrompt = basePrompt.formatted(json);
 				System.out.println("PROMPT" + basePrompt);
-				String response = chatClient.prompt().user(basePrompt).call().content();
+				String response = chatClient.prompt().user(basePrompt).call().content().replace("```json", "")
+						.replace("```", "");
 				System.out.println("RESPONSE" + response);
 				this.updateSurveyWithCodedResponses(surveyWorkbook, response);
 			} catch (Exception e) {
@@ -282,7 +291,7 @@ public class QuestionCodingView extends VerticalLayout {
 	}
 
 	private StreamResource createExcelStreamResource(Workbook workbook) {
-		return new StreamResource("coded_survey.xlsx", () -> {
+		return new StreamResource(fileName + "_codificada.xlsx", () -> {
 			try {
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				workbook.write(bos);
@@ -303,10 +312,44 @@ public class QuestionCodingView extends VerticalLayout {
 	}
 
 	private void updateSurveyWithCodedResponses(Workbook workbook, String codedResponses) {
-		Sheet sheet = workbook.getSheetAt(0);
-		Row headerRow = sheet.getRow(0);
-		int newColumnIndex = headerRow.getLastCellNum();
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			CodedResponse codedResponse = objectMapper.readValue(codedResponses.replace('`', ' '), CodedResponse.class);
+			Sheet sheet = workbook.getSheetAt(0);
+			Row headerRow = sheet.getRow(0);
 
+			for (Question question : codedResponse.getQuestions()) {
+				// Create new headers for code and comment
+				int codeColumnIndex = headerRow.getLastCellNum();
+				Cell codeHeaderCell = headerRow.createCell(codeColumnIndex);
+				codeHeaderCell.setCellValue(question.getQuestionId() + "CODIGO");
+
+				int commentColumnIndex = headerRow.getLastCellNum();
+				Cell commentHeaderCell = headerRow.createCell(commentColumnIndex);
+				commentHeaderCell.setCellValue(question.getQuestionId() + "COMENTARIO");
+
+				for (Coding coding : question.getCodings()) {
+					try {
+						int responseId = Integer.parseInt(coding.getResponseId());
+						Row dataRow = sheet.getRow(responseId);
+						if (dataRow == null) {
+							dataRow = sheet.createRow(responseId);
+						}
+
+						Cell codeCell = dataRow.createCell(codeColumnIndex);
+						codeCell.setCellValue(coding.getAssignedCode());
+
+						Cell commentCell = dataRow.createCell(commentColumnIndex);
+						commentCell.setCellValue(coding.getComment());
+					} catch (NumberFormatException e) {
+						System.err.println("Invalid response_id format: " + coding.getResponseId());
+					}
+				}
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			Notification.show("Error al parsear la respuesta JSON.");
+		}
 	}
 
 	private List<String> getColumnData(Workbook workbook, String columnName) {
@@ -353,10 +396,10 @@ public class QuestionCodingView extends VerticalLayout {
 	}
 
 	public static class ColumnMapping {
-		private final String questionVariable;
+		private String questionVariable = "";
 		private boolean toCode;
-		private String fineTuning;
-		private String question;
+		private String fineTuning = "";
+		private String question = "";
 
 		public ColumnMapping(String originalName) {
 			this.questionVariable = originalName;

@@ -2,8 +2,8 @@ Eres un analista experto en investigación de mercado especializado en codificac
 
 TAREA:
 Vas a recibir un JSON de entrada que contiene una o varias preguntas abiertas, con:
-- question_id
-- question_text
+- question_id (es el id de la pregunta)
+- question_text (es el texto de la pregunta)
 - question_fineTunning
 - codes (lista de códigos posibles)
 - responses (lista de respuestas abiertas)
@@ -15,7 +15,7 @@ REGLAS:
 2. Si ninguna categoría aplica, usa el código de "Otros" si existe.
 3. Si la respuesta es “no sé”, en blanco o similar, usa el código de “No sabe / No responde” si existe.
 4. Puedes asignar solo un código por respuesta.
-5.  Puedes usar el campo question_fineTunning para entendar más sobre  la pregunta, la respuesta o el módo de codificar de esa pregunta 
+5. Puedes usar el campo question_fineTunning para entendar más sobre  la pregunta, la respuesta o el módo de codificar de esa pregunta 
 6. No cambies los IDs: usa siempre los mismos question_id y response_id.
 7. No reformules los textos de respuestas ni los nombres/descripciones de códigos.
 8. Tu salida debe ser SOLO JSON válido, sin texto adicional antes o después.
@@ -62,7 +62,9 @@ FORMATO DE SALIDA (obligatorio):
 }
 
 A CONTINUACIÓN VIENE EL JSON DE ENTRADA REAL.
-LEELO Y DEVUELVE ÚNICAMENTE EL JSON CON EL FORMATO DE SALIDA.
+LEELO Y DEVUELVE ÚNICAMENTE EL JSON CON EL FORMATO DE SALIDA. ESE JSON SE VA A PARSEAR DIRECTAMENTE. NO AGREGUES NINGUN PREFIJO O SUFIJO AL JSON DE SALIDA
+LAS VARIABLES DEL JSON DE ENTRADA "question_id" deben corresponderse con las variables del JSON de salida "question_id". 
+LAS VARIABLES DEL JSON DE ENTRADA "response_id" deben corresponderse con las variables del JSON de salida "response_id". 
 
 JSON_DE_ENTRADA:
 %s
