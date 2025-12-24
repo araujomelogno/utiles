@@ -245,6 +245,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem questionCodingItem = new SideNavItem("Codificación de preguntas", "question-coding");
 		questionCodingItem.setPrefixComponent(new Icon("vaadin", "cogs"));
 		toolsItem.addItem(questionCodingItem);
+		SideNavItem supervisionItem = new SideNavItem("Supervisión", "supervision");
+		supervisionItem.setPrefixComponent(new Icon("vaadin", "headphones"));
+		toolsItem.addItem(supervisionItem);
 		nav.addItem(toolsItem);
 
 		return nav;
