@@ -15,6 +15,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.util.FileCopyUtils;
 
@@ -44,12 +46,14 @@ import uy.com.bay.utiles.dto.aiencoding.QuestionEncodingAIInput;
 import uy.com.bay.utiles.dto.aiencoding.response.CodedResponse;
 import uy.com.bay.utiles.dto.aiencoding.response.Coding;
 import uy.com.bay.utiles.dto.aiencoding.response.Question;
+import uy.com.bay.utiles.tasks.AlchemerAnswerRetriever;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Codificación")
 @Route(value = "question-coding", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
 public class QuestionCodingView extends VerticalLayout {
+	private static final Logger logger = LoggerFactory.getLogger(QuestionCodingView.class);
 
 	private final VerticalLayout step1;
 	private VerticalLayout step2;
@@ -238,18 +242,6 @@ public class QuestionCodingView extends VerticalLayout {
 
 					String columnName = mapping.getQuestionVariable();
 
-					// Extract data for the prompt
-					List<String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
-					Integer row = 1;
-					for (String answer : questionResponses) {
-						QuestionAIAnswer aianswer = new QuestionAIAnswer();
-						aianswer.setAnswer(answer);
-						aianswer.setResponse_id(row.toString());
-						question.getResponses().add(aianswer);
-						row++;
-
-					}
-
 					List<String> questionCodes = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
 					for (String questionCode : questionCodes) {
 						QuestionAICode qCode = new QuestionAICode();
@@ -258,15 +250,43 @@ public class QuestionCodingView extends VerticalLayout {
 					}
 					aiInput.getQuestions().add(question);
 
+					// Extract data for the prompt
+					List<String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
+					Integer size = questionResponses.size();
+					int batchSize = 50;
+					int iterCount = size / batchSize + 1;
+					for (int i = 0; i < iterCount; i++) {
+						Integer row = 1 + i * batchSize;
+						for (int j = i * batchSize; j < batchSize * (i + 1) && j < questionResponses.size(); j++) {
+							String answer = questionResponses.get(j);
+							QuestionAIAnswer aianswer = new QuestionAIAnswer();
+							aianswer.setAnswer(answer);
+							aianswer.setResponse_id(row.toString());
+							question.getResponses().add(aianswer);
+							row++;
+
+						}
+
+						/////
+						ObjectMapper objectMapper = new ObjectMapper();
+						String json = objectMapper.writeValueAsString(aiInput);
+						String formattedPrompt = basePrompt.formatted(json);
+						System.out.println("PROMPT" + formattedPrompt);
+						String response = chatClient.prompt().user(formattedPrompt).call().content()
+								.replace("```json", "").replace("```", "");
+						logger.info("RESPONSE:\n{}", response);
+
+						System.out.println("RESPONSE" + response);
+						this.updateSurveyWithCodedResponses(surveyWorkbook, response);
+						// limpio las respuestas
+						question.getResponses().clear();
+
+						///
+
+					}
+					aiInput.getQuestions().clear();
 				}
-				ObjectMapper objectMapper = new ObjectMapper();
-				String json = objectMapper.writeValueAsString(aiInput);
-				basePrompt = basePrompt.formatted(json);
-				System.out.println("PROMPT" + basePrompt);
-				String response = chatClient.prompt().user(basePrompt).call().content().replace("```json", "")
-						.replace("```", "");
-				System.out.println("RESPONSE" + response);
-				this.updateSurveyWithCodedResponses(surveyWorkbook, response);
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				Notification.show("Error al procesar los archivos. ");
@@ -320,13 +340,10 @@ public class QuestionCodingView extends VerticalLayout {
 
 			for (Question question : codedResponse.getQuestions()) {
 				// Create new headers for code and comment
-				int codeColumnIndex = headerRow.getLastCellNum();
-				Cell codeHeaderCell = headerRow.createCell(codeColumnIndex);
-				codeHeaderCell.setCellValue(question.getQuestionId() + "CODIGO");
+				int codeColumnIndex = this.getOrCreateColumnIndex(headerRow, question.getQuestionId() + "CODIGO");
 
-				int commentColumnIndex = headerRow.getLastCellNum();
-				Cell commentHeaderCell = headerRow.createCell(commentColumnIndex);
-				commentHeaderCell.setCellValue(question.getQuestionId() + "COMENTARIO");
+				int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
+						question.getQuestionId() + "COMENTARIO");
 
 				for (Coding coding : question.getCodings()) {
 					try {
@@ -379,6 +396,28 @@ public class QuestionCodingView extends VerticalLayout {
 			}
 		}
 		return data;
+	}
+
+	private static int getOrCreateColumnIndex(Row headerRow, String headerName) {
+
+		// 1. Buscar si ya existe
+		for (Cell cell : headerRow) {
+			if (cell.getCellType() == CellType.STRING
+					&& headerName.equalsIgnoreCase(cell.getStringCellValue().trim())) {
+				return cell.getColumnIndex();
+			}
+		}
+
+		// 2. No existe → crear al final
+		int newColumnIndex = headerRow.getLastCellNum();
+		if (newColumnIndex < 0) {
+			newColumnIndex = 0; // fila vacía
+		}
+
+		Cell newCell = headerRow.createCell(newColumnIndex);
+		newCell.setCellValue(headerName);
+
+		return newColumnIndex;
 	}
 
 	private String buildPrompt(String question, List<String> surveyResponses, List<String> codes) {

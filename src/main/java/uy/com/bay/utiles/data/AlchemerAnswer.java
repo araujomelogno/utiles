@@ -7,7 +7,7 @@ import jakarta.persistence.Entity;
 
 @Entity
 public class AlchemerAnswer extends AbstractEntity {
- 
+
 	private Long alchemerId;
 	private String type;
 	@Column(columnDefinition = "MEDIUMTEXT")
@@ -19,6 +19,8 @@ public class AlchemerAnswer extends AbstractEntity {
 	private Integer surveyId;
 	private Integer responseId;
 	private String studyName;
+	private String studyTeam;
+	private String campaignName;
 	private String surveyor;
 
 	private LocalDate created = LocalDate.now();
@@ -30,7 +32,7 @@ public class AlchemerAnswer extends AbstractEntity {
 	public void setCreated(LocalDate created) {
 		this.created = created;
 	}
- 
+
 	public Long getAlchemerId() {
 		return alchemerId;
 	}
@@ -114,4 +116,21 @@ public class AlchemerAnswer extends AbstractEntity {
 	public void setSurveyor(String surveyor) {
 		this.surveyor = surveyor;
 	}
+
+	public String getStudyTeam() {
+		return studyTeam;
+	}
+
+	public void setStudyTeam(String studyTeam) {
+		this.studyTeam = studyTeam;
+	}
+
+	public String getCampaignName() {
+		return campaignName;
+	}
+
+	public void setCampaignName(String campaignName) {
+		this.campaignName = campaignName;
+	}
+
 }

@@ -123,6 +123,13 @@ public class AlchemerController {
 		log.info("Received Alchemer survey response with response_id: {} and survey_id: {}",
 				response.getData().getResponseId(), response.getData().getSurveyId());
 
+		// si es un link de pruebas, no se guarda
+		if (response.getData().isTest()) {
+			log.warn("Testing response -  Alchemer survey response received. response_id: {}, survey_id: {}. Ignoring.",
+					response.getData().getResponseId(), response.getData().getSurveyId());
+			return ResponseEntity.ok().build();
+		}
+
 		List<AlchemerSurveyResponse> existingResponses = alchemerSurveyResponseRepository
 				.findByDataResponseIdAndDataSurveyId((long) response.getData().getResponseId(),
 						response.getData().getSurveyId());
@@ -139,7 +146,6 @@ public class AlchemerController {
 		optionalFieldwork.ifPresent(response::setFieldwork);
 
 		// si tenemos fieldowrk también afectamos el Budget en caso de que tenga
-
 		if (response.getFieldwork() != null && response.getFieldwork().getBudgetEntry() != null
 				&& response.getFieldwork().getUnitCost() != null) {
 			BudgetEntry budgetEntry = response.getFieldwork().getBudgetEntry();

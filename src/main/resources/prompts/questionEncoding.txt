@@ -14,7 +14,7 @@ REGLAS:
 1. Solo puedes usar los code_id provistos en "codes".
 2. Si ninguna categoría aplica, usa el código de "Otros" si existe.
 3. Si la respuesta es “no sé”, en blanco o similar, usa el código de “No sabe / No responde” si existe.
-4. Puedes asignar solo un código por respuesta.
+4. Puedes asignar solo un código por respuesta, si te parece que dos o más códigos aplican utiliza el código que te parezca que mejor aplica. 
 5. Puedes usar el campo question_fineTunning para entendar más sobre  la pregunta, la respuesta o el módo de codificar de esa pregunta 
 6. No cambies los IDs: usa siempre los mismos question_id y response_id.
 7. No reformules los textos de respuestas ni los nombres/descripciones de códigos.
