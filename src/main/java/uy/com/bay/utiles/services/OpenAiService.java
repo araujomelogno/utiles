@@ -22,7 +22,7 @@ import uy.com.bay.utiles.dto.AudioFile;
 @Service
 public class OpenAiService {
 
-    @Value("${spring.ai.openai.api}")
+    @Value("${spring.ai.openai.api-key}")
     private String openaiApiKey;
 
     private static final String OPENAI_API_URL = "https://api.openai.com/v1/audio/transcriptions";

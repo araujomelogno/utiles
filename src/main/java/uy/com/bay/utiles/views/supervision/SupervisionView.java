@@ -36,7 +36,7 @@ public class SupervisionView extends VerticalLayout {
 	public SupervisionView(OpenAiService openAiService) {
 		this.openAiService = openAiService;
 
-		H2 title = new H2("Wizard de Supervisión de Encuestas");
+		H2 title = new H2("Audios");
 
 		MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
 		Upload multiFileUpload = new Upload(buffer);
