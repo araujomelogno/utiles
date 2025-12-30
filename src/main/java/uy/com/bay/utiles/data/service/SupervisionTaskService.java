@@ -20,4 +20,8 @@ public class SupervisionTaskService {
     public List<SupervisionTask> findByCreatedBetween(Date from, Date to, String fileName, Status status) {
         return repository.findByCreatedBetweenOrderByCreatedDesc(from, to, fileName, status);
     }
+
+    public void saveAll(List<SupervisionTask> tasks) {
+        repository.saveAll(tasks);
+    }
 }
