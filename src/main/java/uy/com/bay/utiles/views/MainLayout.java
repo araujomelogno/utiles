@@ -248,6 +248,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem supervisionItem = new SideNavItem("Supervisión", "supervision");
 		supervisionItem.setPrefixComponent(new Icon("vaadin", "headphones"));
 		toolsItem.addItem(supervisionItem);
+		SideNavItem supervisionTasksItem = new SideNavItem("Tareas de Supervisión", "supervision-tasks");
+		supervisionTasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
+		toolsItem.addItem(supervisionTasksItem);
 		nav.addItem(toolsItem);
 
 		return nav;
