@@ -35,7 +35,7 @@ import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 //GASTOS
 @PageTitle("Conceptos")
 @Route("conceptos/:expenseRequestTypeID?/:action?(edit)")
-@RolesAllowed("GASTOS")
+@RolesAllowed("ADMIN")
 public class ExpenseRequestTypeView extends Div implements BeforeEnterObserver {
 
     private final String EXPENSEREQUESTTYPE_ID = "expenseRequestTypeID";

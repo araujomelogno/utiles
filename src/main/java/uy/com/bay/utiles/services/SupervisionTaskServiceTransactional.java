@@ -14,13 +14,13 @@ import java.util.Date;
 import java.util.List;
 
 @Service
-public class SupervisionTaskService {
+public class SupervisionTaskServiceTransactional {
 
-    private static final Logger logger = LoggerFactory.getLogger(SupervisionTaskService.class);
+    private static final Logger logger = LoggerFactory.getLogger(SupervisionTaskServiceTransactional.class);
     private final SupervisionTaskRepository supervisionTaskRepository;
     private final OpenAiService openAiService;
 
-    public SupervisionTaskService(SupervisionTaskRepository supervisionTaskRepository, OpenAiService openAiService) {
+    public SupervisionTaskServiceTransactional(SupervisionTaskRepository supervisionTaskRepository, OpenAiService openAiService) {
         this.supervisionTaskRepository = supervisionTaskRepository;
         this.openAiService = openAiService;
     }

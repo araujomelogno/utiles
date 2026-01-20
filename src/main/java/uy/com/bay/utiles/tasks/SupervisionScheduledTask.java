@@ -2,14 +2,14 @@ package uy.com.bay.utiles.tasks;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import uy.com.bay.utiles.services.SupervisionTaskService;
+import uy.com.bay.utiles.services.SupervisionTaskServiceTransactional;
 
 @Component
 public class SupervisionScheduledTask {
 
-    private final SupervisionTaskService supervisionTaskService;
+    private final SupervisionTaskServiceTransactional supervisionTaskService;
 
-    public SupervisionScheduledTask(SupervisionTaskService supervisionTaskService) {
+    public SupervisionScheduledTask(SupervisionTaskServiceTransactional supervisionTaskService) {
         this.supervisionTaskService = supervisionTaskService;
     }
 

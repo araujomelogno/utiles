@@ -101,8 +101,7 @@ public class SupervisionTasksView extends VerticalLayout {
 
 		Date to = Date.from(toDateField.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
 		if (from != null && to != null) {
-			grid.setItems(supervisionTaskService.findByCreatedBetween(from, to, fileNameFilter.getValue(),
-					statusFilter.getValue()));
+			grid.setItems(supervisionTaskService.findByCreatedBetween(from, to));
 		}
 	}
 }
