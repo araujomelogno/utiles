@@ -27,6 +27,8 @@ public class SupervisionTask extends AbstractEntity {
 
     @Lob
     private String output;
+    
+    
 
     private Date processed;
 
