@@ -1,9 +1,12 @@
 package uy.com.bay.utiles.services;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Date;
 import java.util.List;
 
+import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,24 @@ public class SupervisionTaskServiceTransactional {
 			try {
 				AudioFile audioFile = new AudioFile(task.getFileName(),
 						new ByteArrayInputStream(task.getAudioContent()));
+
+				File tempFile = null;
+				try {
+					tempFile = File.createTempFile("audio_", "_" + task.getFileName());
+					try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+						fos.write(task.getAudioContent());
+					}
+					org.jaudiotagger.audio.AudioFile taggedFile = AudioFileIO.read(tempFile);
+					int duration = taggedFile.getAudioHeader().getTrackLength();
+					task.setTotalAudioDuration((double) duration);
+				} catch (Exception e) {
+					logger.error("Error calculating audio duration for task {}: {}", task.getId(), e.getMessage());
+				} finally {
+					if (tempFile != null) {
+						tempFile.delete();
+					}
+				}
+
 				String transcription = openAiService.transcribeAudio(audioFile);
 				task.setOutput(prettyPrint(transcription));
 				task.setStatus(Status.DONE);
