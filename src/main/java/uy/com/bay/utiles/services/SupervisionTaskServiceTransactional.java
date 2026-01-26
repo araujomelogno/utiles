@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +97,16 @@ public class SupervisionTaskServiceTransactional {
 				}
 
 				String questionnaireString = "";
-				String formattedPrompt = basePrompt.formatted(transcription, transcription);
+				if (task.getQuestionnaire() != null) {
+					try (InputStream is = new ByteArrayInputStream(task.getQuestionnaire());
+							XWPFDocument doc = new XWPFDocument(is);
+							XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
+						questionnaireString = extractor.getText();
+					} catch (Exception e) {
+						logger.error("Error extracting text from questionnaire for task {}", task.getId(), e);
+					}
+				}
+				String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
 				String response = chatClient.prompt().user(formattedPrompt).call().content().replace("```json", "")
 						.replace("```", "");
 				task.setEvaluationOutput(prettyPrint(response));
