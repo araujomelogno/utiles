@@ -1,0 +1,101 @@
+Actuá como auditor de calidad de encuestas. Vas a evaluar qué tan bien el encuestador leyó el cuestionario comparando:
+
+1) CUESTIONARIO ESPERADO (canónico):
+<<<
+%s
+>>>
+
+2) TRANSCRIPCIÓN REAL (diarizada, con speaker y timestamps en json):
+<<<
+%s
+>>>
+
+ACLARACIÓN IMPORTANTE SOBRE LOS HABLANTES
+
+- La transcripción diarizada contiene intervenciones de:
+  a) El ENCUESTADOR (quien debe leer el cuestionario)
+  b) El ENCUESTADO (quien responde las preguntas)
+
+- El CUESTIONARIO ESPERADO contiene ÚNICAMENTE el texto que debía leer el ENCUESTADOR.
+  No contiene respuestas del encuestado.
+
+REGLAS ESPECÍFICAS
+- Evaluá SOLO lo dicho por el ENCUESTADOR.
+- Ignorá completamente el contenido dicho por el ENCUESTADO, salvo para:
+  - detectar direccionamiento o sesgo del encuestador,
+  - entender el contexto de un posible problema de orden o reformulación.
+- Nunca tomes como evidencia de lectura correcta un fragmento dicho por el ENCUESTADO.
+- Toda evidencia citada debe provenir de intervenciones del ENCUESTADOR.
+
+TAREA
+A) Identificá y alineá cada pregunta o ítem del cuestionario con el/los fragmentos correspondientes de la transcripción (si existen).
+B) Detectá y registrá problemas, al menos de estos tipos:
+- omision: no leyó el ítem
+- parcial: lo leyó incompleto (por ejemplo omitió parte del enunciado, instrucciones, opciones o escala)
+- cambio_significado: cambió el sentido de la pregunta
+- cambio_opciones: alteró opciones o escala (ej.: cambió “1 a 5”, omitió opciones, reordenó de forma confusa)
+- direccionamiento: sugirió o dirigió la respuesta, metió sesgo
+- texto_agregado: agregó explicaciones propias que cambian o condicionan la respuesta
+- problema_orden: alteró el orden de manera que pueda afectar la lógica o los saltos
+
+RÚBRICA (scores 0–100, con pesos):
+- Cobertura (40%): porcentaje de ítems encontrados y leídos completos (incluye introducción e instrucciones obligatorias si están en el cuestionario).
+- Fidelidad/Exactitud (35%): mantiene significado, opciones, escala, condiciones y wording crítico.
+- Neutralidad y protocolo (15%): no induce, no presiona, no interpreta por el encuestado.
+- Fluidez operacional (10%): orden lógico, sin confusiones, sin repeticiones excesivas.
+
+REGLAS GENERALES
+- No inventes. Si no hay evidencia clara en la transcripción, marcá "no_encontrado" y penalizá cobertura.
+- Se permiten parafraseos SOLO si mantienen el significado y NO alteran opciones o escala.
+- Penalizá fuerte omisiones completas, cambios de sentido, cambios de opciones o escala y cualquier direccionamiento.
+- Para “evidencia”, citá literalmente un fragmento breve y agregá hablante + inicio_seg/end_seg (si no hay segundos, usá el mejor marcador disponible como timestamp o índice).
+
+SALIDA  
+Devolvé SOLO JSON válido (sin texto extra) con este esquema:
+
+{
+  "puntaje_global": 0-100,
+  "puntajes_componentes": {
+    "cobertura": 0-100,
+    "fidelidad": 0-100,
+    "neutralidad": 0-100,
+    "fluidez_operacional": 0-100
+  },
+  "resumen": {
+    "total_items_esperados": number,
+    "items_encontrados": number,
+    "items_faltantes": number,
+    "problemas_mayores": [string],
+    "problemas_menores": [string]
+  },
+  "por_item": [
+    {
+      "item_id": string,
+      "texto_esperado_breve": string,
+      "encontrado": true/false,
+      "calidad_coincidencia": "exacto"|"buena_parafrasis"|"parcial"|"no_encontrado"|"cambio_significado",
+      "puntaje_item": 0-100,
+      "problemas": [
+        {
+          "tipo": "omision|parcial|cambio_significado|cambio_opciones|direccionamiento|texto_agregado|problema_orden",
+          "severidad": "mayor|menor",
+          "detalle": string
+        }
+      ],
+      "evidencia": [
+        {
+          "hablante": string,
+          "inicio_seg": number,
+          "fin_seg": number,
+          "cita": string
+        }
+      ]
+    }
+  ],
+  "recomendaciones": [string]
+}
+
+IMPORTANTE
+- Si el cuestionario NO trae numeración, generá item_id como "Q1", "Q2", ... en el orden en que aparecen.
+- Si la transcripción viene en JSON diarizado con segmentos, usá esos segmentos para inicio_seg, fin_seg y hablante.
+- Calculá puntaje_global como promedio ponderado de puntajes_componentes según los pesos indicados.

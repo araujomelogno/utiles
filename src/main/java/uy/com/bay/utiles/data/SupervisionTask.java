@@ -51,6 +51,10 @@ public class SupervisionTask extends AbstractEntity {
     @JoinColumn(name = "fieldwork_id")
     private Fieldwork fieldwork;
 
+    @Lob
+    private String evaluationOutput;
+    
+    
     private Date processed;
 
     public Date getCreated() {
@@ -156,4 +160,12 @@ public class SupervisionTask extends AbstractEntity {
     public void setFieldwork(Fieldwork fieldwork) {
         this.fieldwork = fieldwork;
     }
+
+	public String getEvaluationOutput() {
+		return evaluationOutput;
+	}
+
+	public void setEvaluationOutput(String evaluationOutput) {
+		this.evaluationOutput = evaluationOutput;
+	}
 }

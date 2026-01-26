@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -62,6 +63,23 @@ public class SupervisionTaskServiceTransactional {
 				task.setOutput(prettyPrint(transcription));
 				task.setStatus(Status.DONE);
 				task.setProcessed(new Date());
+
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode root = mapper.readTree(transcription);
+				JsonNode segments = root.path("segments");
+				if (segments.isArray()) {
+					double totalDuration= 0d;
+					for (JsonNode segment : segments) {
+						if (segment.has("speaker") && segment.has("start") && segment.has("end")) {
+							String speaker = segment.get("speaker").asText();
+							double start = segment.get("start").asDouble();
+							double end = segment.get("end").asDouble();
+							totalDuration += end-start;
+							task.getDurationBySpeakers().merge(speaker, end - start, Double::sum);
+						}
+					}
+					task.setTotalAudioDuration(totalDuration);
+				}
 			} catch (Exception e) {
 				logger.error("Error processing supervision task {}: {}", task.getId(), e.getMessage());
 				task.setStatus(Status.ERROR);
