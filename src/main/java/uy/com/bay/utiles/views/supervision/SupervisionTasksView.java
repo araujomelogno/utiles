@@ -44,7 +44,7 @@ public class SupervisionTasksView extends VerticalLayout {
 		setSizeFull();
 		configureGrid();
 		add(getToolbar(), grid);
-		toDateField.setValue(LocalDateTime.now().toLocalDate());
+		toDateField.setValue(LocalDateTime.now().plusDays(1).toLocalDate());
 		fromDateField.setValue(LocalDateTime.now().minusDays(7).toLocalDate());
 		refreshGrid();
 	}

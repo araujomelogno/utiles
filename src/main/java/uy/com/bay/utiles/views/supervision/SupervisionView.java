@@ -69,7 +69,10 @@ public class SupervisionView extends VerticalLayout {
 					}
 				});
 				supervisionTaskService.saveAll(tasks);
-				Notification.show("Tareas de supervisión creadas exitosamente.");
+				Notification.show("Tareas de supervisión creadas exitosamente.", 5000, Notification.Position.MIDDLE);
+				multiFileBuffer.getFiles().clear();
+				multiFileUpload.clearFileList();
+
 			} catch (IOException ex) {
 				ex.printStackTrace();
 				Notification.show("Error al leer el cuestionario.");
