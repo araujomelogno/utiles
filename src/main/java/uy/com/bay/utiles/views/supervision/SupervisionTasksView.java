@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -53,6 +55,17 @@ public class SupervisionTasksView extends VerticalLayout {
 		grid.setSizeFull();
 		Grid.Column<SupervisionTask> fileNameColumn = grid.addColumn(SupervisionTask::getFileName).setHeader("Archivo");
 		Grid.Column<SupervisionTask> statusColumn = grid.addColumn(SupervisionTask::getStatus).setHeader("Estado");
+
+		grid.addColumn(SupervisionTask::getTotalAudioDuration).setHeader("Duración del audio");
+		grid.addColumn(SupervisionTask::getSpeakingDuration).setHeader("Duración hablando");
+		grid.addColumn(task -> {
+			Map<String, Double> speakers = task.getDurationBySpeakers();
+			if (speakers != null) {
+				return speakers.entrySet().stream().map(entry -> entry.getKey() + ":" + entry.getValue())
+						.collect(Collectors.joining(", "));
+			}
+			return "";
+		}).setHeader("Duración/ participante");
 
 		grid.addColumn(task -> {
 			if (task.getCreated() != null) {
