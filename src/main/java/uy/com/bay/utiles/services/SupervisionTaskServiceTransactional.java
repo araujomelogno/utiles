@@ -3,14 +3,19 @@ package uy.com.bay.utiles.services;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
 import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileCopyUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +33,18 @@ public class SupervisionTaskServiceTransactional {
 	private final SupervisionTaskRepository supervisionTaskRepository;
 	private final OpenAiService openAiService;
 
+	private final ChatClient chatClient;
+	private String basePrompt;
+
 	public SupervisionTaskServiceTransactional(SupervisionTaskRepository supervisionTaskRepository,
-			OpenAiService openAiService) {
+			OpenAiService openAiService, ChatClient.Builder chatClientBuilder) {
+		this.chatClient = chatClientBuilder.build();
+		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision2.txt")) {
+			byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
+			this.basePrompt = new String(byteArray, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		this.supervisionTaskRepository = supervisionTaskRepository;
 		this.openAiService = openAiService;
 	}
@@ -61,25 +76,34 @@ public class SupervisionTaskServiceTransactional {
 
 				String transcription = openAiService.transcribeAudio(audioFile);
 				task.setOutput(prettyPrint(transcription));
-				task.setStatus(Status.DONE);
-				task.setProcessed(new Date());
 
 				ObjectMapper mapper = new ObjectMapper();
 				JsonNode root = mapper.readTree(transcription);
 				JsonNode segments = root.path("segments");
 				if (segments.isArray()) {
-					double totalDuration= 0d;
+					double totalDuration = 0d;
 					for (JsonNode segment : segments) {
 						if (segment.has("speaker") && segment.has("start") && segment.has("end")) {
 							String speaker = segment.get("speaker").asText();
 							double start = segment.get("start").asDouble();
 							double end = segment.get("end").asDouble();
-							totalDuration += end-start;
+							totalDuration += end - start;
 							task.getDurationBySpeakers().merge(speaker, end - start, Double::sum);
 						}
 					}
 					task.setTotalAudioDuration(totalDuration);
 				}
+
+				String questionnaireString = "";
+				String formattedPrompt = basePrompt.formatted(transcription, transcription);
+				String response = chatClient.prompt().user(formattedPrompt).call().content().replace("```json", "")
+						.replace("```", "");
+				task.setEvaluationOutput(prettyPrint(response));
+				System.out.println("RESPONSE de la EVALUACI¨NO" + task.getEvaluationOutput());
+
+				task.setStatus(Status.DONE);
+				task.setProcessed(new Date());
+
 			} catch (Exception e) {
 				logger.error("Error processing supervision task {}: {}", task.getId(), e.getMessage());
 				task.setStatus(Status.ERROR);

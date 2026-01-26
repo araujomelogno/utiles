@@ -46,7 +46,6 @@ import uy.com.bay.utiles.dto.aiencoding.QuestionEncodingAIInput;
 import uy.com.bay.utiles.dto.aiencoding.response.CodedResponse;
 import uy.com.bay.utiles.dto.aiencoding.response.Coding;
 import uy.com.bay.utiles.dto.aiencoding.response.Question;
-import uy.com.bay.utiles.tasks.AlchemerAnswerRetriever;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Codificación")
@@ -420,19 +419,7 @@ public class QuestionCodingView extends VerticalLayout {
 		return newColumnIndex;
 	}
 
-	private String buildPrompt(String question, List<String> surveyResponses, List<String> codes) {
-		StringBuilder prompt = new StringBuilder();
-		prompt.append(basePrompt);
-		prompt.append("\n\nPregunta:\n");
-		prompt.append(question + "\n");
-		prompt.append("\n\nRespuesta a codificar:\n");
-		surveyResponses.forEach(response -> prompt.append("- ").append(response).append("\n"));
-		prompt.append("\n\nCódigos:\n");
-		for (int i = 0; i < codes.size(); i++) {
-			prompt.append(codes.get(i)).append("\n");
-		}
-		return prompt.toString();
-	}
+
 
 	public static class ColumnMapping {
 		private String questionVariable = "";

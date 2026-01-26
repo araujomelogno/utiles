@@ -18,6 +18,7 @@
 	</appender>
 
 
+	<logger name="org.jaudiotagger" level="ERROR" />
 
 
 	<root level="INFO">
