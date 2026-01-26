@@ -15,7 +15,7 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 
     List<SupervisionTask> findByStatus(Status status);
 
-    @Query("SELECT st FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to " +
+    @Query("SELECT DISTINCT st FROM SupervisionTask st LEFT JOIN FETCH st.durationBySpeakers WHERE st.created BETWEEN :from AND :to " +
             "AND (:fileName IS NULL OR :fileName = '' OR lower(st.fileName) LIKE lower(concat('%', :fileName, '%'))) " +
             "AND (:status IS NULL OR st.status = :status) " +
             "ORDER BY st.created DESC")
