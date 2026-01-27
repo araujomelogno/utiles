@@ -55,7 +55,7 @@ public class SupervisionTasksView extends VerticalLayout {
 		grid.setSizeFull();
 		Grid.Column<SupervisionTask> fileNameColumn = grid.addColumn(SupervisionTask::getFileName).setHeader("Archivo");
 		Grid.Column<SupervisionTask> statusColumn = grid.addColumn(SupervisionTask::getStatus).setHeader("Estado");
-
+		grid.addColumn(SupervisionTask::getAiScore).setHeader("Scoring");
 		grid.addColumn(SupervisionTask::getTotalAudioDuration).setHeader("Duración del audio");
 		grid.addColumn(SupervisionTask::getSpeakingDuration).setHeader("Duración hablando");
 		grid.addColumn(task -> {

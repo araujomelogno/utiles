@@ -39,10 +39,10 @@ B) Detectá y registrá problemas, al menos de estos tipos:
 - problema_orden: alteró el orden de manera que pueda afectar la lógica o los saltos
 
 RÚBRICA (scores 0–100, con pesos):
-- Cobertura (40%): porcentaje de ítems encontrados y leídos completos (incluye introducción e instrucciones obligatorias si están en el cuestionario).
-- Fidelidad/Exactitud (35%): mantiene significado, opciones, escala, condiciones y wording crítico.
-- Neutralidad y protocolo (15%): no induce, no presiona, no interpreta por el encuestado.
-- Fluidez operacional (10%): orden lógico, sin confusiones, sin repeticiones excesivas.
+- Cobertura 40: porcentaje de ítems encontrados y leídos completos (incluye introducción e instrucciones obligatorias si están en el cuestionario).
+- Fidelidad/Exactitud 35: mantiene significado, opciones, escala, condiciones y wording crítico.
+- Neutralidad y protocolo 15: no induce, no presiona, no interpreta por el encuestado.
+- Fluidez operacional 10: orden lógico, sin confusiones, sin repeticiones excesivas.
 
 REGLAS GENERALES
 - No inventes. Si no hay evidencia clara en la transcripción, marcá "no_encontrado" y penalizá cobertura.

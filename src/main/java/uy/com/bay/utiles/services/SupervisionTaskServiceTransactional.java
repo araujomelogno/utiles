@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,26 +83,42 @@ public class SupervisionTaskServiceTransactional {
 				JsonNode root = mapper.readTree(transcription);
 				JsonNode segments = root.path("segments");
 				if (segments.isArray()) {
-					double totalDuration = 0d;
+					Double totalDuration = 0d;
 					for (JsonNode segment : segments) {
 						if (segment.has("speaker") && segment.has("start") && segment.has("end")) {
 							String speaker = segment.get("speaker").asText();
-							double start = segment.get("start").asDouble();
-							double end = segment.get("end").asDouble();
+							double start = Double.valueOf(segment.get("start").asDouble()).intValue();
+							double end = Double.valueOf(segment.get("start").asDouble()).intValue();
 							totalDuration += end - start;
 							task.getDurationBySpeakers().merge(speaker, end - start, Double::sum);
 						}
 					}
-					task.setTotalAudioDuration(totalDuration);
+					task.setSpeakingDuration(totalDuration.intValue());
 				}
 
 				String questionnaireString = "";
-				String formattedPrompt = basePrompt.formatted(transcription, transcription);
+				if (task.getQuestionnaire() != null) {
+					try (InputStream is = new ByteArrayInputStream(task.getQuestionnaire());
+							XWPFDocument doc = new XWPFDocument(is);
+							XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
+						questionnaireString = extractor.getText();
+					} catch (Exception e) {
+						logger.error("Error extracting text from questionnaire for task {}", task.getId(), e);
+					}
+				}
+				String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
 				String response = chatClient.prompt().user(formattedPrompt).call().content().replace("```json", "")
 						.replace("```", "");
-				task.setEvaluationOutput(prettyPrint(response));
-				System.out.println("RESPONSE de la EVALUACI¨NO" + task.getEvaluationOutput());
 
+				task.setEvaluationOutput(prettyPrint(response));
+
+				mapper = new ObjectMapper();
+				JsonNode rootNode = mapper.readTree(task.getEvaluationOutput());
+
+				int puntajeGlobal = rootNode.path("puntaje_global") // obtiene el nodo
+						.asInt(); // lo convierte a int
+
+				task.setAiScore(puntajeGlobal);
 				task.setStatus(Status.DONE);
 				task.setProcessed(new Date());
 
