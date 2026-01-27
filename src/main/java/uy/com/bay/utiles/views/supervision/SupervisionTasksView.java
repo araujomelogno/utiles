@@ -1,7 +1,5 @@
 package uy.com.bay.utiles.views.supervision;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -26,6 +24,7 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.SupervisionTask;
 import uy.com.bay.utiles.data.service.SupervisionTaskService;
+import uy.com.bay.utiles.services.WordExportService;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Supervision Tasks")
@@ -34,6 +33,7 @@ import uy.com.bay.utiles.views.MainLayout;
 public class SupervisionTasksView extends VerticalLayout {
 
 	private final SupervisionTaskService supervisionTaskService;
+	private final WordExportService wordExportService;
 
 	private final DatePicker fromDateField = new DatePicker("Desde:");
 	private final DatePicker toDateField = new DatePicker("Hasta:");
@@ -41,8 +41,9 @@ public class SupervisionTasksView extends VerticalLayout {
 	private final TextField fileNameFilter = new TextField();
 	private final ComboBox<Status> statusFilter = new ComboBox<>();
 
-	public SupervisionTasksView(SupervisionTaskService supervisionTaskService) {
+	public SupervisionTasksView(SupervisionTaskService supervisionTaskService, WordExportService wordExportService) {
 		this.supervisionTaskService = supervisionTaskService;
+		this.wordExportService = wordExportService;
 		setSizeFull();
 		configureGrid();
 		add(getToolbar(), grid);
@@ -77,13 +78,15 @@ public class SupervisionTasksView extends VerticalLayout {
 		grid.addComponentColumn(task -> {
 			if (task.getOutput() != null && !task.getOutput().isEmpty()) {
 				Anchor downloadLink = new Anchor(
-						new StreamResource("output.txt",
-								() -> new ByteArrayInputStream(task.getOutput().getBytes(StandardCharsets.UTF_8))),
-						"Descargar informe");
+						new StreamResource("Supervision_Report_" + task.getId() + ".docx",
+								() -> wordExportService.generateSupervisionTaskReport(task)),
+						"Descargar Word");
 				downloadLink.getElement().setAttribute("download", true);
 				return downloadLink;
 			} else {
-				return new Button("No Output");
+				Button button = new Button("No Output");
+				button.setEnabled(false);
+				return button;
 			}
 		}).setHeader("Output").setSortable(true)
 				.setComparator(task -> task.getOutput() != null && !task.getOutput().isEmpty());
