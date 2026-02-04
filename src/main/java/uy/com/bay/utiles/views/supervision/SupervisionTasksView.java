@@ -102,6 +102,8 @@ public class SupervisionTasksView extends VerticalLayout {
 		headerRow.getCell(statusColumn).setComponent(statusFilter);
 
 		grid.getColumns().forEach(col -> col.setSortable(true));
+		grid.getColumns().forEach(c -> c.setResizable(true));
+
 	}
 
 	private HorizontalLayout getToolbar() {

@@ -74,6 +74,8 @@ public class SupervisionView extends VerticalLayout {
 				multiFileBuffer.getFiles().clear();
 				multiFileUpload.clearFileList();
 
+				questionnaireUpload.clearFileList();
+
 			} catch (IOException ex) {
 				ex.printStackTrace();
 				Notification.show("Error al leer el cuestionario.");

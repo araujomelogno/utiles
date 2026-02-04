@@ -52,9 +52,10 @@ public class SupervisionTaskServiceTransactional {
 	}
 
 	@Transactional
-	public void processPendingTasks() {
+	public void processPendingTasks() { 
 		List<SupervisionTask> pendingTasks = supervisionTaskRepository.findByStatus(Status.PENDING);
 		for (SupervisionTask task : pendingTasks) {
+			logger.info("Processing Supervision Task:"+task.getId());
 			try {
 				AudioFile audioFile = new AudioFile(task.getFileName(),
 						new ByteArrayInputStream(task.getAudioContent()));
@@ -88,7 +89,7 @@ public class SupervisionTaskServiceTransactional {
 						if (segment.has("speaker") && segment.has("start") && segment.has("end")) {
 							String speaker = segment.get("speaker").asText();
 							double start = Double.valueOf(segment.get("start").asDouble()).intValue();
-							double end = Double.valueOf(segment.get("start").asDouble()).intValue();
+							double end = Double.valueOf(segment.get("end").asDouble()).intValue();
 							totalDuration += end - start;
 							task.getDurationBySpeakers().merge(speaker, end - start, Double::sum);
 						}
