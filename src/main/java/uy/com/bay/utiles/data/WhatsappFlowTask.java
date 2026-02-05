@@ -46,6 +46,15 @@ public class WhatsappFlowTask extends AbstractEntity {
 
 	private String urlParameter;
 
+	private boolean hasHeaderParameter;
+
+	private boolean hasBodyParameters;
+
+	private Boolean hasUrlParameter;
+
+	@Enumerated(EnumType.STRING)
+	private TaskType type;
+
 	@Lob
 	private String input;
 
@@ -170,5 +179,37 @@ public class WhatsappFlowTask extends AbstractEntity {
 
 	public void setUrlParameter(String urlParameter) {
 		this.urlParameter = urlParameter;
+	}
+
+	public boolean isHasHeaderParameter() {
+		return hasHeaderParameter;
+	}
+
+	public void setHasHeaderParameter(boolean hasHeaderParameter) {
+		this.hasHeaderParameter = hasHeaderParameter;
+	}
+
+	public boolean isHasBodyParameters() {
+		return hasBodyParameters;
+	}
+
+	public void setHasBodyParameters(boolean hasBodyParameters) {
+		this.hasBodyParameters = hasBodyParameters;
+	}
+
+	public Boolean getHasUrlParameter() {
+		return hasUrlParameter;
+	}
+
+	public void setHasUrlParameter(Boolean hasUrlParameter) {
+		this.hasUrlParameter = hasUrlParameter;
+	}
+
+	public TaskType getType() {
+		return type;
+	}
+
+	public void setType(TaskType type) {
+		this.type = type;
 	}
 }

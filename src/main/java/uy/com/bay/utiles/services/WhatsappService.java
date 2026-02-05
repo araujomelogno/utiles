@@ -17,8 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import uy.com.bay.utiles.data.Status;
+import uy.com.bay.utiles.data.TaskType;
 import uy.com.bay.utiles.data.WhatsappFlowTask;
 import uy.com.bay.utiles.data.repository.WhatsappFlowTaskRepository;
+import uy.com.bay.utiles.dto.whatsapp.WhatsappButton;
+import uy.com.bay.utiles.dto.whatsapp.WhatsappComponent;
 import uy.com.bay.utiles.dto.whatsapp.WhatsappTemplate;
 import uy.com.bay.utiles.dto.whatsapp.WhatsappTemplatesResponse;
 
@@ -132,7 +135,58 @@ public class WhatsappService {
                 task.setTemplateName(selectedTemplate.getName());
                 task.setFirstScreenName(selectedTemplate.getNavigateScreen());
                 task.setLanguage(selectedTemplate.getLanguage());
-                
+
+                boolean hasHeaderParameter = false;
+                boolean hasBodyParameters = false;
+                boolean hasUrlParameter = false;
+                TaskType type = TaskType.PLAINTEXT;
+
+                if (selectedTemplate.getComponents() != null) {
+                    for (WhatsappComponent component : selectedTemplate.getComponents()) {
+                        if ("HEADER".equalsIgnoreCase(component.getType()) && component.getText() != null && component.getText().contains("{{")) {
+                            hasHeaderParameter = true;
+                        }
+                        if ("BODY".equalsIgnoreCase(component.getType()) && component.getText() != null && component.getText().contains("{{")) {
+                            hasBodyParameters = true;
+                        }
+                        if ("BUTTONS".equalsIgnoreCase(component.getType())) {
+                            if (component.getButtons() != null) {
+                                for (WhatsappButton button : component.getButtons()) {
+                                    if (button.getUrl() != null && button.getUrl().contains("{{")) {
+                                        hasUrlParameter = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!component.getButtons().isEmpty()) {
+                                    WhatsappButton firstButton = component.getButtons().get(0);
+                                    if ("FLOW".equalsIgnoreCase(firstButton.getType())) {
+                                        type = TaskType.FLOW;
+                                    } else if ("URL".equalsIgnoreCase(firstButton.getType())) {
+                                        type = TaskType.URL;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                task.setHasHeaderParameter(hasHeaderParameter);
+                task.setHasBodyParameters(hasBodyParameters);
+                task.setHasUrlParameter(hasUrlParameter);
+                task.setType(type);
+
+                if (hasHeaderParameter && !parameters.isEmpty()) {
+                    String headerParam = parameters.remove(0);
+                    task.setHeaderParameter(headerParam);
+                }
+
+                if (hasUrlParameter && !parameters.isEmpty()) {
+                    String urlParam = parameters.remove(parameters.size() - 1);
+                    task.setUrlParameter(urlParam);
+                }
+
+                task.setParameters(parameters);
 
                 // Construct JSON input
                 String inputJson = constructInputJson(task);
@@ -183,34 +237,61 @@ public class WhatsappService {
 
         ArrayNode components = template.putArray("components");
 
-        if (task.getParameters() != null && !task.getParameters().isEmpty()) {
+        // Header
+        if (task.isHasHeaderParameter()) {
+            ObjectNode headerComponent = components.addObject();
+            headerComponent.put("type", "header");
+            ArrayNode headerParams = headerComponent.putArray("parameters");
+            ObjectNode paramObj = headerParams.addObject();
+            paramObj.put("type", "text");
+            paramObj.put("text", task.getHeaderParameter() != null ? task.getHeaderParameter() : "");
+        }
+
+        // Body
+        if (task.isHasBodyParameters()) {
             ObjectNode bodyComponent = components.addObject();
             bodyComponent.put("type", "body");
             ArrayNode bodyParams = bodyComponent.putArray("parameters");
-            for (String param : task.getParameters()) {
-                ObjectNode paramObj = bodyParams.addObject();
-                paramObj.put("type", "text");
-                paramObj.put("text", param);
+            if (task.getParameters() != null) {
+                for (String param : task.getParameters()) {
+                    ObjectNode paramObj = bodyParams.addObject();
+                    paramObj.put("type", "text");
+                    paramObj.put("text", param);
+                }
             }
         }
 
-        ObjectNode buttonComponent = components.addObject();
-        buttonComponent.put("type", "button");
-        buttonComponent.put("sub_type", "flow");
-        buttonComponent.put("index", "0");
+        if (task.getType() == TaskType.FLOW) {
+            ObjectNode buttonComponent = components.addObject();
+            buttonComponent.put("type", "button");
+            buttonComponent.put("sub_type", "flow");
+            buttonComponent.put("index", "0");
 
-        ArrayNode buttonParams = buttonComponent.putArray("parameters");
-        ObjectNode actionParam = buttonParams.addObject();
-        actionParam.put("type", "action");
-        ObjectNode action = actionParam.putObject("action");
+            ArrayNode buttonParams = buttonComponent.putArray("parameters");
+            ObjectNode actionParam = buttonParams.addObject();
+            actionParam.put("type", "action");
+            ObjectNode action = actionParam.putObject("action");
 
-        // Random number for rid
-        long rid = System.currentTimeMillis();
-        String flowToken = "tpl=" + task.getTemplateName() + "|rid=" + rid;
-        action.put("flow_token", flowToken);
+            // Random number for rid
+            long rid = System.currentTimeMillis();
+            String flowToken = "tpl=" + task.getTemplateName() + "|rid=" + rid;
+            action.put("flow_token", flowToken);
 
-        ObjectNode flowActionData = action.putObject("flow_action_data");
-        flowActionData.put("screen", task.getFirstScreenName());
+            ObjectNode flowActionData = action.putObject("flow_action_data");
+            flowActionData.put("screen", task.getFirstScreenName());
+        } else if (task.getType() == TaskType.URL) {
+            ObjectNode buttonComponent = components.addObject();
+            buttonComponent.put("type", "button");
+            buttonComponent.put("sub_type", "url");
+            buttonComponent.put("index", "0");
+
+            ArrayNode buttonParams = buttonComponent.putArray("parameters");
+            if (Boolean.TRUE.equals(task.getHasUrlParameter())) {
+                ObjectNode paramObj = buttonParams.addObject();
+                paramObj.put("type", "text");
+                paramObj.put("text", task.getUrlParameter() != null ? task.getUrlParameter() : "");
+            }
+        }
 
         try {
             return objectMapper.writeValueAsString(root);
