@@ -9,6 +9,7 @@ import lombok.Data;
 public class WhatsappButton {
     private String type;
     private String text;
+    private String url;
     @JsonProperty("flow_id")
     private Long flowId;
     @JsonProperty("flow_action")
@@ -26,6 +27,12 @@ public class WhatsappButton {
 	}
 	public void setText(String text) {
 		this.text = text;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public void setUrl(String url) {
+		this.url = url;
 	}
 	public Long getFlowId() {
 		return flowId;
