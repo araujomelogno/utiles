@@ -8,4 +8,15 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WhatsappTemplatesResponse {
     private List<WhatsappTemplate> data;
+
+	public List<WhatsappTemplate> getData() {
+		return data;
+	}
+
+	public void setData(List<WhatsappTemplate> data) {
+		this.data = data;
+	}
+    
+    
+    
 }

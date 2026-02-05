@@ -15,140 +15,160 @@ import java.util.ArrayList;
 @Entity
 public class WhatsappFlowTask extends AbstractEntity {
 
-    private Date created;
+	private Date created;
 
-    @Enumerated(EnumType.STRING)
-    private Status status;
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
-    private Date schedule;
+	private Date schedule;
 
-    private Date processedDate;
+	private Date processedDate;
 
-    @Column(name = "recipient")
-    private String to;
+	@Column(name = "recipient")
+	private String to;
 
-    @ElementCollection
-    @CollectionTable(name = "whatsapp_flow_task_parameters", joinColumns = @JoinColumn(name = "task_id"))
-    @Column(name = "parameter_value")
-    private List<String> parameters = new ArrayList<>();
+	@ElementCollection
+	@CollectionTable(name = "whatsapp_flow_task_parameters", joinColumns = @JoinColumn(name = "task_id"))
+	@Column(name = "parameter_value")
+	private List<String> parameters = new ArrayList<>();
 
-    private String templateName;
+	private String templateName;
 
-    private String firstScreenName;
+	private String firstScreenName;
 
-    private String language;
+	private String language;
 
-    private String wamid;
+	private String wamid;
 
-    private String responseStatus;
+	private String responseStatus;
 
-    @Lob
-    private String input;
+	private String headerParameter;
 
-    @Lob
-    private String output;
+	private String urlParameter;
 
-    public Date getCreated() {
-        return created;
-    }
+	@Lob
+	private String input;
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
+	@Lob
+	private String output;
 
-    public Status getStatus() {
-        return status;
-    }
+	public Date getCreated() {
+		return created;
+	}
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+	public void setCreated(Date created) {
+		this.created = created;
+	}
 
-    public Date getSchedule() {
-        return schedule;
-    }
+	public Status getStatus() {
+		return status;
+	}
 
-    public void setSchedule(Date schedule) {
-        this.schedule = schedule;
-    }
+	public void setStatus(Status status) {
+		this.status = status;
+	}
 
-    public Date getProcessedDate() {
-        return processedDate;
-    }
+	public Date getSchedule() {
+		return schedule;
+	}
 
-    public void setProcessedDate(Date processedDate) {
-        this.processedDate = processedDate;
-    }
+	public void setSchedule(Date schedule) {
+		this.schedule = schedule;
+	}
 
-    public String getTo() {
-        return to;
-    }
+	public Date getProcessedDate() {
+		return processedDate;
+	}
 
-    public void setTo(String to) {
-        this.to = to;
-    }
+	public void setProcessedDate(Date processedDate) {
+		this.processedDate = processedDate;
+	}
 
-    public List<String> getParameters() {
-        return parameters;
-    }
+	public String getTo() {
+		return to;
+	}
 
-    public void setParameters(List<String> parameters) {
-        this.parameters = parameters;
-    }
+	public void setTo(String to) {
+		this.to = to;
+	}
 
-    public String getTemplateName() {
-        return templateName;
-    }
+	public List<String> getParameters() {
+		return parameters;
+	}
 
-    public void setTemplateName(String templateName) {
-        this.templateName = templateName;
-    }
+	public void setParameters(List<String> parameters) {
+		this.parameters = parameters;
+	}
 
-    public String getFirstScreenName() {
-        return firstScreenName;
-    }
+	public String getTemplateName() {
+		return templateName;
+	}
 
-    public void setFirstScreenName(String firstScreenName) {
-        this.firstScreenName = firstScreenName;
-    }
+	public void setTemplateName(String templateName) {
+		this.templateName = templateName;
+	}
 
-    public String getLanguage() {
-        return language;
-    }
+	public String getFirstScreenName() {
+		return firstScreenName;
+	}
 
-    public void setLanguage(String language) {
-        this.language = language;
-    }
+	public void setFirstScreenName(String firstScreenName) {
+		this.firstScreenName = firstScreenName;
+	}
 
-    public String getWamid() {
-        return wamid;
-    }
+	public String getLanguage() {
+		return language;
+	}
 
-    public void setWamid(String wamid) {
-        this.wamid = wamid;
-    }
+	public void setLanguage(String language) {
+		this.language = language;
+	}
 
-    public String getResponseStatus() {
-        return responseStatus;
-    }
+	public String getWamid() {
+		return wamid;
+	}
 
-    public void setResponseStatus(String responseStatus) {
-        this.responseStatus = responseStatus;
-    }
+	public void setWamid(String wamid) {
+		this.wamid = wamid;
+	}
 
-    public String getInput() {
-        return input;
-    }
+	public String getResponseStatus() {
+		return responseStatus;
+	}
 
-    public void setInput(String input) {
-        this.input = input;
-    }
+	public void setResponseStatus(String responseStatus) {
+		this.responseStatus = responseStatus;
+	}
 
-    public String getOutput() {
-        return output;
-    }
+	public String getInput() {
+		return input;
+	}
 
-    public void setOutput(String output) {
-        this.output = output;
-    }
+	public void setInput(String input) {
+		this.input = input;
+	}
+
+	public String getOutput() {
+		return output;
+	}
+
+	public void setOutput(String output) {
+		this.output = output;
+	}
+
+	public String getHeaderParameter() {
+		return headerParameter;
+	}
+
+	public void setHeaderParameter(String headerParameter) {
+		this.headerParameter = headerParameter;
+	}
+
+	public String getUrlParameter() {
+		return urlParameter;
+	}
+
+	public void setUrlParameter(String urlParameter) {
+		this.urlParameter = urlParameter;
+	}
 }
