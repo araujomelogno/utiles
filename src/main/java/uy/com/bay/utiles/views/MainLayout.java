@@ -253,6 +253,13 @@ public class MainLayout extends AppLayout {
 		toolsItem.addItem(supervisionTasksItem);
 		nav.addItem(toolsItem);
 
+		SideNavItem whatsappItem = new SideNavItem("Whatsapp");
+		whatsappItem.setPrefixComponent(new Icon("vaadin", "comments"));
+		SideNavItem sendMessagesItem = new SideNavItem("Enviar mensajes", "whatsapp-sender");
+		sendMessagesItem.setPrefixComponent(new Icon("vaadin", "paperplane"));
+		whatsappItem.addItem(sendMessagesItem);
+		nav.addItem(whatsappItem);
+
 		return nav;
 	}
 
