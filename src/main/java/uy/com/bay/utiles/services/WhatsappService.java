@@ -3,6 +3,8 @@ package uy.com.bay.utiles.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -46,7 +48,11 @@ public class WhatsappService {
 
     @Autowired
     public WhatsappService(WhatsappFlowTaskRepository taskRepository, ObjectMapper objectMapper) {
-        this.restClient = RestClient.create();
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
+        converter.setSupportedMediaTypes(List.of(MediaType.APPLICATION_JSON, new MediaType("text", "javascript")));
+        this.restClient = RestClient.builder()
+                .messageConverters(converters -> converters.add(converter))
+                .build();
         this.taskRepository = taskRepository;
         this.objectMapper = objectMapper;
     }
