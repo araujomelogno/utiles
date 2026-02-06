@@ -8,4 +8,5 @@ import uy.com.bay.utiles.data.WhatsappFlowTask;
 
 public interface WhatsappFlowTaskRepository extends JpaRepository<WhatsappFlowTask, Long> {
     List<WhatsappFlowTask> findByCreatedBetweenOrderByCreatedDesc(Date start, Date end);
+    List<WhatsappFlowTask> findByScheduleBetweenOrderByCreatedDesc(Date start, Date end);
 }
