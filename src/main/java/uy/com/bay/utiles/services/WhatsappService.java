@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -300,5 +302,14 @@ public class WhatsappService {
             e.printStackTrace();
             return "{}";
         }
+    }
+
+    public List<WhatsappFlowTask> getTasksByDateRange(LocalDateTime from, LocalDateTime to) {
+        if (from == null || to == null) {
+            return Collections.emptyList();
+        }
+        Date fromDate = Date.from(from.atZone(ZoneId.systemDefault()).toInstant());
+        Date toDate = Date.from(to.atZone(ZoneId.systemDefault()).toInstant());
+        return taskRepository.findByCreatedBetweenOrderByCreatedDesc(fromDate, toDate);
     }
 }

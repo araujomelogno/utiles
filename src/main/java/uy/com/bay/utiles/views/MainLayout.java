@@ -258,6 +258,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem sendMessagesItem = new SideNavItem("Enviar mensajes", "whatsapp-sender");
 		sendMessagesItem.setPrefixComponent(new Icon("vaadin", "paperplane"));
 		whatsappItem.addItem(sendMessagesItem);
+		SideNavItem messagesItem = new SideNavItem("Envíos", "whatsapp-messages");
+		messagesItem.setPrefixComponent(new Icon("vaadin", "list"));
+		whatsappItem.addItem(messagesItem);
 		nav.addItem(whatsappItem);
 
 		return nav;
