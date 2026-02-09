@@ -17,149 +17,148 @@ import java.util.Map;
 @Entity
 public class SupervisionTask extends AbstractEntity {
 
-    private Date created;
+	private Date created;
 
-    @Enumerated(EnumType.STRING)
-    private Status status;
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
-    private String fileName;
+	private String fileName;
 
-    @Lob
-    private byte[] audioContent;
+	@Lob
+	private byte[] audioContent;
 
-    @Lob
-    private byte[] questionnaire;
+	@Lob
+	private byte[] questionnaire;
 
-    @Lob
-    private String input;
+	@Lob
+	private String input;
 
-    @Lob
-    private String output;
-    
-    private double totalAudioDuration;
-    private double speakingDuration;
+	@Lob
+	private String output;
 
-    @ElementCollection
-    @CollectionTable(name = "supervision_task_speakers", joinColumns = @JoinColumn(name = "task_id"))
-    @MapKeyColumn(name = "speaker")
-    @Column(name = "duration")
-    private Map<String, Double> durationBySpeakers = new HashMap<>();
+	private double totalAudioDuration;
+	private double speakingDuration;
 
-    private double aiScore;
-    
-    @ManyToOne
-    @JoinColumn(name = "fieldwork_id")
-    private Fieldwork fieldwork;
+	@ElementCollection
+	@CollectionTable(name = "supervision_task_speakers", joinColumns = @JoinColumn(name = "task_id"))
+	@MapKeyColumn(name = "speaker")
+	@Column(name = "duration")
+	private Map<String, Double> durationBySpeakers = new HashMap<>();
 
-    @Lob
-    private String evaluationOutput;
-    
-    
-    private Date processed;
+	private double aiScore;
 
-    public Date getCreated() {
-        return created;
-    }
+	@ManyToOne
+	@JoinColumn(name = "fieldwork_id")
+	private Fieldwork fieldwork;
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
+	@Lob
+	private String evaluationOutput;
 
-    public Status getStatus() {
-        return status;
-    }
+	private Date processed;
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+	public Date getCreated() {
+		return created;
+	}
 
-    public String getFileName() {
-        return fileName;
-    }
+	public void setCreated(Date created) {
+		this.created = created;
+	}
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
+	public Status getStatus() {
+		return status;
+	}
 
-    public byte[] getAudioContent() {
-        return audioContent;
-    }
+	public void setStatus(Status status) {
+		this.status = status;
+	}
 
-    public void setAudioContent(byte[] audioContent) {
-        this.audioContent = audioContent;
-    }
+	public String getFileName() {
+		return fileName;
+	}
 
-    public byte[] getQuestionnaire() {
-        return questionnaire;
-    }
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 
-    public void setQuestionnaire(byte[] questionnaire) {
-        this.questionnaire = questionnaire;
-    }
+	public byte[] getAudioContent() {
+		return audioContent;
+	}
 
-    public String getInput() {
-        return input;
-    }
+	public void setAudioContent(byte[] audioContent) {
+		this.audioContent = audioContent;
+	}
 
-    public void setInput(String input) {
-        this.input = input;
-    }
+	public byte[] getQuestionnaire() {
+		return questionnaire;
+	}
 
-    public String getOutput() {
-        return output;
-    }
+	public void setQuestionnaire(byte[] questionnaire) {
+		this.questionnaire = questionnaire;
+	}
 
-    public void setOutput(String output) {
-        this.output = output;
-    }
+	public String getInput() {
+		return input;
+	}
 
-    public Date getProcessed() {
-        return processed;
-    }
+	public void setInput(String input) {
+		this.input = input;
+	}
 
-    public void setProcessed(Date processed) {
-        this.processed = processed;
-    }
+	public String getOutput() {
+		return output;
+	}
 
-    public double getTotalAudioDuration() {
-        return totalAudioDuration;
-    }
+	public void setOutput(String output) {
+		this.output = output;
+	}
 
-    public void setTotalAudioDuration(double totalAudioDuration) {
-        this.totalAudioDuration = totalAudioDuration;
-    }
+	public Date getProcessed() {
+		return processed;
+	}
 
-    public double getSpeakingDuration() {
-        return speakingDuration;
-    }
+	public void setProcessed(Date processed) {
+		this.processed = processed;
+	}
 
-    public void setSpeakingDuration(double speakingDuration) {
-        this.speakingDuration = speakingDuration;
-    }
+	public double getTotalAudioDuration() {
+		return totalAudioDuration;
+	}
 
-    public Map<String, Double> getDurationBySpeakers() {
-        return durationBySpeakers;
-    }
+	public void setTotalAudioDuration(double totalAudioDuration) {
+		this.totalAudioDuration = totalAudioDuration;
+	}
 
-    public void setDurationBySpeakers(Map<String, Double> durationBySpeakers) {
-        this.durationBySpeakers = durationBySpeakers;
-    }
+	public Double getSpeakingDuration() {
+		return speakingDuration;
+	}
 
-    public double getAiScore() {
-        return aiScore;
-    }
+	public void setSpeakingDuration(double speakingDuration) {
+		this.speakingDuration = speakingDuration;
+	}
 
-    public void setAiScore(double aiScore) {
-        this.aiScore = aiScore;
-    }
+	public Map<String, Double> getDurationBySpeakers() {
+		return durationBySpeakers;
+	}
 
-    public Fieldwork getFieldwork() {
-        return fieldwork;
-    }
+	public void setDurationBySpeakers(Map<String, Double> durationBySpeakers) {
+		this.durationBySpeakers = durationBySpeakers;
+	}
 
-    public void setFieldwork(Fieldwork fieldwork) {
-        this.fieldwork = fieldwork;
-    }
+	public double getAiScore() {
+		return aiScore;
+	}
+
+	public void setAiScore(double aiScore) {
+		this.aiScore = aiScore;
+	}
+
+	public Fieldwork getFieldwork() {
+		return fieldwork;
+	}
+
+	public void setFieldwork(Fieldwork fieldwork) {
+		this.fieldwork = fieldwork;
+	}
 
 	public String getEvaluationOutput() {
 		return evaluationOutput;

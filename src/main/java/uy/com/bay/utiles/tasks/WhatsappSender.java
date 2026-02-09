@@ -37,7 +37,7 @@ public class WhatsappSender {
         this.restClient = RestClient.builder().build();
     }
 
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "0 0/2 * * * ?")
     public void sendMessages() {
         logger.info("Starting WhatsappSender task...");
         List<WhatsappFlowTask> tasks = whatsappFlowTaskRepository.findAllByStatusAndScheduleBefore(Status.PENDING, new Date());
@@ -96,11 +96,7 @@ public class WhatsappSender {
         } catch (Exception e) {
             logger.error("Error processing WhatsappFlowTask id: " + task.getId(), e);
             task.setStatus(Status.ERROR);
-            task.setProcessedDate(new Date());
-            // Optionally append error to output or just leave it.
-            // The prompt says "Si da error el atributo status deberá actualizarse a ‘ERROR’".
-            // I'll assume we want to know what happened so I'll append to output if possible,
-            // but carefully not to overwrite valid response if it happened later (unlikely here).
+            task.setProcessedDate(new Date()); 
             String currentOutput = task.getOutput();
             String errorMsg = "Error: " + e.getMessage();
             task.setOutput(currentOutput == null ? errorMsg : currentOutput + "\n" + errorMsg);

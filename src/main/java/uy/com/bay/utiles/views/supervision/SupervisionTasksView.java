@@ -62,7 +62,9 @@ public class SupervisionTasksView extends VerticalLayout {
 		grid.addColumn(task -> {
 			Map<String, Double> speakers = task.getDurationBySpeakers();
 			if (speakers != null) {
-				return speakers.entrySet().stream().map(entry -> entry.getKey() + ":" + entry.getValue())
+				return speakers.entrySet().stream()
+						.map(entry -> entry.getKey() + ":"
+								+ Double.valueOf(100 * entry.getValue() / task.getSpeakingDuration()).intValue() + "%")
 						.collect(Collectors.joining(", "));
 			}
 			return "";
@@ -77,10 +79,8 @@ public class SupervisionTasksView extends VerticalLayout {
 
 		grid.addComponentColumn(task -> {
 			if (task.getOutput() != null && !task.getOutput().isEmpty()) {
-				Anchor downloadLink = new Anchor(
-						new StreamResource("Supervision_Report_" + task.getId() + ".docx",
-								() -> wordExportService.generateSupervisionTaskReport(task)),
-						"Descargar Word");
+				Anchor downloadLink = new Anchor(new StreamResource("Supervision_Report_" + task.getId() + ".docx",
+						() -> wordExportService.generateSupervisionTaskReport(task)), "Descargar Word");
 				downloadLink.getElement().setAttribute("download", true);
 				return downloadLink;
 			} else {

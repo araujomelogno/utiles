@@ -52,10 +52,10 @@ public class SupervisionTaskServiceTransactional {
 	}
 
 	@Transactional
-	public void processPendingTasks() { 
+	public void processPendingTasks() {
 		List<SupervisionTask> pendingTasks = supervisionTaskRepository.findByStatus(Status.PENDING);
 		for (SupervisionTask task : pendingTasks) {
-			logger.info("Processing Supervision Task:"+task.getId());
+			logger.info("Processing Supervision Task:" + task.getId());
 			try {
 				AudioFile audioFile = new AudioFile(task.getFileName(),
 						new ByteArrayInputStream(task.getAudioContent()));
@@ -127,7 +127,7 @@ public class SupervisionTaskServiceTransactional {
 				logger.error("Error processing supervision task {}: {}", task.getId(), e.getMessage());
 				task.setStatus(Status.ERROR);
 			} finally {
-				supervisionTaskRepository.save(task);
+				supervisionTaskRepository.saveAndFlush(task);
 			}
 		}
 	}

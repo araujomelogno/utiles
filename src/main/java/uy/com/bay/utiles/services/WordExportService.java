@@ -28,6 +28,9 @@ public class WordExportService {
             titleRun.addBreak();
 
             // Evaluation Output Section
+            addSection(document, "Archivo evaluado", task.getFileName());
+            
+            // Evaluation Output Section
             addSection(document, "Resultado de Evaluación", task.getEvaluationOutput());
 
             // Output Section
