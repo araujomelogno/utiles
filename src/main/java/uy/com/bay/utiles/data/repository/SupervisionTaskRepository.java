@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.SupervisionTask;
+import jakarta.persistence.Tuple;
 
 @Repository
 public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask, Long> {
@@ -22,4 +23,16 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
             "ORDER BY st.created DESC")
     List<SupervisionTask> findByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
                                                                  @Param("fileName") String fileName, @Param("status") Status status);
+
+    @Query("SELECT st.id as id, st.fileName as fileName, st.status as status, st.aiScore as aiScore, " +
+           "st.totalAudioDuration as totalAudioDuration, st.speakingDuration as speakingDuration, " +
+           "st.created as created, st.output as output, st.evaluationOutput as evaluationOutput, " +
+           "KEY(d) as speaker, VALUE(d) as duration " +
+           "FROM SupervisionTask st LEFT JOIN st.durationBySpeakers d " +
+           "WHERE st.created BETWEEN :from AND :to " +
+           "AND (:fileName IS NULL OR :fileName = '' OR lower(st.fileName) LIKE lower(concat('%', :fileName, '%'))) " +
+           "AND (:status IS NULL OR st.status = :status) " +
+           "ORDER BY st.created DESC")
+    List<Tuple> findTuplesByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
+                                                             @Param("fileName") String fileName, @Param("status") Status status);
 }
