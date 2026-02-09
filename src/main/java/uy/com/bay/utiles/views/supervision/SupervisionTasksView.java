@@ -22,8 +22,8 @@ import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Status;
-import uy.com.bay.utiles.data.SupervisionTask;
 import uy.com.bay.utiles.data.service.SupervisionTaskService;
+import uy.com.bay.utiles.dto.SupervisionTaskDTO;
 import uy.com.bay.utiles.services.WordExportService;
 import uy.com.bay.utiles.views.MainLayout;
 
@@ -37,7 +37,7 @@ public class SupervisionTasksView extends VerticalLayout {
 
 	private final DatePicker fromDateField = new DatePicker("Desde:");
 	private final DatePicker toDateField = new DatePicker("Hasta:");
-	private final Grid<SupervisionTask> grid = new Grid<>(SupervisionTask.class, false);
+	private final Grid<SupervisionTaskDTO> grid = new Grid<>(SupervisionTaskDTO.class, false);
 	private final TextField fileNameFilter = new TextField();
 	private final ComboBox<Status> statusFilter = new ComboBox<>();
 
@@ -54,11 +54,11 @@ public class SupervisionTasksView extends VerticalLayout {
 
 	private void configureGrid() {
 		grid.setSizeFull();
-		Grid.Column<SupervisionTask> fileNameColumn = grid.addColumn(SupervisionTask::getFileName).setHeader("Archivo");
-		Grid.Column<SupervisionTask> statusColumn = grid.addColumn(SupervisionTask::getStatus).setHeader("Estado");
-		grid.addColumn(SupervisionTask::getAiScore).setHeader("Scoring");
-		grid.addColumn(SupervisionTask::getTotalAudioDuration).setHeader("Duración del audio");
-		grid.addColumn(SupervisionTask::getSpeakingDuration).setHeader("Duración hablando");
+		Grid.Column<SupervisionTaskDTO> fileNameColumn = grid.addColumn(SupervisionTaskDTO::getFileName).setHeader("Archivo");
+		Grid.Column<SupervisionTaskDTO> statusColumn = grid.addColumn(SupervisionTaskDTO::getStatus).setHeader("Estado");
+		grid.addColumn(SupervisionTaskDTO::getAiScore).setHeader("Scoring");
+		grid.addColumn(SupervisionTaskDTO::getTotalAudioDuration).setHeader("Duración del audio");
+		grid.addColumn(SupervisionTaskDTO::getSpeakingDuration).setHeader("Duración hablando");
 		grid.addColumn(task -> {
 			Map<String, Double> speakers = task.getDurationBySpeakers();
 			if (speakers != null) {
@@ -119,7 +119,7 @@ public class SupervisionTasksView extends VerticalLayout {
 
 		Date to = Date.from(toDateField.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
 		if (from != null && to != null) {
-			grid.setItems(supervisionTaskService.findByCreatedBetweenAndFileNameAndStatus(from, to,
+			grid.setItems(supervisionTaskService.findDTOByCreatedBetweenAndFileNameAndStatus(from, to,
 					fileNameFilter.getValue(), statusFilter.getValue()));
 		}
 	}

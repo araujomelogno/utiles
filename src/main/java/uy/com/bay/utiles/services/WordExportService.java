@@ -6,6 +6,7 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.stereotype.Service;
 import uy.com.bay.utiles.data.SupervisionTask;
+import uy.com.bay.utiles.dto.SupervisionTaskDTO;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,6 +16,14 @@ import java.io.IOException;
 public class WordExportService {
 
     public ByteArrayInputStream generateSupervisionTaskReport(SupervisionTask task) {
+        return generateReport(task.getFileName(), task.getEvaluationOutput(), task.getOutput());
+    }
+
+    public ByteArrayInputStream generateSupervisionTaskReport(SupervisionTaskDTO task) {
+        return generateReport(task.getFileName(), task.getEvaluationOutput(), task.getOutput());
+    }
+
+    private ByteArrayInputStream generateReport(String fileName, String evaluationOutput, String output) {
         try (XWPFDocument document = new XWPFDocument();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
@@ -28,13 +37,13 @@ public class WordExportService {
             titleRun.addBreak();
 
             // Evaluation Output Section
-            addSection(document, "Archivo evaluado", task.getFileName());
-            
+            addSection(document, "Archivo evaluado", fileName);
+
             // Evaluation Output Section
-            addSection(document, "Resultado de Evaluación", task.getEvaluationOutput());
+            addSection(document, "Resultado de Evaluación", evaluationOutput);
 
             // Output Section
-            addSection(document, "Output", task.getOutput());
+            addSection(document, "Output", output);
 
             document.write(out);
             return new ByteArrayInputStream(out.toByteArray());
