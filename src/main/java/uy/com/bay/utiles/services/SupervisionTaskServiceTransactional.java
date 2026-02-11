@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
 
@@ -51,7 +52,7 @@ public class SupervisionTaskServiceTransactional {
 		this.openAiService = openAiService;
 	}
 
-	@Transactional
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void processPendingTasks() {
 		List<SupervisionTask> pendingTasks = supervisionTaskRepository.findByStatus(Status.PENDING);
 		for (SupervisionTask task : pendingTasks) {
@@ -127,7 +128,8 @@ public class SupervisionTaskServiceTransactional {
 				logger.error("Error processing supervision task {}: {}", task.getId(), e.getMessage());
 				task.setStatus(Status.ERROR);
 			} finally {
-				supervisionTaskRepository.saveAndFlush(task);
+				supervisionTaskRepository.save(task);
+				supervisionTaskRepository.flush();
 			}
 		}
 	}

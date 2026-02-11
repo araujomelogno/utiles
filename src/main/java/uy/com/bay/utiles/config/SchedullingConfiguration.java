@@ -10,7 +10,7 @@ public class SchedullingConfiguration {
 	@Bean
 	public TaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
-		s.setPoolSize(1);
+		s.setPoolSize(2);
 		
 		s.setThreadNamePrefix("sched-");
 		return s;

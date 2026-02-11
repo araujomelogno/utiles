@@ -6,27 +6,32 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
-import uy.com.bay.utiles.services.SupervisionTaskServiceTransactional;
+import uy.com.bay.utiles.services.SupervisionTaskBatchService;
 
 @Component
 public class SupervisionScheduledTask {
 
-	private final SupervisionTaskServiceTransactional supervisionTaskService;
+	private final SupervisionTaskBatchService batchService;
+
 	private static final Logger logger = LoggerFactory.getLogger(SupervisionScheduledTask.class);
 
-	public SupervisionScheduledTask(SupervisionTaskServiceTransactional supervisionTaskService) {
-		this.supervisionTaskService = supervisionTaskService;
+	public SupervisionScheduledTask(SupervisionTaskBatchService batchService) {
+		this.batchService = batchService;
 	}
 
-	
 	@PostConstruct
 	public void init() {
-	  logger.info("[SCHED] SupervisionScheduledTask bean initialized");
+		logger.info("[SCHED] SupervisionScheduledTask bean initialized");
 	}
-	
+
 	@Scheduled(cron = "0 */9 * * * *")
 	public void processPendingSupervisionTasks() {
-		logger.info("Ejecutando SupervisionService Task");
-		supervisionTaskService.processPendingTasks();
+
+		try {
+			logger.info("Ejecutando SupervisionService Task");
+			batchService.processPendingTasksBatch();
+		} catch (Exception e) {
+			logger.error("Scheduled supervision processing failed", e);
+		}
 	}
 }

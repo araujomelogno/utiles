@@ -67,6 +67,25 @@
   <groupId>org.apache.httpcomponents.core5</groupId>
   <artifactId>httpcore5</artifactId>
 </dependency>
+
+<!-- MP3 SPI (habilita AudioSystem.getAudioInputStream en MP3) -->
+  <dependency>
+    <groupId>com.googlecode.soundlibs</groupId>
+    <artifactId>mp3spi</artifactId>
+    <version>1.9.5.4</version>
+  </dependency>
+
+  <!-- A veces necesario para providers (según entorno) -->
+  <dependency>
+    <groupId>com.googlecode.soundlibs</groupId>
+    <artifactId>tritonus-share</artifactId>
+    <version>0.3.7.4</version>
+  </dependency>
+  <dependency>
+    <groupId>com.googlecode.soundlibs</groupId>
+    <artifactId>jlayer</artifactId>
+    <version>1.0.1.4</version>
+  </dependency>
   
     <!-- OpenAI LLM via Spring AI -->
     <dependency>

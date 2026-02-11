@@ -14,12 +14,12 @@ public class OpenAiTimeoutConfig {
 	@Bean
 	public RestClient.Builder restClientBuilder() {
 
-		HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofMinutes(20)).build();
+		HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofMinutes(240)).build();
 
 		JdkClientHttpRequestFactory rf = new JdkClientHttpRequestFactory(client);
 
 		// ⬇️ ESTE es el read timeout
-		rf.setReadTimeout(Duration.ofMinutes(25));
+		rf.setReadTimeout(Duration.ofMinutes(250));
 
 		return RestClient.builder().requestFactory(rf);
 	}
