@@ -24,7 +24,7 @@ public class SupervisionScheduledTask {
 		logger.info("[SCHED] SupervisionScheduledTask bean initialized");
 	}
 
-	@Scheduled(cron = "0 */9 * * * *")
+	@Scheduled(cron = "0 */2 * * * *")
 	public void processPendingSupervisionTasks() {
 
 		try {

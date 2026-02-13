@@ -30,16 +30,16 @@ import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
 import uy.com.bay.utiles.dto.AudioFile;
 
 @Service
-public class SupervisionTaskServiceTransactional {
+public class SupervisionTaskServiceTransactionalDEPRECATED {
 
-	private static final Logger logger = LoggerFactory.getLogger(SupervisionTaskServiceTransactional.class);
+	private static final Logger logger = LoggerFactory.getLogger(SupervisionTaskServiceTransactionalDEPRECATED.class);
 	private final SupervisionTaskRepository supervisionTaskRepository;
 	private final OpenAiService openAiService;
 
 	private final ChatClient chatClient;
 	private String basePrompt;
 
-	public SupervisionTaskServiceTransactional(SupervisionTaskRepository supervisionTaskRepository,
+	public SupervisionTaskServiceTransactionalDEPRECATED(SupervisionTaskRepository supervisionTaskRepository,
 			OpenAiService openAiService, ChatClient.Builder chatClientBuilder) {
 		this.chatClient = chatClientBuilder.build();
 		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision2.txt")) {

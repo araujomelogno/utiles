@@ -6,8 +6,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Date;
 
+import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.extractor.WordExtractor;
+import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -31,139 +35,172 @@ import uy.com.bay.utiles.dto.AudioFile;
 @Service
 public class SupervisionTaskProcessorService {
 
-    private static final Logger logger = LoggerFactory.getLogger(SupervisionTaskProcessorService.class);
+	private static final Logger logger = LoggerFactory.getLogger(SupervisionTaskProcessorService.class);
 
-    private final SupervisionTaskRepository supervisionTaskRepository;
-    private final OpenAiService openAiService;
-    private final ChatClient chatClient;
+	private final SupervisionTaskRepository supervisionTaskRepository;
+	private final OpenAiService openAiService;
+	private final ChatClient chatClient;
 
-    private final String basePrompt;
+	private final String basePrompt;
 
-    public SupervisionTaskProcessorService(SupervisionTaskRepository supervisionTaskRepository,
-                                          OpenAiService openAiService,
-                                          ChatClient.Builder chatClientBuilder) {
-        this.supervisionTaskRepository = supervisionTaskRepository;
-        this.openAiService = openAiService;
-        this.chatClient = chatClientBuilder.build();
+	public SupervisionTaskProcessorService(SupervisionTaskRepository supervisionTaskRepository,
+			OpenAiService openAiService, ChatClient.Builder chatClientBuilder) {
+		this.supervisionTaskRepository = supervisionTaskRepository;
+		this.openAiService = openAiService;
+		this.chatClient = chatClientBuilder.build();
 
-        String loadedPrompt = "";
-        try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision2.txt")) {
-            if (inputStream != null) {
-                byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
-                loadedPrompt = new String(byteArray, StandardCharsets.UTF_8);
-            } else {
-                logger.error("Prompt file not found: /prompts/supervision2.txt");
-            }
-        } catch (IOException e) {
-            logger.error("Error loading prompt /prompts/supervision2.txt", e);
-        }
-        this.basePrompt = loadedPrompt;
-    }
+		String loadedPrompt = "";
+		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision2.txt")) {
+			if (inputStream != null) {
+				byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
+				loadedPrompt = new String(byteArray, StandardCharsets.UTF_8);
+			} else {
+				logger.error("Prompt file not found: /prompts/supervision2.txt");
+			}
+		} catch (IOException e) {
+			logger.error("Error loading prompt /prompts/supervision2.txt", e);
+		}
+		this.basePrompt = loadedPrompt;
+	}
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processSingleTask(Long taskId) {
-        SupervisionTask task = supervisionTaskRepository.findById(taskId).orElse(null);
-        if (task == null) {
-            logger.warn("SupervisionTask not found id={}", taskId);
-            return;
-        }
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void processSingleTask(Long taskId) {
+		SupervisionTask task = supervisionTaskRepository.findById(taskId).orElse(null);
+		if (task == null) {
+			logger.warn("SupervisionTask not found id={}", taskId);
+			return;
+		}
 
-        logger.info("Processing Supervision Task: {}", task.getId());
+		logger.info("Processing Supervision Task: {}", task.getId());
 
-        try {
-            // (Opcional pero útil) marcar RUNNING y persistir rápido
-            task.setStatus(Status.RUNNING);
-            supervisionTaskRepository.save(task);
-            supervisionTaskRepository.flush();
+		try {
+			// (Opcional pero útil) marcar RUNNING y persistir rápido
+			task.setStatus(Status.RUNNING);
+			supervisionTaskRepository.save(task);
+			supervisionTaskRepository.flush();
 
-            AudioFile audioFile = new AudioFile(task.getFileName(),
-                    new ByteArrayInputStream(task.getAudioContent()));
+			AudioFile audioFile = new AudioFile(task.getFileName(), new ByteArrayInputStream(task.getAudioContent()));
 
-            // Duración
-            File tempFile = null;
-            try {
-                tempFile = File.createTempFile("audio_", "_" + task.getFileName());
-                try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                    fos.write(task.getAudioContent());
-                }
-                org.jaudiotagger.audio.AudioFile taggedFile = AudioFileIO.read(tempFile);
-                int duration = taggedFile.getAudioHeader().getTrackLength();
-                task.setTotalAudioDuration((double) duration);
-            } catch (Exception e) {
-                logger.error("Error calculating audio duration for task {}: {}", task.getId(), e.getMessage(), e);
-            } finally {
-                if (tempFile != null) {
-                    //noinspection ResultOfMethodCallIgnored
-                    tempFile.delete();
-                }
-            }
+			// Duración
+			File tempFile = null;
+			try {
+				tempFile = File.createTempFile("audio_", "_" + task.getFileName());
+				try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+					fos.write(task.getAudioContent());
+				}
+				org.jaudiotagger.audio.AudioFile taggedFile = AudioFileIO.read(tempFile);
+				int duration = taggedFile.getAudioHeader().getTrackLength();
+				task.setTotalAudioDuration((double) duration);
+			} catch (Exception e) {
+				logger.error("Error calculating audio duration for task {}: {}", task.getId(), e.getMessage(), e);
+			} finally {
+				if (tempFile != null) {
+					// noinspection ResultOfMethodCallIgnored
+					tempFile.delete();
+				}
+			}
 
-            // Transcripción
-            String transcription = openAiService.transcribeAudio(audioFile);
-            task.setOutput(prettyPrint(transcription));
+			// Transcripción
+			String transcription = openAiService.transcribeAudioTotal(audioFile);
+			task.setOutput(prettyPrint(transcription));
 
-            // Segmentos diarize
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(transcription);
-            JsonNode segments = root.path("segments");
-            if (segments.isArray()) {
-                double totalDuration = 0d;
-                for (JsonNode segment : segments) {
-                    if (segment.has("speaker") && segment.has("start") && segment.has("end")) {
-                        String speaker = segment.get("speaker").asText();
-                        double start = segment.get("start").asDouble();
-                        double end = segment.get("end").asDouble();
-                        totalDuration += (end - start);
-                        task.getDurationBySpeakers().merge(speaker, (end - start), Double::sum);
-                    }
-                }
-                task.setSpeakingDuration((int) totalDuration);
-            }
+			// Segmentos diarize
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode root = mapper.readTree(transcription);
+			JsonNode segments = root.path("segments");
+			if (segments.isArray()) {
+				double totalDuration = 0d;
+				for (JsonNode segment : segments) {
+					if (segment.has("speaker") && segment.has("start") && segment.has("end")) {
+						String speaker = segment.get("speaker").asText();
+						double start = segment.get("start").asDouble();
+						double end = segment.get("end").asDouble();
+						totalDuration += (end - start);
+						task.getDurationBySpeakers().merge(speaker, (end - start), Double::sum);
+					}
+				}
+				task.setSpeakingDuration((int) totalDuration);
+			}
 
-            // Questionnaire
-            String questionnaireString = "";
-            if (task.getQuestionnaire() != null) {
-                try (InputStream is = new ByteArrayInputStream(task.getQuestionnaire());
-                     XWPFDocument doc = new XWPFDocument(is);
-                     XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
-                    questionnaireString = extractor.getText();
-                } catch (Exception e) {
-                    logger.error("Error extracting text from questionnaire for task {}", task.getId(), e);
-                }
-            }
+			// Questionnaire
 
-            // Evaluación
-            String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
-            String response = chatClient.prompt()
-                    .user(formattedPrompt)
-                    .call()
-                    .content()
-                    .replace("```json", "")
-                    .replace("```", "");
+			String questionnaireString = extractQuestionnaireText(task.getQuestionnaire());
 
-            task.setEvaluationOutput(prettyPrint(response));
+			// Evaluación
+			String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
+			String response = chatClient.prompt().user(formattedPrompt).call().content().replace("```json", "")
+					.replace("```", "");
 
-            JsonNode rootNode = new ObjectMapper().readTree(task.getEvaluationOutput());
-            int puntajeGlobal = rootNode.path("puntaje_global").asInt();
-            task.setAiScore(puntajeGlobal);
+			task.setEvaluationOutput(prettyPrint(response));
 
-            task.setStatus(Status.DONE);
-            task.setProcessed(new Date());
+			JsonNode rootNode = new ObjectMapper().readTree(task.getEvaluationOutput());
+			int puntajeGlobal = rootNode.path("puntaje_global").asInt();
+			task.setAiScore(puntajeGlobal);
 
-        } catch (Exception e) {
-            logger.error("Error processing supervision task {}", task.getId(), e);
-            task.setStatus(Status.ERROR);
-        } finally {
-            // Persist final
-            supervisionTaskRepository.save(task);
-            supervisionTaskRepository.flush();
-        }
-    }
+			task.setStatus(Status.DONE);
+			task.setProcessed(new Date());
 
-    public String prettyPrint(String json) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        Object jsonObject = mapper.readValue(json, Object.class);
-        ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
-        return writer.writeValueAsString(jsonObject);
-    }
+		} catch (Exception e) {
+			logger.error("Error processing supervision task {}", task.getId(), e);
+			task.setStatus(Status.ERROR);
+		} finally {
+			// Persist final
+			supervisionTaskRepository.save(task);
+			supervisionTaskRepository.flush();
+		}
+	}
+
+	public static String extractQuestionnaireText(byte[] data) {
+		if (data == null || data.length == 0)
+			return "";
+
+		// DOCX (ZIP) suele empezar con 'PK'
+		boolean looksZip = data.length >= 2 && data[0] == 'P' && data[1] == 'K';
+
+		// DOC (Word 97-2003) suele empezar con D0 CF 11 E0 A1 B1 1A E1 (OLE2)
+		byte[] oleSig = new byte[] { (byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1,
+				(byte) 0x1A, (byte) 0xE1 };
+		boolean looksOle = data.length >= 8 && Arrays.equals(Arrays.copyOfRange(data, 0, 8), oleSig);
+
+		// PDF empieza con %PDF
+		boolean looksPdf = data.length >= 4 && data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F';
+
+		try {
+			if (looksZip) {
+				try (InputStream is = new ByteArrayInputStream(data);
+						XWPFDocument doc = new XWPFDocument(OPCPackage.open(is));
+						XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
+					return extractor.getText();
+				}
+			}
+
+			if (looksOle) {
+				try (InputStream is = new ByteArrayInputStream(data);
+						HWPFDocument doc = new HWPFDocument(is);
+						WordExtractor extractor = new WordExtractor(doc)) {
+					return extractor.getText();
+				}
+			}
+
+			if (looksPdf) {
+				// Sin librería extra no conviene “improvisar” PDF.
+				// Mejor: devolver vacío o usar Apache Tika (ver abajo).
+				return "";
+			}
+
+			// Fallback: asumir texto plano UTF-8
+			return new String(data, StandardCharsets.UTF_8);
+
+		} catch (Exception e) {
+			// Si está corrupto/truncado, cae acá
+			return "";
+		}
+	}
+
+	public String prettyPrint(String json) throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		Object jsonObject = mapper.readValue(json, Object.class);
+		ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
+		return writer.writeValueAsString(jsonObject);
+	}
 }

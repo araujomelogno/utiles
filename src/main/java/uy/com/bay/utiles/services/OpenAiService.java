@@ -33,7 +33,7 @@ public class OpenAiService {
 		return new RestTemplate(rf);
 	}
 
-	public String transcribeAudio(AudioFile audioFile) throws Exception {
+	public String transcribeAudioTotal(AudioFile audioFile) throws Exception {
 		RestTemplate restTemplate = buildRestTemplate();
 
 		HttpHeaders headers = new HttpHeaders();
@@ -66,4 +66,5 @@ public class OpenAiService {
 
 		return response.getBody();
 	}
+
 }
