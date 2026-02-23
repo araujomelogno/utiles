@@ -27,6 +27,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -72,32 +73,50 @@ public class OpenAiService {
 	}
 
 	protected String callApi(byte[] bytes, String filename) {
-		RestTemplate restTemplate = buildRestTemplate();
+		int maxRetries = 3;
+		for (int attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				RestTemplate restTemplate = buildRestTemplate();
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setBearerAuth(openaiApiKey);
-		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-		headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+				HttpHeaders headers = new HttpHeaders();
+				headers.setBearerAuth(openaiApiKey);
+				headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+				headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-		// Resource con filename + length real
-		ByteArrayResource filePart = new ByteArrayResource(bytes) {
-			@Override
-			public String getFilename() {
-				return filename;
+				// Resource con filename + length real
+				ByteArrayResource filePart = new ByteArrayResource(bytes) {
+					@Override
+					public String getFilename() {
+						return filename;
+					}
+				};
+
+				MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+				body.add("file", filePart);
+				body.add("model", "gpt-4o-transcribe-diarize");
+				body.add("response_format", "diarized_json");
+				body.add("chunking_strategy", "auto");
+
+				HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+				ResponseEntity<String> response = restTemplate.postForEntity(OPENAI_API_URL, requestEntity,
+						String.class);
+
+				return response.getBody();
+			} catch (ResourceAccessException e) {
+				logger.warn("API call failed (attempt {}/{}): {}", attempt, maxRetries, e.getMessage());
+				if (attempt == maxRetries) {
+					throw e;
+				}
+				try {
+					Thread.sleep(1000L * attempt);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					throw e;
+				}
 			}
-		};
-
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", filePart);
-		body.add("model", "gpt-4o-transcribe-diarize");
-		body.add("response_format", "diarized_json");
-		body.add("chunking_strategy", "auto");
-
-		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-		ResponseEntity<String> response = restTemplate.postForEntity(OPENAI_API_URL, requestEntity, String.class);
-
-		return response.getBody();
+		}
+		throw new RuntimeException("API call failed after retries");
 	}
 
 	public String transcribeAudioTotal(AudioFile audioFile) throws Exception {
@@ -124,7 +143,8 @@ public class OpenAiService {
 				try {
 					return processChunksWav(tempFile);
 				} catch (UnsupportedAudioFileException | IllegalArgumentException | java.io.IOException e) {
-					logger.warn("WAV splitting failed (unsupported format or IO error?), falling back to byte splitting: {}", e.getMessage());
+					logger.warn("WAV splitting failed (unsupported format or IO error?), falling back to byte splitting: {}",
+							e.getMessage());
 					return processChunksBytes(bytes, filename, duration);
 				}
 			}
@@ -149,20 +169,15 @@ public class OpenAiService {
 		try (AudioInputStream in = AudioSystem.getAudioInputStream(inputFile)) {
 			AudioFormat baseFormat = in.getFormat();
 			// Decode to PCM
-			AudioFormat decodedFormat = new AudioFormat(
-					AudioFormat.Encoding.PCM_SIGNED,
-					baseFormat.getSampleRate(),
-					16,
-					baseFormat.getChannels(),
-					baseFormat.getChannels() * 2,
-					baseFormat.getSampleRate(),
-					false);
+			AudioFormat decodedFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, baseFormat.getSampleRate(), 16,
+					baseFormat.getChannels(), baseFormat.getChannels() * 2, baseFormat.getSampleRate(), false);
 
 			try (AudioInputStream din = AudioSystem.getAudioInputStream(decodedFormat, in)) {
-				// Chunk size: 20MB (approx 2 mins)
-				long bytesPerChunk = 20 * 1024 * 1024;
+				// Chunk size: 6MB (approx 35s-40s depending on bitrate, safer for uploads)
+				long bytesPerChunk = 6 * 1024 * 1024;
 				int frameSize = decodedFormat.getFrameSize();
-				if (frameSize <= 0) frameSize = 4;
+				if (frameSize <= 0)
+					frameSize = 4;
 				// Align to frame size
 				bytesPerChunk = (bytesPerChunk / frameSize) * frameSize;
 
@@ -173,10 +188,12 @@ public class OpenAiService {
 					int totalRead = 0;
 					while (totalRead < buffer.length) {
 						int read = din.read(buffer, totalRead, buffer.length - totalRead);
-						if (read == -1) break;
+						if (read == -1)
+							break;
 						totalRead += read;
 					}
-					if (totalRead == 0) break;
+					if (totalRead == 0)
+						break;
 
 					File chunkFile = File.createTempFile("openai_chunk_" + chunkIndex, ".wav");
 					try {
@@ -191,12 +208,15 @@ public class OpenAiService {
 
 						// Merge logic
 						if (chunkIndex == 0) {
-							if (responseNode.has("task")) task = responseNode.get("task").asText();
-							if (responseNode.has("language")) language = responseNode.get("language").asText();
+							if (responseNode.has("task"))
+								task = responseNode.get("task").asText();
+							if (responseNode.has("language"))
+								language = responseNode.get("language").asText();
 						}
 
 						if (responseNode.has("text")) {
-							if (combinedText.length() > 0) combinedText.append(" ");
+							if (combinedText.length() > 0)
+								combinedText.append(" ");
 							combinedText.append(responseNode.get("text").asText());
 						}
 
@@ -235,8 +255,10 @@ public class OpenAiService {
 			}
 		}
 
-		if (task != null) mergedResponse.put("task", task);
-		if (language != null) mergedResponse.put("language", language);
+		if (task != null)
+			mergedResponse.put("task", task);
+		if (language != null)
+			mergedResponse.put("language", language);
 		mergedResponse.put("duration", totalProcessedDuration);
 		mergedResponse.put("text", combinedText.toString());
 		mergedResponse.set("segments", combinedSegments);
@@ -245,11 +267,18 @@ public class OpenAiService {
 	}
 
 	private String processChunksBytes(byte[] bytes, String filename, double totalDuration) throws Exception {
-		// Fallback implementation: split by bytes (risky but necessary for unsupported formats without ffmpeg)
+		// Fallback implementation: split by bytes (risky but necessary for unsupported
+		// formats without ffmpeg)
 		long totalBytes = bytes.length;
-		double chunkDurationSeconds = 1000.0;
+		double chunkDurationSeconds = 400.0; // Reduced from 1000s for safety
 		long bytesPerChunk = (long) (totalBytes * (chunkDurationSeconds / totalDuration));
-		if (bytesPerChunk < 1024) bytesPerChunk = totalBytes;
+		if (bytesPerChunk < 1024)
+			bytesPerChunk = totalBytes;
+		// Cap at 6MB
+		long maxBytes = 6 * 1024 * 1024;
+		if (bytesPerChunk > maxBytes) {
+			bytesPerChunk = maxBytes;
+		}
 
 		int numberOfChunks = (int) Math.ceil((double) totalBytes / bytesPerChunk);
 
@@ -264,7 +293,8 @@ public class OpenAiService {
 		for (int i = 0; i < numberOfChunks; i++) {
 			int start = (int) (i * bytesPerChunk);
 			int end = (int) Math.min((i + 1) * bytesPerChunk, totalBytes);
-			if (start >= end) break;
+			if (start >= end)
+				break;
 
 			byte[] chunkBytes = Arrays.copyOfRange(bytes, start, end);
 			String chunkFilename = "chunk_" + i + "_" + filename;
@@ -273,12 +303,15 @@ public class OpenAiService {
 			JsonNode responseNode = objectMapper.readTree(responseJson);
 
 			if (i == 0) {
-				if (responseNode.has("task")) task = responseNode.get("task").asText();
-				if (responseNode.has("language")) language = responseNode.get("language").asText();
+				if (responseNode.has("task"))
+					task = responseNode.get("task").asText();
+				if (responseNode.has("language"))
+					language = responseNode.get("language").asText();
 			}
 
 			if (responseNode.has("text")) {
-				if (combinedText.length() > 0) combinedText.append(" ");
+				if (combinedText.length() > 0)
+					combinedText.append(" ");
 				combinedText.append(responseNode.get("text").asText());
 			}
 
@@ -309,8 +342,10 @@ public class OpenAiService {
 			}
 		}
 
-		if (task != null) mergedResponse.put("task", task);
-		if (language != null) mergedResponse.put("language", language);
+		if (task != null)
+			mergedResponse.put("task", task);
+		if (language != null)
+			mergedResponse.put("language", language);
 		mergedResponse.put("duration", totalProcessedDuration);
 		mergedResponse.put("text", combinedText.toString());
 		mergedResponse.set("segments", combinedSegments);
