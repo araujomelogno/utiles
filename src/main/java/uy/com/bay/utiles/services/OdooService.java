@@ -138,4 +138,58 @@ public class OdooService {
         }
         return Collections.emptyList(); // Return empty list in case of any error
     }
+
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getOdooLeads() {
+        if (objectClient == null) {
+            logger.error("Odoo object client not initialized. Cannot fetch leads.");
+            return Collections.emptyList();
+        }
+        try {
+            Integer uid = authenticate();
+            if (uid == null) {
+                logger.error("Cannot fetch leads: Authentication failed.");
+                return Collections.emptyList();
+            }
+
+            List<String> fieldsToFetch = Arrays.asList("id", "name");
+            List<Object> domain = Collections.singletonList(Arrays.asList("name", "like", "S%")); // Leads starting with "S"
+
+            HashMap<String, Object> keywordArgs = new HashMap<>();
+            keywordArgs.put("fields", fieldsToFetch);
+
+            Object[] params = new Object[]{
+                    odooConfig.getDb(),
+                    uid,
+                    odooConfig.getPassword(),
+                    "crm.lead", // Odoo model name for leads
+                    "search_read",
+                    Collections.singletonList(domain),
+                    keywordArgs
+            };
+
+            logger.info("Executing Odoo search_read on 'crm.lead' with fields: {}", fieldsToFetch);
+            Object[] leadsRaw = (Object[]) objectClient.execute("execute_kw", params);
+
+            List<Map<String, Object>> leadsList = new ArrayList<>();
+            for (Object leadObj : leadsRaw) {
+                if (leadObj instanceof Map) {
+                    leadsList.add((Map<String, Object>) leadObj);
+                } else {
+                    logger.warn("Received an object that is not a Map from Odoo: {}", leadObj);
+                }
+            }
+            logger.info("Successfully fetched {} leads from Odoo.", leadsList.size());
+
+            return leadsList;
+
+        } catch (XmlRpcException e) {
+            logger.error("XmlRpcException while fetching leads from Odoo: {}. Check Odoo XML-RPC endpoint and network.", e.getMessage(), e);
+        } catch (ClassCastException e) {
+            logger.error("ClassCastException while processing Odoo response. Unexpected data structure: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Unexpected exception while fetching leads from Odoo: {}", e.getMessage(), e);
+        }
+        return Collections.emptyList();
+    }
 }
