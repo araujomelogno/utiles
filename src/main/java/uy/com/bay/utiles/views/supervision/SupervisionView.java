@@ -63,13 +63,14 @@ public class SupervisionView extends VerticalLayout {
 						task.setFileName(fileName);
 						task.setAudioContent(audioContent);
 						task.setQuestionnaire(questionnaireContent);
+						task.setQuestionnaireFileName(questionnaireBuffer.getFileName());
 						tasks.add(task);
 					} catch (IOException ex) {
 						ex.printStackTrace();
 					}
 				});
 				supervisionTaskService.saveAll(tasks);
-				
+
 				Notification.show("Tareas de supervisión creadas exitosamente.", 5000, Notification.Position.MIDDLE);
 				multiFileBuffer.getFiles().clear();
 				multiFileUpload.clearFileList();

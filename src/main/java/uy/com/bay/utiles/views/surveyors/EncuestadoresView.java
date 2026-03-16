@@ -476,7 +476,8 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 				refreshGrid();
 				populateForm(encuestador);
 			} catch (NumberFormatException ex) {
-				Notification.show("Por favor, ingrese un monto válido.", 3000, Notification.Position.MIDDLE)
+				Notification.show("Por favor, "
+						+ "se un monto válido.", 3000, Notification.Position.MIDDLE)
 						.addThemeVariants(NotificationVariant.LUMO_ERROR);
 			}
 		});

@@ -30,8 +30,10 @@ public class SupervisionTask extends AbstractEntity {
 	@Lob
 	private byte[] questionnaire;
 
+	private String questionnaireFileName;
+
 	@Lob
-	private String input;
+	private String fullPrompt;
 
 	@Lob
 	private String output;
@@ -96,12 +98,12 @@ public class SupervisionTask extends AbstractEntity {
 		this.questionnaire = questionnaire;
 	}
 
-	public String getInput() {
-		return input;
+	public String getQuestionnaireFileName() {
+		return questionnaireFileName;
 	}
 
-	public void setInput(String input) {
-		this.input = input;
+	public void setQuestionnaireFileName(String questionnaireFileName) {
+		this.questionnaireFileName = questionnaireFileName;
 	}
 
 	public String getOutput() {
@@ -166,5 +168,13 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setEvaluationOutput(String evaluationOutput) {
 		this.evaluationOutput = evaluationOutput;
+	}
+
+	public String getFullPrompt() {
+		return fullPrompt;
+	}
+
+	public void setFullPrompt(String fullPrompt) {
+		this.fullPrompt = fullPrompt;
 	}
 }

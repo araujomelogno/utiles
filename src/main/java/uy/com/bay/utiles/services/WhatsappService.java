@@ -282,13 +282,13 @@ public class WhatsappService {
 			ObjectNode flowActionData = action.putObject("flow_action_data");
 			flowActionData.put("screen", task.getFirstScreenName());
 		} else if (task.getType() == TaskType.URL) {
-			ObjectNode buttonComponent = components.addObject();
-			buttonComponent.put("type", "button");
-			buttonComponent.put("sub_type", "url");
-			buttonComponent.put("index", "0");
 
-			ArrayNode buttonParams = buttonComponent.putArray("parameters");
 			if (Boolean.TRUE.equals(task.getHasUrlParameter())) {
+				ObjectNode buttonComponent = components.addObject();
+				buttonComponent.put("type", "button");
+				buttonComponent.put("sub_type", "url");
+				buttonComponent.put("index", "0");
+				ArrayNode buttonParams = buttonComponent.putArray("parameters");
 				ObjectNode paramObj = buttonParams.addObject();
 				paramObj.put("type", "text");
 				paramObj.put("text", task.getUrlParameter() != null ? task.getUrlParameter() : "");

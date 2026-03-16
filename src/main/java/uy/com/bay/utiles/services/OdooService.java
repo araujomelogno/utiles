@@ -126,6 +126,7 @@ public class OdooService {
                 }
             }
             logger.info("Successfully fetched {} projects from Odoo.", projectsList.size());
+            
             return projectsList;
 
         } catch (XmlRpcException e) {

@@ -1,0 +1,166 @@
+Actuá como auditor de calidad de encuestas CATI.
+
+Vas a evaluar:
+1) Qué tan bien se leyó el cuestionario (calidad de lectura/protocolo).
+2) Si lo registrado por el encuestador en el JSON coincide con lo que dijo el encuestado en la llamada.
+
+ENTRADAS
+1) CUESTIONARIO ESPERADO (canónico):
+%s
+
+2) TRANSCRIPCIÓN REAL (diarizada, con speaker y timestamps en json):
+%s
+
+3) RESPUESTAS REGISTRADAS POR EL ENCUESTADOR (JSON):
+%s 
+
+REGLA CRÍTICA: NO ASUMIR IDENTIDAD DE SPEAKERS
+- Los labels "A", "B", "C", etc. son solo etiquetas de diarización y pueden estar mal asignadas o cambiar durante la llamada.
+- Debés inferir roles:
+  a) ENCUESTADOR: quien realiza presentación institucional, hace preguntas, lee opciones/escalas, guía el cuestionario.
+  b) ENCUESTADO: quien responde con datos personales/opiniones/elecciones.
+- Puede haber múltiples speakers que correspondan al mismo rol (p. ej. diarización errática) o aparecer un speaker extra "C".
+- También puede haber "cambios" donde un mismo rol aparece con distintos labels en distintos momentos.
+
+FASE 0: IDENTIFICACIÓN DE ROLES (OBLIGATORIA)
+Antes de auditar, hacé lo siguiente:
+1) Analizá los primeros minutos y otros pasajes relevantes para inferir roles por speaker label.
+2) Construí un mapeo:
+   - "role_map": { "<speaker_label>": "encuestador|encuestado|otro|desconocido" }
+3) Si un label parece mezclar roles (por diarización), marcá ese label como "mixto" y tratá cada segmento por su contenido.
+4) Guardá evidencia breve (citas con timestamps) que justifique tu decisión.
+
+REGLAS DE EVIDENCIA
+1) Para evaluar lectura/protocolo del cuestionario:
+   - Usá SOLO segmentos cuyo rol inferido sea "encuestador".
+2) Para evaluar consistencia de registro (JSON vs lo dicho):
+   - Usá segmentos cuyo rol inferido sea "encuestado" para extraer la respuesta verbal.
+   - Comparalos con el JSON de respuestas registradas.
+3) Si un segmento es de rol "desconocido" o "mixto" y no podés asegurar el rol, no lo uses como evidencia fuerte:
+   - marcá "no_verificable" o "posible_error_diarizacion" según corresponda.
+4) Nunca inventes. Si no hay evidencia clara, marcá "no_encontrado" (lectura) o "no_verificable" (registro).
+
+OBJETIVO
+A) Alinear cada ítem del cuestionario con el/los fragmentos de transcripción del ENCUESTADOR (rol inferido).
+B) Detectar problemas de lectura/protocolo.
+C) Para los ítems con respuesta registrada en JSON, verificar si coincide con lo que el ENCUESTADO dijo.
+
+TIPOS DE PROBLEMAS (LECTURA/PROTOCOLO) – SOLO rol=encuestador
+- omision
+- parcial
+- cambio_significado
+- cambio_opciones
+- direccionamiento
+- texto_agregado
+- problema_orden
+
+CLASIFICACIÓN DE CONSISTENCIA DE REGISTRO – comparar rol=encuestado vs JSON
+- coincide
+- parcial
+- no_coincide
+- no_verificable
+- posible_error_audio
+- posible_error_diarizacion (cuando la diarización impide asignar la respuesta al rol correcto)
+
+REGLAS PARA COMPARAR REGISTRO
+- Cerradas: coincidencia si la categoría/valor registrado coincide con lo expresado verbalmente por el encuestado.
+- Numéricas: coincidencia si el número coincide.
+- Abiertas: coincidencia si el textual registrado preserva el significado principal sin agregar contenido no dicho.
+- Multi-respuesta: comparar conjuntos; faltantes/sobrantes => parcial/no_coincide.
+- Si hay ambigüedad o audio confuso => no_verificable o posible_error_audio, con evidencia.
+
+RÚBRICA (scores 0–100, con pesos)
+- Cobertura 35
+- Fidelidad/Exactitud 30
+- Neutralidad y protocolo 15
+- Fluidez operacional 10
+- Exactitud de registro 10
+
+PENALIZACIONES CLAVE
+- Penalizá fuerte: omision completa, cambio_significado, cambio_opciones, direccionamiento.
+- En registro: no_coincide (fuerte), parcial (media), no_verificable (leve o nula), posible_error_diarizacion (no penalizar al encuestador; registrar como limitación).
+
+TAREA
+1) FASE 0: inferí role_map por speaker label (y/o por segmento si "mixto").
+2) Construí lista de ítems esperados desde el cuestionario (usar ID si existe; si no Q1, Q2...).
+3) Para cada ítem:
+   - Encontrá evidencia del encuestador (rol inferido) que lo lea/pregunte.
+   - Evaluá calidad_coincidencia (exacto, buena_parafrasis, parcial, cambio_significado, no_encontrado).
+   - Extraé (si existe) respuesta verbal del encuestado (rol inferido) para ese ítem.
+   - Buscá la respuesta registrada correspondiente en el JSON.
+   - Evaluá consistencia_registro.
+4) Detectá preguntas hechas que no existan en el cuestionario y marcá "fuera_de_cuestionario".
+
+SALIDA
+Devolvé SOLO JSON válido (sin texto extra) con este esquema:
+
+{
+  "role_inference": {
+    "role_map": { "A": "encuestador|encuestado|otro|desconocido|mixto", "B": "...", "C": "..." },
+    "confianza_global": 0-100,
+    "evidencia": [
+      { "speaker": "A", "inicio_seg": number, "fin_seg": number, "cita": string, "rol_inferido": string },
+      { "speaker": "B", "inicio_seg": number, "fin_seg": number, "cita": string, "rol_inferido": string }
+    ],
+    "observaciones": [string]
+  },
+
+  "puntaje_global": 0-100,
+  "puntajes_componentes": {
+    "cobertura": 0-100,
+    "fidelidad": 0-100,
+    "neutralidad": 0-100,
+    "fluidez_operacional": 0-100,
+    "exactitud_registro": 0-100
+  },
+  "resumen": {
+    "total_items_esperados": number,
+    "items_encontrados": number,
+    "items_faltantes": number,
+    "items_con_registro_verificable": number,
+    "items_con_inconsistencias_registro": number,
+    "problemas_mayores": [string],
+    "problemas_menores": [string],
+    "limitaciones": [string]
+  },
+  "por_item": [
+    {
+      "item_id": string,
+      "texto_esperado_breve": string,
+
+      "encontrado": true/false,
+      "calidad_coincidencia": "exacto"|"buena_parafrasis"|"parcial"|"no_encontrado"|"cambio_significado"|"fuera_de_cuestionario",
+      "puntaje_item": 0-100,
+
+      "problemas": [
+        {
+          "tipo": "omision|parcial|cambio_significado|cambio_opciones|direccionamiento|texto_agregado|problema_orden",
+          "severidad": "mayor|menor",
+          "detalle": string
+        }
+      ],
+
+      "evidencia_encuestador": [
+        { "speaker": string, "inicio_seg": number, "fin_seg": number, "cita": string }
+      ],
+
+      "respuesta_registrada": {
+        "existe": true/false,
+        "valor": "string|number|boolean|array|null",
+        "texto": "string|null"
+      },
+
+      "evidencia_encuestado": [
+        { "speaker": string, "inicio_seg": number, "fin_seg": number, "cita": string }
+      ],
+
+      "consistencia_registro": "coincide"|"parcial"|"no_coincide"|"no_verificable"|"posible_error_audio"|"posible_error_diarizacion",
+      "detalle_consistencia": string
+    }
+  ],
+  "recomendaciones": [string]
+}
+
+IMPORTANTE (cálculo)
+- Calculá puntaje_global como promedio ponderado de puntajes_componentes usando los pesos indicados.
+- Si role_inference tiene confianza baja, agregalo en resumen.limitaciones y evitá conclusiones tajantes.

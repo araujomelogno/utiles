@@ -412,8 +412,8 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
 		budgetEntry = new ComboBox<>("Concepto - Presupuesto");
-		budgetEntry.setItemLabelGenerator(
-				be -> be == null ? "" : be.getConcept().getName() + " - " + be.getBudget().getName());
+		budgetEntry.setItemLabelGenerator(be -> be == null || be.getConcept() == null ? ""
+				: be.getConcept().getName() + " - " + be.getBudget().getName());
 		study.addValueChangeListener(event -> {
 			Study selectedStudy = event.getValue();
 			if (selectedStudy != null && selectedStudy.getBudget() != null) {

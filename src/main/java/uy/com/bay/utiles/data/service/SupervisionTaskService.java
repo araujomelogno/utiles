@@ -1,17 +1,18 @@
 package uy.com.bay.utiles.data.service;
 
-import org.springframework.stereotype.Service;
-import uy.com.bay.utiles.data.Status;
-import uy.com.bay.utiles.data.SupervisionTask;
-import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
-import uy.com.bay.utiles.dto.SupervisionTaskDTO;
-
-import jakarta.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import jakarta.persistence.Tuple;
+import uy.com.bay.utiles.data.Status;
+import uy.com.bay.utiles.data.SupervisionTask;
+import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
+import uy.com.bay.utiles.dto.SupervisionTaskDTO;
 
 @Service
 public class SupervisionTaskService {
