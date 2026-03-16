@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 
+import org.apache.poi.extractor.ExtractorFactory;
+import org.apache.poi.extractor.POITextExtractor;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -154,46 +156,21 @@ public class SupervisionTaskProcessorService {
 		if (data == null || data.length == 0)
 			return "";
 
-		// DOCX (ZIP) suele empezar con 'PK'
-		boolean looksZip = data.length >= 2 && data[0] == 'P' && data[1] == 'K';
-
-		// DOC (Word 97-2003) suele empezar con D0 CF 11 E0 A1 B1 1A E1 (OLE2)
-		byte[] oleSig = new byte[] { (byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1,
-				(byte) 0x1A, (byte) 0xE1 };
-		boolean looksOle = data.length >= 8 && Arrays.equals(Arrays.copyOfRange(data, 0, 8), oleSig);
-
-		// PDF empieza con %PDF
-		boolean looksPdf = data.length >= 4 && data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F';
-
-		try {
-			if (looksZip) {
-				try (InputStream is = new ByteArrayInputStream(data);
-						XWPFDocument doc = new XWPFDocument(OPCPackage.open(is));
-						XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
-					return extractor.getText();
-				}
-			}
-
-			if (looksOle) {
-				try (InputStream is = new ByteArrayInputStream(data);
-						HWPFDocument doc = new HWPFDocument(is);
-						WordExtractor extractor = new WordExtractor(doc)) {
-					return extractor.getText();
-				}
-			}
-
+		try (InputStream is = new ByteArrayInputStream(data);
+				POITextExtractor extractor = ExtractorFactory.createExtractor(is)) {
+			return extractor.getText();
+		} catch (Exception e) {
+			// Fallback if POI fails to extract text (e.g. not a valid Word/Excel/PPT file).
+			// Let's check if it's a PDF.
+			boolean looksPdf = data.length >= 4 && data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F';
 			if (looksPdf) {
 				// Sin librería extra no conviene “improvisar” PDF.
-				// Mejor: devolver vacío o usar Apache Tika (ver abajo).
+				// Mejor: devolver vacío o usar Apache Tika.
 				return "";
 			}
 
 			// Fallback: asumir texto plano UTF-8
 			return new String(data, StandardCharsets.UTF_8);
-
-		} catch (Exception e) {
-			// Si está corrupto/truncado, cae acá
-			return "";
 		}
 	}
 

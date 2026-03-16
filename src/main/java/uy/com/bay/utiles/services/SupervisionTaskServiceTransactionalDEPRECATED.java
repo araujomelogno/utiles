@@ -78,7 +78,7 @@ public class SupervisionTaskServiceTransactionalDEPRECATED {
 					}
 				}
 
-				String transcription = openAiService.transcribeAudio(audioFile);
+				String transcription = openAiService.transcribeAudioTotal(audioFile);
 				task.setOutput(prettyPrint(transcription));
 
 				ObjectMapper mapper = new ObjectMapper();
