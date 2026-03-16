@@ -153,7 +153,7 @@ public class OdooService {
             }
 
             List<String> fieldsToFetch = Arrays.asList("id", "name");
-            List<Object> domain = Collections.emptyList(); // Fetch all leads
+            List<Object> domain = Collections.singletonList(Arrays.asList("name", "like", "S%")); // Leads starting with "S"
 
             HashMap<String, Object> keywordArgs = new HashMap<>();
             keywordArgs.put("fields", fieldsToFetch);
