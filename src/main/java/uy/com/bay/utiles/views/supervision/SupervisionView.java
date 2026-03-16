@@ -63,6 +63,7 @@ public class SupervisionView extends VerticalLayout {
 						task.setFileName(fileName);
 						task.setAudioContent(audioContent);
 						task.setQuestionnaire(questionnaireContent);
+					task.setQuestionnaireFileName(questionnaireBuffer.getFileName());
 						tasks.add(task);
 					} catch (IOException ex) {
 						ex.printStackTrace();

@@ -124,7 +124,7 @@ public class SupervisionTaskProcessorService {
 
 			// Questionnaire
 
-			String questionnaireString = extractQuestionnaireText(task.getQuestionnaire());
+			String questionnaireString = extractQuestionnaireText(task.getQuestionnaire(), task.getQuestionnaireFileName());
 
 			// Evaluación
 			String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
@@ -150,51 +150,54 @@ public class SupervisionTaskProcessorService {
 		}
 	}
 
-	public static String extractQuestionnaireText(byte[] data) {
+	public static String extractQuestionnaireText(byte[] data, String fileName) {
 		if (data == null || data.length == 0)
-			return "";
+			return “”;
 
-		// DOCX (ZIP) suele empezar con 'PK'
+		String lowerName = fileName != null ? fileName.toLowerCase() : “”;
+
+		// DOCX (ZIP) empieza con 'PK'; también se detecta por extensión como fallback
 		boolean looksZip = data.length >= 2 && data[0] == 'P' && data[1] == 'K';
+		boolean nameDocx = lowerName.endsWith(“.docx”);
 
-		// DOC (Word 97-2003) suele empezar con D0 CF 11 E0 A1 B1 1A E1 (OLE2)
+		// DOC (Word 97-2003) empieza con D0 CF 11 E0 A1 B1 1A E1 (OLE2); también por extensión
 		byte[] oleSig = new byte[] { (byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1,
 				(byte) 0x1A, (byte) 0xE1 };
 		boolean looksOle = data.length >= 8 && Arrays.equals(Arrays.copyOfRange(data, 0, 8), oleSig);
+		boolean nameDoc = lowerName.endsWith(“.doc”);
 
 		// PDF empieza con %PDF
 		boolean looksPdf = data.length >= 4 && data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F';
 
-		try {
-			if (looksZip) {
-				try (InputStream is = new ByteArrayInputStream(data);
-						XWPFDocument doc = new XWPFDocument(OPCPackage.open(is));
-						XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
-					return extractor.getText();
-				}
+		logger.debug(“Extracting questionnaire text: file='{}', looksZip={}, nameDocx={}, looksOle={}, nameDoc={}, looksPdf={}, bytes={}”,
+				fileName, looksZip, nameDocx, looksOle, nameDoc, looksPdf, data.length);
+
+		if (looksZip || nameDocx) {
+			try (InputStream is = new ByteArrayInputStream(data);
+					XWPFDocument doc = new XWPFDocument(OPCPackage.open(is));
+					XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
+				return extractor.getText();
+			} catch (Exception e) {
+				logger.warn(“No se pudo extraer texto DOCX de '{}': {}”, fileName, e.getMessage());
 			}
-
-			if (looksOle) {
-				try (InputStream is = new ByteArrayInputStream(data);
-						HWPFDocument doc = new HWPFDocument(is);
-						WordExtractor extractor = new WordExtractor(doc)) {
-					return extractor.getText();
-				}
-			}
-
-			if (looksPdf) {
-				// Sin librería extra no conviene “improvisar” PDF.
-				// Mejor: devolver vacío o usar Apache Tika (ver abajo).
-				return "";
-			}
-
-			// Fallback: asumir texto plano UTF-8
-			return new String(data, StandardCharsets.UTF_8);
-
-		} catch (Exception e) {
-			// Si está corrupto/truncado, cae acá
-			return "";
 		}
+
+		if (looksOle || nameDoc) {
+			try (InputStream is = new ByteArrayInputStream(data);
+					HWPFDocument doc = new HWPFDocument(is);
+					WordExtractor extractor = new WordExtractor(doc)) {
+				return extractor.getText();
+			} catch (Exception e) {
+				logger.warn(“No se pudo extraer texto DOC de '{}': {}”, fileName, e.getMessage());
+			}
+		}
+
+		if (looksPdf) {
+			return “”;
+		}
+
+		// Fallback: asumir texto plano UTF-8
+		return new String(data, StandardCharsets.UTF_8);
 	}
 
 	public String prettyPrint(String json) throws Exception {
