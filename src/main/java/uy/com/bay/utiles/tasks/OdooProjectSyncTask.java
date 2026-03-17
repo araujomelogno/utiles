@@ -32,30 +32,31 @@ public class OdooProjectSyncTask {
 		System.out.println("Starting Odoo Project Sync Task...");
 
 		List<Map<String, Object>> odooProjects = odooService.getOdooProjects();
+		odooProjects.addAll(odooService.getOdooLeads());
 		if (odooProjects.isEmpty()) {
 			System.out.println("No projects fetched from Odoo. Sync task finished.");
 			return;
 		}
 
 		for (Map<String, Object> map : odooProjects) {
-			System.out.print("______");
+			System.out.println("______");
 			for (String keys : map.keySet()) {
 				System.out.println(map.get(keys));
 			}
-			System.out.print("______");
+			System.out.println("______");
 
 		}
 
 		List<Study> existingProyectos = proyectoService.findAll();
-		Set<String> existingOdooIds = existingProyectos.stream().map(Study::getOdooId)
-				.filter(id -> id != null && !id.isEmpty()).collect(Collectors.toSet());
+		Set<String> existingOdooNames = existingProyectos.stream().map(Study::getName)
+				.filter(name -> name != null && !name.isEmpty()).collect(Collectors.toSet());
 
 		int newProjectsCount = 0;
 		for (Map<String, Object> odooProjectMap : odooProjects) {
 			// Assuming Odoo project map contains "id" as the Odoo ID and "name" as the
 			// project name.
 			// These keys might need adjustment based on the actual data from OdooService.
-			Object odooIdObj = odooProjectMap.get("id");
+			Object odooIdObj = odooProjectMap.get("name");
 			String odooId = null;
 			if (odooIdObj != null) {
 				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
@@ -66,7 +67,7 @@ public class OdooProjectSyncTask {
 				continue;
 			}
 
-			if (!existingOdooIds.contains(odooId)) {
+			if (!existingOdooNames.contains(odooId)) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);
 
