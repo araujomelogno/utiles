@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views.proyectos;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
@@ -160,19 +161,19 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 			String odooVal = odooIdFilter.getValue() != null ? odooIdFilter.getValue().trim().toLowerCase() : "";
 			String obsVal = obsFilter.getValue() != null ? obsFilter.getValue().trim().toLowerCase() : "";
 
-			java.util.stream.Stream<Study> stream = proyectoService
-					.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
+			Specification<Study> spec = Specification.where(null);
 
 			if (!nameVal.isEmpty()) {
-				stream = stream.filter(p -> p.getName() != null && p.getName().toLowerCase().contains(nameVal));
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("name")), "%" + nameVal + "%"));
 			}
 			if (!odooVal.isEmpty()) {
-				stream = stream.filter(p -> p.getOdooId() != null && p.getOdooId().toLowerCase().contains(odooVal));
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("odooId")), "%" + odooVal + "%"));
 			}
 			if (!obsVal.isEmpty()) {
-				stream = stream.filter(p -> p.getObs() != null && p.getObs().toLowerCase().contains(obsVal));
+				spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsVal + "%"));
 			}
-			return stream;
+
+			return proyectoService.list(VaadinSpringDataHelpers.toSpringPageRequest(query), spec).stream();
 		});
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
