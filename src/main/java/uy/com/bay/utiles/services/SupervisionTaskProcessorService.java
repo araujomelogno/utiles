@@ -172,7 +172,10 @@ public class SupervisionTaskProcessorService {
 		logger.debug(“Extracting questionnaire text: file='{}', looksZip={}, nameDocx={}, looksOle={}, nameDoc={}, looksPdf={}, bytes={}”,
 				fileName, looksZip, nameDocx, looksOle, nameDoc, looksPdf, data.length);
 
-		if (looksZip || nameDocx) {
+		boolean nameWord = nameDocx || nameDoc;
+
+		// Intentar DOCX primero (también para .doc, ya que muchos .doc son realmente DOCX)
+		if (looksZip || nameWord) {
 			try (InputStream is = new ByteArrayInputStream(data);
 					XWPFDocument doc = new XWPFDocument(OPCPackage.open(is));
 					XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
@@ -182,7 +185,8 @@ public class SupervisionTaskProcessorService {
 			}
 		}
 
-		if (looksOle || nameDoc) {
+		// Intentar DOC (OLE2) — también para .docx por si la extensión miente
+		if (looksOle || nameWord) {
 			try (InputStream is = new ByteArrayInputStream(data);
 					HWPFDocument doc = new HWPFDocument(is);
 					WordExtractor extractor = new WordExtractor(doc)) {
