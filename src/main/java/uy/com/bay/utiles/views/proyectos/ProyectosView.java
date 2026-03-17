@@ -34,6 +34,7 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.data.jpa.domain.Specification;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.data.service.FieldworkService;
@@ -156,23 +157,23 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 
 		grid.setItems(query -> {
+			Specification<Study> spec = Specification.where(null);
+
 			String nameVal = nameFilter.getValue() != null ? nameFilter.getValue().trim().toLowerCase() : "";
 			String odooVal = odooIdFilter.getValue() != null ? odooIdFilter.getValue().trim().toLowerCase() : "";
 			String obsVal = obsFilter.getValue() != null ? obsFilter.getValue().trim().toLowerCase() : "";
 
-			java.util.stream.Stream<Study> stream = proyectoService
-					.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
-
 			if (!nameVal.isEmpty()) {
-				stream = stream.filter(p -> p.getName() != null && p.getName().toLowerCase().contains(nameVal));
+				spec = spec.and((root, cq, cb) -> cb.like(cb.lower(root.get("name")), "%" + nameVal + "%"));
 			}
 			if (!odooVal.isEmpty()) {
-				stream = stream.filter(p -> p.getOdooId() != null && p.getOdooId().toLowerCase().contains(odooVal));
+				spec = spec.and((root, cq, cb) -> cb.like(cb.lower(root.get("odooId")), "%" + odooVal + "%"));
 			}
 			if (!obsVal.isEmpty()) {
-				stream = stream.filter(p -> p.getObs() != null && p.getObs().toLowerCase().contains(obsVal));
+				spec = spec.and((root, cq, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsVal + "%"));
 			}
-			return stream;
+
+			return proyectoService.list(VaadinSpringDataHelpers.toSpringPageRequest(query), spec).stream();
 		});
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
