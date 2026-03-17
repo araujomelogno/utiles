@@ -177,23 +177,48 @@ public class SupervisionTaskProcessorService {
 				"Extracting questionnaire text: file='{}', looksZip={}, nameDocx={}, looksOle={}, nameDoc={}, looksPdf={}, bytes={}",
 				fileName, looksZip, nameDocx, looksOle, nameDoc, looksPdf, data.length);
 
+		// Intentar DOCX primero si la firma o extensión lo sugieren
 		if (looksZip || nameDocx) {
 			try (InputStream is = new ByteArrayInputStream(data);
 					XWPFDocument doc = new XWPFDocument(OPCPackage.open(is));
 					XWPFWordExtractor extractor = new XWPFWordExtractor(doc)) {
 				return extractor.getText();
 			} catch (Exception e) {
-				logger.warn("No se pudo extraer texto DOCX de '{}': {}”, fileName, e.getMessage()");
+				logger.warn("No se pudo extraer texto DOCX de '{}': {}", fileName, e.getMessage());
 			}
 		}
 
+		// Intentar DOC si la firma o extensión lo sugieren
 		if (looksOle || nameDoc) {
 			try (InputStream is = new ByteArrayInputStream(data);
 					HWPFDocument doc = new HWPFDocument(is);
 					WordExtractor extractor = new WordExtractor(doc)) {
 				return extractor.getText();
 			} catch (Exception e) {
-				logger.warn("No se pudo extraer texto DOC de '{}': {}”, fileName, e.getMessage()");
+				logger.warn("No se pudo extraer texto DOC de '{}': {}", fileName, e.getMessage());
+				// Fallback: archivo .doc que en realidad es DOCX (formato incorrecto de extensión)
+				if (nameDoc && !looksZip) {
+					try (InputStream is2 = new ByteArrayInputStream(data);
+							XWPFDocument doc2 = new XWPFDocument(OPCPackage.open(is2));
+							XWPFWordExtractor extractor2 = new XWPFWordExtractor(doc2)) {
+						logger.info("Archivo '{}' con extensión .doc se abrió exitosamente como DOCX", fileName);
+						return extractor2.getText();
+					} catch (Exception e2) {
+						logger.warn("Tampoco se pudo extraer texto DOCX (fallback) de '{}': {}", fileName, e2.getMessage());
+					}
+				}
+			}
+		}
+
+		// Fallback inverso: archivo .docx que en realidad es DOC
+		if (nameDocx && !looksOle && !looksZip) {
+			try (InputStream is = new ByteArrayInputStream(data);
+					HWPFDocument doc = new HWPFDocument(is);
+					WordExtractor extractor = new WordExtractor(doc)) {
+				logger.info("Archivo '{}' con extensión .docx se abrió exitosamente como DOC", fileName);
+				return extractor.getText();
+			} catch (Exception e) {
+				logger.warn("Tampoco se pudo extraer texto DOC (fallback) de '{}': {}", fileName, e.getMessage());
 			}
 		}
 
