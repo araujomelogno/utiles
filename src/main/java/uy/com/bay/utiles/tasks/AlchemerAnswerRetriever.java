@@ -57,11 +57,6 @@ public class AlchemerAnswerRetriever {
 				Status.PENDING);
 		LOGGER.info("Found {} pending tasks.", pendingTasks.size());
 
-		for (Task task : pendingTasks) {
-			task.setStatus(Status.RUNNING);
-			taskRepository.save(task);
-		}
-
 		List<CompletableFuture<Void>> futures = pendingTasks.stream()
 				.map(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor))
 				.toList();
@@ -72,6 +67,8 @@ public class AlchemerAnswerRetriever {
 	}
 
 	private void processTask(Task task) {
+		task.setStatus(Status.RUNNING);
+		taskRepository.save(task);
 		if (alchemerAnswerRepository
 				.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId()).isEmpty()) {
 			try {
