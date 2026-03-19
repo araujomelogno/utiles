@@ -1,6 +1,9 @@
 package uy.com.bay.utiles.tasks;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +56,10 @@ public class AlchemerAnswerRetriever {
 	@Scheduled(cron = "0 */1 * * * *")
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
-		List<Task> pendingTasks = taskRepository.findByJobTypeAndStatus(JobType.ALCHEMERANSWERRETRIEVAL,
-				Status.PENDING);
-		LOGGER.info("Found {} pending tasks.", pendingTasks.size());
+		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
+		List<Task> pendingTasks = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL,
+				cutoffDate);
+		LOGGER.info("Found {} pending/stuck tasks.", pendingTasks.size());
 
 		List<CompletableFuture<Void>> futures = pendingTasks.stream()
 				.map(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor))
@@ -68,6 +72,7 @@ public class AlchemerAnswerRetriever {
 
 	private void processTask(Task task) {
 		task.setStatus(Status.RUNNING);
+		task.setProcessDate(new Date());
 		taskRepository.save(task);
 		if (alchemerAnswerRepository
 				.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId()).isEmpty()) {
