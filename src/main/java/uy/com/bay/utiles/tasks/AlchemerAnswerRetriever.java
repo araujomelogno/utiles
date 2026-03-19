@@ -135,6 +135,7 @@ public class AlchemerAnswerRetriever {
 							case "HIDDEN":
 							case "ESSAY":
 							case "NPS":
+							case "RANK":	
 							case "TEXTBOX":
 
 								Long alchemerId = answerNode.path("id").asLong();
