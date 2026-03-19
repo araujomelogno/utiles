@@ -5,9 +5,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -31,6 +34,7 @@ public class AlchemerAnswerRetriever {
 	private final TaskRepository taskRepository;
 	private final AlchemerAnswerRepository alchemerAnswerRepository;
 	private final RestTemplate restTemplate;
+	private final Executor alchemerExecutor;
 
 	@Value("${alchemer.api.token}")
 	private String apiToken;
@@ -38,10 +42,12 @@ public class AlchemerAnswerRetriever {
 	@Value("${alchemer.api.token.secret}")
 	private String apiTokenSecret;
 
-	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository) {
+	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository,
+			@Qualifier("alchemerExecutor") Executor alchemerExecutor) {
 		this.taskRepository = taskRepository;
 		this.alchemerAnswerRepository = alchemerAnswerRepository;
 		this.restTemplate = new RestTemplate();
+		this.alchemerExecutor = alchemerExecutor;
 	}
 
 	@Scheduled(cron = "0 */1 * * * *")
@@ -50,116 +56,128 @@ public class AlchemerAnswerRetriever {
 		List<Task> pendingTasks = taskRepository.findByJobTypeAndStatus(JobType.ALCHEMERANSWERRETRIEVAL,
 				Status.PENDING);
 		LOGGER.info("Found {} pending tasks.", pendingTasks.size());
+
 		for (Task task : pendingTasks) {
-			if (alchemerAnswerRepository
-					.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId()).isEmpty()) {
-				try {
-					LOGGER.info("Processing task ID: {}", task.getId());
+			task.setStatus(Status.RUNNING);
+			taskRepository.save(task);
+		}
 
-					String url = String.format(
-							"https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
-							task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
+		List<CompletableFuture<Void>> futures = pendingTasks.stream()
+				.map(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor))
+				.toList();
 
-					String response = restTemplate.getForObject(url, String.class);
-					String surveyor = "";
-					ObjectMapper mapper = new ObjectMapper();
-					JsonNode root = mapper.readTree(response);
-					JsonNode surveyData = root.path("data").path("survey_data");
-					JsonNode urlData = root.path("data").path("url_variables");
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-					String url2 = String.format(
-							"https://api.alchemer.com/v5/survey/%d?api_token=%s&api_token_secret=%s",
-							task.getSurveyId(), apiToken, apiTokenSecret);
+		LOGGER.info("Alchemer Answer Retriever task finished.");
+	}
 
-					String response2 = restTemplate.getForObject(url2, String.class);
+	private void processTask(Task task) {
+		if (alchemerAnswerRepository
+				.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId()).isEmpty()) {
+			try {
+				LOGGER.info("Processing task ID: {}", task.getId());
 
-					ObjectMapper mapper2 = new ObjectMapper();
-					JsonNode root2 = mapper2.readTree(response2);
+				String url = String.format(
+						"https://api.alchemer.com/v5/survey/%d/surveyresponse/%d?api_token=%s&api_token_secret=%s",
+						task.getSurveyId(), task.getResponseId(), apiToken, apiTokenSecret);
 
-					JsonNode teamArray = root2.path("data").path("team");
-					String studyTeam = Optional.ofNullable(teamArray).filter(JsonNode::isArray)
-							.filter(arr -> arr.size() > 0).map(arr -> arr.get(0))
-							.map(node -> node.path("name").asText()).orElse("");
+				String response = restTemplate.getForObject(url, String.class);
+				String surveyor = "";
+				ObjectMapper mapper = new ObjectMapper();
+				JsonNode root = mapper.readTree(response);
+				JsonNode surveyData = root.path("data").path("survey_data");
+				JsonNode urlData = root.path("data").path("url_variables");
 
-					String linkId = root.path("data").path("link_id").asText();
+				String url2 = String.format(
+						"https://api.alchemer.com/v5/survey/%d?api_token=%s&api_token_secret=%s",
+						task.getSurveyId(), apiToken, apiTokenSecret);
 
-					String url3 = String.format(
-							"https://api.alchemer.com/v5/survey/%d/surveycampaign/%s?api_token=%s&api_token_secret=%s",
-							task.getSurveyId(), linkId, apiToken, apiTokenSecret);
+				String response2 = restTemplate.getForObject(url2, String.class);
 
-					String response3 = restTemplate.getForObject(url3, String.class);
-					ObjectMapper mapper3 = new ObjectMapper();
-					JsonNode root3 = mapper3.readTree(response3);
+				ObjectMapper mapper2 = new ObjectMapper();
+				JsonNode root2 = mapper2.readTree(response2);
 
-					String campaignName = root3.path("data").path("name").asText();
-					if (urlData != null) {
-						JsonNode surveyorNode = urlData.path("agente");
-						if (surveyorNode.get("value") != null)
-							surveyor = surveyorNode.get("value").asText();
-					}
+				JsonNode teamArray = root2.path("data").path("team");
+				String studyTeam = Optional.ofNullable(teamArray).filter(JsonNode::isArray)
+						.filter(arr -> arr.size() > 0).map(arr -> arr.get(0))
+						.map(node -> node.path("name").asText()).orElse("");
 
-					if (root.path("result_ok").asBoolean()) {
-						Iterator<Map.Entry<String, JsonNode>> fields = surveyData.fields();
-						while (fields.hasNext()) {
-							Map.Entry<String, JsonNode> entry = fields.next();
-							JsonNode answerNode = entry.getValue();
+				String linkId = root.path("data").path("link_id").asText();
 
-							String type = answerNode.path("type").asText();
-							if (answerNode.path("shown").asBoolean()) {
-								switch (type) {
-								case "RADIO":
-								case "MENU":
-								case "HIDDEN":
-								case "ESSAY":
-								case "NPS":
-								case "TEXTBOX":
+				String url3 = String.format(
+						"https://api.alchemer.com/v5/survey/%d/surveycampaign/%s?api_token=%s&api_token_secret=%s",
+						task.getSurveyId(), linkId, apiToken, apiTokenSecret);
 
-									Long alchemerId = answerNode.path("id").asLong();
-									AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-									alchemerAnswer.setAlchemerId(alchemerId);
-									alchemerAnswer.setType(type);
-									alchemerAnswer.setQuestion(answerNode.path("question").asText());
-									alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-									alchemerAnswer.setAnswer(answerNode.path("answer").asText());
-									alchemerAnswer.setShown(true);
-									alchemerAnswer.setSurveyId(task.getSurveyId());
-									alchemerAnswer.setStudyName(task.getStudyName());
-									alchemerAnswer.setResponseId(task.getResponseId());
-									alchemerAnswer.setCreated(LocalDate.now());
-									alchemerAnswer.setSurveyor(surveyor);
-									alchemerAnswer.setStudyTeam(studyTeam);
-									alchemerAnswer.setCampaignName(campaignName);
-									alchemerAnswerRepository.save(alchemerAnswer);
-									break;
-								case "parent":
-									processParentAnswer(answerNode, task, task.getStudyName(), surveyor, studyTeam,
-											campaignName);
-									break;
-								default:
-									LOGGER.warn("Unknown answer type: {}", type);
-									break;
-								}
+				String response3 = restTemplate.getForObject(url3, String.class);
+				ObjectMapper mapper3 = new ObjectMapper();
+				JsonNode root3 = mapper3.readTree(response3);
+
+				String campaignName = root3.path("data").path("name").asText();
+				if (urlData != null) {
+					JsonNode surveyorNode = urlData.path("agente");
+					if (surveyorNode.get("value") != null)
+						surveyor = surveyorNode.get("value").asText();
+				}
+
+				if (root.path("result_ok").asBoolean()) {
+					Iterator<Map.Entry<String, JsonNode>> fields = surveyData.fields();
+					while (fields.hasNext()) {
+						Map.Entry<String, JsonNode> entry = fields.next();
+						JsonNode answerNode = entry.getValue();
+
+						String type = answerNode.path("type").asText();
+						if (answerNode.path("shown").asBoolean()) {
+							switch (type) {
+							case "RADIO":
+							case "MENU":
+							case "HIDDEN":
+							case "ESSAY":
+							case "NPS":
+							case "TEXTBOX":
+
+								Long alchemerId = answerNode.path("id").asLong();
+								AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+								alchemerAnswer.setAlchemerId(alchemerId);
+								alchemerAnswer.setType(type);
+								alchemerAnswer.setQuestion(answerNode.path("question").asText());
+								alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+								alchemerAnswer.setAnswer(answerNode.path("answer").asText());
+								alchemerAnswer.setShown(true);
+								alchemerAnswer.setSurveyId(task.getSurveyId());
+								alchemerAnswer.setStudyName(task.getStudyName());
+								alchemerAnswer.setResponseId(task.getResponseId());
+								alchemerAnswer.setCreated(LocalDate.now());
+								alchemerAnswer.setSurveyor(surveyor);
+								alchemerAnswer.setStudyTeam(studyTeam);
+								alchemerAnswer.setCampaignName(campaignName);
+								alchemerAnswerRepository.save(alchemerAnswer);
+								break;
+							case "parent":
+								processParentAnswer(answerNode, task, task.getStudyName(), surveyor, studyTeam,
+										campaignName);
+								break;
+							default:
+								LOGGER.warn("Unknown answer type: {}", type);
+								break;
 							}
 						}
-						task.setStatus(Status.DONE);
-						taskRepository.save(task);
-						LOGGER.info("Task ID: {} processed successfully.", task.getId());
-					} else {
-						LOGGER.warn("Task ID: {} not processed successfully, se mantiene en PENDING.", task.getId());
 					}
-
-				} catch (Exception e) {
-					task.setStatus(Status.ERROR);
+					task.setStatus(Status.DONE);
 					taskRepository.save(task);
-					LOGGER.error("Error processing task ID: {}", task.getId(), e);
+					LOGGER.info("Task ID: {} processed successfully.", task.getId());
+				} else {
+					LOGGER.warn("Task ID: {} not processed successfully, se mantiene en PENDING.", task.getId());
 				}
-			} else {
-				task.setStatus(Status.DONE);
-				taskRepository.save(task);
-			}
 
+			} catch (Exception e) {
+				task.setStatus(Status.ERROR);
+				taskRepository.save(task);
+				LOGGER.error("Error processing task ID: {}", task.getId(), e);
+			}
+		} else {
+			task.setStatus(Status.DONE);
+			taskRepository.save(task);
 		}
-		LOGGER.info("Alchemer Answer Retriever task finished.");
 	}
 
 	private void processParentAnswer(JsonNode answerNode, Task task, String surveyTitle, String surveyor,
