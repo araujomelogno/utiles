@@ -29,6 +29,8 @@ public class Task {
 
 	private String studyName;
 
+	private Date processDate;
+
 	public Long getId() {
 		return id;
 	}
@@ -83,5 +85,13 @@ public class Task {
 
 	public void setStudyName(String studyName) {
 		this.studyName = studyName;
+	}
+
+	public Date getProcessDate() {
+		return processDate;
+	}
+
+	public void setProcessDate(Date processDate) {
+		this.processDate = processDate;
 	}
 }
