@@ -16,7 +16,7 @@ ACLARACIÓN IMPORTANTE SOBRE LOS HABLANTES
   a) El ENCUESTADOR (quien debe leer el cuestionario)
   b) El ENCUESTADO (quien responde las preguntas)
 
-- El CUESTIONARIO ESPERADO contiene ÚNICAMENTE el texto que debía leer el ENCUESTADOR.
+- El CUESTIONARIO ESPERADO contiene ÚNICAMENTE el texto que debía leer el ENCUESTADOR. Dentro del cuestioanrio, las palabras que están escritas todas sus letras en  mayúsculas no es necesario que el encuestador las lea. 
   No contiene respuestas del encuestado.
 
 REGLAS ESPECÍFICAS
@@ -25,6 +25,7 @@ REGLAS ESPECÍFICAS
   - detectar direccionamiento o sesgo del encuestador,
   - entender el contexto de un posible problema de orden o reformulación.
 - Nunca tomes como evidencia de lectura correcta un fragmento dicho por el ENCUESTADO.
+- Dentro del cuestioanrio, las palabras que están escritas todas sus letras en  mayúsculas no es necesario que el encuestador las lea.
 - Toda evidencia citada debe provenir de intervenciones del ENCUESTADOR.
 
 TAREA

@@ -57,13 +57,11 @@ public class AlchemerAnswerRetriever {
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
-		List<Task> pendingTasks = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL,
-				cutoffDate);
+		List<Task> pendingTasks = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate);
 		LOGGER.info("Found {} pending/stuck tasks.", pendingTasks.size());
 
 		List<CompletableFuture<Void>> futures = pendingTasks.stream()
-				.map(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor))
-				.toList();
+				.map(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor)).toList();
 
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
@@ -74,8 +72,8 @@ public class AlchemerAnswerRetriever {
 		task.setStatus(Status.RUNNING);
 		task.setProcessDate(new Date());
 		taskRepository.save(task);
-		if (alchemerAnswerRepository
-				.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId()).isEmpty()) {
+		if (alchemerAnswerRepository.findByResponseIdAndSurveyId(task.getResponseId().longValue(), task.getSurveyId())
+				.isEmpty()) {
 			try {
 				LOGGER.info("Processing task ID: {}", task.getId());
 
@@ -90,8 +88,7 @@ public class AlchemerAnswerRetriever {
 				JsonNode surveyData = root.path("data").path("survey_data");
 				JsonNode urlData = root.path("data").path("url_variables");
 
-				String url2 = String.format(
-						"https://api.alchemer.com/v5/survey/%d?api_token=%s&api_token_secret=%s",
+				String url2 = String.format("https://api.alchemer.com/v5/survey/%d?api_token=%s&api_token_secret=%s",
 						task.getSurveyId(), apiToken, apiTokenSecret);
 
 				String response2 = restTemplate.getForObject(url2, String.class);
@@ -101,8 +98,8 @@ public class AlchemerAnswerRetriever {
 
 				JsonNode teamArray = root2.path("data").path("team");
 				String studyTeam = Optional.ofNullable(teamArray).filter(JsonNode::isArray)
-						.filter(arr -> arr.size() > 0).map(arr -> arr.get(0))
-						.map(node -> node.path("name").asText()).orElse("");
+						.filter(arr -> arr.size() > 0).map(arr -> arr.get(0)).map(node -> node.path("name").asText())
+						.orElse("");
 
 				String linkId = root.path("data").path("link_id").asText();
 
@@ -135,7 +132,7 @@ public class AlchemerAnswerRetriever {
 							case "HIDDEN":
 							case "ESSAY":
 							case "NPS":
-							case "RANK":	
+							case "RANK":
 							case "TEXTBOX":
 
 								Long alchemerId = answerNode.path("id").asLong();
@@ -195,26 +192,26 @@ public class AlchemerAnswerRetriever {
 				JsonNode optionNode = optionEntry.getValue();
 				if (optionNode.path("shown").asBoolean(true)) { // Assume shown if not present
 					Long alchemerId = optionNode.path("id").asLong();
+
+					AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+					alchemerAnswer.setAlchemerId(alchemerId);
+					alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
+					alchemerAnswer.setQuestion(answerNode.path("question").asText());
+					alchemerAnswer.setAnswer(optionNode.path("answer").asText());
+					alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+					alchemerAnswer.setShown(true);
+					alchemerAnswer.setSurveyId(task.getSurveyId());
+					alchemerAnswer.setStudyName(surveyTitle);
+					alchemerAnswer.setResponseId(task.getResponseId());
+					alchemerAnswer.setSurveyor(surveyor);
+					alchemerAnswer.setCreated(LocalDate.now());
+					alchemerAnswer.setStudyTeam(studyTeam);
+					alchemerAnswer.setCampaignName(campaignName);
 					if (!alchemerAnswerRepository.existsByStudyNameAndResponseIdAndSurveyIdAndAlchemerId(
-							surveyTitle, task.getResponseId(), task.getSurveyId(), alchemerId)) {
-						AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-						alchemerAnswer.setAlchemerId(alchemerId);
-						alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
-						alchemerAnswer.setQuestion(answerNode.path("question").asText());
-						alchemerAnswer.setAnswer(optionNode.path("answer").asText());
-						alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-						alchemerAnswer.setShown(true);
-						alchemerAnswer.setSurveyId(task.getSurveyId());
-						alchemerAnswer.setStudyName(surveyTitle);
-						alchemerAnswer.setResponseId(task.getResponseId());
-						alchemerAnswer.setSurveyor(surveyor);
-						alchemerAnswer.setCreated(LocalDate.now());
-						alchemerAnswer.setStudyTeam(studyTeam);
-						alchemerAnswer.setCampaignName(campaignName);
+							task.getStudyName(), task.getResponseId(), task.getSurveyId(), alchemerId)) {
 						alchemerAnswerRepository.save(alchemerAnswer);
-						LOGGER.info("Saved answer for parent question ID: {}, option ID: {}",
-								answerNode.path("id").asLong(), alchemerId);
 					}
+
 				}
 			}
 		}
@@ -230,26 +227,27 @@ public class AlchemerAnswerRetriever {
 					JsonNode answer = answerEntry.getValue();
 					if (answer.path("shown").asBoolean(true)) { // Assume shown if not present
 						Long alchemerId = answer.path("id").asLong();
+
+						AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
+						alchemerAnswer.setAlchemerId(alchemerId);
+						alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
+						alchemerAnswer.setQuestion(answer.path("question").asText());
+						alchemerAnswer.setAnswer(answer.path("answer").asText());
+						alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
+						alchemerAnswer.setShown(true);
+						alchemerAnswer.setSurveyId(task.getSurveyId());
+						alchemerAnswer.setResponseId(task.getResponseId());
+						alchemerAnswer.setStudyName(surveyTitle);
+						alchemerAnswer.setSurveyor(surveyor);
+						alchemerAnswer.setCreated(LocalDate.now());
+						alchemerAnswer.setStudyTeam(studyTeam);
+						alchemerAnswer.setCampaignName(campaignName);
 						if (!alchemerAnswerRepository.existsByStudyNameAndResponseIdAndSurveyIdAndAlchemerId(
-								surveyTitle, task.getResponseId(), task.getSurveyId(), alchemerId)) {
-							AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
-							alchemerAnswer.setAlchemerId(alchemerId);
-							alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
-							alchemerAnswer.setQuestion(answer.path("question").asText());
-							alchemerAnswer.setAnswer(answer.path("answer").asText());
-							alchemerAnswer.setSectionId(answerNode.path("section_id").asInt());
-							alchemerAnswer.setShown(true);
-							alchemerAnswer.setSurveyId(task.getSurveyId());
-							alchemerAnswer.setResponseId(task.getResponseId());
-							alchemerAnswer.setStudyName(surveyTitle);
-							alchemerAnswer.setSurveyor(surveyor);
-							alchemerAnswer.setCreated(LocalDate.now());
-							alchemerAnswer.setStudyTeam(studyTeam);
-							alchemerAnswer.setCampaignName(campaignName);
+								task.getStudyName(), task.getResponseId(), task.getSurveyId(), alchemerId)) {
 							alchemerAnswerRepository.save(alchemerAnswer);
-							LOGGER.info("Saved answer for parent question ID: {}, subquestion ID: {}",
-									answerNode.path("id").asLong(), alchemerId);
+
 						}
+
 					}
 				}
 			}

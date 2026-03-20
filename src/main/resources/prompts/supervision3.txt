@@ -21,7 +21,7 @@ REGLA CRÍTICA: NO ASUMIR IDENTIDAD DE SPEAKERS
   b) ENCUESTADO: quien responde con datos personales/opiniones/elecciones.
 - Puede haber múltiples speakers que correspondan al mismo rol (p. ej. diarización errática) o aparecer un speaker extra "C".
 - También puede haber "cambios" donde un mismo rol aparece con distintos labels en distintos momentos.
-
+- Dentro del cuestioanrio, las palabras que están escritas todas sus letras en  mayúsculas no es necesario que el encuestador las lea.
 FASE 0: IDENTIFICACIÓN DE ROLES (OBLIGATORIA)
 Antes de auditar, hacé lo siguiente:
 1) Analizá los primeros minutos y otros pasajes relevantes para inferir roles por speaker label.
