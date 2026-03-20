@@ -59,6 +59,10 @@ public class SupervisionTask extends AbstractEntity {
 
 	private Date processed;
 
+	private String alchemerStudyName;
+
+	private Integer alchemerSuerveyId;
+
 	public Date getCreated() {
 		return created;
 	}
@@ -179,5 +183,21 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setFullPrompt(String fullPrompt) {
 		this.fullPrompt = fullPrompt;
+	}
+
+	public String getAlchemerStudyName() {
+		return alchemerStudyName;
+	}
+
+	public void setAlchemerStudyName(String alchemerStudyName) {
+		this.alchemerStudyName = alchemerStudyName;
+	}
+
+	public Integer getAlchemerSuerveyId() {
+		return alchemerSuerveyId;
+	}
+
+	public void setAlchemerSuerveyId(Integer alchemerSuerveyId) {
+		this.alchemerSuerveyId = alchemerSuerveyId;
 	}
 }
