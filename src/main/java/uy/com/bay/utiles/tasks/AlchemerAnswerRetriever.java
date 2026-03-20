@@ -153,7 +153,10 @@ public class AlchemerAnswerRetriever {
 								alchemerAnswer.setSurveyor(surveyor);
 								alchemerAnswer.setStudyTeam(studyTeam);
 								alchemerAnswer.setCampaignName(campaignName);
-								alchemerAnswerRepository.save(alchemerAnswer);
+								if (!alchemerAnswerRepository.existsByStudyNameAndResponseIdAndSurveyIdAndAlchemerId(
+										task.getStudyName(), task.getResponseId(), task.getSurveyId(), alchemerId)) {
+									alchemerAnswerRepository.save(alchemerAnswer);
+								}
 								break;
 							case "parent":
 								processParentAnswer(answerNode, task, task.getStudyName(), surveyor, studyTeam,
@@ -192,7 +195,8 @@ public class AlchemerAnswerRetriever {
 				JsonNode optionNode = optionEntry.getValue();
 				if (optionNode.path("shown").asBoolean(true)) { // Assume shown if not present
 					Long alchemerId = optionNode.path("id").asLong();
-					if (alchemerAnswerRepository.findByAlchemerId(alchemerId).isEmpty()) {
+					if (!alchemerAnswerRepository.existsByStudyNameAndResponseIdAndSurveyIdAndAlchemerId(
+							surveyTitle, task.getResponseId(), task.getSurveyId(), alchemerId)) {
 						AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
 						alchemerAnswer.setAlchemerId(alchemerId);
 						alchemerAnswer.setType(optionNode.path("type").asText("parent_option"));
@@ -226,7 +230,8 @@ public class AlchemerAnswerRetriever {
 					JsonNode answer = answerEntry.getValue();
 					if (answer.path("shown").asBoolean(true)) { // Assume shown if not present
 						Long alchemerId = answer.path("id").asLong();
-						if (alchemerAnswerRepository.findByAlchemerId(alchemerId).isEmpty()) {
+						if (!alchemerAnswerRepository.existsByStudyNameAndResponseIdAndSurveyIdAndAlchemerId(
+								surveyTitle, task.getResponseId(), task.getSurveyId(), alchemerId)) {
 							AlchemerAnswer alchemerAnswer = new AlchemerAnswer();
 							alchemerAnswer.setAlchemerId(alchemerId);
 							alchemerAnswer.setType(answer.path("type").asText("parent_subquestion"));
