@@ -53,9 +53,6 @@ public class SupervisionTask extends AbstractEntity {
 	@JoinColumn(name = "fieldwork_id")
 	private Fieldwork fieldwork;
 
-	@ManyToOne
-	@JoinColumn(name = "study_id")
-	private Study study;
 
 	@Lob
 	private String evaluationOutput;
@@ -166,13 +163,7 @@ public class SupervisionTask extends AbstractEntity {
 		this.fieldwork = fieldwork;
 	}
 
-	public Study getStudy() {
-		return study;
-	}
 
-	public void setStudy(Study study) {
-		this.study = study;
-	}
 
 	public String getEvaluationOutput() {
 		return evaluationOutput;

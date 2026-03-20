@@ -36,11 +36,6 @@ public class SupervisionView extends VerticalLayout {
 		this.supervisionTaskService = supervisionTaskService;
 		this.studyService = studyService;
 
-		H2 studyTitle = new H2("Estudio");
-		ComboBox<Study> studyComboBox = new ComboBox<>("Estudio");
-		studyComboBox.setItems(studyService.listAll());
-		studyComboBox.setItemLabelGenerator(Study::getName);
-
 		H2 title = new H2("Audios");
 
 		MultiFileMemoryBuffer multiFileBuffer = new MultiFileMemoryBuffer();
@@ -52,10 +47,7 @@ public class SupervisionView extends VerticalLayout {
 		Upload questionnaireUpload = new Upload(questionnaireBuffer);
 
 		Button processButton = new Button("Procesar", e -> {
-			if (studyComboBox.getValue() == null) {
-				Notification.show("Por favor, seleccione un estudio.");
-				return;
-			}
+
 			if (questionnaireBuffer.getInputStream() == null) {
 				Notification.show("Por favor, suba un archivo de cuestionario.");
 				return;
@@ -78,7 +70,7 @@ public class SupervisionView extends VerticalLayout {
 						task.setAudioContent(audioContent);
 						task.setQuestionnaire(questionnaireContent);
 						task.setQuestionnaireFileName(questionnaireBuffer.getFileName());
-						task.setStudy(studyComboBox.getValue());
+
 						tasks.add(task);
 					} catch (IOException ex) {
 						ex.printStackTrace();
@@ -98,7 +90,7 @@ public class SupervisionView extends VerticalLayout {
 			}
 		});
 
-		add(studyTitle, studyComboBox, title, multiFileUpload, questionnaireTitle, questionnaireUpload, processButton);
+		add(title, multiFileUpload, questionnaireTitle, questionnaireUpload, processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
 	}
