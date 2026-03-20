@@ -173,7 +173,7 @@ public class AlchemerAnswerRetriever {
 				}
 
 			} catch (Exception e) {
-				task.setStatus(Status.ERROR);
+				task.setStatus(Status.PENDING);
 				taskRepository.save(task);
 				LOGGER.error("Error processing task ID: {}", task.getId(), e);
 			}
