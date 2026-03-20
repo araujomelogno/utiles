@@ -37,15 +37,7 @@ public class OdooProjectSyncTask {
 			System.out.println("No projects fetched from Odoo. Sync task finished.");
 			return;
 		}
-
-		for (Map<String, Object> map : odooProjects) {
-			System.out.println("______");
-			for (String keys : map.keySet()) {
-				System.out.println(map.get(keys));
-			}
-			System.out.println("______");
-
-		}
+ 
 
 		List<Study> existingProyectos = proyectoService.findAll();
 		Set<String> existingOdooNames = existingProyectos.stream().map(Study::getName)
