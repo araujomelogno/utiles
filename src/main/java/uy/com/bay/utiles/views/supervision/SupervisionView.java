@@ -1,6 +1,7 @@
 package uy.com.bay.utiles.views.supervision;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -12,8 +13,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.SupervisionTask;
 import uy.com.bay.utiles.data.service.SupervisionTaskService;
+import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.views.MainLayout;
 
 import java.io.IOException;
@@ -27,9 +30,16 @@ import java.util.List;
 public class SupervisionView extends VerticalLayout {
 
 	private final SupervisionTaskService supervisionTaskService;
+	private final StudyService studyService;
 
-	public SupervisionView(SupervisionTaskService supervisionTaskService) {
+	public SupervisionView(SupervisionTaskService supervisionTaskService, StudyService studyService) {
 		this.supervisionTaskService = supervisionTaskService;
+		this.studyService = studyService;
+
+		H2 studyTitle = new H2("Estudio");
+		ComboBox<Study> studyComboBox = new ComboBox<>("Estudio");
+		studyComboBox.setItems(studyService.listAll());
+		studyComboBox.setItemLabelGenerator(Study::getName);
 
 		H2 title = new H2("Audios");
 
@@ -42,6 +52,10 @@ public class SupervisionView extends VerticalLayout {
 		Upload questionnaireUpload = new Upload(questionnaireBuffer);
 
 		Button processButton = new Button("Procesar", e -> {
+			if (studyComboBox.getValue() == null) {
+				Notification.show("Por favor, seleccione un estudio.");
+				return;
+			}
 			if (questionnaireBuffer.getInputStream() == null) {
 				Notification.show("Por favor, suba un archivo de cuestionario.");
 				return;
@@ -64,6 +78,7 @@ public class SupervisionView extends VerticalLayout {
 						task.setAudioContent(audioContent);
 						task.setQuestionnaire(questionnaireContent);
 						task.setQuestionnaireFileName(questionnaireBuffer.getFileName());
+						task.setStudy(studyComboBox.getValue());
 						tasks.add(task);
 					} catch (IOException ex) {
 						ex.printStackTrace();
@@ -83,7 +98,7 @@ public class SupervisionView extends VerticalLayout {
 			}
 		});
 
-		add(title, multiFileUpload, questionnaireTitle, questionnaireUpload, processButton);
+		add(studyTitle, studyComboBox, title, multiFileUpload, questionnaireTitle, questionnaireUpload, processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
 	}
