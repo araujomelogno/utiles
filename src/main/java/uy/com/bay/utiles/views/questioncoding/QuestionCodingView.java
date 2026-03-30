@@ -27,6 +27,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -86,6 +87,8 @@ public class QuestionCodingView extends VerticalLayout {
 
 	private VerticalLayout createStep1() {
 		H2 header = new H2("Paso 1: Cargar archivo de estudio");
+		H3 subHeader = new H3(
+				"El archivo excel debe contener una columna por variable. En el encabezado debe estar el nombre de la variable");
 		MemoryBuffer buffer = new MemoryBuffer();
 		Upload upload = new Upload(buffer);
 		Button nextButton = new Button("Siguiente");
@@ -109,7 +112,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 		nextButton.addClickListener(event -> this.showStep(2));
 
-		VerticalLayout layout = new VerticalLayout(header, upload, nextButton);
+		VerticalLayout layout = new VerticalLayout(header, subHeader, upload, nextButton);
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -119,7 +122,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 	private VerticalLayout createStep2() {
 		H2 header = new H2("Paso 2: Seleccionar columnas a codificar");
-
+		
 		Button prevButton = new Button("Anterior");
 		Button nextButton = new Button("Siguiente");
 
@@ -158,6 +161,8 @@ public class QuestionCodingView extends VerticalLayout {
 
 	private VerticalLayout createStep3() {
 		H2 header = new H2("Paso 3: Cargar archivo de mapeo de códigos");
+		H3 subHeader = new H3(
+				"El archivo excel debe contener una columna por variable a codificar. En el encabezado debe debe tener el formato 'NombreVariable-CODIGO'");
 		MemoryBuffer buffer = new MemoryBuffer();
 		Upload upload = new Upload(buffer);
 		Button prevButton = new Button("Anterior");
@@ -165,6 +170,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 		upload.addSucceededListener(event -> {
 			try (InputStream inputStream = buffer.getInputStream()) {
+				nextButton.setEnabled(true);
 				codeMappingFileContent = inputStream.readAllBytes();
 				Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
 				Sheet sheet = workbook.getSheetAt(0);
@@ -181,6 +187,7 @@ public class QuestionCodingView extends VerticalLayout {
 					String originalName = mapping.getQuestionVariable() != null ? mapping.getQuestionVariable() : "";
 					if (!headers.contains(originalName + "-CODIGO")) {
 						allHeadersValid = false;
+						logger.warn("no se encontró " + originalName + "-CODIGO");
 						break;
 					}
 				}
@@ -189,18 +196,22 @@ public class QuestionCodingView extends VerticalLayout {
 				} else {
 					Notification
 							.show("Error de validación: El archivo de mapeo de códigos no tiene el formato correcto.");
+					logger.warn("Error de validación: El archivo de mapeo de códigos no tiene el formato correcto.");
+					nextButton.setEnabled(false);
 				}
 
 			} catch (Exception e) {
 				e.printStackTrace();
+				logger.warn(e.getMessage());
 				Notification.show("Error al leer el archivo de mapeo de códigos.");
+				nextButton.setEnabled(false);
 			}
 		});
 
 		prevButton.addClickListener(event -> showStep(2));
 		nextButton.addClickListener(event -> showStep(4));
 
-		VerticalLayout layout = new VerticalLayout(header, upload, new HorizontalLayout(prevButton, nextButton));
+		VerticalLayout layout = new VerticalLayout(header, subHeader , upload, new HorizontalLayout(prevButton, nextButton));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -418,8 +429,6 @@ public class QuestionCodingView extends VerticalLayout {
 
 		return newColumnIndex;
 	}
-
-
 
 	public static class ColumnMapping {
 		private String questionVariable = "";

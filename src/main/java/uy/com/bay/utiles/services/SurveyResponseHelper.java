@@ -31,11 +31,11 @@ public class SurveyResponseHelper {
         this.objectMapper = objectMapper;
     }
 
-    public String buildSurveyResponseJson(int surveyId, String celular) throws JsonProcessingException {
+    public String buildSurveyResponseJson(int surveyId, String phoneNumber) throws JsonProcessingException {
         List<SurveyResponseDTO> resultado = new ArrayList<>();
 
         List<AlchemerContact> contacts = contactRepository
-                .findByInviteCustom1AndSurveyResponseDataSurveyId(celular, surveyId);
+                .findByInviteCustom1AndSurveyResponseDataSurveyId(phoneNumber, surveyId);
 
         for (AlchemerContact contact : contacts) {
             AlchemerSurveyResponseData responseData = contact.getSurveyResponseData();

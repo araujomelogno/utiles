@@ -23,8 +23,10 @@ public class SchedullingConfiguration {
 	@Bean(name = "alchemerExecutor")
 	public Executor alchemerExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(8);
-		executor.setMaxPoolSize(14);
+//		executor.setCorePoolSize(8);
+//		executor.setMaxPoolSize(14);
+		executor.setCorePoolSize(2);
+		executor.setMaxPoolSize(3);
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("alchemer-");
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
