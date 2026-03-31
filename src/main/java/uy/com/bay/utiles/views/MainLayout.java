@@ -251,6 +251,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem supervisionTasksItem = new SideNavItem("Tareas de Supervisión", "supervision-tasks");
 		supervisionTasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
 		toolsItem.addItem(supervisionTasksItem);
+		SideNavItem encodingTasksItem = new SideNavItem("Tareas de Codificación", "encoding-tasks");
+		encodingTasksItem.setPrefixComponent(new Icon("vaadin", "code"));
+		toolsItem.addItem(encodingTasksItem);
 		nav.addItem(toolsItem);
 
 		SideNavItem whatsappItem = new SideNavItem("Whatsapp");
