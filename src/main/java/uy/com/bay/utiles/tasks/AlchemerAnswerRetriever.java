@@ -60,7 +60,7 @@ public class AlchemerAnswerRetriever {
 		List<Task> pendingTasks = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate);
 		LOGGER.info("Found {} pending/stuck tasks.", pendingTasks.size());
 
-		pendingTasks.forEach(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
+		pendingTasks.stream().findFirst().ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
 
 		LOGGER.info("Alchemer Answer Retriever task finished.");
 	}
