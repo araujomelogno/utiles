@@ -3,8 +3,7 @@
 		<file>/opt/tomcat/logs/utiles.log</file>
 		<append>true</append>
 		<encoder>
-			<pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n
-			</pattern>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n </pattern>
 		</encoder>
 	</appender>
 
@@ -12,8 +11,8 @@
 	<appender name="CONSOLE"
 		class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n
-			</pattern>
+
+			<pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
 		</encoder>
 	</appender>
 

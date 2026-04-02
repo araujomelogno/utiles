@@ -53,17 +53,14 @@ public class AlchemerAnswerRetriever {
 		this.alchemerExecutor = alchemerExecutor;
 	}
 
-	@Scheduled(cron = "0 */1 * * * *")
+	@Scheduled(cron = "0 */5 * * * *")
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
 		List<Task> pendingTasks = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate);
 		LOGGER.info("Found {} pending/stuck tasks.", pendingTasks.size());
 
-		List<CompletableFuture<Void>> futures = pendingTasks.stream()
-				.map(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor)).toList();
-
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		pendingTasks.forEach(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
 
 		LOGGER.info("Alchemer Answer Retriever task finished.");
 	}
