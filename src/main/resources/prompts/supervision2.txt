@@ -97,6 +97,6 @@ Devolvé SOLO JSON válido (sin texto extra) con este esquema:
 }
 
 IMPORTANTE
-- item_id como lo que esta el código que esta dentro del cuestionario antes de la pregunta , por ejemplo  si el cuestionario dice "PPROB_dep. Cambiando de tema, ¿Cuál cree que es el principal problema de Paysandú? ¿Y en segundo lugar?" item_id es PPROB_dep. Si no se encuentra ningún codigo antes de la pregunta poner "N/A" 
+- item_id toma lo que esta en el código que esta dentro del cuestionario antes de la pregunta , por ejemplo  si el cuestionario dice "PPROB_dep. Cambiando de tema, ¿Cuál cree que es el principal problema de Paysandú? ¿Y en segundo lugar?" item_id es PPROB_dep. Si no se encuentra ningún codigo antes de la pregunta poner "N/A" 
 - Si la transcripción viene en JSON diarizado con segmentos, usá esos segmentos para inicio_seg, fin_seg y hablante.
 - Calculá puntaje_global como promedio ponderado de puntajes_componentes según los pesos indicados.

@@ -25,8 +25,8 @@ public class SchedullingConfiguration {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 //		executor.setCorePoolSize(8);
 //		executor.setMaxPoolSize(14);
-		executor.setCorePoolSize(2);
-		executor.setMaxPoolSize(3);
+		executor.setCorePoolSize(6);
+		executor.setMaxPoolSize(8);
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("alchemer-");
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
