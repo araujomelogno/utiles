@@ -13,6 +13,7 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -56,7 +57,7 @@ public class AlchemerAnswerRetriever {
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
-		Optional<Task> pendingTask = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate);
+		Optional<Task> pendingTask = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate, PageRequest.of(0, 1)).stream().findFirst();
 		LOGGER.info("Found {} pending/stuck task.", pendingTask.isPresent() ? 1 : 0);
 
 		pendingTask.ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
