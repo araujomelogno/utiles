@@ -30,7 +30,6 @@ public class SchedullingConfiguration {
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("alchemer-");
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-		executor.initialize();
 		return executor;
 	}
 }
