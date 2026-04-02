@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -57,10 +56,10 @@ public class AlchemerAnswerRetriever {
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
-		List<Task> pendingTasks = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate);
-		LOGGER.info("Found {} pending/stuck tasks.", pendingTasks.size());
+		Optional<Task> pendingTask = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate);
+		LOGGER.info("Found {} pending/stuck task.", pendingTask.isPresent() ? 1 : 0);
 
-		pendingTasks.stream().findFirst().ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
+		pendingTask.ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
 
 		LOGGER.info("Alchemer Answer Retriever task finished.");
 	}
