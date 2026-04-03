@@ -15,9 +15,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.annotation.PostConstruct;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +41,7 @@ public class AlchemerAnswerRetriever {
 	private final AlchemerAnswerRepository alchemerAnswerRepository;
 	private final RestTemplate restTemplate;
 	private final Executor alchemerExecutor;
+	private final TaskScheduler alchemerTaskScheduler;
 
 	@Value("${alchemer.api.token}")
 	private String apiToken;
@@ -46,14 +50,20 @@ public class AlchemerAnswerRetriever {
 	private String apiTokenSecret;
 
 	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository,
-			@Qualifier("alchemerExecutor") Executor alchemerExecutor) {
+			@Qualifier("alchemerExecutor") Executor alchemerExecutor,
+			@Qualifier("alchemerTaskScheduler") TaskScheduler alchemerTaskScheduler) {
 		this.taskRepository = taskRepository;
 		this.alchemerAnswerRepository = alchemerAnswerRepository;
 		this.restTemplate = new RestTemplate();
 		this.alchemerExecutor = alchemerExecutor;
+		this.alchemerTaskScheduler = alchemerTaskScheduler;
 	}
 
-	@Scheduled(cron = "0 */1 * * * *")
+	@PostConstruct
+	public void scheduleRetrieveAlchemerAnswers() {
+		alchemerTaskScheduler.schedule(this::retrieveAlchemerAnswers, new CronTrigger("0 */1 * * * *"));
+	}
+
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));

@@ -20,6 +20,14 @@ public class SchedullingConfiguration {
 		return s;
 	}
 
+	@Bean(name = "alchemerTaskScheduler")
+	public TaskScheduler alchemerTaskScheduler() {
+		ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
+		s.setPoolSize(1);
+		s.setThreadNamePrefix("alchemer-sched-");
+		return s;
+	}
+
 	@Bean(name = "alchemerExecutor")
 	public Executor alchemerExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
