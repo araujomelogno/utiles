@@ -67,12 +67,18 @@ public class AlchemerAnswerRetriever {
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
-		Optional<Task> pendingTask = taskRepository.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate, PageRequest.of(0, 1)).stream().findFirst();
-		LOGGER.info("Found {} pending/stuck task.", pendingTask.isPresent() ? 1 : 0);
+		Optional<Task> pendingTask = taskRepository
+				.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate, PageRequest.of(0, 1)).stream()
+				.findFirst();
+		if (pendingTask.isEmpty()) {
+			pendingTask.get().getId();
+			LOGGER.info("Found  pending task. ID: " + pendingTask.get().getId());
 
-		pendingTask.ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
+			pendingTask.ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
 
-		LOGGER.info("Alchemer Answer Retriever task finished.");
+			LOGGER.info("Alchemer Answer Retriever task finished: " + pendingTask.get().getId());
+
+		}
 	}
 
 	private void processTask(Task task) {

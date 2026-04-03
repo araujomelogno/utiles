@@ -23,7 +23,7 @@ public class SchedullingConfiguration {
 	@Bean(name = "alchemerTaskScheduler")
 	public TaskScheduler alchemerTaskScheduler() {
 		ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
-		s.setPoolSize(1);
+		s.setPoolSize(3);
 		s.setThreadNamePrefix("alchemer-sched-");
 		return s;
 	}
@@ -33,8 +33,8 @@ public class SchedullingConfiguration {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 //		executor.setCorePoolSize(8);
 //		executor.setMaxPoolSize(14);
-		executor.setCorePoolSize(2);
-		executor.setMaxPoolSize(2);
+		executor.setCorePoolSize(4);
+		executor.setMaxPoolSize(4);
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("alchemer-");
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
