@@ -212,6 +212,7 @@ public class AlchemerAnswerRetriever {
 		} else {
 			task.setStatus(Status.DONE);
 			taskRepository.save(task);
+			LOGGER.info("Tarea ya fue procesada task ID: {}", task.getId());
 		}
 	}
 
