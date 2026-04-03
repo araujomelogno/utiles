@@ -70,7 +70,7 @@ public class AlchemerAnswerRetriever {
 		Optional<Task> pendingTask = taskRepository
 				.findPendingOrStuckRunning(JobType.ALCHEMERANSWERRETRIEVAL, cutoffDate, PageRequest.of(0, 1)).stream()
 				.findFirst();
-		if (pendingTask.isEmpty()) {
+		if (pendingTask.isPresent()) {
 			pendingTask.get().getId();
 			LOGGER.info("Found  pending task. ID: " + pendingTask.get().getId());
 
