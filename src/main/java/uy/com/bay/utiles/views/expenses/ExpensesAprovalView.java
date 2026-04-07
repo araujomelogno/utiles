@@ -238,7 +238,6 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 					this.expenseRequest = new ExpenseRequest();
 				}
 				binder.writeBean(this.expenseRequest);
-				expenseRequestService.update(this.expenseRequest);
 
 				if (this.expenseRequest.getStudy() == null) {
 					Notification.show("Debe asociarse estudio");
@@ -251,7 +250,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 				this.expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
 				this.expenseRequest.setAprovalDate(new Date());
-				expenseRequestService.update(this.expenseRequest);
+				this.expenseRequest = expenseRequestService.update(this.expenseRequest);
 				clearForm();
 				refreshGrid();
 				Notification.show("Solicitud de gasto aprobada.");
