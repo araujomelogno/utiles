@@ -48,10 +48,13 @@ public class AlchemerAnswerRetriever {
 	@Value("${alchemer.api.token.secret}")
 	private String apiTokenSecret;
 
-	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository) {
+	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository, org.springframework.boot.web.client.RestTemplateBuilder restTemplateBuilder) {
 		this.taskRepository = taskRepository;
 		this.alchemerAnswerRepository = alchemerAnswerRepository;
-		this.restTemplate = new RestTemplate();
+		this.restTemplate = restTemplateBuilder
+				.setConnectTimeout(java.time.Duration.ofSeconds(30))
+				.setReadTimeout(java.time.Duration.ofSeconds(30))
+				.build();
 
 	}
 
