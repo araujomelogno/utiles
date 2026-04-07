@@ -118,6 +118,8 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 
 		add(splitLayout);
 
+		Grid.Column<ExpenseRequest> statusColumn = grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado")
+				.setAutoWidth(true).setSortable(true).setSortProperty("expenseStatus");
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
 				.setAutoWidth(true).setSortable(true).setSortProperty("study.name");
@@ -146,8 +148,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		Grid.Column<ExpenseRequest> conceptColumn = grid
 				.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
 				.setAutoWidth(true).setSortable(true).setSortProperty("concept.name");
-		Grid.Column<ExpenseRequest> statusColumn = grid.addColumn(ExpenseRequest::getExpenseStatus).setHeader("Estado")
-				.setAutoWidth(true).setSortable(true).setSortProperty("expenseStatus");
+
 		FooterRow footerRow = grid.appendFooterRow();
 
 		grid.sort(List.of(new GridSortOrder<>(requestDateColumn, SortDirection.DESCENDING)));

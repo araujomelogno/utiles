@@ -245,15 +245,15 @@ public class MainLayout extends AppLayout {
 		SideNavItem questionCodingItem = new SideNavItem("Codificación de preguntas", "question-coding");
 		questionCodingItem.setPrefixComponent(new Icon("vaadin", "cogs"));
 		toolsItem.addItem(questionCodingItem);
+		SideNavItem encodingTasksItem = new SideNavItem("Tareas de Codificación", "encoding-tasks");
+		encodingTasksItem.setPrefixComponent(new Icon("vaadin", "code"));
+		toolsItem.addItem(encodingTasksItem);
 		SideNavItem supervisionItem = new SideNavItem("Supervisión", "supervision");
 		supervisionItem.setPrefixComponent(new Icon("vaadin", "headphones"));
 		toolsItem.addItem(supervisionItem);
 		SideNavItem supervisionTasksItem = new SideNavItem("Tareas de Supervisión", "supervision-tasks");
 		supervisionTasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
 		toolsItem.addItem(supervisionTasksItem);
-		SideNavItem encodingTasksItem = new SideNavItem("Tareas de Codificación", "encoding-tasks");
-		encodingTasksItem.setPrefixComponent(new Icon("vaadin", "code"));
-		toolsItem.addItem(encodingTasksItem);
 		nav.addItem(toolsItem);
 
 		SideNavItem whatsappItem = new SideNavItem("Whatsapp");

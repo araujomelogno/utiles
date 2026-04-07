@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
@@ -33,7 +35,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.DataProvider;
@@ -42,6 +43,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
@@ -70,7 +72,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 	private final String EXPENSE_ID = "expenseID";
 	private final String EXPENSE_EDIT_ROUTE_TEMPLATE = "expenses-approval/%s/edit";
-
+	private static final Logger logger = LoggerFactory.getLogger(ExpensesAprovalView.class);
 	private final Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
 
 	private ComboBox<Study> study;
@@ -107,9 +109,8 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 	public ExpensesAprovalView(ExpenseRequestService expenseRequestService,
 			ExpenseRequestTypeService expenseRequestTypeService, StudyService studyService,
-			SurveyorService surveyorService, BudgetService budgetService,
-			JournalEntryService journalEntryService, ExpenseTransferFileService expenseTransferFileService,
-			ExpenseReportFileService expenseReportFileService) {
+			SurveyorService surveyorService, BudgetService budgetService, JournalEntryService journalEntryService,
+			ExpenseTransferFileService expenseTransferFileService, ExpenseReportFileService expenseReportFileService) {
 		this.expenseRequestService = expenseRequestService;
 		this.expenseRequestTypeService = expenseRequestTypeService;
 		this.studyService = studyService;
@@ -204,8 +205,11 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 						"Error updating the data. Somebody else has updated the record while you were making changes.");
 				n.setPosition(Notification.Position.MIDDLE);
 				n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				logger.warn("error al aprobar la solicitud " + exception.getMessage());
+				exception.printStackTrace();
 			} catch (ValidationException validationException) {
 				Notification.show("Failed to update the data. Check again that all values are valid");
+				validationException.printStackTrace();
 			}
 		});
 
@@ -253,7 +257,10 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 				Notification.show("Solicitud de gasto aprobada.");
 				UI.getCurrent().navigate(ExpensesAprovalView.class);
 			} catch (ObjectOptimisticLockingFailureException | ValidationException exception) {
-				Notification.show("Error al aprobar la solicitud.").addThemeVariants(NotificationVariant.LUMO_ERROR);
+				Notification.show("Error al aprobar la solicitud." + exception.getMessage())
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				logger.warn("error al aprobar la solicitud " + exception.getMessage());
+				exception.printStackTrace();
 			}
 		});
 
@@ -463,12 +470,14 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
-		formLayout.add(study, budgetEntry, surveyor, surveyorBalance, requestDate, aprovalDate, amount, concept, obs);
-		editorDiv.add(formLayout);
 		Button viewSurveyorMovements = new Button("Ver movimientos encuestador");
 		viewSurveyorMovements.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		viewSurveyorMovements.addClickListener(e -> showSurveyorJournalEntriesDialog());
 		editorDiv.add(viewSurveyorMovements);
+		formLayout.add(study, budgetEntry, surveyor, surveyorBalance, viewSurveyorMovements, requestDate, aprovalDate,
+				amount, concept, obs);
+		editorDiv.add(formLayout);
+
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
 		editorLayoutDiv.setVisible(false);
@@ -597,6 +606,7 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 			} catch (IOException e) {
 				Notification.show("Error al generar el archivo Excel", 3000, Notification.Position.MIDDLE)
 						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				logger.warn("error al aprobar la solicitud " + e.getMessage());
 				return new ByteArrayInputStream(new byte[0]);
 			}
 		});
