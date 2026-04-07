@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -40,8 +41,6 @@ public class AlchemerAnswerRetriever {
 	private final TaskRepository taskRepository;
 	private final AlchemerAnswerRepository alchemerAnswerRepository;
 	private final RestTemplate restTemplate;
-	private final Executor alchemerExecutor;
-	private final TaskScheduler alchemerTaskScheduler;
 
 	@Value("${alchemer.api.token}")
 	private String apiToken;
@@ -49,21 +48,14 @@ public class AlchemerAnswerRetriever {
 	@Value("${alchemer.api.token.secret}")
 	private String apiTokenSecret;
 
-	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository,
-			@Qualifier("alchemerExecutor") Executor alchemerExecutor,
-			@Qualifier("alchemerTaskScheduler") TaskScheduler alchemerTaskScheduler) {
+	public AlchemerAnswerRetriever(TaskRepository taskRepository, AlchemerAnswerRepository alchemerAnswerRepository) {
 		this.taskRepository = taskRepository;
 		this.alchemerAnswerRepository = alchemerAnswerRepository;
 		this.restTemplate = new RestTemplate();
-		this.alchemerExecutor = alchemerExecutor;
-		this.alchemerTaskScheduler = alchemerTaskScheduler;
+
 	}
 
-	@PostConstruct
-	public void scheduleRetrieveAlchemerAnswers() {
-		alchemerTaskScheduler.schedule(this::retrieveAlchemerAnswers, new CronTrigger("0 */1 * * * *"));
-	}
-
+	@Scheduled(cron = "0 */2 * * * *")
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));
@@ -73,9 +65,7 @@ public class AlchemerAnswerRetriever {
 		if (pendingTask.isPresent()) {
 			pendingTask.get().getId();
 			LOGGER.info("Found  pending task. ID: " + pendingTask.get().getId());
-
-			pendingTask.ifPresent(task -> CompletableFuture.runAsync(() -> processTask(task), alchemerExecutor));
-
+			processTask(pendingTask.get());
 			LOGGER.info("Alchemer Answer Retriever task finished: " + pendingTask.get().getId());
 
 		}
