@@ -1,5 +1,8 @@
 package uy.com.bay.utiles.views.expenses;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,11 +18,13 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -28,6 +33,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.DataProvider;
@@ -42,14 +48,20 @@ import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetService;
+import uy.com.bay.utiles.services.ExcelReportGenerator;
+import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
+import uy.com.bay.utiles.services.ExpenseTransferFileService;
+import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
+import uy.com.bay.utiles.views.surveyors.JournalEntryGrid;
 
 @Route("expenses-approval/:expenseID?/:action?(edit)")
 @PageTitle("Aprobar Solicitudes de Gasto")
@@ -85,6 +97,9 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 	private final StudyService studyService;
 	private final SurveyorService surveyorService;
 	private final BudgetService budgetService;
+	private final JournalEntryService journalEntryService;
+	private final ExpenseTransferFileService expenseTransferFileService;
+	private final ExpenseReportFileService expenseReportFileService;
 
 	private Div editorLayoutDiv;
 
@@ -92,12 +107,17 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 	public ExpensesAprovalView(ExpenseRequestService expenseRequestService,
 			ExpenseRequestTypeService expenseRequestTypeService, StudyService studyService,
-			SurveyorService surveyorService, BudgetService budgetService) {
+			SurveyorService surveyorService, BudgetService budgetService,
+			JournalEntryService journalEntryService, ExpenseTransferFileService expenseTransferFileService,
+			ExpenseReportFileService expenseReportFileService) {
 		this.expenseRequestService = expenseRequestService;
 		this.expenseRequestTypeService = expenseRequestTypeService;
 		this.studyService = studyService;
 		this.surveyorService = surveyorService;
 		this.budgetService = budgetService;
+		this.journalEntryService = journalEntryService;
+		this.expenseTransferFileService = expenseTransferFileService;
+		this.expenseReportFileService = expenseReportFileService;
 		this.filters = new Filters();
 
 		addClassName("expenses-aproval-view");
@@ -428,6 +448,12 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		surveyor = new ComboBox<>("Encuestador");
 		surveyor.setItems(surveyorService.listAll());
 		surveyor.setItemLabelGenerator(s -> s == null ? "" : s.getName());
+		TextField surveyorBalance = new TextField("Saldo encuestador");
+		surveyorBalance.setReadOnly(true);
+		surveyor.addValueChangeListener(event -> {
+			Surveyor selected = event.getValue();
+			surveyorBalance.setValue(selected != null ? String.format("%.2f", selected.getBalance()) : "");
+		});
 		requestDate = new DatePicker("Fecha solicitud");
 		requestDate.setReadOnly(true);
 		aprovalDate = new DatePicker("Fecha aprobación");
@@ -437,8 +463,12 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
-		formLayout.add(study, budgetEntry, surveyor, requestDate, aprovalDate, amount, concept, obs);
+		formLayout.add(study, budgetEntry, surveyor, surveyorBalance, requestDate, aprovalDate, amount, concept, obs);
 		editorDiv.add(formLayout);
+		Button viewSurveyorMovements = new Button("Ver movimientos encuestador");
+		viewSurveyorMovements.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+		viewSurveyorMovements.addClickListener(e -> showSurveyorJournalEntriesDialog());
+		editorDiv.add(viewSurveyorMovements);
 		createButtonLayout(editorLayoutDiv);
 		splitLayout.addToSecondary(editorLayoutDiv);
 		editorLayoutDiv.setVisible(false);
@@ -525,6 +555,51 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 
 			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 		};
+	}
+
+	private void showSurveyorJournalEntriesDialog() {
+		Surveyor selected = surveyor.getValue();
+		if (selected == null) {
+			Notification.show("No hay encuestador seleccionado.");
+			return;
+		}
+		Dialog dialog = new Dialog();
+		dialog.setCloseOnEsc(true);
+		dialog.setCloseOnOutsideClick(true);
+		dialog.setWidth("80%");
+		dialog.setHeaderTitle("Movimientos de Gasto");
+
+		List<JournalEntry> journalEntries = journalEntryService.findBySurveyor(selected);
+		JournalEntryGrid journalEntryGrid = new JournalEntryGrid(expenseTransferFileService, expenseReportFileService);
+		journalEntryGrid.setJournalEntries(journalEntries);
+
+		dialog.add(journalEntryGrid);
+
+		Button closeButton = new Button("Cerrar", e -> dialog.close());
+		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		Button exportButton = new Button("Exportar");
+		exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		Anchor downloadLink = new Anchor(createSurveyorExcelStreamResource(journalEntries), "");
+		downloadLink.getElement().setAttribute("download", true);
+		downloadLink.add(exportButton);
+
+		dialog.getFooter().add(downloadLink, closeButton);
+
+		dialog.open();
+	}
+
+	private StreamResource createSurveyorExcelStreamResource(List<JournalEntry> journalEntries) {
+		return new StreamResource("movimientos_encuestador.xlsx", () -> {
+			try {
+				ByteArrayOutputStream excelOutput = ExcelReportGenerator.generateExcel(journalEntries);
+				return new ByteArrayInputStream(excelOutput.toByteArray());
+			} catch (IOException e) {
+				Notification.show("Error al generar el archivo Excel", 3000, Notification.Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				return new ByteArrayInputStream(new byte[0]);
+			}
+		});
 	}
 
 	private static class Filters {
