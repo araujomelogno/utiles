@@ -42,6 +42,7 @@ public class BudgetService {
 
 	@Transactional
 	public void delete(Long id) {
+		budgetEntryRepository.deleteAllByBudgetId(id);
 		repository.deleteById(id);
 	}
 
