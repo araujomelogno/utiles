@@ -15,7 +15,7 @@ public interface BudgetEntryRepository extends JpaRepository<BudgetEntry, Long> 
 	@Query("SELECT be FROM BudgetEntry be LEFT JOIN FETCH be.extras LEFT JOIN FETCH be.fieldworks LEFT JOIN FETCH be.expenseRequests WHERE be.id = :id")
 	Optional<BudgetEntry> findByIdWithExtras(@Param("id") Long id);
 
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Query("DELETE FROM BudgetEntry be WHERE be.budget.id = :budgetId")
 	void deleteAllByBudgetId(@Param("budgetId") Long budgetId);
 }

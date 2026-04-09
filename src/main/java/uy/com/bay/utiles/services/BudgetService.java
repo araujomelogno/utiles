@@ -43,12 +43,7 @@ public class BudgetService {
 	@Transactional
 	public void delete(Long id) {
 		budgetEntryRepository.deleteAllByBudgetId(id);
-		repository.findById(id).ifPresent(budget -> {
-			if (budget.getStudy() != null) {
-				budget.getStudy().setBudget(null);
-			}
-			repository.delete(budget);
-		});
+		repository.deleteByIdBulk(id);
 	}
 
 	@Transactional(readOnly = true)
