@@ -23,21 +23,22 @@ public class OdooProjectSyncTask {
 		this.proyectoService = proyectoService;
 	}
 
+	 
 	// @Scheduled(cron = "0 0 * * * ?") // Runs every hour at the beginning of the
 	// hour
 	// For testing, you might use a more frequent cron like "*/30 * * * * ?" (every
 	// 30 seconds)
-	@Scheduled(cron = "0 */10 * * * *")
+	@Scheduled(cron = "0 */20 * * * *")
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
 
 		List<Map<String, Object>> odooProjects = odooService.getOdooProjects();
 		odooProjects.addAll(odooService.getOdooLeads());
+		odooProjects.addAll(odooService.getOdooAnalyticAccounts());
 		if (odooProjects.isEmpty()) {
 			System.out.println("No projects fetched from Odoo. Sync task finished.");
 			return;
 		}
-
 
 		List<Study> existingProyectos = proyectoService.findAll();
 		Set<String> existingOdooNames = existingProyectos.stream().map(Study::getName)

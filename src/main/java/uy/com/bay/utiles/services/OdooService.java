@@ -189,4 +189,56 @@ public class OdooService {
 		return Collections.emptyList(); // Return empty list in case of any error
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> getOdooAnalyticAccounts() {
+		if (objectClient == null) {
+			logger.error("Odoo object client not initialized. Cannot fetch analytic accounts.");
+			return Collections.emptyList();
+		}
+		try {
+			Integer uid = authenticate();
+			if (uid == null) {
+				logger.error("Cannot fetch analytic accounts: Authentication failed.");
+				return Collections.emptyList();
+			}
+
+			List<String> fieldsToFetch = Arrays.asList("id", "name");
+			List<Object> domain = Collections.emptyList(); // Fetch all analytic accounts
+
+			HashMap<String, Object> keywordArgs = new HashMap<>();
+			keywordArgs.put("fields", fieldsToFetch);
+
+			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(),
+					"account.analytic.account", // Odoo model name for analytic accounts
+					"search_read", // Method to call
+					Collections.singletonList(domain), keywordArgs };
+
+			logger.info("Executing Odoo search_read on 'account.analytic.account' with fields: {}", fieldsToFetch);
+			Object[] accountsRaw = (Object[]) objectClient.execute("execute_kw", params);
+
+			List<Map<String, Object>> accountsList = new ArrayList<>();
+			for (Object accountObj : accountsRaw) {
+				if (accountObj instanceof Map) {
+					accountsList.add((Map<String, Object>) accountObj);
+				} else {
+					logger.warn("Received an object that is not a Map from Odoo: {}", accountObj);
+				}
+			}
+			logger.info("Successfully fetched {} analytic accounts from Odoo.", accountsList.size());
+
+			return accountsList;
+
+		} catch (XmlRpcException e) {
+			logger.error(
+					"XmlRpcException while fetching analytic accounts from Odoo: {}. Check Odoo XML-RPC endpoint and network.",
+					e.getMessage(), e);
+		} catch (ClassCastException e) {
+			logger.error("ClassCastException while processing Odoo response. Unexpected data structure: {}",
+					e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected exception while fetching analytic accounts from Odoo: {}", e.getMessage(), e);
+		}
+		return Collections.emptyList(); // Return empty list in case of any error
+	}
+
 }
