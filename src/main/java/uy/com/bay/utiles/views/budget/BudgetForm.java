@@ -32,10 +32,14 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.shared.Registration;
 
+import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.ExpenseStatus;
+import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.entities.Extra;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
@@ -119,7 +123,27 @@ public class BudgetForm extends VerticalLayout {
 		HorizontalLayout actions = new HorizontalLayout(saveButton);
 		actions.setPadding(false);
 
-		Grid.Column<BudgetEntry> spentColumn = entriesGrid.addColumn(BudgetEntry::getSpent).setHeader("Gastado");
+		Grid.Column<BudgetEntry> spentColumn = entriesGrid.addColumn(entry -> {
+			Double totalSpent = 0.0;
+			for (Extra extra : entry.getExtras()) {
+				if (extra.getQuantity() != null && extra.getUnitPrice() != null) {
+					totalSpent += extra.getQuantity() * extra.getUnitPrice();
+				}
+			}
+			for (ExpenseRequest expenseRequest : entry.getExpenseRequests()) {
+				if (ExpenseStatus.TRANSFERIDO.equals(expenseRequest.getExpenseStatus())
+						&& expenseRequest.getExpenseTransfer() != null
+						&& expenseRequest.getExpenseTransfer().getAmount() != null) {
+					totalSpent += expenseRequest.getExpenseTransfer().getAmount();
+				}
+			}
+			for (Fieldwork fieldwork : entry.getFieldworks()) {
+				if (fieldwork.getUnitCost() != null && fieldwork.getCompleted() != null) {
+					totalSpent += fieldwork.getUnitCost().doubleValue() * fieldwork.getCompleted();
+				}
+			}
+			return totalSpent;
+		}).setHeader("Gastado");
 
 		Grid.Column<BudgetEntry> editorColumn = entriesGrid.addComponentColumn(entry -> {
 			HorizontalLayout hl = new HorizontalLayout();
