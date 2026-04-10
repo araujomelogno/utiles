@@ -55,6 +55,9 @@ public class BudgetService {
 
 	@Transactional
 	public void delete(Long id) {
+		budgetEntryRepository.detachExtrasByBudgetId(id);
+		budgetEntryRepository.detachExpenseRequestsByBudgetId(id);
+		budgetEntryRepository.detachFieldworksByBudgetId(id);
 		budgetEntryRepository.deleteAllByBudgetId(id);
 		repository.deleteByIdBulk(id);
 	}

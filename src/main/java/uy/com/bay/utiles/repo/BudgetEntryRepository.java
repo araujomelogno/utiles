@@ -16,6 +16,18 @@ public interface BudgetEntryRepository extends JpaRepository<BudgetEntry, Long> 
 	Optional<BudgetEntry> findByIdWithExtras(@Param("id") Long id);
 
 	@Modifying(clearAutomatically = true)
+	@Query("UPDATE Extra e SET e.budgetEntry = null WHERE e.budgetEntry.id IN (SELECT be.id FROM BudgetEntry be WHERE be.budget.id = :budgetId)")
+	void detachExtrasByBudgetId(@Param("budgetId") Long budgetId);
+
+	@Modifying(clearAutomatically = true)
+	@Query("UPDATE ExpenseRequest er SET er.budgetEntry = null WHERE er.budgetEntry.id IN (SELECT be.id FROM BudgetEntry be WHERE be.budget.id = :budgetId)")
+	void detachExpenseRequestsByBudgetId(@Param("budgetId") Long budgetId);
+
+	@Modifying(clearAutomatically = true)
+	@Query("UPDATE Fieldwork fw SET fw.budgetEntry = null WHERE fw.budgetEntry.id IN (SELECT be.id FROM BudgetEntry be WHERE be.budget.id = :budgetId)")
+	void detachFieldworksByBudgetId(@Param("budgetId") Long budgetId);
+
+	@Modifying(clearAutomatically = true)
 	@Query("DELETE FROM BudgetEntry be WHERE be.budget.id = :budgetId")
 	void deleteAllByBudgetId(@Param("budgetId") Long budgetId);
 }
