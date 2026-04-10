@@ -140,7 +140,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 				.setHeader("Aprobado:").setAutoWidth(true).setSortable(true).setSortProperty("aprovalDate");
 		Grid.Column<ExpenseRequest> transferDateColumn = grid
 				.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> er.getTransferDate() != null
-						? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getTransferDate())
+						? er.getTransferDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 						: ""))
 				.setHeader("Transferido").setAutoWidth(true).setSortable(true).setSortProperty("transferDate");
 		Grid.Column<ExpenseRequest> amountColumn = grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto")
