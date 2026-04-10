@@ -113,6 +113,7 @@ public class BudgetForm extends VerticalLayout {
 					}
 				}
 				budgetEntry.setSpent(totalFielwdorkCost);
+				//aca hay que guardar el buget entry.. con un budget entry service!!! 
 			}
 
 		}
