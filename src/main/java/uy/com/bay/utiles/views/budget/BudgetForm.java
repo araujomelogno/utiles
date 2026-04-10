@@ -88,6 +88,7 @@ public class BudgetForm extends VerticalLayout {
 			editor.editItem(newEntry);
 			updateTotal();
 		});
+
 		refresh.addClickListener(click -> refreshSpent());
 	}
 
@@ -109,6 +110,7 @@ public class BudgetForm extends VerticalLayout {
 				}
 			}
 			entry.setSpent(totalFielwdorkCost);
+
 		}
 		entriesGrid.setItems(binder.getBean().getEntries());
 		updateTotal();
