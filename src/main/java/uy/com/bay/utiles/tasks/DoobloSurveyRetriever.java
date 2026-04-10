@@ -66,7 +66,7 @@ public class DoobloSurveyRetriever {
 		this.restTemplate = new RestTemplate();
 	}
 
-	@Scheduled(cron = "0 0 0 * * *")
+	//@Scheduled(cron = "0 0 0 * * *")
 	public void retrieveDoobloSurveys() {
 		LOGGER.info("Starting Dooblo Survey Retriever task...");
 		try {

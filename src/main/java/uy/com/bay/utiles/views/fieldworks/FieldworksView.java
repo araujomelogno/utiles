@@ -109,7 +109,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
-		
 
 		grid.setItems(query -> {
 			Specification<Fieldwork> spec = (root, q, cb) -> {
@@ -157,13 +156,20 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				}
 
 				binder.writeBean(this.fieldwork);
+
+				if (this.fieldwork.getInitPlannedDate() == null) {
+					Notification.show("Debe seleccionar fechaplanificada de inicio .", 3000,
+							Notification.Position.BOTTOM_CENTER);
+					return;
+				}
+
 				if (this.fieldwork.getBudgetEntry() == null) {
-					Notification.show("Debe seleccionar un Presupuesto.", 3000, Notification.Position.BOTTOM_START);
+					Notification.show("Debe seleccionar un Presupuesto.", 3000, Notification.Position.BOTTOM_CENTER);
 					return;
 				}
 
 				if (this.fieldwork.getType() == null) {
-					Notification.show("Debe seleccionar el tipo campo.", 3000, Notification.Position.BOTTOM_START);
+					Notification.show("Debe seleccionar el tipo campo.", 3000, Notification.Position.BOTTOM_CENTER);
 					return;
 				}
 				fieldworkService.save(this.fieldwork);

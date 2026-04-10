@@ -17,13 +17,13 @@ import uy.com.bay.utiles.data.repository.AlchemerContactRepository;
 import uy.com.bay.utiles.dto.SurveyResponseDTO;
 
 @Service
-public class SurveyResponseHelper {
+public class AlchemerSurveyResponseHelper {
 
     private final AlchemerContactRepository contactRepository;
     private final AlchemerAnswerRepository answerRepository;
     private final ObjectMapper objectMapper;
 
-    public SurveyResponseHelper(AlchemerContactRepository contactRepository,
+    public AlchemerSurveyResponseHelper(AlchemerContactRepository contactRepository,
                                 AlchemerAnswerRepository answerRepository,
                                 ObjectMapper objectMapper) {
         this.contactRepository = contactRepository;

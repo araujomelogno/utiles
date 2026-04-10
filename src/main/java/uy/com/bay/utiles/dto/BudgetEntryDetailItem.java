@@ -18,6 +18,9 @@ public class BudgetEntryDetailItem {
 		this.detalle = detalle;
 		this.cantidad = cantidad != null ? new BigDecimal(String.valueOf(cantidad)) : BigDecimal.ZERO;
 		this.costoUnitario = costoUnitario != null ? new BigDecimal(String.valueOf(costoUnitario)) : BigDecimal.ZERO;
+		this.surveyor = surveyor;
+		this.date = date;
+		
 	}
 
 	public String getTipo() {

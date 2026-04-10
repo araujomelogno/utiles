@@ -31,6 +31,7 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		add(layout);
 
 		Grid<BudgetEntryDetailItem> grid = new Grid<>();
+
 		List<BudgetEntryDetailItem> items = new ArrayList<>();
 
 		// Process Extras
@@ -66,21 +67,21 @@ public class BudgetEntryDetailsDialog extends Dialog {
 
 		GridListDataView<BudgetEntryDetailItem> dataView = grid.setItems(items);
 
-		grid.addColumn(BudgetEntryDetailItem::getTipo).setHeader("Tipo");
-		grid.addColumn(BudgetEntryDetailItem::getDate).setHeader("Fecha");
-		grid.addColumn(BudgetEntryDetailItem::getSurveyor).setHeader("Encuestador");
-		grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle");
+		grid.addColumn(BudgetEntryDetailItem::getTipo).setHeader("Tipo").setResizable(true);
+		grid.addColumn(BudgetEntryDetailItem::getDate).setHeader("Fecha").setResizable(true);
+		grid.addColumn(BudgetEntryDetailItem::getSurveyor).setHeader("Encuestador").setResizable(true);
+		grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle").setResizable(true);
 		grid.addColumn(
 				new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, NumberFormat.getIntegerInstance(Locale.US)))
-				.setHeader("Cantidad");
+				.setHeader("Cantidad").setResizable(true);
 		Grid.Column<BudgetEntryDetailItem> ucolumn = grid
 				.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCostoUnitario,
 						NumberFormat.getCurrencyInstance(Locale.US)))
-				.setHeader("Costo U.");
+				.setHeader("Costo U.").setResizable(true);
 
 		Grid.Column<BudgetEntryDetailItem> totalColumn = grid.addColumn(
 				new NumberRenderer<>(BudgetEntryDetailItem::getTotal, NumberFormat.getCurrencyInstance(Locale.US)))
-				.setHeader("Total");
+				.setHeader("Total").setResizable(true);
 
 		// Footer for Total sum
 		var footerRow = grid.appendFooterRow();
