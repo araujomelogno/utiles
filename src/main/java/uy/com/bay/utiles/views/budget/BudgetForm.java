@@ -29,13 +29,13 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.shared.Registration;
 
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.entities.BudgetEntry;
@@ -59,15 +59,17 @@ public class BudgetForm extends VerticalLayout {
 	private final Binder<Budget> binder = new BeanValidationBinder<>(Budget.class);
 	private final BudgetConceptService budgetConceptService;
 	private final BudgetService budgetService;
+	private final FieldworkService fieldworkService;
 	private final AlchemerSurveyResponseHelper alchemerSurveyResponseHelper;
 	private final Editor<BudgetEntry> editor;
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
 
-	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService,
-			BudgetService budgetService, AlchemerSurveyResponseHelper alchemerSurveyResponseHelper) {
+	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService,
+			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
+		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseHelper = alchemerSurveyResponseHelper;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
@@ -96,20 +98,25 @@ public class BudgetForm extends VerticalLayout {
 			return;
 		}
 		for (BudgetEntry budgetEntry : binder.getBean().getEntries()) {
-			Double totalFielwdorkCost = 0.0;
+
 			if (budgetEntry.getFieldworks() != null) {
+				Double totalFielwdorkCost = 0.0;
 				for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
 					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
 						Integer completedSurveys = alchemerSurveyResponseHelper
 								.getCompletedSurveys(fieldwork.getAlchemerId());
+						fieldwork.setCompleted(completedSurveys);
+						fieldworkService.save(fieldwork);
 						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
 							totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
 						}
 					}
 				}
+				budgetEntry.setSpent(totalFielwdorkCost);
 			}
-			budgetEntry.setSpent(totalFielwdorkCost);
+
 		}
+
 		entriesGrid.setItems(binder.getBean().getEntries());
 		updateTotal();
 	}
@@ -139,14 +146,16 @@ public class BudgetForm extends VerticalLayout {
 		conceptComboBox.setItemLabelGenerator(BudgetConcept::getName);
 		entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
 		entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
-				.setHeader("Concepto").setEditorComponent(conceptComboBox);
-		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Costo unitario").setEditorComponent(ammountField);
+				.setHeader("Concepto").setEditorComponent(conceptComboBox).setResizable(true);
+		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Costo unitario").setEditorComponent(ammountField)
+				.setResizable(true);
 		IntegerField quantityField = new IntegerField();
 		quantityField.setWidthFull();
 		entryBinder.forField(quantityField).bind(BudgetEntry::getQuantity, BudgetEntry::setQuantity);
 		Grid.Column<BudgetEntry> quantityColumn = entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad")
-				.setEditorComponent(quantityField);
-		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total");
+				.setResizable(true).setEditorComponent(quantityField);
+		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total")
+				.setResizable(true);
 
 		Button saveButton = new Button("Guardar", e -> editor.save());
 		HorizontalLayout actions = new HorizontalLayout(saveButton);
@@ -167,12 +176,12 @@ public class BudgetForm extends VerticalLayout {
 				}
 			}
 			for (Fieldwork fieldwork : entry.getFieldworks()) {
-				if (fieldwork.getUnitCost() != null && fieldwork.getCompleted() != null) {
-					totalSpent += fieldwork.getUnitCost().doubleValue() * fieldwork.getCompleted();
+				if (fieldwork.getCompleted() != null) {
+					totalSpent += entry.getAmmount() * fieldwork.getCompleted();
 				}
 			}
 			return totalSpent;
-		}).setHeader("Gastado");
+		}).setHeader("Gastado").setResizable(true);
 
 		Grid.Column<BudgetEntry> editorColumn = entriesGrid.addComponentColumn(entry -> {
 			HorizontalLayout hl = new HorizontalLayout();
@@ -199,7 +208,7 @@ public class BudgetForm extends VerticalLayout {
 			hl.add(editButton);
 
 			return hl;
-		});
+		}).setResizable(true);
 		editorColumn.setEditorComponent(actions);
 
 		entriesGrid.addComponentColumn(entry -> {
@@ -287,7 +296,10 @@ public class BudgetForm extends VerticalLayout {
 		}
 		if (totalAmountLabel != null) {
 			NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+			currencyFormat.setMinimumFractionDigits(0);
+			currencyFormat.setMaximumFractionDigits(0);
 			totalAmountLabel.setText(currencyFormat.format(sum));
+			
 			totalSpentLabel.setText(currencyFormat.format(spentSum));
 		}
 	}

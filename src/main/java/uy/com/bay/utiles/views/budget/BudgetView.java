@@ -16,6 +16,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
@@ -33,14 +34,15 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 	private final BudgetForm form;
 	private final BudgetService budgetService;
 
-	public BudgetView(BudgetService budgetService, StudyService studyService,
-			BudgetConceptService budgetConceptService, AlchemerSurveyResponseHelper alchemerSurveyResponseHelper) {
+	public BudgetView(BudgetService budgetService, StudyService studyService, BudgetConceptService budgetConceptService,
+			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService) {
 		this.budgetService = budgetService;
 		addClassName("budget-view");
 		setSizeFull();
 		configureGrid();
 
-		form = new BudgetForm(studyService, budgetConceptService, budgetService, alchemerSurveyResponseHelper);
+		form = new BudgetForm(studyService, budgetConceptService, budgetService, alchemerSurveyResponseHelper,
+				fieldworkService);
 		form.addSaveListener(this::saveBudget);
 		form.addDeleteListener(this::deleteBudget);
 		form.addCloseListener(e -> closeEditor());
@@ -107,7 +109,7 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 	private void closeEditor() {
 		form.setBudget(null);
 		form.setVisible(false);
-		
+
 		removeClassName("editing");
 	}
 

@@ -49,7 +49,7 @@ public class BudgetEntryDetailsDialog extends Dialog {
 			for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
 				items.add(new BudgetEntryDetailItem("Campo",
 						fieldwork.getType() != null ? fieldwork.getType().toString() : "", fieldwork.getCompleted(),
-						fieldwork.getUnitCost(), "N/A",
+						budgetEntry.getAmmount(), "N/A",
 						fieldwork.getEndPlannedDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
 			}
 		}
