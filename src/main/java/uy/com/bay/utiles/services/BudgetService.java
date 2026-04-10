@@ -3,6 +3,7 @@ package uy.com.bay.utiles.services;
 import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,19 @@ public class BudgetService {
 
 	@Transactional(readOnly = true)
 	public Optional<Budget> get(Long id) {
-		return repository.findByIdWithEntries(id);
+		Optional<Budget> budget = repository.findByIdWithEntries(id);
+		budget.ifPresent(this::initializeEntryCollections);
+		return budget;
+	}
+
+	private void initializeEntryCollections(Budget budget) {
+		if (budget.getEntries() != null) {
+			for (BudgetEntry entry : budget.getEntries()) {
+				Hibernate.initialize(entry.getExtras());
+				Hibernate.initialize(entry.getExpenseRequests());
+				Hibernate.initialize(entry.getFieldworks());
+			}
+		}
 	}
 
 	@Transactional
@@ -67,7 +80,9 @@ public class BudgetService {
 
 	@Transactional(readOnly = true)
 	public Optional<Budget> findByIdWithEntries(Long id) {
-		return repository.findByIdWithEntries(id);
+		Optional<Budget> budget = repository.findByIdWithEntries(id);
+		budget.ifPresent(this::initializeEntryCollections);
+		return budget;
 	}
 
 	@Transactional(readOnly = true)

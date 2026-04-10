@@ -93,7 +93,11 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 		if (budget == null) {
 			closeEditor();
 		} else {
-			form.setBudget(budget);
+			Budget toEdit = budget;
+			if (budget.getId() != null) {
+				toEdit = budgetService.get(budget.getId()).orElse(budget);
+			}
+			form.setBudget(toEdit);
 			form.setVisible(true);
 			addClassName("editing");
 		}
