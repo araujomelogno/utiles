@@ -40,6 +40,7 @@ import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
+import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
@@ -51,20 +52,23 @@ public class BudgetForm extends VerticalLayout {
 	private final ComboBox<Study> study = new ComboBox<>("Estudio");
 	private final Grid<BudgetEntry> entriesGrid = new Grid<>(BudgetEntry.class);
 	private final Button addEntryButton = new Button("Agregar concepto");
+	private final Button refresh = new Button("Actualizar campo");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
 	private final Button close = new Button("Cerrar");
 	private final Binder<Budget> binder = new BeanValidationBinder<>(Budget.class);
 	private final BudgetConceptService budgetConceptService;
 	private final BudgetService budgetService;
+	private final AlchemerSurveyResponseHelper alchemerSurveyResponseHelper;
 	private final Editor<BudgetEntry> editor;
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService,
-			BudgetService budgetService) {
+			BudgetService budgetService, AlchemerSurveyResponseHelper alchemerSurveyResponseHelper) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
+		this.alchemerSurveyResponseHelper = alchemerSurveyResponseHelper;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
 		study.setItems(studyService.listAll());
@@ -72,7 +76,8 @@ public class BudgetForm extends VerticalLayout {
 
 		editor = entriesGrid.getEditor();
 		configureGrid();
-		add(createFormLayout(), entriesGrid, addEntryButton, createButtonsLayout());
+		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh);
+		add(createFormLayout(), entriesGrid, entryActions, createButtonsLayout());
 		addEntryButton.addClickListener(click -> {
 			BudgetEntry newEntry = new BudgetEntry();
 			if (binder.getBean().getEntries() == null) {
@@ -83,6 +88,30 @@ public class BudgetForm extends VerticalLayout {
 			editor.editItem(newEntry);
 			updateTotal();
 		});
+		refresh.addClickListener(click -> refreshSpentFromAlchemer());
+	}
+
+	private void refreshSpentFromAlchemer() {
+		if (binder.getBean() == null || binder.getBean().getEntries() == null) {
+			return;
+		}
+		for (BudgetEntry budgetEntry : binder.getBean().getEntries()) {
+			Double totalFielwdorkCost = 0.0;
+			if (budgetEntry.getFieldworks() != null) {
+				for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
+					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
+						Integer completedSurveys = alchemerSurveyResponseHelper
+								.getCompletedSurveys(fieldwork.getAlchemerId());
+						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
+							totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
+						}
+					}
+				}
+			}
+			budgetEntry.setSpent(totalFielwdorkCost);
+		}
+		entriesGrid.setItems(binder.getBean().getEntries());
+		updateTotal();
 	}
 
 	private Component createFormLayout() {
