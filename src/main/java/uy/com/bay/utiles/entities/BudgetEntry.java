@@ -11,6 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import uy.com.bay.utiles.data.AbstractEntity;
 import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Fieldwork;
 
 @Entity
@@ -18,7 +19,6 @@ public class BudgetEntry extends AbstractEntity {
 
 	private Double ammount;
 	private Integer quantity;
-	private Double spent = 0.0;
 	private LocalDate created;
 
 	public BudgetEntry() {
@@ -70,13 +70,31 @@ public class BudgetEntry extends AbstractEntity {
 	}
 
 	public Double getSpent() {
-		if (spent != null)
-			return spent;
-		return 0d;
-	}
-
-	public void setSpent(Double spent) {
-		this.spent = spent;
+		double totalSpent = 0.0;
+		if (extras != null) {
+			for (Extra extra : extras) {
+				if (extra.getQuantity() != null && extra.getUnitPrice() != null) {
+					totalSpent += extra.getQuantity() * extra.getUnitPrice();
+				}
+			}
+		}
+		if (expenseRequests != null) {
+			for (ExpenseRequest expenseRequest : expenseRequests) {
+				if (ExpenseStatus.TRANSFERIDO.equals(expenseRequest.getExpenseStatus())
+						&& expenseRequest.getExpenseTransfer() != null
+						&& expenseRequest.getExpenseTransfer().getAmount() != null) {
+					totalSpent += expenseRequest.getExpenseTransfer().getAmount();
+				}
+			}
+		}
+		if (fieldworks != null) {
+			for (Fieldwork fieldwork : fieldworks) {
+				if (fieldwork.getUnitCost() != null && fieldwork.getCompleted() != null) {
+					totalSpent += fieldwork.getUnitCost().doubleValue() * fieldwork.getCompleted();
+				}
+			}
+		}
+		return totalSpent;
 	}
 
 	public BudgetConcept getConcept() {
