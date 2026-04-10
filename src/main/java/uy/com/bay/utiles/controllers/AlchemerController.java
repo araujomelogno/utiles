@@ -149,7 +149,6 @@ public class AlchemerController {
 		if (response.getFieldwork() != null && response.getFieldwork().getBudgetEntry() != null
 				&& response.getFieldwork().getUnitCost() != null) {
 			BudgetEntry budgetEntry = response.getFieldwork().getBudgetEntry();
-			budgetEntry.setSpent(budgetEntry.getSpent() + response.getFieldwork().getUnitCost().doubleValue());
 			budgetEntryService.save(budgetEntry);
 
 		}

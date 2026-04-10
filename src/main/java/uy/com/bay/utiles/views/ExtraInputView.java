@@ -169,7 +169,7 @@ public class ExtraInputView extends VerticalLayout {
 							return;
 						}
 						BudgetEntry budgetEntry = extra.getBudgetEntry();
-						budgetEntry.setSpent(budgetEntry.getSpent() + extra.getAmount());
+
 						budgetEntryService.save(budgetEntry);
 						extraService.save(extra);
 						grid.getDataProvider().refreshAll();
@@ -190,7 +190,7 @@ public class ExtraInputView extends VerticalLayout {
 			deleteButton.addClickListener(e -> {
 				if (extra.getBudgetEntry() != null) {
 					BudgetEntry budgetEntry = extra.getBudgetEntry();
-					budgetEntry.setSpent(budgetEntry.getSpent() - extra.getAmount());
+
 					budgetEntry.getExtras().remove(extra);
 					budgetEntryService.save(budgetEntry);
 				}

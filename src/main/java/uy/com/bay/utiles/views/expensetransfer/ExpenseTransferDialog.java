@@ -65,7 +65,7 @@ public class ExpenseTransferDialog extends Dialog {
 
 		double totalAmount = selectedRequests.stream().mapToDouble(er -> er.getAmount() != null ? er.getAmount() : 0)
 				.sum();
-		
+
 		amount.setValue(totalAmount);
 		amount.setReadOnly(true);
 		obs = new TextArea("Observaciones");
@@ -153,7 +153,7 @@ public class ExpenseTransferDialog extends Dialog {
 				for (ExpenseRequest request : requestList) {
 					var budgetEntry = request.getBudgetEntry();
 					if (budgetEntry != null) {
-						budgetEntry.setSpent(budgetEntry.getSpent() + request.getAmount());
+
 						budgetEntryService.save(budgetEntry);
 					}
 				}

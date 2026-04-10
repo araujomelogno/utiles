@@ -165,7 +165,6 @@ public class DoobloSurveyRetriever {
 				// Se afecta elbudget si ya tiene asignado
 				if (fw != null && fw.getBudgetEntry() != null && fw.getUnitCost() != null) {
 					BudgetEntry budgetEntry = fw.getBudgetEntry();
-					budgetEntry.setSpent(budgetEntry.getSpent() + fw.getUnitCost().doubleValue());
 					budgetEntryService.save(budgetEntry);
 
 				}
