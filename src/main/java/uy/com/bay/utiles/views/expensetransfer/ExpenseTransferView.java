@@ -1,10 +1,19 @@
 package uy.com.bay.utiles.views.expensetransfer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,24 +26,16 @@ import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.QuerySortOrder;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.server.StreamResource;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.ExpenseRequest;
@@ -45,9 +46,9 @@ import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
-import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.ExpenseTransferService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
@@ -115,12 +116,13 @@ public class ExpenseTransferView extends VerticalLayout {
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Proyecto")
 				.setSortable(true).setKey("study.name");
-		Grid.Column<ExpenseRequest> requestDateColumn = grid.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> {
-			if (er.getRequestDate() != null) {
-				return new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate());
-			}
-			return "";
-		})).setHeader("Fecha Solicitud").setSortable(true).setKey("requestDate");
+		Grid.Column<ExpenseRequest> requestDateColumn = grid
+				.addColumn(new com.vaadin.flow.data.renderer.TextRenderer<>(er -> {
+					if (er.getRequestDate() != null) {
+						return new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getRequestDate());
+					}
+					return "";
+				})).setHeader("Fecha Solicitud").setSortable(true).setKey("requestDate");
 		grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
 				.addColumn(er -> er.getConcept() != null ? er.getConcept().getDescription() : "").setHeader("Concepto")
@@ -192,13 +194,14 @@ public class ExpenseTransferView extends VerticalLayout {
 		int rowNum = 1;
 		for (ExpenseRequest expenseRequest : expenseRequests) {
 			Row row = sheet.createRow(rowNum++);
-			row.createCell(0).setCellValue(
-					expenseRequest.getSurveyor() != null ? expenseRequest.getSurveyor().getName() : "");
+			row.createCell(0)
+					.setCellValue(expenseRequest.getSurveyor() != null ? expenseRequest.getSurveyor().getName() : "");
 			row.createCell(1)
 					.setCellValue(expenseRequest.getStudy() != null ? expenseRequest.getStudy().getName() : "");
-			row.createCell(2).setCellValue(expenseRequest.getRequestDate() != null
-					? new java.text.SimpleDateFormat("dd/MM/yyyy").format(expenseRequest.getRequestDate())
-					: "");
+			row.createCell(2)
+					.setCellValue(expenseRequest.getRequestDate() != null
+							? new java.text.SimpleDateFormat("dd/MM/yyyy").format(expenseRequest.getRequestDate())
+							: "");
 			row.createCell(3).setCellValue(expenseRequest.getAmount());
 			row.createCell(4).setCellValue(
 					expenseRequest.getConcept() != null ? expenseRequest.getConcept().getDescription() : "");
@@ -224,8 +227,7 @@ public class ExpenseTransferView extends VerticalLayout {
 		transferButton.setEnabled(false);
 		transferButton.addClickListener(e -> {
 			if (!grid.getSelectedItems().isEmpty()) {
-				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems(),
-						budgetEntryService);
+				ExpenseTransferDialog dialog = new ExpenseTransferDialog(grid.getSelectedItems(), budgetEntryService);
 				dialog.addListener(ExpenseTransferDialog.SaveEvent.class, this::saveTransfer);
 				dialog.open();
 			}
@@ -235,7 +237,7 @@ public class ExpenseTransferView extends VerticalLayout {
 	private void saveTransfer(ExpenseTransferDialog.SaveEvent event) {
 		ExpenseTransfer expenseTransfer = event.getExpenseTransfer();
 		List<ExpenseRequest> requestsToUpdate = new ArrayList<>(expenseTransfer.getExpenseRequests());
-		Date now = new Date();
+		LocalDate now = LocalDate.now();
 
 		expenseTransfer.setTransferDate(now);
 		expenseTransfer.setExpenseRequests(new HashSet<>());
@@ -261,7 +263,7 @@ public class ExpenseTransferView extends VerticalLayout {
 
 				Study requestStudy = requestToUpdate.getStudy();
 				if (requestStudy != null) {
-					studyService.get(requestStudy.getId()).ifPresent(s -> { 
+					studyService.get(requestStudy.getId()).ifPresent(s -> {
 						s.setTotalTransfered(s.getTotalTransfered() + requestToUpdate.getAmount());
 						studyService.save(s);
 					});
@@ -347,8 +349,8 @@ public class ExpenseTransferView extends VerticalLayout {
 					"%" + conceptFilter.getValue().toLowerCase() + "%"));
 		}
 		if (obsFilter != null && !obsFilter.isEmpty()) {
-			spec = spec.and(
-					(root, q, cb) -> cb.like(cb.lower(root.get("obs")), "%" + obsFilter.getValue().toLowerCase() + "%"));
+			spec = spec.and((root, q, cb) -> cb.like(cb.lower(root.get("obs")),
+					"%" + obsFilter.getValue().toLowerCase() + "%"));
 		}
 		return spec;
 	}

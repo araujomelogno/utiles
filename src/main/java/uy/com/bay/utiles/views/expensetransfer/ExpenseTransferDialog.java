@@ -123,8 +123,7 @@ public class ExpenseTransferDialog extends Dialog {
 				expenseTransfer.setSurveyor(firstSurveyor);
 				LocalDate localDate = transferDate.getValue();
 				if (localDate != null) {
-					Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-					expenseTransfer.setTransferDate(date);
+					expenseTransfer.setTransferDate(localDate);
 				}
 
 				List<ExpenseTransferFile> files = new ArrayList<>();

@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.data;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import jakarta.persistence.Entity;
@@ -24,7 +25,7 @@ public class ExpenseRequest extends AbstractEntity {
 
 	private Date requestDate;
 	private Date aprovalDate;
-	private Date transferDate;
+	private LocalDate transferDate;
 	private Double amount;
 
 	@ManyToOne
@@ -78,12 +79,12 @@ public class ExpenseRequest extends AbstractEntity {
 		this.aprovalDate = aprovalDate;
 	}
 
-	public Date getTransferDate() {
+	public LocalDate getTransferDate() {
 
 		return transferDate;
 	}
 
-	public void setTransferDate(Date transferDate) {
+	public void setTransferDate(LocalDate transferDate) {
 		this.transferDate = transferDate;
 	}
 

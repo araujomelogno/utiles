@@ -38,7 +38,7 @@ public class ExpenseTransferViewDialog extends Dialog {
 
 		FormLayout formLayout = new FormLayout();
 		DatePicker transferDate = new DatePicker("Fecha de Transferencia");
-		transferDate.setValue(new java.sql.Date(expenseTransfer.getTransferDate().getTime()).toLocalDate());
+		transferDate.setValue((expenseTransfer.getTransferDate()));
 		transferDate.setReadOnly(true);
 
 		NumberField amount = new NumberField("Monto");

@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views.gantt;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -14,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 
 import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.dto.BudgetEntryDetailItem;
 import uy.com.bay.utiles.entities.BudgetEntry;
@@ -36,7 +38,8 @@ public class BudgetEntryDetailsDialog extends Dialog {
 			for (Extra extra : budgetEntry.getExtras()) {
 				items.add(new BudgetEntryDetailItem("Extras",
 						extra.getConcept() != null ? extra.getConcept().getDescription() : "", extra.getQuantity(),
-						extra.getUnitPrice()));
+						extra.getUnitPrice(), extra.getSurveyor().getName(),
+						extra.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
 			}
 		}
 
@@ -45,22 +48,27 @@ public class BudgetEntryDetailsDialog extends Dialog {
 			for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
 				items.add(new BudgetEntryDetailItem("Campo",
 						fieldwork.getType() != null ? fieldwork.getType().toString() : "", fieldwork.getCompleted(),
-						fieldwork.getUnitCost()));
+						fieldwork.getUnitCost(), "N/A",
+						fieldwork.getEndPlannedDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
 			}
 		}
 
 		// Process ExpenseRequests
 		if (budgetEntry.getExpenseRequests() != null) {
 			for (ExpenseRequest expenseRequest : budgetEntry.getExpenseRequests()) {
-				items.add(new BudgetEntryDetailItem("Gastos",
-						expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "", 1,
-						expenseRequest.getAmount()));
+				if (expenseRequest.getExpenseStatus().equals(ExpenseStatus.TRANSFERIDO))
+					items.add(new BudgetEntryDetailItem("Gastos",
+							expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "", 1,
+							expenseRequest.getAmount(), expenseRequest.getSurveyor().getName(),
+							expenseRequest.getTransferDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
 			}
 		}
 
 		GridListDataView<BudgetEntryDetailItem> dataView = grid.setItems(items);
 
 		grid.addColumn(BudgetEntryDetailItem::getTipo).setHeader("Tipo");
+		grid.addColumn(BudgetEntryDetailItem::getDate).setHeader("Fecha");
+		grid.addColumn(BudgetEntryDetailItem::getSurveyor).setHeader("Encuestador");
 		grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle");
 		grid.addColumn(
 				new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, NumberFormat.getIntegerInstance(Locale.US)))
