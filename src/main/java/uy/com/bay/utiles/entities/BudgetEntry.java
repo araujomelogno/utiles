@@ -47,6 +47,9 @@ public class BudgetEntry extends AbstractEntity {
 	@Transient
 	private Double total;
 
+	@Transient
+	private Double spent;
+
 	public Double getTotal() {
 		if (ammount != null && quantity != null) {
 			return ammount * quantity;
@@ -143,6 +146,10 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setTotal(Double total) {
 		this.total = total;
+	}
+
+	public void setSpent(Double spent) {
+		this.spent = spent;
 	}
 
 	public LocalDate getCreated() {

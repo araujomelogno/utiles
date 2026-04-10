@@ -88,27 +88,29 @@ public class BudgetForm extends VerticalLayout {
 			editor.editItem(newEntry);
 			updateTotal();
 		});
-		refresh.addClickListener(click -> refreshSpentFromAlchemer());
+
+		refresh.addClickListener(click -> refreshSpent());
 	}
 
-	private void refreshSpentFromAlchemer() {
+	private void refreshSpent() {
 		if (binder.getBean() == null || binder.getBean().getEntries() == null) {
 			return;
 		}
-		for (BudgetEntry budgetEntry : binder.getBean().getEntries()) {
+		for (BudgetEntry entry : binder.getBean().getEntries()) {
 			Double totalFielwdorkCost = 0.0;
-			if (budgetEntry.getFieldworks() != null) {
-				for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
+			if (entry.getFieldworks() != null) {
+				for (Fieldwork fieldwork : entry.getFieldworks()) {
 					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
 						Integer completedSurveys = alchemerSurveyResponseHelper
 								.getCompletedSurveys(fieldwork.getAlchemerId());
-						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
-							totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
+						if (completedSurveys != null && fieldwork.getUnitCost() != null) {
+							totalFielwdorkCost += fieldwork.getUnitCost().doubleValue() * completedSurveys;
 						}
 					}
 				}
 			}
-			budgetEntry.setSpent(totalFielwdorkCost);
+			entry.setSpent(totalFielwdorkCost);
+
 		}
 		entriesGrid.setItems(binder.getBean().getEntries());
 		updateTotal();
