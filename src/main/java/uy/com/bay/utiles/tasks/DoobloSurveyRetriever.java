@@ -141,6 +141,29 @@ public class DoobloSurveyRetriever {
 		LOGGER.info("Dooblo Survey Retriever task finished.");
 	}
 
+	public Integer getCompletedSurveys(String surveyId) {
+		try {
+			HttpEntity<String> entity = createAuthHeaders();
+			String interviewsUrl = String.format(
+					"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&completed=True",
+					surveyId);
+			ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET,
+					entity, String.class);
+			LOGGER.info("Successfully retrieved interview IDs for SurveyID {}. Response: {}", surveyId,
+					interviewsResponse.getBody());
+
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
+			if (interviewsRoot.isArray()) {
+				return interviewsRoot.size();
+			}
+			return 0;
+		} catch (Exception e) {
+			LOGGER.error("Failed to retrieve completed surveys for SurveyID: {}", surveyId, e);
+			return 0;
+		}
+	}
+
 	private void processAndSaveSurveyData(String xmlData, String surveyId, String interviewId) {
 		try {
 			XmlMapper xmlMapper = new XmlMapper();
