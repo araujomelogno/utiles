@@ -145,14 +145,6 @@ public class AlchemerController {
 				.findByAlchemerId(String.valueOf(response.getData().getSurveyId()));
 		optionalFieldwork.ifPresent(response::setFieldwork);
 
-		// si tenemos fieldowrk también afectamos el Budget en caso de que tenga
-		if (response.getFieldwork() != null && response.getFieldwork().getBudgetEntry() != null
-				&& response.getFieldwork().getUnitCost() != null) {
-			BudgetEntry budgetEntry = response.getFieldwork().getBudgetEntry();
-			budgetEntryService.save(budgetEntry);
-
-		}
-
 		response.getData().setSurveyResponse(response);
 
 		alchemerSurveyResponseRepository.save(response);

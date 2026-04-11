@@ -24,10 +24,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
-import uy.com.bay.utiles.data.ExtraConcept;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
-import uy.com.bay.utiles.data.service.ExtraConceptService;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
 import uy.com.bay.utiles.services.BudgetEntryService;
@@ -42,7 +40,6 @@ public class ExtraInputView extends VerticalLayout {
 
 	private final ExtraService extraService;
 	private final StudyService studyService;
-	private final ExtraConceptService extraConceptService;
 	private final SurveyorService surveyorService;
 	private final BudgetEntryService budgetEntryService;
 
@@ -52,11 +49,10 @@ public class ExtraInputView extends VerticalLayout {
 	private Grid<Extra> grid;
 	private List<Extra> extras;
 
-	public ExtraInputView(ExtraService extraService, StudyService studyService, ExtraConceptService extraConceptService,
-			SurveyorService surveyorService, BudgetEntryService budgetEntryService) {
+	public ExtraInputView(ExtraService extraService, StudyService studyService, SurveyorService surveyorService,
+			BudgetEntryService budgetEntryService) {
 		this.extraService = extraService;
 		this.studyService = studyService;
-		this.extraConceptService = extraConceptService;
 		this.surveyorService = surveyorService;
 		this.budgetEntryService = budgetEntryService;
 
@@ -121,14 +117,6 @@ public class ExtraInputView extends VerticalLayout {
 		grid.addColumn(extra -> extra.getSurveyor() != null ? extra.getSurveyor().getName() : "")
 				.setHeader("Encuestador").setKey("surveyor").setEditorComponent(surveyorComboBox).setSortable(true)
 				.setComparator(extra -> extra.getSurveyor() != null ? extra.getSurveyor().getName() : "");
-
-		// Columna Concepto (editable)
-		ComboBox<ExtraConcept> conceptComboBox = new ComboBox<>();
-		conceptComboBox.setItems(extraConceptService.findAll());
-		conceptComboBox.setItemLabelGenerator(ExtraConcept::getDescription);
-		binder.forField(conceptComboBox).bind(Extra::getConcept, Extra::setConcept);
-		grid.addColumn(extra -> extra.getConcept() != null ? extra.getConcept().getDescription() : "")
-				.setHeader("Concepto").setEditorComponent(conceptComboBox);
 
 		// Presupuesto" (editable)
 		budgetEntryComboBox = new ComboBox<>();

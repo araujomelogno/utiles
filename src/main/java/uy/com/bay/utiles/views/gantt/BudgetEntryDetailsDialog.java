@@ -38,8 +38,8 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		if (budgetEntry.getExtras() != null) {
 			for (Extra extra : budgetEntry.getExtras()) {
 				items.add(new BudgetEntryDetailItem("Extras",
-						extra.getConcept() != null ? extra.getConcept().getDescription() : "", extra.getQuantity(),
-						extra.getUnitPrice(), extra.getSurveyor().getName(),
+						budgetEntry.getConcept() != null ? budgetEntry.getConcept().getName().toString() : "",
+						extra.getQuantity(), extra.getUnitPrice(), extra.getSurveyor().getName(),
 						extra.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
 			}
 		}

@@ -30,9 +30,7 @@ public class Fieldwork extends AbstractEntity {
 	private FieldworkStatus status;
 
 	@Enumerated(EnumType.STRING)
-	private FieldworkType type;
-
-	private BigDecimal unitCost;
+	private FieldworkType type;;
 
 	@ManyToOne
 	@JoinColumn(name = "area_id")
@@ -150,14 +148,6 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setType(FieldworkType type) {
 		this.type = type;
-	}
-
-	public BigDecimal getUnitCost() {
-		return unitCost;
-	}
-
-	public void setUnitCost(BigDecimal unitCost) {
-		this.unitCost = unitCost;
 	}
 
 	public BudgetEntry getBudgetEntry() {

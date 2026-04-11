@@ -162,12 +162,12 @@ public class DoobloSurveyRetriever {
 				fw.setCompleted(fw.getCompleted() + 1);
 				fieldworkRepository.save(fw);
 
-				// Se afecta elbudget si ya tiene asignado
-				if (fw != null && fw.getBudgetEntry() != null && fw.getUnitCost() != null) {
-					BudgetEntry budgetEntry = fw.getBudgetEntry();
-					budgetEntryService.save(budgetEntry);
-
-				}
+//				// Se afecta elbudget si ya tiene asignado
+//				if (fw != null && fw.getBudgetEntry() != null && fw.getUnitCost() != null) {
+//					BudgetEntry budgetEntry = fw.getBudgetEntry();
+//					budgetEntryService.save(budgetEntry);
+//
+//				}
 
 			}
 			doobloResponseRepository.save(doobloResponse);

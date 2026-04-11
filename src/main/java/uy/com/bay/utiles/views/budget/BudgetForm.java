@@ -52,7 +52,7 @@ public class BudgetForm extends VerticalLayout {
 	private final ComboBox<Study> study = new ComboBox<>("Estudio");
 	private final Grid<BudgetEntry> entriesGrid = new Grid<>(BudgetEntry.class);
 	private final Button addEntryButton = new Button("Agregar concepto");
-	private final Button refresh = new Button("Actualizar campo");
+	private final Button refresh = new Button("Actualizar casos campo");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
 	private final Button close = new Button("Cerrar");
@@ -112,8 +112,7 @@ public class BudgetForm extends VerticalLayout {
 						}
 					}
 				}
-				budgetEntry.setSpent(totalFielwdorkCost);
-				//aca hay que guardar el buget entry.. con un budget entry service!!! 
+
 			}
 
 		}
@@ -300,7 +299,7 @@ public class BudgetForm extends VerticalLayout {
 			currencyFormat.setMinimumFractionDigits(0);
 			currencyFormat.setMaximumFractionDigits(0);
 			totalAmountLabel.setText(currencyFormat.format(sum));
-			
+
 			totalSpentLabel.setText(currencyFormat.format(spentSum));
 		}
 	}

@@ -58,7 +58,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private IntegerField goalQuantity;
 	private IntegerField completed;
 	private TextArea obs;
-	private BigDecimalField unitCost;
 	private ComboBox<FieldworkStatus> status;
 	private ComboBox<FieldworkType> type;
 	private ComboBox<Area> area;
@@ -104,7 +103,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("initDate").setHeader("Fecha Inicio").setAutoWidth(true);
 		grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
-		grid.addColumn("unitCost").setHeader("Costo Unitario").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
@@ -158,18 +156,24 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				binder.writeBean(this.fieldwork);
 
 				if (this.fieldwork.getInitPlannedDate() == null) {
-					Notification.show("Debe seleccionar fechaplanificada de inicio .", 3000,
-							Notification.Position.BOTTOM_CENTER);
+					Notification.show("Debe seleccionar fecha planificada de inicio .", 3000,
+							Notification.Position.MIDDLE);
+					return;
+				}
+
+				if (this.fieldwork.getEndPlannedDate() == null) {
+					Notification.show("Debe seleccionar fecha planificada de fin .", 3000,
+							Notification.Position.MIDDLE);
 					return;
 				}
 
 				if (this.fieldwork.getBudgetEntry() == null) {
-					Notification.show("Debe seleccionar un Presupuesto.", 3000, Notification.Position.BOTTOM_CENTER);
+					Notification.show("Debe seleccionar un Presupuesto.", 3000, Notification.Position.MIDDLE);
 					return;
 				}
 
 				if (this.fieldwork.getType() == null) {
-					Notification.show("Debe seleccionar el tipo campo.", 3000, Notification.Position.BOTTOM_CENTER);
+					Notification.show("Debe seleccionar el tipo campo.", 3000, Notification.Position.MIDDLE);
 					return;
 				}
 				fieldworkService.save(this.fieldwork);
@@ -264,7 +268,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		initDate = new DatePicker("Fecha Inicio");
 		endDate = new DatePicker("Fecha Fin");
 		goalQuantity = new IntegerField("Cantidad Objetivo");
-		unitCost = new BigDecimalField("Costo unitario");
 		completed = new IntegerField("Completas");
 		completed.setReadOnly(true);
 		obs = new TextArea("Observaciones");
@@ -276,7 +279,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		area.setItems(areaService.listAll());
 		area.setItemLabelGenerator(Area::getNombre);
 		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity,
-				unitCost, completed, area, status, type, obs);
+				completed, area, status, type, obs);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);

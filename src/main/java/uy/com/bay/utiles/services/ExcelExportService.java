@@ -45,8 +45,8 @@ public class ExcelExportService {
 					row.createCell(1).setCellValue(extra.getSurveyor().getFirstName());
 				if (extra.getStudy() != null)
 					row.createCell(2).setCellValue(extra.getStudy().getName());
-				if (extra.getConcept() != null)
-					row.createCell(3).setCellValue(extra.getConcept().getDescription());
+				if (extra.getBudgetEntry() != null)
+					row.createCell(3).setCellValue(extra.getBudgetEntry().getConcept().getName());
 				row.createCell(4).setCellValue(extra.getAmount());
 			}
 

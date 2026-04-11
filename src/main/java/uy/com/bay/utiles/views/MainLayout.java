@@ -31,7 +31,6 @@ import com.vaadin.flow.server.menu.MenuEntry;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import uy.com.bay.utiles.data.User;
-import uy.com.bay.utiles.data.service.ExtraConceptService;
 import uy.com.bay.utiles.security.AuthenticatedUser;
 import uy.com.bay.utiles.services.ExcelExportService;
 import uy.com.bay.utiles.services.ExtraService;
@@ -56,20 +55,17 @@ public class MainLayout extends AppLayout {
 	private final SurveyorService surveyorService;
 	private final StudyService studyService;
 	private final JournalEntryService journalEntryService;
-	private final ExtraConceptService extraConceptService;
 	private final ExtraService extraService;
 	private final ExcelExportService excelExportService;
 
 	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
 			SurveyorService surveyorService, StudyService studyService, JournalEntryService journalEntryService,
-			ExtraConceptService extraConceptService, ExtraService extraService,
-			ExcelExportService excelExportService) {
+			ExtraService extraService, ExcelExportService excelExportService) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
 		this.surveyorService = surveyorService;
 		this.studyService = studyService;
 		this.journalEntryService = journalEntryService;
-		this.extraConceptService = extraConceptService;
 		this.extraService = extraService;
 		this.excelExportService = excelExportService;
 
@@ -202,9 +198,7 @@ public class MainLayout extends AppLayout {
 
 		SideNavItem extrasItem = new SideNavItem("Extras");
 		extrasItem.setPrefixComponent(new Icon("vaadin", "plus"));
-		SideNavItem extraConceptItem = new SideNavItem("Conceptos de extra", "extraconcepts");
-		extraConceptItem.setPrefixComponent(new Icon("vaadin", "list"));
-		extrasItem.addItem(extraConceptItem);
+
 		SideNavItem ingresarExtrasItem = new SideNavItem("Ingresar Extras", "IngresarExtras");
 		ingresarExtrasItem.setPrefixComponent(new Icon("vaadin", "edit"));
 		extrasItem.addItem(ingresarExtrasItem);
@@ -212,8 +206,8 @@ public class MainLayout extends AppLayout {
 		SideNavItem reportesExtrasItem = new SideNavItem("Reporte");
 		reportesExtrasItem.setPrefixComponent(new Icon("vaadin", "file-chart"));
 		reportesExtrasItem.getElement().addEventListener("click", e -> {
-			ExtrasReportDialog dialog = new ExtrasReportDialog(surveyorService, studyService, extraConceptService,
-					extraService, excelExportService);
+			ExtrasReportDialog dialog = new ExtrasReportDialog(surveyorService, studyService, extraService,
+					excelExportService);
 			dialog.open();
 		});
 		extrasItem.addItem(reportesExtrasItem);

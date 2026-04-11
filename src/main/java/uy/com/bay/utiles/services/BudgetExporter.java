@@ -69,7 +69,7 @@ public class BudgetExporter {
 			for (Extra extra : entry.getExtras()) {
 				Row extraRow = sheet.createRow(rowNum++);
 				extraRow.createCell(0).setCellValue("Extras");
-				extraRow.createCell(1).setCellValue(extra.getConcept().getDescription());
+				extraRow.createCell(1).setCellValue(entry.getConcept().toString());
 				if (extra.getSurveyor() != null) {
 					extraRow.createCell(2).setCellValue(extra.getSurveyor().getName());
 				}
@@ -103,12 +103,13 @@ public class BudgetExporter {
 				fieldworkRow.createCell(1).setCellValue(fieldwork.getType().name());
 				fieldworkRow.createCell(3).setCellValue(fieldwork.getObs());
 				fieldworkRow.createCell(5).setCellValue(
-						Objects.nonNull(fieldwork.getUnitCost()) ? fieldwork.getUnitCost().doubleValue() : 0);
+						fieldwork.getBudgetEntry().getAmmount() != null ? fieldwork.getBudgetEntry().getAmmount() : 0);
 
 				fieldworkRow.createCell(6)
 						.setCellValue(Objects.nonNull(fieldwork.getCompleted()) ? fieldwork.getCompleted() : 0);
-				double total = (Objects.nonNull(fieldwork.getUnitCost()) ? fieldwork.getUnitCost().doubleValue() : 0)
-						* (Objects.nonNull(fieldwork.getCompleted()) ? fieldwork.getCompleted() : 0);
+				double total = (fieldwork.getBudgetEntry().getAmmount() != null
+						? fieldwork.getBudgetEntry().getAmmount()
+						: 0) * (Objects.nonNull(fieldwork.getCompleted()) ? fieldwork.getCompleted() : 0);
 				fieldworkRow.createCell(7).setCellValue(fieldwork.getInitDate());
 				fieldworkRow.getCell(7).setCellStyle(dateStyle);
 				fieldworkRow.createCell(9).setCellValue(-total);

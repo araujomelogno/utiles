@@ -140,10 +140,11 @@ public class GanttView extends VerticalLayout {
 
 			totalSpent = 0d;
 			budgetTotal = 0d;
-			study.getBudget().getEntries().forEach(entry -> {
-				totalSpent = totalSpent + entry.getSpent();
-				budgetTotal = budgetTotal + entry.getTotal();
-			});
+			if (study.getBudget() != null)
+				study.getBudget().getEntries().forEach(entry -> {
+					totalSpent = totalSpent + entry.getSpent();
+					budgetTotal = budgetTotal + entry.getTotal();
+				});
 			if (budgetTotal != 0d) {
 				if (totalSpent > budgetTotal)
 					gantt.getStepElement(studyStep.getUid()).add(createBudgetBar(100d));
