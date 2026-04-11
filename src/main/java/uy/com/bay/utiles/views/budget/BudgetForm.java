@@ -100,22 +100,30 @@ public class BudgetForm extends VerticalLayout {
 		});
 		refresh.addClickListener(click -> refreshSpentFromAlchemer());
 		Anchor downloadLink = new Anchor();
+		downloadLink.getElement().setAttribute("download", true);
 		downloadLink.getStyle().set("display", "none");
 		exportButton.addClickListener(event -> {
-			try {
-				BudgetExporter budgetExporter = new BudgetExporter();
-				InputStream excelStream = budgetExporter.export(binder.getBean().getStudy());
-				SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
-				StreamResource resource = new StreamResource(
-						"Presupuesto_" + binder.getBean().getName() + "_" + sdf.format(new Date()) + ".xlsx",
-						() -> excelStream);
-				downloadLink.setHref(resource);
-				downloadLink.getElement().callJsFunction("click");
-			} catch (IOException e) {
-				e.printStackTrace();
+			Budget budget = binder.getBean();
+			if (budget == null || budget.getStudy() == null) {
+				Notification.show("Debe seleccionar un estudio antes de exportar.", 2500, Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				return;
 			}
+			SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
+			StreamResource resource = new StreamResource(
+					"Presupuesto_" + budget.getName() + "_" + sdf.format(new Date()) + ".xlsx",
+					() -> {
+						try {
+							return new BudgetExporter().export(budget.getStudy());
+						} catch (IOException e) {
+							e.printStackTrace();
+							return InputStream.nullInputStream();
+						}
+					});
+			downloadLink.setHref(resource);
+			downloadLink.getElement().executeJs("setTimeout(() => $0.click(), 0)", downloadLink.getElement());
 		});
-		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh, exportButton);
+		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh, exportButton, downloadLink);
 		add(createFormLayout(), entriesGrid, entryActions, createButtonsLayout());
 		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
 		currencyFormat.setMinimumFractionDigits(0);
