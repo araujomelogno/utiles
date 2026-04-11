@@ -1,7 +1,11 @@
 package uy.com.bay.utiles.views.budget;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
@@ -17,6 +21,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.editor.Editor;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -29,6 +34,7 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.shared.Registration;
 
 import uy.com.bay.utiles.data.ExpenseRequest;
@@ -42,6 +48,7 @@ import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
 import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
+import uy.com.bay.utiles.services.BudgetExporter;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.views.gantt.BudgetEntryDetailsDialog;
@@ -55,6 +62,7 @@ public class BudgetForm extends VerticalLayout {
 	private final Button refresh = new Button("Actualizar casos campo");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
+	private final Button exportButton = new Button("Exportar");
 	private final Button close = new Button("Cerrar");
 	private final Binder<Budget> binder = new BeanValidationBinder<>(Budget.class);
 	private final BudgetConceptService budgetConceptService;
@@ -64,6 +72,7 @@ public class BudgetForm extends VerticalLayout {
 	private final Editor<BudgetEntry> editor;
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
+	private final NumberFormat currencyFormat;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService,
 			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService) {
@@ -78,8 +87,7 @@ public class BudgetForm extends VerticalLayout {
 
 		editor = entriesGrid.getEditor();
 		configureGrid();
-		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh);
-		add(createFormLayout(), entriesGrid, entryActions, createButtonsLayout());
+
 		addEntryButton.addClickListener(click -> {
 			BudgetEntry newEntry = new BudgetEntry();
 			if (binder.getBean().getEntries() == null) {
@@ -91,6 +99,27 @@ public class BudgetForm extends VerticalLayout {
 			updateTotal();
 		});
 		refresh.addClickListener(click -> refreshSpentFromAlchemer());
+		Anchor downloadLink = new Anchor();
+		downloadLink.getStyle().set("display", "none");
+		exportButton.addClickListener(event -> {
+			try {
+				BudgetExporter budgetExporter = new BudgetExporter();
+				InputStream excelStream = budgetExporter.export(binder.getBean().getStudy());
+				SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
+				StreamResource resource = new StreamResource(
+						"Presupuesto_" + binder.getBean().getName() + "_" + sdf.format(new Date()) + ".xlsx",
+						() -> excelStream);
+				downloadLink.setHref(resource);
+				downloadLink.getElement().callJsFunction("click");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh, exportButton);
+		add(createFormLayout(), entriesGrid, entryActions, createButtonsLayout());
+		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat.setMinimumFractionDigits(0);
+		currencyFormat.setMaximumFractionDigits(0);
 	}
 
 	private void refreshSpentFromAlchemer() {
@@ -147,15 +176,15 @@ public class BudgetForm extends VerticalLayout {
 		entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
 		entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
 				.setHeader("Concepto").setEditorComponent(conceptComboBox).setResizable(true);
-		entriesGrid.addColumn(BudgetEntry::getAmmount).setHeader("Costo unitario").setEditorComponent(ammountField)
-				.setResizable(true);
+		entriesGrid.addColumn(entry -> currencyFormat.format(entry.getAmmount())).setHeader("Costo unitario")
+				.setEditorComponent(ammountField).setResizable(true);
 		IntegerField quantityField = new IntegerField();
 		quantityField.setWidthFull();
 		entryBinder.forField(quantityField).bind(BudgetEntry::getQuantity, BudgetEntry::setQuantity);
 		Grid.Column<BudgetEntry> quantityColumn = entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad")
 				.setResizable(true).setEditorComponent(quantityField);
-		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(BudgetEntry::getTotal).setHeader("Total")
-				.setResizable(true);
+		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(entry -> currencyFormat.format(entry.getTotal()))
+				.setHeader("Total").setResizable(true);
 
 		Button saveButton = new Button("Guardar", e -> editor.save());
 		HorizontalLayout actions = new HorizontalLayout(saveButton);
@@ -180,7 +209,7 @@ public class BudgetForm extends VerticalLayout {
 					totalSpent += entry.getAmmount() * fieldwork.getCompleted();
 				}
 			}
-			return totalSpent;
+			return currencyFormat.format(totalSpent);
 		}).setHeader("Gastado").setResizable(true);
 
 		Grid.Column<BudgetEntry> editorColumn = entriesGrid.addComponentColumn(entry -> {
@@ -295,9 +324,7 @@ public class BudgetForm extends VerticalLayout {
 			spentSum = binder.getBean().getEntries().stream().mapToDouble(BudgetEntry::getSpent).sum();
 		}
 		if (totalAmountLabel != null) {
-			NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
-			currencyFormat.setMinimumFractionDigits(0);
-			currencyFormat.setMaximumFractionDigits(0);
+
 			totalAmountLabel.setText(currencyFormat.format(sum));
 
 			totalSpentLabel.setText(currencyFormat.format(spentSum));

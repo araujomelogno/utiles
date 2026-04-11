@@ -3,7 +3,9 @@ package uy.com.bay.utiles.views.gantt;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Locale;
 
 import com.vaadin.flow.component.UI;
@@ -21,7 +23,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.server.StreamResource;
 
 import uy.com.bay.utiles.data.Fieldwork;
@@ -30,11 +31,14 @@ import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetExporter;
 
 public class StudyDetailsDialog extends Dialog {
-
+	private final NumberFormat currencyFormat;
 
 	public StudyDetailsDialog(Study study) {
+		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat.setMinimumFractionDigits(0);
+		currencyFormat.setMaximumFractionDigits(0);
 		setHeaderTitle("Detalles del Estudio: " + study.getName());
-		setWidth("1200px"); 
+		setWidth("1200px");
 
 		VerticalLayout layout = new VerticalLayout();
 		add(layout);
@@ -45,14 +49,20 @@ public class StudyDetailsDialog extends Dialog {
 		name.setReadOnly(true);
 
 		TextField casosCompletos = new TextField("Casos completos");
+		Integer completed = 0;
+		for (Fieldwork fw : study.getFieldworks()) {
+			completed = completed + fw.getCompleted();
+
+		}
+		casosCompletos.setValue(completed.toString());
 		casosCompletos.setReadOnly(true);
 
 		TextField totalTransfered = new TextField("Total de gastos transferidos");
-		totalTransfered.setValue(Double.valueOf(study.getTotalTransfered()).toString());
+		totalTransfered.setValue(currencyFormat.format(study.getTotalTransfered()));
 		totalTransfered.setReadOnly(true);
 
 		TextField totalReportedCost = new TextField("Total de gastos rendidos");
-		totalReportedCost.setValue(Double.valueOf(study.getTotalReportedCost()).toString());
+		totalReportedCost.setValue(currencyFormat.format(study.getTotalReportedCost()));
 		totalReportedCost.setReadOnly(true);
 
 		formLayout.add(name, casosCompletos, totalTransfered, totalReportedCost);
@@ -66,15 +76,11 @@ public class StudyDetailsDialog extends Dialog {
 			budgetGrid.addColumn(entry -> entry.getConcept().getName()).setHeader("Concepto");
 			budgetGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad");
 			Grid.Column<BudgetEntry> costouColumn = budgetGrid
-					.addColumn(
-							new NumberRenderer<>(BudgetEntry::getAmmount, NumberFormat.getCurrencyInstance(Locale.US)))
-					.setHeader("Costo U.");
+					.addColumn((entry -> currencyFormat.format(entry.getAmmount()))).setHeader("Costo U.");
 			Grid.Column<BudgetEntry> totalColumn = budgetGrid
-					.addColumn(new NumberRenderer<>(BudgetEntry::getTotal, NumberFormat.getCurrencyInstance(Locale.US)))
-					.setHeader("Total");
+					.addColumn((entry -> currencyFormat.format(entry.getTotal()))).setHeader("Total");
 			Grid.Column<BudgetEntry> spentColumn = budgetGrid
-					.addColumn(new NumberRenderer<>(BudgetEntry::getSpent, NumberFormat.getCurrencyInstance(Locale.US)))
-					.setHeader("Gastado");
+					.addColumn((entry -> currencyFormat.format(entry.getSpent()))).setHeader("Gastado");
 
 			budgetGrid.addColumn(new ComponentRenderer<>(Button::new, (button, entry) -> {
 				button.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_TERTIARY);
@@ -86,8 +92,8 @@ public class StudyDetailsDialog extends Dialog {
 			double totalSum = dataView.getItems().mapToDouble(BudgetEntry::getTotal).sum();
 			double totalSpent = dataView.getItems().mapToDouble(BudgetEntry::getSpent).sum();
 			footerRow.getCell(costouColumn).setText("Total:");
-			footerRow.getCell(totalColumn).setText(String.format("$%,.2f", totalSum));
-			footerRow.getCell(spentColumn).setText(String.format("$%,.2f", totalSpent));
+			footerRow.getCell(totalColumn).setText(currencyFormat.format(totalSum));
+			footerRow.getCell(spentColumn).setText(currencyFormat.format(totalSpent));
 
 			budgetGrid.setAllRowsVisible(true);
 			HorizontalLayout budgetHeader = new HorizontalLayout();
@@ -100,7 +106,10 @@ public class StudyDetailsDialog extends Dialog {
 				try {
 					BudgetExporter budgetExporter = new BudgetExporter();
 					InputStream excelStream = budgetExporter.export(study);
-					StreamResource resource = new StreamResource("presupuesto.xlsx", () -> excelStream);
+					SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
+					StreamResource resource = new StreamResource(
+							"Presupuesto_" + study.getName() + "_" + sdf.format(new Date()) + ".xlsx",
+							() -> excelStream);
 					downloadLink.setHref(resource);
 					downloadLink.getElement().callJsFunction("click");
 				} catch (IOException e) {

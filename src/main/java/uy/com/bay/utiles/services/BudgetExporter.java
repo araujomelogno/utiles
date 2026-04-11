@@ -4,10 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
-import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -20,6 +21,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import uy.com.bay.utiles.data.ExpenseRequest;
+import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.BudgetEntry;
@@ -30,10 +32,19 @@ public class BudgetExporter {
 
 	public InputStream export(Study study) throws IOException {
 		Workbook workbook = new XSSFWorkbook();
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		Sheet sheet = workbook.createSheet("Presupuesto");
 
 		// Header
-		Row headerRow = sheet.createRow(0);
+		int rowIndex = 0;
+		Row preHeaderRow = sheet.createRow(rowIndex);
+		rowIndex++;
+
+		Row dateRow = sheet.createRow(rowIndex);
+		rowIndex++;
+
+		Row headerRow = sheet.createRow(rowIndex);
+		rowIndex++;
 		String[] headers = { "Tipo", "Concepto", "Encuestador", "Obs", "Cantidad", "Costo U.", "Completadas", "Fecha",
 				"Total Presupuestado", "Total Gastado" };
 		CellStyle headerStyle = workbook.createCellStyle();
@@ -45,13 +56,29 @@ public class BudgetExporter {
 		CellStyle dateStyle = workbook.createCellStyle();
 		dateStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("d-mmm-yy"));
 
+		Cell labelStudyCell = preHeaderRow.createCell(0);
+		labelStudyCell.setCellValue("Estudio:");
+		labelStudyCell.setCellStyle(headerStyle);
+
+		Cell scell = preHeaderRow.createCell(1);
+		scell.setCellValue(study.getName());
+		scell.setCellStyle(headerStyle);
+
+		Cell labelCreatedCell = dateRow.createCell(0);
+		labelCreatedCell.setCellValue("Reporte generado:");
+		labelCreatedCell.setCellStyle(headerStyle);
+
+		Cell ccell = dateRow.createCell(1);
+		ccell.setCellValue(sdf.format(new Date()));
+		ccell.setCellStyle(headerStyle);
+
 		for (int i = 0; i < headers.length; i++) {
 			Cell cell = headerRow.createCell(i);
 			cell.setCellValue(headers[i]);
 			cell.setCellStyle(headerStyle);
 		}
 
-		int rowNum = 1;
+		int rowNum = rowIndex;
 		double totalBudgetSum = 0;
 		double totalSpentSum = 0;
 
@@ -69,7 +96,7 @@ public class BudgetExporter {
 			for (Extra extra : entry.getExtras()) {
 				Row extraRow = sheet.createRow(rowNum++);
 				extraRow.createCell(0).setCellValue("Extras");
-				extraRow.createCell(1).setCellValue(entry.getConcept().toString());
+				extraRow.createCell(1).setCellValue(entry.getConcept().getName().toString());
 				if (extra.getSurveyor() != null) {
 					extraRow.createCell(2).setCellValue(extra.getSurveyor().getName());
 				}
@@ -84,17 +111,19 @@ public class BudgetExporter {
 			}
 
 			for (ExpenseRequest expense : entry.getExpenseRequests()) {
-				Row expenseRow = sheet.createRow(rowNum++);
-				expenseRow.createCell(0).setCellValue("Gastos");
-				expenseRow.createCell(1).setCellValue(expense.getConcept().getName());
-				if (expense.getSurveyor() != null) {
-					expenseRow.createCell(2).setCellValue(expense.getSurveyor().getName());
+				if (expense.getExpenseStatus().equals(ExpenseStatus.TRANSFERIDO)) {
+					Row expenseRow = sheet.createRow(rowNum++);
+					expenseRow.createCell(0).setCellValue("Gastos");
+					expenseRow.createCell(1).setCellValue(expense.getConcept().getName());
+					if (expense.getSurveyor() != null) {
+						expenseRow.createCell(2).setCellValue(expense.getSurveyor().getName());
+					}
+					expenseRow.createCell(3).setCellValue(expense.getObs());
+					expenseRow.createCell(7).setCellValue(expense.getTransferDate());
+					expenseRow.getCell(7).setCellStyle(dateStyle);
+					expenseRow.createCell(9).setCellValue(-expense.getAmount());
+					totalSpentSum -= expense.getAmount();
 				}
-				expenseRow.createCell(3).setCellValue(expense.getObs());
-				expenseRow.createCell(7).setCellValue(expense.getTransferDate());
-				expenseRow.getCell(7).setCellStyle(dateStyle);
-				expenseRow.createCell(9).setCellValue(-expense.getAmount());
-				totalSpentSum -= expense.getAmount();
 			}
 
 			for (Fieldwork fieldwork : entry.getFieldworks()) {

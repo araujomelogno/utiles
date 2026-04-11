@@ -54,7 +54,9 @@ public class BudgetEntry extends AbstractEntity {
 	}
 
 	public Double getAmmount() {
-		return ammount;
+		if (ammount != null)
+			return ammount;
+		return 0d;
 	}
 
 	public void setAmmount(Double ammount) {
@@ -62,7 +64,9 @@ public class BudgetEntry extends AbstractEntity {
 	}
 
 	public Integer getQuantity() {
-		return quantity;
+		if (quantity != null)
+			return quantity;
+		return 0;
 	}
 
 	public void setQuantity(Integer quantity) {
