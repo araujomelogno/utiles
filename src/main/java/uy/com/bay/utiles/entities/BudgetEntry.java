@@ -84,7 +84,8 @@ public class BudgetEntry extends AbstractEntity {
 		}
 		if (expenseRequests != null) {
 			for (ExpenseRequest expenseRequest : expenseRequests) {
-				if (ExpenseStatus.TRANSFERIDO.equals(expenseRequest.getExpenseStatus())
+				if ((ExpenseStatus.TRANSFERIDO.equals(expenseRequest.getExpenseStatus())
+						|| ExpenseStatus.RENDIDO.equals(expenseRequest.getExpenseStatus()))
 						&& expenseRequest.getExpenseTransfer() != null
 						&& expenseRequest.getExpenseTransfer().getAmount() != null) {
 					totalSpent += expenseRequest.getExpenseTransfer().getAmount();

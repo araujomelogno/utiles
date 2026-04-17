@@ -31,8 +31,8 @@ public class OdooProjectSyncTask {
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
 
-		List<Map<String, Object>> products = odooService.getOdooProducts();
-		for (Map<String, Object> odooProjectMap : products) {
+		List<Map<String, Object>> costs = odooService.getOdooAccountMoveLines("33700", "118");
+		for (Map<String, Object> odooProjectMap : costs) {
 			Object odooIdObj = odooProjectMap.get("id");
 			String odooId = null;
 			if (odooIdObj != null) {
@@ -66,7 +66,7 @@ public class OdooProjectSyncTask {
 			// Assuming Odoo project map contains "id" as the Odoo ID and "name" as the
 			// project name.
 			// These keys might need adjustment based on the actual data from OdooService.
-			Object odooIdObj = odooProjectMap.get("name");
+			Object odooIdObj = odooProjectMap.get("id");
 			String odooId = null;
 			if (odooIdObj != null) {
 				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
@@ -76,12 +76,11 @@ public class OdooProjectSyncTask {
 				System.out.println("Skipping Odoo project with null or empty ID.");
 				continue;
 			}
-
-			if (!existingOdooNames.contains(odooId)) {
+			Object nameObj = odooProjectMap.get("name");
+			if (!existingOdooNames.contains(String.valueOf(nameObj))) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);
 
-				Object nameObj = odooProjectMap.get("name");
 				if (nameObj != null) {
 					newProyecto.setName(String.valueOf(nameObj));
 				} else {

@@ -57,7 +57,8 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		// Process ExpenseRequests
 		if (budgetEntry.getExpenseRequests() != null) {
 			for (ExpenseRequest expenseRequest : budgetEntry.getExpenseRequests()) {
-				if (expenseRequest.getExpenseStatus().equals(ExpenseStatus.TRANSFERIDO))
+				if (expenseRequest.getExpenseStatus().equals(ExpenseStatus.TRANSFERIDO)
+						|| expenseRequest.getExpenseStatus().equals(ExpenseStatus.RENDIDO))
 					items.add(new BudgetEntryDetailItem("Gastos",
 							expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "", 1,
 							expenseRequest.getAmount(), expenseRequest.getSurveyor().getName(),
