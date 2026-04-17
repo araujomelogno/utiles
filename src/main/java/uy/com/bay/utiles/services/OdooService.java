@@ -295,4 +295,58 @@ public class OdooService {
 		return Collections.emptyList(); // Return empty list in case of any error
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> getOdooAccountMoveLines(String analitycAccountId, String productId) {
+		if (objectClient == null) {
+			logger.error("Odoo object client not initialized. Cannot fetch account move lines.");
+			return Collections.emptyList();
+		}
+		try {
+			Integer uid = authenticate();
+			if (uid == null) {
+				logger.error("Cannot fetch account move lines: Authentication failed.");
+				return Collections.emptyList();
+			}
+
+			List<String> fieldsToFetch = Arrays.asList("id", "date", "move_id", "name", "product_id", "account_id",
+					"debit", "credit", "balance");
+
+			List<Object> domain = Arrays.asList(
+					Arrays.asList("product_id", "=", Integer.parseInt(productId)),
+					Arrays.asList("analytic_account_id", "=", Integer.parseInt(analitycAccountId)));
+
+			HashMap<String, Object> keywordArgs = new HashMap<>();
+			keywordArgs.put("fields", fieldsToFetch);
+
+			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(), "account.move.line",
+					"search_read", Collections.singletonList(domain), keywordArgs };
+
+			logger.info("Executing Odoo search_read on 'account.move.line' with fields: {}", fieldsToFetch);
+			Object[] linesRaw = (Object[]) objectClient.execute("execute_kw", params);
+
+			List<Map<String, Object>> linesList = new ArrayList<>();
+			for (Object lineObj : linesRaw) {
+				if (lineObj instanceof Map) {
+					linesList.add((Map<String, Object>) lineObj);
+				} else {
+					logger.warn("Received an object that is not a Map from Odoo: {}", lineObj);
+				}
+			}
+			logger.info("Successfully fetched {} account move lines from Odoo.", linesList.size());
+
+			return linesList;
+
+		} catch (XmlRpcException e) {
+			logger.error(
+					"XmlRpcException while fetching account move lines from Odoo: {}. Check Odoo XML-RPC endpoint and network.",
+					e.getMessage(), e);
+		} catch (ClassCastException e) {
+			logger.error("ClassCastException while processing Odoo response. Unexpected data structure: {}",
+					e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected exception while fetching account move lines from Odoo: {}", e.getMessage(), e);
+		}
+		return Collections.emptyList();
+	}
+
 }
