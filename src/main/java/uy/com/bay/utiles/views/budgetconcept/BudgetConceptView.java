@@ -44,6 +44,7 @@ public class BudgetConceptView extends Div implements BeforeEnterObserver {
 
 	private TextField name;
 	private TextArea description;
+	private TextField odooProductId;
 	private ComboBox<MatchType> matchType;
 
 	private final Button cancel = new Button("Cerrar");
@@ -170,9 +171,10 @@ public class BudgetConceptView extends Div implements BeforeEnterObserver {
 		FormLayout formLayout = new FormLayout();
 		name = new TextField("Nombre");
 		description = new TextArea("Descripción");
+		odooProductId = new TextField("Id de producto ODOO");
 		matchType = new ComboBox<>("Tipo de Coincidencia");
 		matchType.setItems(MatchType.values());
-		formLayout.add(name, description, matchType);
+		formLayout.add(name, description, odooProductId, matchType);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
