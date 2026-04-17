@@ -51,6 +51,7 @@ import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetExporter;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.tasks.DoobloSurveyRetriever;
 import uy.com.bay.utiles.views.gantt.BudgetEntryDetailsDialog;
 
 public class BudgetForm extends VerticalLayout {
@@ -73,13 +74,16 @@ public class BudgetForm extends VerticalLayout {
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
 	private final NumberFormat currencyFormat;
+	private final DoobloSurveyRetriever doobloSurveyRetriever;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService,
-			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService) {
+			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService,
+			DoobloSurveyRetriever doobloSurveyRetriever) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
 		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseHelper = alchemerSurveyResponseHelper;
+		this.doobloSurveyRetriever = doobloSurveyRetriever;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
 		study.setItems(studyService.listAll());
@@ -111,8 +115,7 @@ public class BudgetForm extends VerticalLayout {
 			}
 			SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
 			StreamResource resource = new StreamResource(
-					"Presupuesto_" + budget.getName() + "_" + sdf.format(new Date()) + ".xlsx",
-					() -> {
+					"Presupuesto_" + budget.getName() + "_" + sdf.format(new Date()) + ".xlsx", () -> {
 						try {
 							return new BudgetExporter().export(budget.getStudy());
 						} catch (IOException e) {
@@ -147,7 +150,18 @@ public class BudgetForm extends VerticalLayout {
 						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
 							totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
 						}
+					} else {
+						if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
+							Integer completedSurveys = doobloSurveyRetriever
+									.getCompletedSurveys(fieldwork.getDoobloId());
+							fieldwork.setCompleted(completedSurveys);
+							fieldworkService.save(fieldwork);
+							if (completedSurveys != null && budgetEntry.getAmmount() != null) {
+								totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
+							}
+						}
 					}
+
 				}
 
 			}

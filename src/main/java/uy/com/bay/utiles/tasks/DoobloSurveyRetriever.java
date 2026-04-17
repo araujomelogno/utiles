@@ -66,7 +66,7 @@ public class DoobloSurveyRetriever {
 		this.restTemplate = new RestTemplate();
 	}
 
-	//@Scheduled(cron = "0 0 0 * * *")
+	// @Scheduled(cron = "0 0 0 * * *")
 	public void retrieveDoobloSurveys() {
 		LOGGER.info("Starting Dooblo Survey Retriever task...");
 		try {
@@ -175,6 +175,28 @@ public class DoobloSurveyRetriever {
 
 		} catch (Exception e) {
 			LOGGER.error("Failed to process XML and save DoobloResponse for interview ID {}", interviewId, e);
+		}
+	}
+
+	public Integer getCompletedSurveys(String surveyId) {
+		try {
+			HttpEntity<String> entity = createAuthHeaders();
+			String interviewsUrl = String
+					.format("http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&completed=True", surveyId);
+			ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,
+					String.class);
+			LOGGER.info("Successfully retrieved interview IDs for SurveyID {}. Response: {}", surveyId,
+					interviewsResponse.getBody());
+
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
+			if (interviewsRoot.isArray()) {
+				return interviewsRoot.size();
+			}
+			return 0;
+		} catch (Exception e) {
+			LOGGER.error("Failed to retrieve completed surveys for SurveyID: {}", surveyId, e);
+			return 0;
 		}
 	}
 

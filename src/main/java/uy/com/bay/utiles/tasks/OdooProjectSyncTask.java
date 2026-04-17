@@ -23,18 +23,35 @@ public class OdooProjectSyncTask {
 		this.proyectoService = proyectoService;
 	}
 
-	 
 	// @Scheduled(cron = "0 0 * * * ?") // Runs every hour at the beginning of the
 	// hour
 	// For testing, you might use a more frequent cron like "*/30 * * * * ?" (every
 	// 30 seconds)
-	@Scheduled(cron = "0 */20 * * * *")
+	@Scheduled(cron = "0 */2 * * * *")
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
 
-		List<Map<String, Object>> odooProjects = odooService.getOdooProjects();
-		odooProjects.addAll(odooService.getOdooLeads());
-		odooProjects.addAll(odooService.getOdooAnalyticAccounts());
+		List<Map<String, Object>> products = odooService.getOdooProducts();
+		for (Map<String, Object> odooProjectMap : products) {
+			Object odooIdObj = odooProjectMap.get("id");
+			String odooId = null;
+			if (odooIdObj != null) {
+				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
+			}
+
+			Object nameIdObj = odooProjectMap.get("name");
+			String odooName = null;
+			if (nameIdObj != null) {
+				odooName = String.valueOf(nameIdObj); // Convert to String, ensure it's not null
+			}
+
+			System.out.println(odooId + "-" + odooName);
+		}
+
+		List<Map<String, Object>> odooProjects = odooService.getOdooAnalyticAccounts();
+//				odooService.getOdooProjects();
+//		odooProjects.addAll(odooService.getOdooLeads());
+
 		if (odooProjects.isEmpty()) {
 			System.out.println("No projects fetched from Odoo. Sync task finished.");
 			return;

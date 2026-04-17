@@ -22,6 +22,7 @@ import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.tasks.DoobloSurveyRetriever;
 import uy.com.bay.utiles.views.MainLayout;
 
 @PageTitle("Presupuestos")
@@ -35,14 +36,15 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 	private final BudgetService budgetService;
 
 	public BudgetView(BudgetService budgetService, StudyService studyService, BudgetConceptService budgetConceptService,
-			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService) {
+			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService,
+			DoobloSurveyRetriever doobloSurveyRetriever) {
 		this.budgetService = budgetService;
 		addClassName("budget-view");
 		setSizeFull();
 		configureGrid();
 
 		form = new BudgetForm(studyService, budgetConceptService, budgetService, alchemerSurveyResponseHelper,
-				fieldworkService);
+				fieldworkService, doobloSurveyRetriever);
 		form.addSaveListener(this::saveBudget);
 		form.addDeleteListener(this::deleteBudget);
 		form.addCloseListener(e -> closeEditor());

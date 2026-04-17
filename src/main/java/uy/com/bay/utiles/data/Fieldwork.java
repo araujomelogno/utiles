@@ -119,6 +119,8 @@ public class Fieldwork extends AbstractEntity {
 	}
 
 	public Integer getCompleted() {
+		if (completed == null)
+			return 0;
 		return completed;
 	}
 

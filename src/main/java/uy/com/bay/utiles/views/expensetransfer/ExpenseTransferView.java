@@ -125,7 +125,7 @@ public class ExpenseTransferView extends VerticalLayout {
 				})).setHeader("Fecha Solicitud").setSortable(true).setKey("requestDate");
 		grid.addColumn(ExpenseRequest::getAmount).setHeader("Monto").setSortable(true).setKey("amount");
 		Grid.Column<ExpenseRequest> conceptColumn = grid
-				.addColumn(er -> er.getConcept() != null ? er.getConcept().getDescription() : "").setHeader("Concepto")
+				.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
 				.setSortable(true).setKey("concept.description");
 		Grid.Column<ExpenseRequest> obsColumn = grid.addColumn(ExpenseRequest::getObs).setHeader("Observaciones");
 
@@ -203,8 +203,8 @@ public class ExpenseTransferView extends VerticalLayout {
 							? new java.text.SimpleDateFormat("dd/MM/yyyy").format(expenseRequest.getRequestDate())
 							: "");
 			row.createCell(3).setCellValue(expenseRequest.getAmount());
-			row.createCell(4).setCellValue(
-					expenseRequest.getConcept() != null ? expenseRequest.getConcept().getDescription() : "");
+			row.createCell(4)
+					.setCellValue(expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "");
 			row.createCell(5).setCellValue(expenseRequest.getObs());
 		}
 

@@ -11,4 +11,11 @@ delete from expense_transfer_file where id>0;
 update study set total_reported_cost = 0 where id>0;
 update study set total_transfered = 0 where id>0;
 update surveyor set balance = 0 where id>0;
+delete from extra where id>0;
+
 SET FOREIGN_KEY_CHECKS = 1;
+update alchemer_survey_response set fieldwork_id = null where id !=0;
+delete from fieldwork where id>0;
+delete from budget_entry where id>0;
+delete from budget where id>0;
+delete from study where id>0;
