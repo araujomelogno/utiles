@@ -102,6 +102,12 @@ public class BudgetEntry extends AbstractEntity {
 				}
 			}
 		}
+
+		if (odooCosts != null) {
+			for (OdooCost cost : odooCosts) {
+				totalSpent += cost.getBalance().doubleValue();
+			}
+		}
 		return totalSpent;
 	}
 

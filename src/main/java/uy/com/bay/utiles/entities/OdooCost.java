@@ -90,6 +90,8 @@ public class OdooCost extends AbstractEntity {
 	}
 
 	public BigDecimal getBalance() {
+		if (balance == null)
+			return BigDecimal.ZERO;
 		return balance;
 	}
 

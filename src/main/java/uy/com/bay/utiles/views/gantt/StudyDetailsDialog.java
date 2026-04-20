@@ -73,7 +73,8 @@ public class StudyDetailsDialog extends Dialog {
 			Grid<BudgetEntry> budgetGrid = new Grid<>();
 			GridListDataView<BudgetEntry> dataView = budgetGrid.setItems(study.getBudget().getEntries());
 
-			budgetGrid.addColumn(entry -> entry.getConcept().getName()).setHeader("Concepto");
+			budgetGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "sin concepto")
+					.setHeader("Concepto");
 			budgetGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad");
 			Grid.Column<BudgetEntry> costouColumn = budgetGrid
 					.addColumn((entry -> currencyFormat.format(entry.getAmmount()))).setHeader("Costo U.");

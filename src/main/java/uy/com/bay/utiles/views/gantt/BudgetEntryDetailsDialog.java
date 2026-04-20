@@ -20,6 +20,7 @@ import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.dto.BudgetEntryDetailItem;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
+import uy.com.bay.utiles.entities.OdooCost;
 
 public class BudgetEntryDetailsDialog extends Dialog {
 
@@ -51,6 +52,16 @@ public class BudgetEntryDetailsDialog extends Dialog {
 						fieldwork.getType() != null ? fieldwork.getType().toString() : "", fieldwork.getCompleted(),
 						budgetEntry.getAmmount(), "N/A",
 						fieldwork.getEndPlannedDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+			}
+		}
+
+		// Process OdooCosts
+		if (budgetEntry.getOdooCosts() != null) {
+			for (OdooCost cost : budgetEntry.getOdooCosts()) {
+				items.add(new BudgetEntryDetailItem("G.Odoo", cost.getName() != null ? cost.getName() : "", 1,
+						cost.getBalance(), "N/A",
+						(cost.getDate() != null ? cost.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+								: "")));
 			}
 		}
 

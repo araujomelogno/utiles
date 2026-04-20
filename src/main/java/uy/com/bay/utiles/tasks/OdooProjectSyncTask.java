@@ -31,8 +31,28 @@ public class OdooProjectSyncTask {
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
 
-		List<Map<String, Object>> costs = odooService.getOdooAccountMoveLines("33700", "118");
+		List<Map<String, Object>> costs = odooService.getOdooAccountMoveLines("33647", "118");
 		for (Map<String, Object> odooProjectMap : costs) {
+			Object odooIdObj = odooProjectMap.get("name");
+			String odooId = null;
+			if (odooIdObj != null) {
+				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
+			}
+
+			Object nameIdObj = odooProjectMap.get("balance");
+			String odooName = null;
+			if (nameIdObj != null) {
+				odooName = String.valueOf(nameIdObj); // Convert to String, ensure it's not null
+			}
+
+			System.out.println(odooId + "-" + odooName);
+		}
+
+		List<Map<String, Object>> odooProjects = odooService.getOdooAnalyticAccounts();
+//				odooService.getOdooProjects();
+//		odooProjects.addAll(odooService.getOdooLeads());
+
+		for (Map<String, Object> odooProjectMap : odooProjects) {
 			Object odooIdObj = odooProjectMap.get("id");
 			String odooId = null;
 			if (odooIdObj != null) {
@@ -47,11 +67,6 @@ public class OdooProjectSyncTask {
 
 			System.out.println(odooId + "-" + odooName);
 		}
-
-		List<Map<String, Object>> odooProjects = odooService.getOdooAnalyticAccounts();
-//				odooService.getOdooProjects();
-//		odooProjects.addAll(odooService.getOdooLeads());
-
 		if (odooProjects.isEmpty()) {
 			System.out.println("No projects fetched from Odoo. Sync task finished.");
 			return;
@@ -95,6 +110,13 @@ public class OdooProjectSyncTask {
 				proyectoService.save(newProyecto);
 				newProjectsCount++;
 				System.out.println("Saved new project: " + newProyecto.getName() + " (Odoo ID: " + odooId + ")");
+			} else {
+				for (Study s : existingProyectos)
+					if (s.getName().equalsIgnoreCase(String.valueOf(nameObj))) {
+						s.setOdooId(odooId.toString());
+						proyectoService.save(s);
+					}
+
 			}
 		}
 
