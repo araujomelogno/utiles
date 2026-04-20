@@ -43,6 +43,9 @@ public class BudgetEntry extends AbstractEntity {
 	@OneToMany(mappedBy = "budgetEntry")
 	private Set<Fieldwork> fieldworks = new HashSet<>();
 
+	@OneToMany(mappedBy = "budgetEntry")
+	private Set<OdooCost> odooCosts = new HashSet<>();
+
 	@Transient
 	private Double total;
 
@@ -140,6 +143,14 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setExpenseRequests(Set<ExpenseRequest> expenseRequests) {
 		this.expenseRequests = expenseRequests;
+	}
+
+	public Set<OdooCost> getOdooCosts() {
+		return odooCosts;
+	}
+
+	public void setOdooCosts(Set<OdooCost> odooCosts) {
+		this.odooCosts = odooCosts;
 	}
 
 	public void setTotal(Double total) {
