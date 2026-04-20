@@ -2,12 +2,15 @@ package uy.com.bay.utiles.views.budget;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -46,10 +49,13 @@ import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.Extra;
+import uy.com.bay.utiles.entities.OdooCost;
 import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.BudgetExporter;
 import uy.com.bay.utiles.services.BudgetService;
+import uy.com.bay.utiles.services.OdooCostService;
+import uy.com.bay.utiles.services.OdooService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.tasks.DoobloSurveyRetriever;
 import uy.com.bay.utiles.views.gantt.BudgetEntryDetailsDialog;
@@ -61,6 +67,7 @@ public class BudgetForm extends VerticalLayout {
 	private final Grid<BudgetEntry> entriesGrid = new Grid<>(BudgetEntry.class);
 	private final Button addEntryButton = new Button("Agregar concepto");
 	private final Button refresh = new Button("Actualizar casos campo");
+	private final Button refreshCosts = new Button("Actualizar costos");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Borrar");
 	private final Button exportButton = new Button("Exportar");
@@ -75,15 +82,19 @@ public class BudgetForm extends VerticalLayout {
 	private Span totalSpentLabel;
 	private final NumberFormat currencyFormat;
 	private final DoobloSurveyRetriever doobloSurveyRetriever;
+	private final OdooService odooService;
+	private final OdooCostService odooCostService;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService,
 			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService,
-			DoobloSurveyRetriever doobloSurveyRetriever) {
+			DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService, OdooCostService odooCostService) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
 		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseHelper = alchemerSurveyResponseHelper;
 		this.doobloSurveyRetriever = doobloSurveyRetriever;
+		this.odooService = odooService;
+		this.odooCostService = odooCostService;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
 		study.setItems(studyService.listAll());
@@ -103,6 +114,7 @@ public class BudgetForm extends VerticalLayout {
 			updateTotal();
 		});
 		refresh.addClickListener(click -> refreshSpentFromAlchemer());
+		refreshCosts.addClickListener(click -> refreshCostsFromOdoo());
 		Anchor downloadLink = new Anchor();
 		downloadLink.getElement().setAttribute("download", true);
 		downloadLink.getStyle().set("display", "none");
@@ -126,7 +138,8 @@ public class BudgetForm extends VerticalLayout {
 			downloadLink.setHref(resource);
 			downloadLink.getElement().executeJs("setTimeout(() => $0.click(), 0)", downloadLink.getElement());
 		});
-		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh, exportButton, downloadLink);
+		HorizontalLayout entryActions = new HorizontalLayout(addEntryButton, refresh, refreshCosts, exportButton,
+				downloadLink);
 		add(createFormLayout(), entriesGrid, entryActions, createButtonsLayout());
 		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
 		currencyFormat.setMinimumFractionDigits(0);
@@ -170,6 +183,89 @@ public class BudgetForm extends VerticalLayout {
 
 		entriesGrid.setItems(binder.getBean().getEntries());
 		updateTotal();
+	}
+
+	private void refreshCostsFromOdoo() {
+		if (binder.getBean() == null || binder.getBean().getEntries() == null) {
+			return;
+		}
+		Study budgetStudy = binder.getBean().getStudy();
+		if (budgetStudy == null || budgetStudy.getOdooId() == null || budgetStudy.getOdooId().isEmpty()) {
+			return;
+		}
+		for (BudgetEntry budgetEntry : binder.getBean().getEntries()) {
+			BudgetConcept concept = budgetEntry.getConcept();
+			if (concept == null || concept.getOdooProductId() == null || concept.getOdooProductId().isEmpty()) {
+				continue;
+			}
+			BigDecimal totalOdooCost = BigDecimal.ZERO;
+			List<Map<String, Object>> moveLines = odooService.getOdooAccountMoveLines(budgetStudy.getOdooId(),
+					concept.getOdooProductId());
+			for (Map<String, Object> line : moveLines) {
+				String moveId = odooIdToString(line.get("move_id"));
+				if (moveId == null || moveId.isEmpty()) {
+					continue;
+				}
+				if (odooCostService.findByMoveId(moveId).isPresent()) {
+					continue;
+				}
+				OdooCost cost = new OdooCost();
+				cost.setDate(odooValueToLocalDate(line.get("date")));
+				cost.setMoveId(moveId);
+				cost.setName(odooValueToString(line.get("name")));
+				cost.setProductId(odooIdToString(line.get("product_id")));
+				cost.setAccountId(odooIdToString(line.get("account_id")));
+				cost.setDebit(odooValueToBigDecimal(line.get("debit")));
+				cost.setCredit(odooValueToBigDecimal(line.get("credit")));
+				cost.setBalance(odooValueToBigDecimal(line.get("balance")));
+				cost.setBudgetEntry(budgetEntry);
+				odooCostService.save(cost);
+				if (cost.getBalance() != null) {
+					totalOdooCost = totalOdooCost.add(cost.getBalance());
+				}
+			}
+		}
+		entriesGrid.setItems(binder.getBean().getEntries());
+		updateTotal();
+	}
+
+	private String odooIdToString(Object value) {
+		if (value == null || Boolean.FALSE.equals(value)) {
+			return null;
+		}
+		if (value instanceof Object[]) {
+			Object[] arr = (Object[]) value;
+			return arr.length > 0 && arr[0] != null ? String.valueOf(arr[0]) : null;
+		}
+		if (value instanceof List) {
+			List<?> list = (List<?>) value;
+			return !list.isEmpty() && list.get(0) != null ? String.valueOf(list.get(0)) : null;
+		}
+		return String.valueOf(value);
+	}
+
+	private String odooValueToString(Object value) {
+		if (value == null || Boolean.FALSE.equals(value)) {
+			return null;
+		}
+		return String.valueOf(value);
+	}
+
+	private BigDecimal odooValueToBigDecimal(Object value) {
+		if (value == null || Boolean.FALSE.equals(value)) {
+			return null;
+		}
+		if (value instanceof Number) {
+			return BigDecimal.valueOf(((Number) value).doubleValue());
+		}
+		return new BigDecimal(String.valueOf(value));
+	}
+
+	private LocalDate odooValueToLocalDate(Object value) {
+		if (value == null || Boolean.FALSE.equals(value)) {
+			return null;
+		}
+		return LocalDate.parse(String.valueOf(value));
 	}
 
 	private Component createFormLayout() {
