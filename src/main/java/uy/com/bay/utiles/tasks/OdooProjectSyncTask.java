@@ -1,9 +1,10 @@
 package uy.com.bay.utiles.tasks;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -73,8 +74,13 @@ public class OdooProjectSyncTask {
 		}
 
 		List<Study> existingProyectos = proyectoService.findAll();
-		Set<String> existingOdooNames = existingProyectos.stream().map(Study::getName)
-				.filter(name -> name != null && !name.isEmpty()).collect(Collectors.toSet());
+		Map<String, Study> existingByName = new HashMap<>();
+		for (Study s : existingProyectos) {
+			String name = s.getName();
+			if (name != null && !name.isEmpty()) {
+				existingByName.putIfAbsent(name.toLowerCase(Locale.ROOT), s);
+			}
+		}
 
 		int newProjectsCount = 0;
 		for (Map<String, Object> odooProjectMap : odooProjects) {
@@ -92,12 +98,15 @@ public class OdooProjectSyncTask {
 				continue;
 			}
 			Object nameObj = odooProjectMap.get("name");
-			if (!existingOdooNames.contains(String.valueOf(nameObj))) {
+			String odooName = nameObj == null ? null : String.valueOf(nameObj);
+			String key = odooName == null ? null : odooName.toLowerCase(Locale.ROOT);
+			Study existing = key == null ? null : existingByName.get(key);
+			if (existing == null) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);
 
-				if (nameObj != null) {
-					newProyecto.setName(String.valueOf(nameObj));
+				if (odooName != null) {
+					newProyecto.setName(odooName);
 				} else {
 					newProyecto.setName("Default Name - ID: " + odooId); // Or handle as an error
 				}
@@ -107,16 +116,16 @@ public class OdooProjectSyncTask {
 				// String description = (String) odooProjectMap.get("description");
 				// newProyecto.setObs(description);
 
-				proyectoService.save(newProyecto);
+				Study saved = proyectoService.save(newProyecto);
+				if (saved.getName() != null && !saved.getName().isEmpty()) {
+					existingByName.put(saved.getName().toLowerCase(Locale.ROOT), saved);
+				}
 				newProjectsCount++;
-				System.out.println("Saved new project: " + newProyecto.getName() + " (Odoo ID: " + odooId + ")");
-			} else {
-				for (Study s : existingProyectos)
-					if (s.getName().equalsIgnoreCase(String.valueOf(nameObj))) {
-						s.setOdooId(odooId.toString());
-						proyectoService.save(s);
-					}
-
+				System.out.println("Saved new project: " + saved.getName() + " (Odoo ID: " + odooId + ")");
+			} else if (!Objects.equals(existing.getOdooId(), odooId)) {
+				existing.setOdooId(odooId);
+				Study saved = proyectoService.save(existing);
+				existingByName.put(key, saved);
 			}
 		}
 
