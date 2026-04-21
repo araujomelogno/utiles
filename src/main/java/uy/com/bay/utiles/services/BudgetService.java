@@ -39,6 +39,7 @@ public class BudgetService {
 				Hibernate.initialize(entry.getExtras());
 				Hibernate.initialize(entry.getExpenseRequests());
 				Hibernate.initialize(entry.getFieldworks());
+				Hibernate.initialize(entry.getOdooCosts());
 			}
 		}
 	}
