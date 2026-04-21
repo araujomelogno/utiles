@@ -17,11 +17,11 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -41,7 +41,6 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseRequest;
@@ -49,14 +48,14 @@ import uy.com.bay.utiles.data.ExpenseRequestType;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
-import uy.com.bay.utiles.entities.BudgetConcept;
+import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetConceptService;
 import uy.com.bay.utiles.services.ExpenseRequestService;
 import uy.com.bay.utiles.services.ExpenseRequestTypeService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
+import uy.com.bay.utiles.services.ExpenseTransferService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
-import uy.com.bay.utiles.services.ExpenseTransferService;
 import uy.com.bay.utiles.views.expensetransfer.ExpenseTransferViewDialog;
 
 @PageTitle("Solicitudes de Gastos")
@@ -70,7 +69,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 	private final Grid<ExpenseRequest> grid = new Grid<>(ExpenseRequest.class, false);
 
 	private ComboBox<Study> study;
-	private ComboBox<BudgetConcept> budgetEntryConcept;
+	private ComboBox<BudgetEntry> budgetEntry;
 	private ComboBox<Surveyor> surveyor;
 	private DatePicker requestDate;
 	private DatePicker aprovalDate;
@@ -495,11 +494,16 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(s -> s == null ? "" : s.getName());
-		budgetEntryConcept = new ComboBox<>("Concepto-Presupuesto");
-		budgetEntryConcept.setItems(
-				budgetConceptService.list(org.springframework.data.domain.Pageable.unpaged()).getContent());
-		budgetEntryConcept.setItemLabelGenerator(bc -> bc == null ? "" : bc.getName());
-		budgetEntryConcept.setReadOnly(true);
+		budgetEntry = new ComboBox<>("Concepto-Presupuesto");
+		budgetEntry.setItems((study.getValue() != null && study.getValue().getBudget() != null)
+				? new ArrayList(study.getValue().getBudget().getEntries())
+				: new ArrayList());
+		budgetEntry.setItemLabelGenerator(bc -> bc == null ? "" : bc.getConcept().getName());
+		study.addValueChangeListener(e -> {
+			budgetEntry.setItems((study.getValue() != null && study.getValue().getBudget() != null)
+					? new ArrayList(study.getValue().getBudget().getEntries())
+					: new ArrayList());
+		});
 		surveyor = new ComboBox<>("Encuestador");
 		surveyor.setItems(surveyorService.listAll());
 		surveyor.setItemLabelGenerator(s -> s == null ? "" : s.getName());
@@ -514,8 +518,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		concept.setItems(expenseRequestTypeService.findAll());
 		concept.setItemLabelGenerator(ert -> ert == null ? "" : ert.getName());
 		obs = new com.vaadin.flow.component.textfield.TextArea("Observaciones");
-		formLayout.add(study, budgetEntryConcept, surveyor, requestDate, aprovalDate, transferDate, amount, concept,
-				obs);
+		formLayout.add(study, budgetEntry, surveyor, requestDate, aprovalDate, transferDate, amount, concept, obs);
 		editorDiv.add(formLayout);
 		approve.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		reject.addThemeVariants(ButtonVariant.LUMO_ERROR);
@@ -572,9 +575,10 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		this.expenseRequest = value;
 		binder.readBean(this.expenseRequest);
 		if (value != null && value.getBudgetEntry() != null) {
-			budgetEntryConcept.setValue(value.getBudgetEntry().getConcept());
+			budgetEntry.setValue(value.getBudgetEntry());
 		} else {
-			budgetEntryConcept.clear();
+			budgetEntry.clear();
+
 		}
 		if (value != null) {
 			approve.setEnabled(

@@ -299,6 +299,10 @@ public class ExpensesAprovalView extends Div implements BeforeEnterObserver {
 					Notification.show("Debe asociarse estudio a todas las solicitudes de gasto");
 					return;
 				}
+				if (expenseRequest.getBudgetEntry() == null) {
+					Notification.show("Debe asociarse un concepto de presupuesto a todas las solicitudes de gasto");
+					return;
+				}
 				expenseRequest.setExpenseStatus(ExpenseStatus.APROBADO);
 				expenseRequest.setAprovalDate(new Date());
 				expenseRequestService.update(expenseRequest);
