@@ -91,7 +91,9 @@ public class BudgetService {
 
 	@Transactional(readOnly = true)
 	public Optional<BudgetEntry> getEntryByIdWithExtras(Long id) {
-		return budgetEntryRepository.findByIdWithExtras(id);
+		Optional<BudgetEntry> entry = budgetEntryRepository.findByIdWithExtras(id);
+		entry.ifPresent(e -> Hibernate.initialize(e.getOdooCosts()));
+		return entry;
 	}
 
 }
