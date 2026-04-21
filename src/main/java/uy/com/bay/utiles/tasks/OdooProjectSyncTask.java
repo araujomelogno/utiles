@@ -32,22 +32,22 @@ public class OdooProjectSyncTask {
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
 
-		List<Map<String, Object>> costs = odooService.getOdooAccountMoveLines("33647", "118");
-		for (Map<String, Object> odooProjectMap : costs) {
-			Object odooIdObj = odooProjectMap.get("name");
-			String odooId = null;
-			if (odooIdObj != null) {
-				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
-			}
-
-			Object nameIdObj = odooProjectMap.get("balance");
-			String odooName = null;
-			if (nameIdObj != null) {
-				odooName = String.valueOf(nameIdObj); // Convert to String, ensure it's not null
-			}
-
-			System.out.println(odooId + "-" + odooName);
-		}
+//		List<Map<String, Object>> costs = odooService.getOdooAccountMoveLines("33647", "118");
+//		for (Map<String, Object> odooProjectMap : costs) {
+//			Object odooIdObj = odooProjectMap.get("name");
+//			String odooId = null;
+//			if (odooIdObj != null) {
+//				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
+//			}
+//
+//			Object nameIdObj = odooProjectMap.get("balance");
+//			String odooName = null;
+//			if (nameIdObj != null) {
+//				odooName = String.valueOf(nameIdObj); // Convert to String, ensure it's not null
+//			}
+//
+//			System.out.println(odooId + "-" + odooName);
+//		}
 
 		List<Map<String, Object>> odooProjects = odooService.getOdooAnalyticAccounts();
 //				odooService.getOdooProjects();
