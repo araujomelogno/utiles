@@ -327,6 +327,12 @@ public class BudgetForm extends VerticalLayout {
 					totalSpent += entry.getAmmount() * fieldwork.getCompleted();
 				}
 			}
+
+			for (OdooCost cost : entry.getOdooCosts()) {
+				if (cost.getBalance() != null) {
+					totalSpent += cost.getBalance().doubleValue();
+				}
+			}
 			return currencyFormat.format(totalSpent);
 		}).setHeader("Gastado").setResizable(true);
 

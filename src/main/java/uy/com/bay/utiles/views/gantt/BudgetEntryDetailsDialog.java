@@ -27,6 +27,10 @@ public class BudgetEntryDetailsDialog extends Dialog {
 	public BudgetEntryDetailsDialog(BudgetEntry budgetEntry) {
 		setHeaderTitle("Detalle de la Entrada del Presupuesto: " + budgetEntry.getConcept().getName());
 		setWidth("1000px");
+		NumberFormat currencyFormat;
+		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat.setMinimumFractionDigits(0);
+		currencyFormat.setMaximumFractionDigits(0);
 
 		VerticalLayout layout = new VerticalLayout();
 		add(layout);
@@ -83,24 +87,22 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		grid.addColumn(BudgetEntryDetailItem::getDate).setHeader("Fecha").setResizable(true);
 		grid.addColumn(BudgetEntryDetailItem::getSurveyor).setHeader("Encuestador").setResizable(true);
 		grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle").setResizable(true);
-		grid.addColumn(
-				new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, NumberFormat.getIntegerInstance(Locale.US)))
-				.setHeader("Cantidad").setResizable(true);
+		grid.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, currencyFormat)).setHeader("Cantidad")
+				.setResizable(true);
 		Grid.Column<BudgetEntryDetailItem> ucolumn = grid
-				.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCostoUnitario,
-						NumberFormat.getCurrencyInstance(Locale.US)))
+				.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCostoUnitario, currencyFormat))
 				.setHeader("Costo U.").setResizable(true);
 
-		Grid.Column<BudgetEntryDetailItem> totalColumn = grid.addColumn(
-				new NumberRenderer<>(BudgetEntryDetailItem::getTotal, NumberFormat.getCurrencyInstance(Locale.US)))
-				.setHeader("Total").setResizable(true);
+		Grid.Column<BudgetEntryDetailItem> totalColumn = grid
+				.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getTotal, currencyFormat)).setHeader("Total")
+				.setResizable(true);
 
 		// Footer for Total sum
 		var footerRow = grid.appendFooterRow();
 		BigDecimal total = dataView.getItems().map(BudgetEntryDetailItem::getTotal).reduce(BigDecimal.ZERO,
 				BigDecimal::add);
 
-		footerRow.getCell(totalColumn).setText(String.format("$%,.2f", total));
+		footerRow.getCell(totalColumn).setText(currencyFormat.format(total));
 		footerRow.getCell(ucolumn).setText("Total");
 
 		grid.setAllRowsVisible(true);
