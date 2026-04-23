@@ -87,8 +87,7 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		grid.addColumn(BudgetEntryDetailItem::getDate).setHeader("Fecha").setResizable(true);
 		grid.addColumn(BudgetEntryDetailItem::getSurveyor).setHeader("Encuestador").setResizable(true);
 		grid.addColumn(BudgetEntryDetailItem::getDetalle).setHeader("Detalle").setResizable(true);
-		grid.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCantidad, currencyFormat)).setHeader("Cantidad")
-				.setResizable(true);
+		grid.addColumn(BudgetEntryDetailItem::getCantidad).setHeader("Cantidad").setResizable(true);
 		Grid.Column<BudgetEntryDetailItem> ucolumn = grid
 				.addColumn(new NumberRenderer<>(BudgetEntryDetailItem::getCostoUnitario, currencyFormat))
 				.setHeader("Costo U.").setResizable(true);
