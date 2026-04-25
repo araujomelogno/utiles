@@ -136,10 +136,46 @@ public class SupervisionTaskProcessorService {
 
 			task.setEvaluationOutput(prettyPrint(response));
 
+//			{
+//				  "puntaje_global" : 47,
+//				  "puntajes_componentes" : {
+//				    "cobertura" : 50,
+//				    "fidelidad" : 45,
+//				    "neutralidad" : 60,
+//				    "fluidez_operacional" : 40
+//				  },
+//				  "resumen" : {
+//				    "total_items_esperados" : 26,
+//				    "items_encontrados" : 13,
+//				    "items_faltantes" : 13,
+//				    "problemas_mayores" : [ "omision", "cambio_significado", "cambio_opciones" ],
+//				    "problemas_menores" : [ "parcial", "direccionamiento", "texto_agregado", "problema_orden" ]
+//			}
+
 			JsonNode rootNode = new ObjectMapper().readTree(task.getEvaluationOutput());
 			int puntajeGlobal = rootNode.path("puntaje_global").asInt();
-			task.setAiScore(puntajeGlobal);
 
+			int cobertura = rootNode.path("puntajes_componentes").path("cobertura").asInt();
+			int fidelidad = rootNode.path("puntajes_componentes").path("fidelidad").asInt();
+			int neutralidad = rootNode.path("puntajes_componentes").path("neutralidad").asInt();
+			int fluidez_operacional = rootNode.path("puntajes_componentes").path("fluidez_operacional").asInt();
+
+			int total_items_esperados = rootNode.path("resumen").path("total_items_esperados").asInt();
+			int items_encontrados = rootNode.path("resumen").path("items_encontrados").asInt();
+			int items_faltantes = rootNode.path("resumen").path("items_faltantes").asInt();
+			String problemas_mayores = rootNode.path("resumen").path("problemas_mayores").asText();
+			String problemas_menores = rootNode.path("resumen").path("problemas_menores").asText();
+
+			task.setAiScore(puntajeGlobal);
+			task.setScoreCobertura(cobertura);
+			task.setScoreFidelidad(fidelidad);
+			task.setScoreNeutralidad(neutralidad);
+			task.setScoreFluidez(fluidez_operacional);
+			task.setItemsEsperados(total_items_esperados);
+			task.setItemsEncontrados(items_encontrados);
+			task.setItemsFaltantes(items_faltantes);
+			task.setProblemasMayores(problemas_mayores);
+			task.setProblemasMenores(problemas_menores);
 			task.setStatus(Status.DONE);
 			task.setProcessed(new Date());
 

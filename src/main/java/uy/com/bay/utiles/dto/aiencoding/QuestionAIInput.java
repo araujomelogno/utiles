@@ -5,11 +5,13 @@ import java.util.List;
 
 public class QuestionAIInput {
 	private String question_text = "";
-	private String question_id =  "";
+	private String question_id = "";
 	private String question_fineTunning = "";
+	private Integer minimumCodifications = 0;
+	private Integer maximumCodifications = 0;
+	private Integer minimunQuestionsWithCode = 0;
 	private List<QuestionAICode> codes = new ArrayList();
 	private List<QuestionAIAnswer> responses = new ArrayList();
-
 
 	public String getQuestion_fineTunning() {
 		return question_fineTunning;
@@ -49,6 +51,30 @@ public class QuestionAIInput {
 
 	public void setQuestion_id(String question_id) {
 		this.question_id = question_id;
+	}
+
+	public Integer getMinimumCodifications() {
+		return minimumCodifications;
+	}
+
+	public void setMinimumCodifications(Integer minimumCodifications) {
+		this.minimumCodifications = minimumCodifications;
+	}
+
+	public Integer getMaximumCodifications() {
+		return maximumCodifications;
+	}
+
+	public void setMaximumCodifications(Integer maximumCodifications) {
+		this.maximumCodifications = maximumCodifications;
+	}
+
+	public Integer getMinimunQuestionsWithCode() {
+		return minimunQuestionsWithCode;
+	}
+
+	public void setMinimunQuestionsWithCode(Integer minimunQuestionsWithCode) {
+		this.minimunQuestionsWithCode = minimunQuestionsWithCode;
 	}
 
 }

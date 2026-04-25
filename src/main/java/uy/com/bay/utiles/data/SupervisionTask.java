@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.data;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -8,11 +12,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Entity
 public class SupervisionTask extends AbstractEntity {
@@ -49,10 +49,16 @@ public class SupervisionTask extends AbstractEntity {
 
 	private double aiScore;
 
-	@ManyToOne
-	@JoinColumn(name = "fieldwork_id")
-	private Fieldwork fieldwork;
+	private int scoreCobertura;
+	private int scoreFidelidad;
+	private int scoreNeutralidad;
+	private int scoreFluidez;
 
+	private Integer itemsEsperados;
+	private Integer itemsFaltantes;
+	private Integer itemsEncontrados;
+	private String problemasMayores;
+	private String problemasMenores;
 
 	@Lob
 	private String evaluationOutput;
@@ -159,16 +165,6 @@ public class SupervisionTask extends AbstractEntity {
 		this.aiScore = aiScore;
 	}
 
-	public Fieldwork getFieldwork() {
-		return fieldwork;
-	}
-
-	public void setFieldwork(Fieldwork fieldwork) {
-		this.fieldwork = fieldwork;
-	}
-
-
-
 	public String getEvaluationOutput() {
 		return evaluationOutput;
 	}
@@ -199,5 +195,77 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setAlchemerSuerveyId(Integer alchemerSuerveyId) {
 		this.alchemerSuerveyId = alchemerSuerveyId;
+	}
+
+	public double getScoreCobertura() {
+		return scoreCobertura;
+	}
+
+	public int getScoreFidelidad() {
+		return scoreFidelidad;
+	}
+
+	public void setScoreFidelidad(int scoreFidelidad) {
+		this.scoreFidelidad = scoreFidelidad;
+	}
+
+	public int getScoreNeutralidad() {
+		return scoreNeutralidad;
+	}
+
+	public void setScoreNeutralidad(int scoreNeutralidad) {
+		this.scoreNeutralidad = scoreNeutralidad;
+	}
+
+	public int getScoreFluidez() {
+		return scoreFluidez;
+	}
+
+	public void setScoreFluidez(int scoreFluidez) {
+		this.scoreFluidez = scoreFluidez;
+	}
+
+	public Integer getItemsEsperados() {
+		return itemsEsperados;
+	}
+
+	public void setItemsEsperados(Integer itemsEsperados) {
+		this.itemsEsperados = itemsEsperados;
+	}
+
+	public Integer getItemsEncontrados() {
+		return itemsEncontrados;
+	}
+
+	public void setItemsEncontrados(Integer itemsEncontrados) {
+		this.itemsEncontrados = itemsEncontrados;
+	}
+
+	public String getProblemasMayores() {
+		return problemasMayores;
+	}
+
+	public void setProblemasMayores(String problemasMayores) {
+		this.problemasMayores = problemasMayores;
+	}
+
+	public String getProblemasMenores() {
+		return problemasMenores;
+	}
+
+	public void setProblemasMenores(String problemasMenores) {
+		this.problemasMenores = problemasMenores;
+	}
+
+	public void setScoreCobertura(int scoreCobertura) {
+		this.scoreCobertura = scoreCobertura;
+	}
+
+	public Integer getItemsFaltantes() {
+		return itemsFaltantes;
+	}
+
+	public void setItemsFaltantes(Integer itemsFaltantes) {
+		this.itemsFaltantes = itemsFaltantes;
 	}
 }
