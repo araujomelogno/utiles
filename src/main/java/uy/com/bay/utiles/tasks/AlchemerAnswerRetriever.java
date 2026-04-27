@@ -58,7 +58,7 @@ public class AlchemerAnswerRetriever {
 
 	}
 
-	@Scheduled(cron = "0 */2 * * * *")
+//	@Scheduled(cron = "0 */2 * * * *")
 	public void retrieveAlchemerAnswers() {
 		LOGGER.info("Starting Alchemer Answer Retriever task...");
 		Date cutoffDate = Date.from(Instant.now().minus(1, ChronoUnit.DAYS));

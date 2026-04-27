@@ -33,9 +33,12 @@ public class SupervisionTask extends AbstractEntity {
 	private String questionnaireFileName;
 
 	@Lob
+	@Column(columnDefinition = "LONGTEXT")
+
 	private String fullPrompt;
 
 	@Lob
+	@Column(columnDefinition = "LONGTEXT")
 	private String output;
 
 	private double totalAudioDuration;
@@ -61,6 +64,7 @@ public class SupervisionTask extends AbstractEntity {
 	private String problemasMenores;
 
 	@Lob
+	@Column(columnDefinition = "LONGTEXT")
 	private String evaluationOutput;
 
 	private Date processed;

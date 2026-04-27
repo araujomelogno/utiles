@@ -163,8 +163,8 @@ public class SupervisionTaskProcessorService {
 			int total_items_esperados = rootNode.path("resumen").path("total_items_esperados").asInt();
 			int items_encontrados = rootNode.path("resumen").path("items_encontrados").asInt();
 			int items_faltantes = rootNode.path("resumen").path("items_faltantes").asInt();
-			String problemas_mayores = rootNode.path("resumen").path("problemas_mayores").asText();
-			String problemas_menores = rootNode.path("resumen").path("problemas_menores").asText();
+			String problemas_mayores = rootNode.path("resumen").path("problemas_mayores").toString();
+			String problemas_menores = rootNode.path("resumen").path("problemas_menores").toString();
 
 			task.setAiScore(puntajeGlobal);
 			task.setScoreCobertura(cobertura);

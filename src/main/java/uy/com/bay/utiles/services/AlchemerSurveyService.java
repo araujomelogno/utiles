@@ -31,7 +31,7 @@ public class AlchemerSurveyService {
 
 	public List<AlchemerStudy> fetchRecentSurveys() {
 		try {
-			LocalDate cutoff = LocalDate.now().minusMonths(4);
+			LocalDate cutoff = LocalDate.now().minusMonths(6);
 			String cutoffStr = cutoff.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
 			String url = String.format(

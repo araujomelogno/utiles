@@ -55,7 +55,8 @@ public class SupervisionView extends VerticalLayout {
 		H2 questionnaireTitle = new H2("Cuestionario");
 		MemoryBuffer questionnaireBuffer = new MemoryBuffer();
 		Upload questionnaireUpload = new Upload(questionnaireBuffer);
-
+		questionnaireUpload
+				.setAcceptedFileTypes("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 		Button processButton = new Button("Procesar", e -> {
 
 			if (studyComboBox.getValue() == null) {
@@ -107,7 +108,8 @@ public class SupervisionView extends VerticalLayout {
 			}
 		});
 
-		add(estudioTitle, studyComboBox, title, multiFileUpload, questionnaireTitle, questionnaireUpload, processButton);
+		add(estudioTitle, studyComboBox, title, multiFileUpload, questionnaireTitle, questionnaireUpload,
+				processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
 	}

@@ -53,25 +53,25 @@ public class OdooProjectSyncTask {
 //				odooService.getOdooProjects();
 //		odooProjects.addAll(odooService.getOdooLeads());
 
-		for (Map<String, Object> odooProjectMap : odooProjects) {
-			Object odooIdObj = odooProjectMap.get("id");
-			String odooId = null;
-			if (odooIdObj != null) {
-				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
-			}
-
-			Object nameIdObj = odooProjectMap.get("name");
-			String odooName = null;
-			if (nameIdObj != null) {
-				odooName = String.valueOf(nameIdObj); // Convert to String, ensure it's not null
-			}
-
-			System.out.println(odooId + "-" + odooName);
-		}
-		if (odooProjects.isEmpty()) {
-			System.out.println("No projects fetched from Odoo. Sync task finished.");
-			return;
-		}
+//		for (Map<String, Object> odooProjectMap : odooProjects) {
+//			Object odooIdObj = odooProjectMap.get("id");
+//			String odooId = null;
+//			if (odooIdObj != null) {
+//				odooId = String.valueOf(odooIdObj); // Convert to String, ensure it's not null
+//			}
+//
+//			Object nameIdObj = odooProjectMap.get("name");
+//			String odooName = null;
+//			if (nameIdObj != null) {
+//				odooName = String.valueOf(nameIdObj); // Convert to String, ensure it's not null
+//			}
+//
+//			System.out.println(odooId + "-" + odooName);
+//		}
+//		if (odooProjects.isEmpty()) {
+//			System.out.println("No projects fetched from Odoo. Sync task finished.");
+//			return;
+//		}
 
 		List<Study> existingProyectos = proyectoService.findAll();
 		Map<String, Study> existingByName = new HashMap<>();
