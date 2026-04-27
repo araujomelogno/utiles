@@ -38,7 +38,9 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "st.alchemerStudyName as alchemerStudyName "
 			+ "FROM SupervisionTask st LEFT JOIN st.durationBySpeakers ds " + "WHERE st.created BETWEEN :from AND :to "
 			+ "AND (:fileName IS NULL OR :fileName = '' OR lower(st.fileName) LIKE lower(concat('%', :fileName, '%'))) "
+			+ "AND (:alchemerStudyName IS NULL OR :alchemerStudyName = '' OR lower(st.alchemerStudyName) LIKE lower(concat('%', :alchemerStudyName, '%'))) "
 			+ "AND (:status IS NULL OR st.status = :status) " + "ORDER BY st.created DESC")
 	List<Tuple> findTuplesByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
-			@Param("fileName") String fileName, @Param("status") Status status);
+			@Param("fileName") String fileName, @Param("alchemerStudyName") String alchemerStudyName,
+			@Param("status") Status status);
 }
