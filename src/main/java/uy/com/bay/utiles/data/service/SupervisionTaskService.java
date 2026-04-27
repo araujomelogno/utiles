@@ -17,51 +17,68 @@ import uy.com.bay.utiles.dto.SupervisionTaskDTO;
 @Service
 public class SupervisionTaskService {
 
-    private final SupervisionTaskRepository repository;
+	private final SupervisionTaskRepository repository;
 
-    public SupervisionTaskService(SupervisionTaskRepository repository) {
-        this.repository = repository;
-    }
+	public SupervisionTaskService(SupervisionTaskRepository repository) {
+		this.repository = repository;
+	}
 
-    public List<SupervisionTask> findByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
+	public List<SupervisionTask> findByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
 			Status status) {
 		return repository.findByCreatedBetweenOrderByCreatedDesc(from, to, fileName, status);
 	}
 
-    public List<SupervisionTaskDTO> findDTOsByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName, Status status) {
-        List<Tuple> tuples = repository.findTuplesByCreatedBetweenOrderByCreatedDesc(from, to, fileName, status);
-        Map<Long, SupervisionTaskDTO> dtoMap = new LinkedHashMap<>();
+	public List<SupervisionTaskDTO> findDTOsByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
+			Status status) {
+		List<Tuple> tuples = repository.findTuplesByCreatedBetweenOrderByCreatedDesc(from, to, fileName, status);
+		Map<Long, SupervisionTaskDTO> dtoMap = new LinkedHashMap<>();
 
-        for (Tuple tuple : tuples) {
-            Long id = tuple.get("id", Long.class);
-            SupervisionTaskDTO dto = dtoMap.get(id);
+		for (Tuple tuple : tuples) {
+			Long id = tuple.get("id", Long.class);
+			SupervisionTaskDTO dto = dtoMap.get(id);
 
-            if (dto == null) {
-                dto = new SupervisionTaskDTO();
-                dto.setId(id);
-                dto.setFileName(tuple.get("fileName", String.class));
-                dto.setStatus(tuple.get("status", Status.class));
-                dto.setAiScore(tuple.get("aiScore", Double.class));
-                dto.setTotalAudioDuration(tuple.get("totalAudioDuration", Double.class));
-                dto.setSpeakingDuration(tuple.get("speakingDuration", Double.class));
-                dto.setCreated(tuple.get("created", Date.class));
-                dto.setOutput(tuple.get("output", String.class));
-                dto.setEvaluationOutput(tuple.get("evaluationOutput", String.class));
+			if (dto == null) {
+				dto = new SupervisionTaskDTO();
+				dto.setId(id);
+				dto.setFileName(tuple.get("fileName", String.class));
+				dto.setStatus(tuple.get("status", Status.class));
+				dto.setAiScore(tuple.get("aiScore", Double.class));
+				dto.setTotalAudioDuration(tuple.get("totalAudioDuration", Double.class));
+				dto.setSpeakingDuration(tuple.get("speakingDuration", Double.class));
+				dto.setCreated(tuple.get("created", Date.class));
+				dto.setOutput(tuple.get("output", String.class));
+				dto.setEvaluationOutput(tuple.get("evaluationOutput", String.class));
 
-                dtoMap.put(id, dto);
-            }
+				dto.setEvaluationOutput(tuple.get("evaluationOutput", String.class));
 
-            String speaker = tuple.get("speaker", String.class);
-            Double duration = tuple.get("duration", Double.class);
+				dto.setAlchemerStudyName(tuple.get("alchemerStudyName", String.class));
 
-            if (speaker != null && duration != null) {
-                dto.getDurationBySpeakers().put(speaker, duration);
-            }
-        }
-        return new ArrayList<>(dtoMap.values());
-    }
+				dto.setScoreCobertura(tuple.get("scoreCobertura", Integer.class));
+				dto.setScoreFidelidad(tuple.get("scoreFidelidad", Integer.class));
+				dto.setScoreNeutralidad(tuple.get("scoreNeutralidad", Integer.class));
+				dto.setScoreFluidez(tuple.get("scoreFluidez", Integer.class));
 
-    public void saveAll(List<SupervisionTask> tasks) {
-        repository.saveAll(tasks);
-    }
+				dto.setItemsEsperados(tuple.get("itemsEsperados", Integer.class));
+				dto.setItemsFaltantes(tuple.get("itemsFaltantes", Integer.class));
+				dto.setItemsEncontrados(tuple.get("itemsEncontrados", Integer.class));
+
+				dto.setProblemasMayores(tuple.get("problemasMayores", String.class));
+				dto.setProblemasMenores(tuple.get("problemasMenores", String.class));
+
+				dtoMap.put(id, dto);
+			}
+
+			String speaker = tuple.get("speaker", String.class);
+			Double duration = tuple.get("duration", Double.class);
+
+			if (speaker != null && duration != null) {
+				dto.getDurationBySpeakers().put(speaker, duration);
+			}
+		}
+		return new ArrayList<>(dtoMap.values());
+	}
+
+	public void saveAll(List<SupervisionTask> tasks) {
+		repository.saveAll(tasks);
+	}
 }
