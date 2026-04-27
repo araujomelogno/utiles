@@ -30,7 +30,13 @@ public class SupervisionTaskService {
 
 	public List<SupervisionTaskDTO> findDTOsByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
 			Status status) {
-		List<Tuple> tuples = repository.findTuplesByCreatedBetweenOrderByCreatedDesc(from, to, fileName, status);
+		return findDTOsByCreatedBetweenAndFileNameAndStatus(from, to, fileName, null, status);
+	}
+
+	public List<SupervisionTaskDTO> findDTOsByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
+			String alchemerStudyName, Status status) {
+		List<Tuple> tuples = repository.findTuplesByCreatedBetweenOrderByCreatedDesc(from, to, fileName,
+				alchemerStudyName, status);
 		Map<Long, SupervisionTaskDTO> dtoMap = new LinkedHashMap<>();
 
 		for (Tuple tuple : tuples) {
