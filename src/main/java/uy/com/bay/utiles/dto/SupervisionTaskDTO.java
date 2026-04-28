@@ -14,6 +14,8 @@ public class SupervisionTaskDTO {
 	private Double totalAudioDuration;
 	private Double speakingDuration;
 	private Map<String, Double> durationBySpeakers = new HashMap<>();
+	private Map<String, String> coincidenceByItem = new HashMap<>();
+	private Map<String, Integer> scoreByItem = new HashMap<>();
 	private Date created;
 	private String output;
 	private String evaluationOutput;
@@ -104,6 +106,22 @@ public class SupervisionTaskDTO {
 
 	public void setDurationBySpeakers(Map<String, Double> durationBySpeakers) {
 		this.durationBySpeakers = durationBySpeakers;
+	}
+
+	public Map<String, String> getCoincidenceByItem() {
+		return coincidenceByItem;
+	}
+
+	public void setCoincidenceByItem(Map<String, String> coincidenceByItem) {
+		this.coincidenceByItem = coincidenceByItem;
+	}
+
+	public Map<String, Integer> getScoreByItem() {
+		return scoreByItem;
+	}
+
+	public void setScoreByItem(Map<String, Integer> scoreByItem) {
+		this.scoreByItem = scoreByItem;
 	}
 
 	public Date getCreated() {
