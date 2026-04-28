@@ -89,7 +89,9 @@ public class SupervisionTaskDTO {
 	}
 
 	public Double getSpeakingDuration() {
-		return speakingDuration;
+		if(totalAudioDuration==0)
+			return 0d;
+		return speakingDuration/totalAudioDuration;
 	}
 
 	public void setSpeakingDuration(Double speakingDuration) {

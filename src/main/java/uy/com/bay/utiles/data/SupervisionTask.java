@@ -60,7 +60,11 @@ public class SupervisionTask extends AbstractEntity {
 	private Integer itemsEsperados;
 	private Integer itemsFaltantes;
 	private Integer itemsEncontrados;
+	@Lob
+	@Column(columnDefinition = "LONGTEXT")
 	private String problemasMayores;
+	@Lob
+	@Column(columnDefinition = "LONGTEXT")
 	private String problemasMenores;
 
 	@Lob

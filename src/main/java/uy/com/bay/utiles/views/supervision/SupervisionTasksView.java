@@ -70,8 +70,10 @@ public class SupervisionTasksView extends VerticalLayout {
 		grid.setSizeFull();
 		Grid.Column<SupervisionTaskDTO> alchemerStudyNameColumn = grid
 				.addColumn(SupervisionTaskDTO::getAlchemerStudyName).setHeader("Estudio");
-		Grid.Column<SupervisionTaskDTO> fileNameColumn = grid.addColumn(SupervisionTaskDTO::getFileName).setHeader("Archivo");
-		Grid.Column<SupervisionTaskDTO> statusColumn = grid.addColumn(SupervisionTaskDTO::getStatus).setHeader("Estado");
+		Grid.Column<SupervisionTaskDTO> fileNameColumn = grid.addColumn(SupervisionTaskDTO::getFileName)
+				.setHeader("Archivo");
+		Grid.Column<SupervisionTaskDTO> statusColumn = grid.addColumn(SupervisionTaskDTO::getStatus)
+				.setHeader("Estado");
 		grid.addColumn(SupervisionTaskDTO::getAiScore).setHeader("Scoring global");
 		grid.addColumn(SupervisionTaskDTO::getScoreCobertura).setHeader("Cobertura");
 		grid.addColumn(SupervisionTaskDTO::getScoreFidelidad).setHeader("Fidelidad");
@@ -83,7 +85,9 @@ public class SupervisionTasksView extends VerticalLayout {
 		grid.addColumn(SupervisionTaskDTO::getProblemasMayores).setHeader("Problemas Mayores");
 		grid.addColumn(SupervisionTaskDTO::getProblemasMenores).setHeader("Problemas Menores");
 		grid.addColumn(SupervisionTaskDTO::getTotalAudioDuration).setHeader("Duración del audio");
-		grid.addColumn(SupervisionTaskDTO::getSpeakingDuration).setHeader("Duración hablando");
+		grid.addColumn(task -> {
+			return Double.valueOf(task.getSpeakingDuration() * 100).intValue() + "%";
+		}).setHeader("% hablando/ total");
 		grid.addColumn(task -> {
 			Map<String, Double> speakers = task.getDurationBySpeakers();
 			if (speakers != null) {
@@ -104,8 +108,10 @@ public class SupervisionTasksView extends VerticalLayout {
 
 		grid.addComponentColumn(task -> {
 			if (task.getOutput() != null && !task.getOutput().isEmpty()) {
-				Anchor downloadLink = new Anchor(new StreamResource("Supervision_Report_" + task.getId() + ".docx",
-						() -> wordExportService.generateSupervisionTaskReport(task)), "Descargar Word");
+				Anchor downloadLink = new Anchor(
+						new StreamResource("Supervision_Report_" + task.getFileName() + ".docx",
+								() -> wordExportService.generateSupervisionTaskReport(task)),
+						"Descargar Word");
 				downloadLink.getElement().setAttribute("download", true);
 				return downloadLink;
 			} else {
@@ -179,8 +185,7 @@ public class SupervisionTasksView extends VerticalLayout {
 	private ByteArrayInputStream buildExcel(List<SupervisionTaskDTO> data) throws IOException {
 		String[] columns = { "Estudio", "Archivo", "Estado", "Scoring global", "Cobertura", "Fidelidad", "Neutralidad",
 				"Fluidez", "Items Esperados", "Items Faltantes", "Items Encontrados", "Problemas Mayores",
-				"Problemas Menores", "Duración del audio", "Duración hablando", "Duración/ participante", "Creada",
-				"Output" };
+				"Problemas Menores", "Duración del audio", "% hablando", "Duración/ participante", "Creada", "Output" };
 		java.text.SimpleDateFormat dateFormatter = new java.text.SimpleDateFormat("dd/MM/yyyy");
 
 		try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -229,11 +234,8 @@ public class SupervisionTasksView extends VerticalLayout {
 				} else {
 					row.createCell(13).setCellValue("");
 				}
-				if (dto.getSpeakingDuration() != null) {
-					row.createCell(14).setCellValue(dto.getSpeakingDuration());
-				} else {
-					row.createCell(14).setCellValue("");
-				}
+				row.createCell(14).setCellValue(Double.valueOf(dto.getSpeakingDuration() * 100).intValue() + "%");
+
 				Map<String, Double> speakers = dto.getDurationBySpeakers();
 				String durationBySpeakers = "";
 				if (speakers != null && dto.getSpeakingDuration() != null && dto.getSpeakingDuration() != 0) {
