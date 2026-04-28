@@ -52,6 +52,7 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseReport;
+import uy.com.bay.utiles.data.ExpenseReportDTO;
 import uy.com.bay.utiles.data.ExpenseReportFile;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.ExpenseRequestType;
@@ -71,7 +72,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	private final String EXPENSE_REPORT_ID = "expenseReportID";
 	private final String EXPENSE_REPORT_EDIT_ROUTE_TEMPLATE = "expense-reports/%s/edit";
 
-	private final Grid<ExpenseReport> grid = new Grid<>(ExpenseReport.class, false);
+	private final Grid<ExpenseReportDTO> grid = new Grid<>(ExpenseReportDTO.class, false);
 
 	private TextField studyFilter;
 	private TextField surveyorFilter;
@@ -123,24 +124,23 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		createGridLayout(splitLayout);
 
 		add(splitLayout);
-		grid.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Estudio")
+		grid.addColumn(dto -> dto.getStudyName() != null ? dto.getStudyName() : "").setHeader("Estudio")
 				.setSortProperty("study.name").setKey("study");
+		grid.addColumn(ExpenseReportDTO::getSurveyorName).setHeader("Encuestador")
+				.setSortProperty("surveyor.firstName").setKey("surveyor");
 		grid.addColumn(
-				er -> er.getSurveyor() != null ? er.getSurveyor().getFirstName() + " " + er.getSurveyor().getLastName()
-						: "")
-				.setHeader("Encuestador").setSortProperty("surveyor.firstName").setKey("surveyor");
-		grid.addColumn(
-				er -> er.getDate() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(er.getDate()) : "")
+				dto -> dto.getDate() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy").format(dto.getDate()) : "")
 				.setHeader("Fecha").setSortProperty("date").setKey("date");
-		grid.addColumn(ExpenseReport::getAmount).setHeader("Monto").setSortProperty("amount").setKey("amount");
-		grid.addColumn(er -> er.getConcept() != null ? er.getConcept().getName() : "").setHeader("Concepto")
+		grid.addColumn(ExpenseReportDTO::getAmount).setHeader("Monto").setSortProperty("amount").setKey("amount");
+		grid.addColumn(dto -> dto.getConceptName() != null ? dto.getConceptName() : "").setHeader("Concepto")
 				.setSortProperty("concept.name").setKey("concept");
-		grid.addColumn(ExpenseReport::getExpenseStatus).setHeader("Estado").setSortProperty("expenseStatus")
+		grid.addColumn(ExpenseReportDTO::getExpenseStatus).setHeader("Estado").setSortProperty("expenseStatus")
 				.setKey("expenseStatus");
 
 		grid.setDataProvider(new CallbackDataProvider<>(
 				query -> expenseReportService
-						.list(VaadinSpringDataHelpers.toSpringPageRequest(query), createFilterSpecification()).stream(),
+						.listDtos(VaadinSpringDataHelpers.toSpringPageRequest(query), createFilterSpecification())
+						.stream(),
 				query -> (int) expenseReportService.count(createFilterSpecification())));
 
 		grid.appendFooterRow();
@@ -179,6 +179,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 		save.addClickListener(e -> {
 			try {
+				boolean isNew = this.expenseReport == null || this.expenseReport.getId() == null;
 				if (this.expenseReport == null) {
 					this.expenseReport = new ExpenseReport();
 				}
@@ -187,9 +188,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 				}
 				binder.writeBean(this.expenseReport);
 				if (this.expenseReport.getSurveyor() != null && this.expenseReport.getStudy() != null) {
-					expenseReportService.save(this.expenseReport);
+					ExpenseReport saved = expenseReportService.save(this.expenseReport);
 					clearForm();
-					refreshGrid();
+					refreshGridForChange(saved, isNew);
 					Notification.show("Rendición guardada.");
 					editorLayoutDiv.setVisible(false);
 					UI.getCurrent().navigate(ExpenseReportsView.class);
@@ -208,9 +209,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		reject.addClickListener(e -> {
 			if (this.expenseReport != null) {
 				this.expenseReport.setExpenseStatus(ExpenseReportStatus.RECHAZADO);
-				expenseReportService.save(this.expenseReport);
+				ExpenseReport saved = expenseReportService.save(this.expenseReport);
 				clearForm();
-				refreshGrid();
+				refreshGridForChange(saved, false);
 				Notification.show("Rendición rechazada.");
 				editorLayoutDiv.setVisible(false);
 				UI.getCurrent().navigate(ExpenseReportsView.class);
@@ -224,8 +225,9 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 					if (this.expenseReport.getSurveyor() != null && this.expenseReport.getStudy() != null) {
 						expenseReportService.approveReport(this.expenseReport);
+						ExpenseReport approved = this.expenseReport;
 						clearForm();
-						refreshGrid();
+						refreshGridForChange(approved, false);
 						Notification.show("Rendición aprobada.");
 						editorLayoutDiv.setVisible(false);
 						UI.getCurrent().navigate(ExpenseReportsView.class);
@@ -438,10 +440,22 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		}
 	}
 
+	private void refreshGridForChange(ExpenseReport entity, boolean isNew) {
+		if (isNew || entity == null || entity.getId() == null) {
+			refreshGrid();
+			return;
+		}
+		grid.select(null);
+		grid.getDataProvider().refreshItem(ExpenseReportDTO.fromEntity(entity));
+		if (grid.getFooterRows().size() > 0) {
+			updateFooter();
+		}
+	}
+
 	private void updateFooter() {
 		FooterRow footerRow = grid.getFooterRows().get(0);
-		Grid.Column<ExpenseReport> studyColumn = grid.getColumnByKey("study");
-		Grid.Column<ExpenseReport> amountColumn = grid.getColumnByKey("amount");
+		Grid.Column<ExpenseReportDTO> studyColumn = grid.getColumnByKey("study");
+		Grid.Column<ExpenseReportDTO> amountColumn = grid.getColumnByKey("amount");
 		Specification<ExpenseReport> spec = createFilterSpecification();
 		Double total = expenseReportService.sumAmount(spec);
 		footerRow.getCell(studyColumn).setText("TOTAL");
