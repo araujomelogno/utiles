@@ -50,6 +50,18 @@ public class SupervisionTask extends AbstractEntity {
 	@Column(name = "duration")
 	private Map<String, Double> durationBySpeakers = new HashMap<>();
 
+	@ElementCollection
+	@CollectionTable(name = "supervision_task_coincidence_by_item", joinColumns = @JoinColumn(name = "task_id"))
+	@MapKeyColumn(name = "item_id")
+	@Column(name = "coincidence")
+	private Map<String, String> coincidenceByItem = new HashMap<>();
+
+	@ElementCollection
+	@CollectionTable(name = "supervision_task_score_by_item", joinColumns = @JoinColumn(name = "task_id"))
+	@MapKeyColumn(name = "item_id")
+	@Column(name = "score")
+	private Map<String, Integer> scoreByItem = new HashMap<>();
+
 	private double aiScore;
 
 	private int scoreCobertura;
@@ -275,5 +287,21 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setItemsFaltantes(Integer itemsFaltantes) {
 		this.itemsFaltantes = itemsFaltantes;
+	}
+
+	public Map<String, String> getCoincidenceByItem() {
+		return coincidenceByItem;
+	}
+
+	public void setCoincidenceByItem(Map<String, String> coincidenceByItem) {
+		this.coincidenceByItem = coincidenceByItem;
+	}
+
+	public Map<String, Integer> getScoreByItem() {
+		return scoreByItem;
+	}
+
+	public void setScoreByItem(Map<String, Integer> scoreByItem) {
+		this.scoreByItem = scoreByItem;
 	}
 }

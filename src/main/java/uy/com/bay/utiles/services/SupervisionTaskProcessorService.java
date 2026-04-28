@@ -136,6 +136,21 @@ public class SupervisionTaskProcessorService {
 
 			task.setEvaluationOutput(prettyPrint(response));
 
+			JsonNode evaluationRoot = new ObjectMapper().readTree(task.getEvaluationOutput());
+			JsonNode porItem = evaluationRoot.path("por_item");
+			if (porItem.isArray()) {
+				task.getCoincidenceByItem().clear();
+				task.getScoreByItem().clear();
+				for (JsonNode item : porItem) {
+					String itemId = item.path("item_id").asText();
+					if (itemId == null || itemId.isEmpty()) {
+						continue;
+					}
+					task.getCoincidenceByItem().put(itemId, item.path("calidad_coincidencia").asText());
+					task.getScoreByItem().put(itemId, item.path("puntaje_item").asInt());
+				}
+			}
+
 //			{
 //				  "puntaje_global" : 47,
 //				  "puntajes_componentes" : {
