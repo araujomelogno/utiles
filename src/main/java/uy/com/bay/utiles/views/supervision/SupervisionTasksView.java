@@ -188,6 +188,20 @@ public class SupervisionTasksView extends VerticalLayout {
 				"Problemas Menores", "Duración del audio", "% hablando", "Duración/ participante", "Creada", "Output" };
 		java.text.SimpleDateFormat dateFormatter = new java.text.SimpleDateFormat("dd/MM/yyyy");
 
+		java.util.LinkedHashSet<String> scoreKeys = new java.util.LinkedHashSet<>();
+		java.util.LinkedHashSet<String> coincidenceKeys = new java.util.LinkedHashSet<>();
+		for (SupervisionTaskDTO dto : data) {
+			if (dto.getScoreByItem() != null) {
+				scoreKeys.addAll(dto.getScoreByItem().keySet());
+			}
+			if (dto.getCoincidenceByItem() != null) {
+				coincidenceKeys.addAll(dto.getCoincidenceByItem().keySet());
+			}
+		}
+
+		Map<String, Integer> scoreColumnIndex = new java.util.HashMap<>();
+		Map<String, Integer> coincidenceColumnIndex = new java.util.HashMap<>();
+
 		try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 			Sheet sheet = workbook.createSheet("Supervision Tasks");
 
@@ -195,6 +209,25 @@ public class SupervisionTasksView extends VerticalLayout {
 			for (int col = 0; col < columns.length; col++) {
 				Cell cell = headerRow.createCell(col);
 				cell.setCellValue(columns[col]);
+			}
+
+			int nextCol = columns.length;
+			for (String key : scoreKeys) {
+				scoreColumnIndex.put(key, nextCol);
+				headerRow.createCell(nextCol).setCellValue("puntaje" + key);
+				nextCol++;
+				if (coincidenceKeys.contains(key)) {
+					coincidenceColumnIndex.put(key, nextCol);
+					headerRow.createCell(nextCol).setCellValue("coincidencia" + key);
+					nextCol++;
+				}
+			}
+			for (String key : coincidenceKeys) {
+				if (!coincidenceColumnIndex.containsKey(key)) {
+					coincidenceColumnIndex.put(key, nextCol);
+					headerRow.createCell(nextCol).setCellValue("coincidencia" + key);
+					nextCol++;
+				}
 			}
 
 			int rowIdx = 1;
@@ -248,6 +281,23 @@ public class SupervisionTasksView extends VerticalLayout {
 				row.createCell(15).setCellValue(durationBySpeakers);
 				row.createCell(16).setCellValue(dto.getCreated() != null ? dateFormatter.format(dto.getCreated()) : "");
 				row.createCell(17).setCellValue(dto.getOutput() != null && !dto.getOutput().isEmpty() ? "Sí" : "No");
+
+				if (dto.getScoreByItem() != null) {
+					for (Map.Entry<String, Integer> entry : dto.getScoreByItem().entrySet()) {
+						Integer colIdx = scoreColumnIndex.get(entry.getKey());
+						if (colIdx != null && entry.getValue() != null) {
+							row.createCell(colIdx).setCellValue(entry.getValue());
+						}
+					}
+				}
+				if (dto.getCoincidenceByItem() != null) {
+					for (Map.Entry<String, String> entry : dto.getCoincidenceByItem().entrySet()) {
+						Integer colIdx = coincidenceColumnIndex.get(entry.getKey());
+						if (colIdx != null && entry.getValue() != null) {
+							row.createCell(colIdx).setCellValue(entry.getValue());
+						}
+					}
+				}
 			}
 
 			workbook.write(out);
