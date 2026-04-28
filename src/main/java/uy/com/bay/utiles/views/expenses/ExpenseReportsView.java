@@ -2,14 +2,14 @@ package uy.com.bay.utiles.views.expenses;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.time.LocalDate;
-import java.time.ZoneId;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -21,8 +21,8 @@ import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.FooterRow;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -30,18 +30,18 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.MultiFileReceiver;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.CallbackDataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -49,7 +49,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.ExpenseReport;
@@ -187,14 +186,22 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 					this.expenseReport.setExpenseStatus(ExpenseReportStatus.INGRESADO);
 				}
 				binder.writeBean(this.expenseReport);
-				expenseReportService.save(this.expenseReport);
-				clearForm();
-				refreshGrid();
-				Notification.show("Rendición guardada.");
-				editorLayoutDiv.setVisible(false);
-				UI.getCurrent().navigate(ExpenseReportsView.class);
+				if (this.expenseReport.getSurveyor() != null && this.expenseReport.getStudy() != null) {
+					expenseReportService.save(this.expenseReport);
+					clearForm();
+					refreshGrid();
+					Notification.show("Rendición guardada.");
+					editorLayoutDiv.setVisible(false);
+					UI.getCurrent().navigate(ExpenseReportsView.class);
+				} else {
+					Notification.show(
+							"No se puede guardar la rendición, el estudio y el encuestador no peuden estar vacíos",
+							5000, Position.MIDDLE);
+				}
+
 			} catch (ValidationException validationException) {
-				Notification.show("Error al guardar la rendición.");
+				Notification.show("Error al guardar la rendición.", 5000, Position.MIDDLE);
+
 			}
 		});
 
@@ -212,12 +219,25 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 
 		approve.addClickListener(e -> {
 			if (this.expenseReport != null) {
-				expenseReportService.approveReport(this.expenseReport);
-				clearForm();
-				refreshGrid();
-				Notification.show("Rendición aprobada.");
-				editorLayoutDiv.setVisible(false);
-				UI.getCurrent().navigate(ExpenseReportsView.class);
+				try {
+					binder.writeBean(this.expenseReport);
+
+					if (this.expenseReport.getSurveyor() != null && this.expenseReport.getStudy() != null) {
+						expenseReportService.approveReport(this.expenseReport);
+						clearForm();
+						refreshGrid();
+						Notification.show("Rendición aprobada.");
+						editorLayoutDiv.setVisible(false);
+						UI.getCurrent().navigate(ExpenseReportsView.class);
+					} else {
+						Notification.show(
+								"No se puede guardar la rendición, el estudio y el encuestador no peuden estar vacíos",
+								5000, Position.MIDDLE);
+					}
+				} catch (ValidationException e1) {
+					Notification.show("Error al guardar la rendición.", 5000, Position.MIDDLE);
+					e1.printStackTrace();
+				}
 			}
 		});
 	}

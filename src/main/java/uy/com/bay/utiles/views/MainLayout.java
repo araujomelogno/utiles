@@ -151,9 +151,9 @@ public class MainLayout extends AppLayout {
 		verRendicionesItems.setPrefixComponent(new Icon("vaadin", "list"));
 		rendicionesItem.addItem(verRendicionesItems);
 
-		SideNavItem aprobarRendicionesItem = new SideNavItem("Aprobar rendiciones", "expense-reports-approval");
-		aprobarRendicionesItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
-		rendicionesItem.addItem(aprobarRendicionesItem);
+//		SideNavItem aprobarRendicionesItem = new SideNavItem("Aprobar rendiciones", "expense-reports-approval");
+//		aprobarRendicionesItem.setPrefixComponent(new Icon("vaadin", "check-square-o"));
+//		rendicionesItem.addItem(aprobarRendicionesItem);
 
 		gastosItem.addItem(rendicionesItem);
 
