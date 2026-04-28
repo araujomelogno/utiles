@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import uy.com.bay.utiles.data.ExpenseReport;
+import uy.com.bay.utiles.data.ExpenseReportDTO;
 import uy.com.bay.utiles.data.ExpenseReportStatus;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.repository.JournalEntryRepository;
@@ -60,6 +61,10 @@ public class ExpenseReportService {
 
 	public Page<ExpenseReport> list(Pageable pageable, Specification<ExpenseReport> filter) {
 		return repository.findAll(filter, pageable);
+	}
+
+	public Page<ExpenseReportDTO> listDtos(Pageable pageable, Specification<ExpenseReport> filter) {
+		return repository.findAllDtos(filter, pageable);
 	}
 
 	public List<ExpenseReport> findAllByExpenseStatus(ExpenseReportStatus status) {
