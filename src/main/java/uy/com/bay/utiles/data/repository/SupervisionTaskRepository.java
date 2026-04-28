@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.data.repository;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -43,4 +44,12 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	List<Tuple> findTuplesByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
 			@Param("fileName") String fileName, @Param("alchemerStudyName") String alchemerStudyName,
 			@Param("status") Status status);
+
+	@Query("SELECT st.id as id, KEY(c) as itemId, VALUE(c) as coincidence "
+			+ "FROM SupervisionTask st JOIN st.coincidenceByItem c WHERE st.id IN :ids")
+	List<Tuple> findCoincidenceByItemForIds(@Param("ids") Collection<Long> ids);
+
+	@Query("SELECT st.id as id, KEY(s) as itemId, VALUE(s) as score "
+			+ "FROM SupervisionTask st JOIN st.scoreByItem s WHERE st.id IN :ids")
+	List<Tuple> findScoreByItemForIds(@Param("ids") Collection<Long> ids);
 }

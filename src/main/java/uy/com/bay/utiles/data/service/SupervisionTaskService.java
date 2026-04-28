@@ -81,6 +81,31 @@ public class SupervisionTaskService {
 				dto.getDurationBySpeakers().put(speaker, duration);
 			}
 		}
+
+		if (!dtoMap.isEmpty()) {
+			for (Tuple tuple : repository.findCoincidenceByItemForIds(dtoMap.keySet())) {
+				SupervisionTaskDTO dto = dtoMap.get(tuple.get("id", Long.class));
+				if (dto != null) {
+					String itemId = tuple.get("itemId", String.class);
+					String coincidence = tuple.get("coincidence", String.class);
+					if (itemId != null) {
+						dto.getCoincidenceByItem().put(itemId, coincidence);
+					}
+				}
+			}
+
+			for (Tuple tuple : repository.findScoreByItemForIds(dtoMap.keySet())) {
+				SupervisionTaskDTO dto = dtoMap.get(tuple.get("id", Long.class));
+				if (dto != null) {
+					String itemId = tuple.get("itemId", String.class);
+					Integer score = tuple.get("score", Integer.class);
+					if (itemId != null) {
+						dto.getScoreByItem().put(itemId, score);
+					}
+				}
+			}
+		}
+
 		return new ArrayList<>(dtoMap.values());
 	}
 
