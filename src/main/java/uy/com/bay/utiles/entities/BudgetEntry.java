@@ -20,6 +20,8 @@ public class BudgetEntry extends AbstractEntity {
 	private Double ammount;
 	private Integer quantity;
 	private LocalDate created;
+	private LocalDate init;
+	private LocalDate end;
 
 	public BudgetEntry() {
 		this.created = LocalDate.now();
@@ -171,6 +173,22 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setCreated(LocalDate created) {
 		this.created = created;
+	}
+
+	public LocalDate getInit() {
+		return init;
+	}
+
+	public void setInit(LocalDate init) {
+		this.init = init;
+	}
+
+	public LocalDate getEnd() {
+		return end;
+	}
+
+	public void setEnd(LocalDate end) {
+		this.end = end;
 	}
 
 }

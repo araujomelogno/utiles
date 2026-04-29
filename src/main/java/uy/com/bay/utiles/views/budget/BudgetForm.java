@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
@@ -81,6 +83,7 @@ public class BudgetForm extends VerticalLayout {
 	private Span totalAmountLabel;
 	private Span totalSpentLabel;
 	private final NumberFormat currencyFormat;
+	private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	private final DoobloSurveyRetriever doobloSurveyRetriever;
 	private final OdooService odooService;
 	private final OdooCostService odooCostService;
@@ -200,7 +203,7 @@ public class BudgetForm extends VerticalLayout {
 			}
 			BigDecimal totalOdooCost = BigDecimal.ZERO;
 			List<Map<String, Object>> moveLines = odooService.getOdooAccountMoveLines(budgetStudy.getOdooId(),
-					concept.getOdooProductId());
+					concept.getOdooProductId(), budgetEntry.getInit(), budgetEntry.getEnd());
 			for (Map<String, Object> line : moveLines) {
 				String moveId = odooIdToString(line.get("move_id"));
 				if (moveId == null || moveId.isEmpty()) {
@@ -301,6 +304,19 @@ public class BudgetForm extends VerticalLayout {
 		entryBinder.forField(quantityField).bind(BudgetEntry::getQuantity, BudgetEntry::setQuantity);
 		Grid.Column<BudgetEntry> quantityColumn = entriesGrid.addColumn(BudgetEntry::getQuantity).setHeader("Cantidad")
 				.setResizable(true).setEditorComponent(quantityField);
+
+		DatePicker initField = new DatePicker();
+		initField.setWidthFull();
+		entryBinder.forField(initField).bind(BudgetEntry::getInit, BudgetEntry::setInit);
+		entriesGrid.addColumn(entry -> entry.getInit() != null ? entry.getInit().format(dateFormatter) : "")
+				.setHeader("Inicio").setResizable(true).setEditorComponent(initField);
+
+		DatePicker endField = new DatePicker();
+		endField.setWidthFull();
+		entryBinder.forField(endField).bind(BudgetEntry::getEnd, BudgetEntry::setEnd);
+		entriesGrid.addColumn(entry -> entry.getEnd() != null ? entry.getEnd().format(dateFormatter) : "")
+				.setHeader("Fin").setResizable(true).setEditorComponent(endField);
+
 		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(entry -> currencyFormat.format(entry.getTotal()))
 				.setHeader("Total").setResizable(true);
 
