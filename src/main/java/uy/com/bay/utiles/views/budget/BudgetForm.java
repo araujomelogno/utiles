@@ -113,7 +113,7 @@ public class BudgetForm extends VerticalLayout {
 			editor.editItem(newEntry);
 			updateTotal();
 		});
-		refresh.addClickListener(click -> refreshSpentFromAlchemer());
+		refresh.addClickListener(click -> refreshSpentFromAlchemerAndDooblo());
 		refreshCosts.addClickListener(click -> refreshCostsFromOdoo());
 		Anchor downloadLink = new Anchor();
 		downloadLink.getElement().setAttribute("download", true);
@@ -146,7 +146,7 @@ public class BudgetForm extends VerticalLayout {
 		currencyFormat.setMaximumFractionDigits(0);
 	}
 
-	private void refreshSpentFromAlchemer() {
+	private void refreshSpentFromAlchemerAndDooblo() {
 		if (binder.getBean() == null || binder.getBean().getEntries() == null) {
 			return;
 		}
