@@ -231,7 +231,7 @@ public class QuestionCodingView extends VerticalLayout {
 				boolean allHeadersValid = true;
 				for (ColumnMapping mapping : selected) {
 					String originalName = mapping.getQuestionVariable() != null ? mapping.getQuestionVariable() : "";
-					if (!headers.contains(originalName + "-CODIGO")) {
+					if (!headers.contains(originalName + "-CODIGO") && !mapping.isGenerateCodes()) {
 						allHeadersValid = false;
 						logger.warn("no se encontró " + originalName + "-CODIGO");
 						break;
