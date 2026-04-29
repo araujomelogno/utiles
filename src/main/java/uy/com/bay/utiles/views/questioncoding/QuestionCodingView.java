@@ -132,14 +132,21 @@ public class QuestionCodingView extends VerticalLayout {
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			Checkbox checkbox = new Checkbox();
 			checkbox.setValue(mapping.isToCode());
-			checkbox.addValueChangeListener(event -> mapping.setToCode(event.getValue()));
+			checkbox.addValueChangeListener(event -> {
+				mapping.setToCode(event.getValue());
+				grid.getDataProvider().refreshItem(mapping);
+			});
 			return checkbox;
 		})).setHeader("Codificar");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			Checkbox checkbox = new Checkbox();
 			checkbox.setValue(mapping.isGenerateCodes());
-			checkbox.addValueChangeListener(event -> mapping.setGenerateCodes(event.getValue()));
+			checkbox.setEnabled(mapping.isToCode());
+			checkbox.addValueChangeListener(event -> {
+				mapping.setGenerateCodes(event.getValue());
+				grid.getDataProvider().refreshItem(mapping);
+			});
 			return checkbox;
 		})).setHeader("Generar códigos");
 
@@ -148,6 +155,7 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
 			textField.setMin(0);
 			textField.setWidth("4em");
+			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
@@ -160,6 +168,7 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
 			textField.setMin(0);
 			textField.setWidth("4em");
+			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
@@ -173,6 +182,7 @@ public class QuestionCodingView extends VerticalLayout {
 					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
 			textField.setMin(0);
 			textField.setWidth("4em");
+			textField.setEnabled(mapping.isGenerateCodes());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
@@ -182,12 +192,14 @@ public class QuestionCodingView extends VerticalLayout {
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
 			textField.setValue(mapping.getQuestion() != null ? mapping.getQuestion() : "");
+			textField.setEnabled(mapping.isToCode());
 			textField.addValueChangeListener(event -> mapping.setQuestion(event.getValue()));
 			return textField;
 		})).setHeader("Pregunta");
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
 			textField.setValue(mapping.getFineTuning() != null ? mapping.getFineTuning() : "");
+			textField.setEnabled(mapping.isToCode());
 			textField.addValueChangeListener(event -> mapping.setFineTuning(event.getValue()));
 			return textField;
 		})).setHeader("Fine Tuning ");
