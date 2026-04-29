@@ -147,7 +147,7 @@ public class QuestionCodingView extends VerticalLayout {
 			IntegerField textField = new IntegerField();
 			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
 			textField.setMin(0);
-			textField.setWidthFull();
+			textField.setWidth("4em");
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
@@ -159,7 +159,7 @@ public class QuestionCodingView extends VerticalLayout {
 			IntegerField textField = new IntegerField();
 			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
 			textField.setMin(0);
-			textField.setWidthFull();
+			textField.setWidth("4em");
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
@@ -172,7 +172,7 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(
 					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
 			textField.setMin(0);
-			textField.setWidthFull();
+			textField.setWidth("4em");
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
