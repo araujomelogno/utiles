@@ -1,15 +1,19 @@
 package uy.com.bay.utiles.views.budgetconcept;
 
+import java.util.Optional;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -24,13 +28,11 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.enums.MatchType;
 import uy.com.bay.utiles.services.BudgetConceptService;
-
-import java.util.Optional;
 
 @PageTitle("Conceptos de Presupuesto")
 @Route("budgetconcepts/:budgetconceptID?/:action?(edit)")
@@ -46,6 +48,7 @@ public class BudgetConceptView extends Div implements BeforeEnterObserver {
 	private TextArea description;
 	private TextField odooProductId;
 	private ComboBox<MatchType> matchType;
+	
 
 	private final Button cancel = new Button("Cerrar");
 	private final Button save = new Button("Guardar");
@@ -174,6 +177,8 @@ public class BudgetConceptView extends Div implements BeforeEnterObserver {
 		odooProductId = new TextField("Id de producto ODOO");
 		matchType = new ComboBox<>("Tipo de Coincidencia");
 		matchType.setItems(MatchType.values());
+		
+
 		formLayout.add(name, description, odooProductId, matchType);
 
 		editorDiv.add(formLayout);

@@ -95,9 +95,12 @@ public class ExpenseReportService {
 		Surveyor surveyor = report.getSurveyor();
 		surveyor.setBalance(surveyor.getBalance() - report.getAmount());
 		surveyorRepository.save(surveyor);
-		Study study = report.getStudy();
-		study.setTotalReportedCost(study.getTotalReportedCost() + report.getAmount());
-		studyRepository.save(study);
+		if (!report.getConcept().isRefund()) {
+			Study study = report.getStudy();
+			study.setTotalReportedCost(study.getTotalReportedCost() + report.getAmount());
+			studyRepository.save(study);
+		}
+
 	}
 
 	public void revokeReports(Collection<ExpenseReport> reports) {

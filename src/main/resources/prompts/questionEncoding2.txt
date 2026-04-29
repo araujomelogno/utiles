@@ -18,7 +18,7 @@ REGLAS:
 2. Si ninguna categoría aplica, usa el código de "94.Otros". 
 3. Si la respuesta es vacía (text nulo dentro de la lista responses del json de entrada) usa el código de "97. No contesta". 
 4. Si la respuesta es “no sé” o algo conceptualmente parecido, usa el código de “98. No sabe/No recuerda".
-5. Debes asignar una cantidad de códigos por respuesta que se como mínimo el valor del campo de  minimumCodifications en el json de entrada y como máximo valor del campo de  maximumCodifications en el json de entrada. 
+5. Debes asignar una cantidad de códigos por respuesta que sea como mínimo el valor del campo de  minimumCodifications en el json de entrada y como máximo valor del campo de  maximumCodifications en el json de entrada. 
 6. Puedes usar el campo question_fineTunning para entendar más sobre  la pregunta, la respuesta o el módo de codificar de esa pregunta 
 7. No cambies los IDs: usa siempre los mismos question_id y response_id.
 8. No reformules los textos de respuestas ni los nombres/descripciones de códigos.

@@ -7,6 +7,7 @@ public class ExpenseRequestType extends AbstractEntity {
 
 	private String name;
 	private String description;
+	private boolean refund;
 
 	public String getName() {
 		if (name != null)
@@ -26,4 +27,14 @@ public class ExpenseRequestType extends AbstractEntity {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
+	public boolean isRefund() {
+		return refund;
+	}
+
+	public void setRefund(boolean refund) {
+		this.refund = refund;
+	}
+	
+	
 }

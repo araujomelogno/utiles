@@ -7,9 +7,9 @@ public class QuestionAIInput {
 	private String question_text = "";
 	private String question_id = "";
 	private String question_fineTunning = "";
-	private Integer minimumCodifications = 0;
-	private Integer maximumCodifications = 0;
-	private Integer minimunQuestionsWithCode = 0;
+	private Integer minimumCodifications = 1;
+	private Integer maximumCodifications = 1;
+	private Integer minimunQuestionsWithCode = 1;
 	private List<QuestionAICode> codes = new ArrayList();
 	private List<QuestionAIAnswer> responses = new ArrayList();
 

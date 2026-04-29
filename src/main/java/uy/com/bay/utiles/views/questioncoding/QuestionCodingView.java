@@ -31,7 +31,9 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -122,7 +124,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 	private VerticalLayout createStep2() {
 		H2 header = new H2("Paso 2: Seleccionar columnas a codificar");
-		
+
 		Button prevButton = new Button("Anterior");
 		Button nextButton = new Button("Siguiente");
 
@@ -135,11 +137,46 @@ public class QuestionCodingView extends VerticalLayout {
 		})).setHeader("Codificar");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			Checkbox checkbox = new Checkbox();
+			checkbox.setValue(mapping.isGenerateCodes());
+			checkbox.addValueChangeListener(event -> mapping.setGenerateCodes(event.getValue()));
+			return checkbox;
+		})).setHeader("Generar códigos");
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
 			textField.setValue(mapping.getQuestion() != null ? mapping.getQuestion() : "");
 			textField.addValueChangeListener(event -> mapping.setQuestion(event.getValue()));
 			return textField;
 		})).setHeader("Pregunta");
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			IntegerField textField = new IntegerField();
+			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
+
+			textField.addValueChangeListener(event -> mapping.setMinimumCodifications(event.getValue()));
+
+			return textField;
+		})).setHeader("Códigos min");
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			IntegerField textField = new IntegerField();
+			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
+
+			textField.addValueChangeListener(event -> mapping.setMaximumCodifications(event.getValue()));
+
+			return textField;
+		})).setHeader("Códigos max");
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			IntegerField textField = new IntegerField();
+			textField.setValue(
+					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
+
+			textField.addValueChangeListener(event -> mapping.setMinimunQuestionsWithCode(event.getValue()));
+
+			return textField;
+		})).setHeader("Respuestas para nueva categoría");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
@@ -211,7 +248,8 @@ public class QuestionCodingView extends VerticalLayout {
 		prevButton.addClickListener(event -> showStep(2));
 		nextButton.addClickListener(event -> showStep(4));
 
-		VerticalLayout layout = new VerticalLayout(header, subHeader , upload, new HorizontalLayout(prevButton, nextButton));
+		VerticalLayout layout = new VerticalLayout(header, subHeader, upload,
+				new HorizontalLayout(prevButton, nextButton));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -433,8 +471,12 @@ public class QuestionCodingView extends VerticalLayout {
 	public static class ColumnMapping {
 		private String questionVariable = "";
 		private boolean toCode;
+		private boolean generateCodes;
 		private String fineTuning = "";
 		private String question = "";
+		private Integer minimumCodifications = 1;
+		private Integer maximumCodifications = 1;
+		private Integer minimunQuestionsWithCode = 1;
 
 		public ColumnMapping(String originalName) {
 			this.questionVariable = originalName;
@@ -466,6 +508,42 @@ public class QuestionCodingView extends VerticalLayout {
 
 		public void setQuestion(String question) {
 			this.question = question;
+		}
+
+		public boolean isGenerateCodes() {
+			return generateCodes;
+		}
+
+		public void setGenerateCodes(boolean generateCodes) {
+			this.generateCodes = generateCodes;
+		}
+
+		public Integer getMinimumCodifications() {
+			return minimumCodifications;
+		}
+
+		public void setMinimumCodifications(Integer minimumCodifications) {
+			this.minimumCodifications = minimumCodifications;
+		}
+
+		public Integer getMaximumCodifications() {
+			return maximumCodifications;
+		}
+
+		public void setMaximumCodifications(Integer maximumCodifications) {
+			this.maximumCodifications = maximumCodifications;
+		}
+
+		public Integer getMinimunQuestionsWithCode() {
+			return minimunQuestionsWithCode;
+		}
+
+		public void setMinimunQuestionsWithCode(Integer minimunQuestionsWithCode) {
+			this.minimunQuestionsWithCode = minimunQuestionsWithCode;
+		}
+
+		public void setQuestionVariable(String questionVariable) {
+			this.questionVariable = questionVariable;
 		}
 	}
 }
