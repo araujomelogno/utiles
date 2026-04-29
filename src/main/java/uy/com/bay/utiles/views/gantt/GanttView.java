@@ -1,6 +1,8 @@
 package uy.com.bay.utiles.views.gantt;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.vaadin.tltv.gantt.model.SubStep;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
@@ -44,6 +47,8 @@ import uy.com.bay.utiles.services.GanttService;
 @Route(value = "gantt")
 @PermitAll
 public class GanttView extends VerticalLayout {
+	private static final String ALL_TYPES = "TODOS";
+
 	private final GanttService ganttService;
 	private Gantt gantt;
 	private FlexLayout scrollWrapper;
@@ -51,6 +56,7 @@ public class GanttView extends VerticalLayout {
 
 	private DatePicker startDateField;
 	private DatePicker endDateField;
+	private ComboBox<String> typeFilterComboBox;
 	private Button filterbutton;
 	private Double budgetTotal = 0d;
 	private Double totalSpent = 0d;
@@ -102,6 +108,11 @@ public class GanttView extends VerticalLayout {
 
 	private void fillGantt() {
 		List<Fieldwork> fieldworks = ganttService.getFieldworks(gantt.getStartDate(), gantt.getEndDate());
+		String selectedType = typeFilterComboBox.getValue();
+		if (selectedType != null && !ALL_TYPES.equals(selectedType)) {
+			FieldworkType filterType = FieldworkType.valueOf(selectedType);
+			fieldworks = fieldworks.stream().filter(fw -> fw.getType() == filterType).collect(Collectors.toList());
+		}
 		Map<Study, List<Fieldwork>> fieldworksByStudy = fieldworks.stream()
 				.collect(Collectors.groupingBy(Fieldwork::getStudy));
 		fieldworksByStudy.forEach((study, fieldworkList) -> {
@@ -326,6 +337,13 @@ public class GanttView extends VerticalLayout {
 		endDateField.setLabel("Fin:");
 		endDateField.addValueChangeListener(event -> gantt.setEndDate(event.getValue()));
 
+		typeFilterComboBox = new ComboBox<>("Tipo");
+		List<String> typeOptions = new ArrayList<>();
+		typeOptions.add(ALL_TYPES);
+		Arrays.stream(FieldworkType.values()).map(Enum::name).forEach(typeOptions::add);
+		typeFilterComboBox.setItems(typeOptions);
+		typeFilterComboBox.setValue(ALL_TYPES);
+
 		filterbutton = new Button("Filtrar");
 		filterbutton.addClickListener(e -> {
 			clearGantt();
@@ -333,7 +351,7 @@ public class GanttView extends VerticalLayout {
 
 		});
 
-		tools.add(startDateField, endDateField, filterbutton);
+		tools.add(startDateField, endDateField, typeFilterComboBox, filterbutton);
 		tools.setVerticalComponentAlignment(FlexComponent.Alignment.END, filterbutton);
 		tools.setPadding(true);
 		tools.setSpacing(true);
