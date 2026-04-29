@@ -11,6 +11,7 @@ import uy.com.bay.utiles.config.OdooConfig;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -296,7 +297,8 @@ public class OdooService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Map<String, Object>> getOdooAccountMoveLines(String analitycAccountId, String productId) {
+	public List<Map<String, Object>> getOdooAccountMoveLines(String analitycAccountId, String productId, LocalDate init,
+			LocalDate end) {
 		if (objectClient == null) {
 			logger.error("Odoo object client not initialized. Cannot fetch account move lines.");
 			return Collections.emptyList();
@@ -311,9 +313,13 @@ public class OdooService {
 			List<String> fieldsToFetch = Arrays.asList("id", "date", "move_id", "name", "product_id", "account_id",
 					"debit", "credit", "balance");
 
-			List<Object> domain = Arrays.asList(
-					Arrays.asList("product_id", "=", Integer.parseInt(productId)),
-					Arrays.asList("analytic_account_id", "=", Integer.parseInt(analitycAccountId)));
+			List<Object> domain = new ArrayList<>();
+			domain.add(Arrays.asList("product_id", "=", Integer.parseInt(productId)));
+			domain.add(Arrays.asList("analytic_account_id", "=", Integer.parseInt(analitycAccountId)));
+			if (init != null && end != null) {
+				domain.add(Arrays.asList("date", ">=", init.toString()));
+				domain.add(Arrays.asList("date", "<=", end.toString()));
+			}
 
 			HashMap<String, Object> keywordArgs = new HashMap<>();
 			keywordArgs.put("fields", fieldsToFetch);
