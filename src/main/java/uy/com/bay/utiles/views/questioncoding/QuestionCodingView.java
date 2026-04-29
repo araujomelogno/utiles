@@ -154,38 +154,38 @@ public class QuestionCodingView extends VerticalLayout {
 			IntegerField textField = new IntegerField();
 			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
 			textField.setMin(0);
-			textField.setWidthFull();
+			textField.setWidth("4em");
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
 					event -> mapping.setMinimumCodifications(event.getValue() != null ? event.getValue() : 1));
 			return textField;
-		})).setHeader("Códigos min").setAutoWidth(true).setFlexGrow(0);
+		})).setHeader("Códigos min").setWidth("5em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
 			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
 			textField.setMin(0);
-			textField.setWidthFull();
+			textField.setWidth("4em");
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
 					event -> mapping.setMaximumCodifications(event.getValue() != null ? event.getValue() : 1));
 			return textField;
-		})).setHeader("Códigos max").setAutoWidth(true).setFlexGrow(0);
+		})).setHeader("Códigos max").setWidth("5em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
 			textField.setValue(
 					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
 			textField.setMin(0);
-			textField.setWidthFull();
+			textField.setWidth("4em");
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
 					event -> mapping.setMinimunQuestionsWithCode(event.getValue() != null ? event.getValue() : 1));
 			return textField;
-		})).setHeader("Respuestas para nueva categoría").setAutoWidth(true).setFlexGrow(0);
+		})).setHeader("Respuestas para nueva categoría").setWidth("5em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
