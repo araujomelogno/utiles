@@ -152,28 +152,46 @@ public class QuestionCodingView extends VerticalLayout {
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
+
 			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
 
-			textField.addValueChangeListener(event -> mapping.setMinimumCodifications(event.getValue()));
+			textField.setMin(0);
+			textField.setStepButtonsVisible(true);
+			textField.setWidthFull();
+
+			textField.addValueChangeListener(
+					event -> mapping.setMinimumCodifications(event.getValue() != null ? event.getValue() : 1));
 
 			return textField;
 		})).setHeader("Códigos min");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
+
 			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
 
-			textField.addValueChangeListener(event -> mapping.setMaximumCodifications(event.getValue()));
+			textField.setMin(0);
+			textField.setStepButtonsVisible(true);
+			textField.setWidthFull();
+
+			textField.addValueChangeListener(
+					event -> mapping.setMaximumCodifications(event.getValue() != null ? event.getValue() : 1));
 
 			return textField;
 		})).setHeader("Códigos max");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
+
 			textField.setValue(
 					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
 
-			textField.addValueChangeListener(event -> mapping.setMinimunQuestionsWithCode(event.getValue()));
+			textField.setMin(0);
+			textField.setStepButtonsVisible(true);
+			textField.setWidthFull();
+
+			textField.addValueChangeListener(
+					event -> mapping.setMinimunQuestionsWithCode(event.getValue() != null ? event.getValue() : 1));
 
 			return textField;
 		})).setHeader("Respuestas para nueva categoría");
