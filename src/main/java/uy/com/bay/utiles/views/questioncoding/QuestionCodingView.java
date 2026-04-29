@@ -296,10 +296,14 @@ public class QuestionCodingView extends VerticalLayout {
 					question.setQuestion_text(mapping.getQuestion());
 					question.setQuestion_id(mapping.getQuestionVariable());
 					question.setQuestion_fineTunning(mapping.getFineTuning());
+					question.setMaximumCodifications(mapping.getMaximumCodifications());
+					question.setMinimumCodifications(mapping.getMinimumCodifications());
+					question.setMinimunQuestionsWithCode(mapping.getMinimunQuestionsWithCode());
 
 					String columnName = mapping.getQuestionVariable();
 
 					List<String> questionCodes = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
+
 					for (String questionCode : questionCodes) {
 						QuestionAICode qCode = new QuestionAICode();
 						qCode.setCode(questionCode);
