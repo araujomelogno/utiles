@@ -51,6 +51,7 @@ import uy.com.bay.utiles.dto.aiencoding.QuestionAIAnswer;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAICode;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIInput;
 import uy.com.bay.utiles.dto.aiencoding.QuestionEncodingAIInput;
+import uy.com.bay.utiles.dto.aiencoding.response.AssignedCode;
 import uy.com.bay.utiles.dto.aiencoding.response.CodedResponse;
 import uy.com.bay.utiles.dto.aiencoding.response.Coding;
 import uy.com.bay.utiles.dto.aiencoding.response.Question;
@@ -549,16 +550,7 @@ public class QuestionCodingView extends VerticalLayout {
 			Row headerRow = sheet.getRow(0);
 
 			for (Question question : codedResponse.getQuestions()) {
-				int codingIndex = 0;
 				for (Coding coding : question.getCodings()) {
-					codingIndex++;
-					// Create new headers for code and comment
-					int codeColumnIndex = this.getOrCreateColumnIndex(headerRow,
-							question.getQuestionId() + "-" + codingIndex + "-" + "CODIGO");
-
-					int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
-							question.getQuestionId() + "-" + codingIndex + "-" + "COMENTARIO");
-
 					try {
 						int responseId = Integer.parseInt(coding.getResponseId());
 						Row dataRow = sheet.getRow(responseId);
@@ -566,11 +558,21 @@ public class QuestionCodingView extends VerticalLayout {
 							dataRow = sheet.createRow(responseId);
 						}
 
-						Cell codeCell = dataRow.createCell(codeColumnIndex);
-						codeCell.setCellValue(coding.getAssignedCode());
+						int codeIndex = 0;
+						for (AssignedCode assignedCode : coding.getCodes()) {
+							codeIndex++;
+							int codeColumnIndex = this.getOrCreateColumnIndex(headerRow,
+									question.getQuestionId() + "-" + codeIndex + "-" + "CODIGO");
 
-						Cell commentCell = dataRow.createCell(commentColumnIndex);
-						commentCell.setCellValue(coding.getComment());
+							int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
+									question.getQuestionId() + "-" + codeIndex + "-" + "COMENTARIO");
+
+							Cell codeCell = dataRow.createCell(codeColumnIndex);
+							codeCell.setCellValue(assignedCode.getAssignedCode());
+
+							Cell commentCell = dataRow.createCell(commentColumnIndex);
+							commentCell.setCellValue(assignedCode.getComment());
+						}
 					} catch (NumberFormatException e) {
 						System.err.println("Invalid response_id format: " + coding.getResponseId());
 					}

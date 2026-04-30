@@ -1,13 +1,14 @@
 package uy.com.bay.utiles.dto.aiencoding.response;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Coding {
     @JsonProperty("response_id")
     private String responseId;
-    @JsonProperty("assigned_code")
-    private String assignedCode;
-    private String comment;
+    private List<AssignedCode> codes = new ArrayList<>();
 
     public String getResponseId() {
         return responseId;
@@ -17,19 +18,11 @@ public class Coding {
         this.responseId = responseId;
     }
 
-    public String getAssignedCode() {
-        return assignedCode;
+    public List<AssignedCode> getCodes() {
+        return codes;
     }
 
-    public void setAssignedCode(String assignedCode) {
-        this.assignedCode = assignedCode;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setCodes(List<AssignedCode> codes) {
+        this.codes = codes;
     }
 }
