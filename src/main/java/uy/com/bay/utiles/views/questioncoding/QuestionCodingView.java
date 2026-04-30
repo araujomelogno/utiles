@@ -175,41 +175,41 @@ public class QuestionCodingView extends VerticalLayout {
 			IntegerField textField = new IntegerField();
 			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
 			textField.setMin(0);
-			textField.setWidth("4em");
+			textField.setWidthFull();
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
 					event -> mapping.setMinimumCodifications(event.getValue() != null ? event.getValue() : 1));
 			return textField;
-		})).setHeader("Códigos min").setAutoWidth(true).setFlexGrow(0);
+		})).setHeader("Códigos min").setHeader("Códigos min").setWidth("8em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
 			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
 			textField.setMin(0);
-			textField.setWidth("4em");
+			textField.setWidthFull();
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
 					event -> mapping.setMaximumCodifications(event.getValue() != null ? event.getValue() : 1));
 			return textField;
-		})).setHeader("Códigos max").setAutoWidth(true).setFlexGrow(0);
+		})).setHeader("Códigos max").setHeader("Códigos max").setWidth("8em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			IntegerField textField = new IntegerField();
 			textField.setValue(
 					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
 			textField.setMin(0);
-			textField.setWidth("4em");
+			textField.setWidthFull();
 			textField.setEnabled(mapping.isGenerateCodes());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
 			textField.addValueChangeListener(
 					event -> mapping.setMinimunQuestionsWithCode(event.getValue() != null ? event.getValue() : 1));
 			return textField;
-		})).setHeader("Respuestas para nueva categoría").setAutoWidth(true).setFlexGrow(0);
+		})).setHeader("Respuestas para nueva categoría").setWidth("16em").setFlexGrow(0);
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
 			textField.setValue(mapping.getQuestion() != null ? mapping.getQuestion() : "");
@@ -325,8 +325,11 @@ public class QuestionCodingView extends VerticalLayout {
 			Workbook surveyWorkbook = null;
 			List<String> failedBatches = new ArrayList<>();
 			try {
+
 				surveyWorkbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
-				Workbook codeMappingWorkbook = new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
+				Workbook codeMappingWorkbook = null;
+				if (codeMappingFileContent != null)
+					new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
 
 				List<ColumnMapping> selected = columnMappings.stream().filter(ColumnMapping::isToCode)
 						.collect(Collectors.toList());
@@ -626,26 +629,28 @@ public class QuestionCodingView extends VerticalLayout {
 
 	private List<String> getColumnData(Workbook workbook, String columnName) {
 		List<String> data = new ArrayList<>();
-		Sheet sheet = workbook.getSheetAt(0);
-		int columnIndex = -1;
-		Row headerRow = sheet.getRow(0);
-		for (Cell cell : headerRow) {
-			if (cell.getStringCellValue().equals(columnName)) {
-				columnIndex = cell.getColumnIndex();
-				break;
+		if (workbook != null) {
+			Sheet sheet = workbook.getSheetAt(0);
+			int columnIndex = -1;
+			Row headerRow = sheet.getRow(0);
+			for (Cell cell : headerRow) {
+				if (cell.getStringCellValue().equals(columnName)) {
+					columnIndex = cell.getColumnIndex();
+					break;
+				}
 			}
-		}
 
-		if (columnIndex != -1) {
-			for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-				Row row = sheet.getRow(i);
-				if (row != null) {
-					Cell cell = row.getCell(columnIndex);
-					if (cell != null) {
-						if (cell.getCellType().equals(CellType.NUMERIC))
-							data.add(Double.valueOf(cell.getNumericCellValue()).toString());
-						else
-							data.add(cell.getStringCellValue());
+			if (columnIndex != -1) {
+				for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+					Row row = sheet.getRow(i);
+					if (row != null) {
+						Cell cell = row.getCell(columnIndex);
+						if (cell != null) {
+							if (cell.getCellType().equals(CellType.NUMERIC))
+								data.add(Double.valueOf(cell.getNumericCellValue()).toString());
+							else
+								data.add(cell.getStringCellValue());
+						}
 					}
 				}
 			}

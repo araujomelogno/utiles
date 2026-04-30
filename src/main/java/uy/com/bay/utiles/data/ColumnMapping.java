@@ -14,7 +14,7 @@ public class ColumnMapping extends AbstractEntity {
     private String question = "";
     private Integer minimumCodifications = 1;
     private Integer maximumCodifications = 1;
-    private Integer minimunQuestionsWithCode = 1;
+    private Integer minimunQuestionsWithCode = 3;
 
     @ManyToOne
     @JoinColumn(name = "question_encoding_template_id")
