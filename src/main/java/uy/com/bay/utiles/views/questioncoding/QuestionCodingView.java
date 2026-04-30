@@ -176,7 +176,8 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(
 					mapping.getMinimumCodifications() != null ? String.valueOf(mapping.getMinimumCodifications())
 							: "1");
-			textField.setWidthFull();
+			textField.setWidth("1ch");
+			textField.getStyle().set("min-width", "1ch");
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
@@ -185,7 +186,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMinimumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Códigos min").setWidth("11em").setFlexGrow(0);
+		})).setHeader("Códigos min").setWidth("5em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -193,7 +194,8 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(
 					mapping.getMaximumCodifications() != null ? String.valueOf(mapping.getMaximumCodifications())
 							: "1");
-			textField.setWidthFull();
+			textField.setWidth("1ch");
+			textField.getStyle().set("min-width", "1ch");
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
@@ -202,7 +204,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMaximumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Códigos max").setWidth("11em").setFlexGrow(0);
+		})).setHeader("Códigos max").setWidth("5em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -210,7 +212,8 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(mapping.getMinimunQuestionsWithCode() != null
 					? String.valueOf(mapping.getMinimunQuestionsWithCode())
 					: "1");
-			textField.setWidthFull();
+			textField.setWidth("1ch");
+			textField.getStyle().set("min-width", "1ch");
 			textField.setEnabled(mapping.isGenerateCodes());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
@@ -219,7 +222,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMinimunQuestionsWithCode(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Respuestas para nueva categoría").setWidth("22em").setFlexGrow(0);
+		})).setHeader("Respuestas para nueva categoría").setWidth("16em").setFlexGrow(0);
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
 			textField.setValue(mapping.getQuestion() != null ? mapping.getQuestion() : "");
