@@ -1,110 +1,87 @@
 package uy.com.bay.utiles.data;
 
-import jakarta.persistence.CascadeType;
+import java.util.Date;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
-import jakarta.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 @Entity
 public class EncodingTask extends AbstractEntity {
 
-    private Date created;
+	private Date created;
 
-    @Enumerated(EnumType.STRING)
-    private Status status;
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
-    private String baseFilename;
-    private String codesFileName;
+	private String surveyFileName;
 
-    @Lob
-    private byte[] baseFile;
+	@Lob
+	private byte[] surveyFileContent;
 
-    @Lob
-    private byte[] encodedBaseFile;
+	@Lob
+	private byte[] codeMappingFileContent;
 
-    @Lob
-    private byte[] codesFile;
+	@Lob
+	private byte[] encodedBaseFile;
 
-    private Date processed;
+	private Date processed;
 
-    @OneToMany(mappedBy = "encodingTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<CodingInstruction> instructions = new ArrayList<>();
+	public Date getCreated() {
+		return created;
+	}
 
-    public Date getCreated() {
-        return created;
-    }
+	public void setCreated(Date created) {
+		this.created = created;
+	}
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
+	public Status getStatus() {
+		return status;
+	}
 
-    public Status getStatus() {
-        return status;
-    }
+	public void setStatus(Status status) {
+		this.status = status;
+	}
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+	public String getSurveyFileName() {
+		return surveyFileName;
+	}
 
-    public String getBaseFilename() {
-        return baseFilename;
-    }
+	public void setSurveyFileName(String surveyFileName) {
+		this.surveyFileName = surveyFileName;
+	}
 
-    public void setBaseFilename(String baseFilename) {
-        this.baseFilename = baseFilename;
-    }
+	public byte[] getSurveyFileContent() {
+		return surveyFileContent;
+	}
 
-    public String getCodesFileName() {
-        return codesFileName;
-    }
+	public void setSurveyFileContent(byte[] surveyFileContent) {
+		this.surveyFileContent = surveyFileContent;
+	}
 
-    public void setCodesFileName(String codesFileName) {
-        this.codesFileName = codesFileName;
-    }
+	public byte[] getCodeMappingFileContent() {
+		return codeMappingFileContent;
+	}
 
-    public byte[] getBaseFile() {
-        return baseFile;
-    }
+	public void setCodeMappingFileContent(byte[] codeMappingFileContent) {
+		this.codeMappingFileContent = codeMappingFileContent;
+	}
 
-    public void setBaseFile(byte[] baseFile) {
-        this.baseFile = baseFile;
-    }
+	public byte[] getEncodedBaseFile() {
+		return encodedBaseFile;
+	}
 
-    public byte[] getEncodedBaseFile() {
-        return encodedBaseFile;
-    }
+	public void setEncodedBaseFile(byte[] encodedBaseFile) {
+		this.encodedBaseFile = encodedBaseFile;
+	}
 
-    public void setEncodedBaseFile(byte[] encodedBaseFile) {
-        this.encodedBaseFile = encodedBaseFile;
-    }
+	public Date getProcessed() {
+		return processed;
+	}
 
-    public byte[] getCodesFile() {
-        return codesFile;
-    }
+	public void setProcessed(Date processed) {
+		this.processed = processed;
+	}
 
-    public void setCodesFile(byte[] codesFile) {
-        this.codesFile = codesFile;
-    }
-
-    public Date getProcessed() {
-        return processed;
-    }
-
-    public void setProcessed(Date processed) {
-        this.processed = processed;
-    }
-
-    public List<CodingInstruction> getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(List<CodingInstruction> instructions) {
-        this.instructions = instructions;
-    }
 }

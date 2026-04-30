@@ -174,7 +174,8 @@ public class QuestionCodingView extends VerticalLayout {
 			TextField textField = new TextField();
 			textField.setAllowedCharPattern("[0-9]");
 			textField.setValue(
-					mapping.getMinimumCodifications() != null ? String.valueOf(mapping.getMinimumCodifications()) : "1");
+					mapping.getMinimumCodifications() != null ? String.valueOf(mapping.getMinimumCodifications())
+							: "1");
 			textField.setWidthFull();
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
@@ -190,7 +191,8 @@ public class QuestionCodingView extends VerticalLayout {
 			TextField textField = new TextField();
 			textField.setAllowedCharPattern("[0-9]");
 			textField.setValue(
-					mapping.getMaximumCodifications() != null ? String.valueOf(mapping.getMaximumCodifications()) : "1");
+					mapping.getMaximumCodifications() != null ? String.valueOf(mapping.getMaximumCodifications())
+							: "1");
 			textField.setWidthFull();
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
@@ -335,9 +337,10 @@ public class QuestionCodingView extends VerticalLayout {
 			try {
 
 				surveyWorkbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
+
 				Workbook codeMappingWorkbook = null;
 				if (codeMappingFileContent != null)
-					new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
+					codeMappingWorkbook = new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
 
 				List<ColumnMapping> selected = columnMappings.stream().filter(ColumnMapping::isToCode)
 						.collect(Collectors.toList());

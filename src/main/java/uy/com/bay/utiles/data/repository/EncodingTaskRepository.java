@@ -14,10 +14,9 @@ import uy.com.bay.utiles.data.Status;
 @Repository
 public interface EncodingTaskRepository extends JpaRepository<EncodingTask, Long> {
 
-    @Query("SELECT t FROM EncodingTask t WHERE t.created BETWEEN :from AND :to "
-            + "AND (:fileName IS NULL OR :fileName = '' OR lower(t.baseFilename) LIKE lower(concat('%', :fileName, '%'))) "
-            + "AND (:status IS NULL OR t.status = :status) "
-            + "ORDER BY t.created DESC")
-    List<EncodingTask> findByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
-                                                              @Param("fileName") String fileName, @Param("status") Status status);
+	@Query("SELECT t FROM EncodingTask t WHERE t.created BETWEEN :from AND :to "
+			+ "AND (:surveyFileName IS NULL OR :surveyFileName = '' OR lower(t.surveyFileName) LIKE lower(concat('%', :surveyFileName, '%'))) "
+			+ "AND (:status IS NULL OR t.status = :status) " + "ORDER BY t.created DESC")
+	List<EncodingTask> findByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
+			@Param("surveyFileName") String fileName, @Param("status") Status status);
 }

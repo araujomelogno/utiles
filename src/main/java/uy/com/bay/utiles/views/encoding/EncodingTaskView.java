@@ -51,7 +51,7 @@ public class EncodingTaskView extends VerticalLayout {
     private void configureGrid() {
         grid.setSizeFull();
 
-        Grid.Column<EncodingTask> fileNameColumn = grid.addColumn(EncodingTask::getBaseFilename)
+        Grid.Column<EncodingTask> fileNameColumn = grid.addColumn(EncodingTask::getSurveyFileName)
                 .setHeader("Archivo Base");
 
         grid.addColumn(task -> {
@@ -73,7 +73,7 @@ public class EncodingTaskView extends VerticalLayout {
 
         grid.addComponentColumn(task -> {
             if (task.getEncodedBaseFile() != null && task.getEncodedBaseFile().length > 0) {
-                String fileName = task.getBaseFilename() != null ? task.getBaseFilename() : "encoded_file";
+                String fileName = task.getSurveyFileName() != null ? task.getSurveyFileName()+"_codificado" : "encoded_file";
                 StreamResource resource = new StreamResource(fileName,
                         () -> new ByteArrayInputStream(task.getEncodedBaseFile()));
                 Anchor downloadLink = new Anchor(resource, "Descargar");
