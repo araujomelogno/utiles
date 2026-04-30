@@ -707,7 +707,7 @@ public class QuestionCodingView extends VerticalLayout {
 			for (Question question : codedResponse.getQuestions()) {
 				for (Coding coding : question.getCodings()) {
 					try {
-						int responseId = Integer.parseInt(question.getQuestionId());
+						int responseId = Integer.parseInt(coding.getResponseId());
 						Row dataRow = sheet.getRow(responseId);
 						if (dataRow == null) {
 							dataRow = sheet.createRow(responseId);
