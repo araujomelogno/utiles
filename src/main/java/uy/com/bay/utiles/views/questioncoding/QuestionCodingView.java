@@ -34,7 +34,6 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
@@ -172,42 +171,51 @@ public class QuestionCodingView extends VerticalLayout {
 		})).setHeader("Generar códigos");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
-			IntegerField textField = new IntegerField();
-			textField.setValue(mapping.getMinimumCodifications() != null ? mapping.getMinimumCodifications() : 1);
-			textField.setMin(0);
-			textField.setWidthFull();
-			textField.setEnabled(mapping.isToCode());
-			textField.getElement().addEventListener("click", e -> {
-			}).addEventData("event.stopPropagation()");
-			textField.addValueChangeListener(
-					event -> mapping.setMinimumCodifications(event.getValue() != null ? event.getValue() : 1));
-			return textField;
-		})).setHeader("Códigos min").setHeader("Códigos min").setWidth("8em").setFlexGrow(0);
-
-		grid.addColumn(new ComponentRenderer<>(mapping -> {
-			IntegerField textField = new IntegerField();
-			textField.setValue(mapping.getMaximumCodifications() != null ? mapping.getMaximumCodifications() : 1);
-			textField.setMin(0);
-			textField.setWidthFull();
-			textField.setEnabled(mapping.isToCode());
-			textField.getElement().addEventListener("click", e -> {
-			}).addEventData("event.stopPropagation()");
-			textField.addValueChangeListener(
-					event -> mapping.setMaximumCodifications(event.getValue() != null ? event.getValue() : 1));
-			return textField;
-		})).setHeader("Códigos max").setHeader("Códigos max").setWidth("8em").setFlexGrow(0);
-
-		grid.addColumn(new ComponentRenderer<>(mapping -> {
-			IntegerField textField = new IntegerField();
+			TextField textField = new TextField();
+			textField.setAllowedCharPattern("[0-9]");
 			textField.setValue(
-					mapping.getMinimunQuestionsWithCode() != null ? mapping.getMinimunQuestionsWithCode() : 1);
-			textField.setMin(0);
+					mapping.getMinimumCodifications() != null ? String.valueOf(mapping.getMinimumCodifications()) : "1");
+			textField.setWidthFull();
+			textField.setEnabled(mapping.isToCode());
+			textField.getElement().addEventListener("click", e -> {
+			}).addEventData("event.stopPropagation()");
+			textField.addValueChangeListener(event -> {
+				String v = event.getValue();
+				mapping.setMinimumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
+			});
+			return textField;
+		})).setHeader("Códigos min").setWidth("8em").setFlexGrow(0);
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			TextField textField = new TextField();
+			textField.setAllowedCharPattern("[0-9]");
+			textField.setValue(
+					mapping.getMaximumCodifications() != null ? String.valueOf(mapping.getMaximumCodifications()) : "1");
+			textField.setWidthFull();
+			textField.setEnabled(mapping.isToCode());
+			textField.getElement().addEventListener("click", e -> {
+			}).addEventData("event.stopPropagation()");
+			textField.addValueChangeListener(event -> {
+				String v = event.getValue();
+				mapping.setMaximumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
+			});
+			return textField;
+		})).setHeader("Códigos max").setWidth("8em").setFlexGrow(0);
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			TextField textField = new TextField();
+			textField.setAllowedCharPattern("[0-9]");
+			textField.setValue(mapping.getMinimunQuestionsWithCode() != null
+					? String.valueOf(mapping.getMinimunQuestionsWithCode())
+					: "1");
 			textField.setWidthFull();
 			textField.setEnabled(mapping.isGenerateCodes());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
-			textField.addValueChangeListener(
-					event -> mapping.setMinimunQuestionsWithCode(event.getValue() != null ? event.getValue() : 1));
+			textField.addValueChangeListener(event -> {
+				String v = event.getValue();
+				mapping.setMinimunQuestionsWithCode(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
+			});
 			return textField;
 		})).setHeader("Respuestas para nueva categoría").setWidth("16em").setFlexGrow(0);
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
