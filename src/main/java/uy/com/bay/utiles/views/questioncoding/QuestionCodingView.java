@@ -74,6 +74,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private String fileName;
 	private String basePrompt;
 	Grid<ColumnMapping> grid;
+	private TextField templateName;
 
 	public QuestionCodingView(ChatClient.Builder chatClientBuilder,
 			QuestionEncodingTemplateService questionEncodingTemplateService) {
@@ -101,6 +102,8 @@ public class QuestionCodingView extends VerticalLayout {
 				"El archivo excel debe contener una columna por variable. En el encabezado debe estar el nombre de la variable");
 		MemoryBuffer buffer = new MemoryBuffer();
 		Upload upload = new Upload(buffer);
+		templateName = new TextField("Template cargado:");
+		templateName.setReadOnly(true);
 		Button nextButton = new Button("Siguiente");
 
 		upload.addSucceededListener(event -> {
@@ -122,7 +125,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 		nextButton.addClickListener(event -> this.showStep(2));
 
-		VerticalLayout layout = new VerticalLayout(header, subHeader, upload, nextButton);
+		VerticalLayout layout = new VerticalLayout(header, subHeader, upload, templateName, nextButton);
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -288,6 +291,7 @@ public class QuestionCodingView extends VerticalLayout {
 		H2 header = new H2("Paso 4: Procesar codificación");
 		Button prevButton = new Button("Anterior");
 		Button saveButton = new Button("Guardar template");
+		Button loadButton = new Button("Abrir template");
 		Button processButton = new Button("Procesar");
 		Button downloadButton = new Button("Descargar");
 		downloadButton.setVisible(false);
@@ -297,6 +301,7 @@ public class QuestionCodingView extends VerticalLayout {
 		downloadLink.add(downloadButton);
 
 		saveButton.addClickListener(event -> openSaveTemplateDialog());
+		loadButton.addClickListener(event -> openLoadTemplateDialog());
 
 		processButton.addClickListener(event -> {
 			ProgressDialog dialog = new ProgressDialog();
@@ -386,7 +391,7 @@ public class QuestionCodingView extends VerticalLayout {
 		prevButton.addClickListener(event -> showStep(3));
 
 		VerticalLayout layout = new VerticalLayout(header,
-				new HorizontalLayout(prevButton, saveButton, processButton, downloadLink));
+				new HorizontalLayout(prevButton, saveButton, loadButton, processButton, downloadLink));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -425,6 +430,39 @@ public class QuestionCodingView extends VerticalLayout {
 
 		dialog.add(new VerticalLayout(nameField));
 		dialog.getFooter().add(cancelButton, saveDialogButton);
+		dialog.open();
+	}
+
+	private void openLoadTemplateDialog() {
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("Abrir template");
+
+		Grid<QuestionEncodingTemplate> templateGrid = new Grid<>();
+		templateGrid.setItems(questionEncodingTemplateService.findAll());
+		templateGrid.addColumn(QuestionEncodingTemplate::getName).setHeader("Nombre");
+		templateGrid.addColumn(new ComponentRenderer<>(template -> {
+			Button deleteButton = new Button("Borrar");
+			deleteButton.addClickListener(e -> {
+				questionEncodingTemplateService.delete(template);
+				templateGrid.setItems(questionEncodingTemplateService.findAll());
+				Notification.show("Template borrado");
+			});
+			return deleteButton;
+		})).setHeader("Acciones");
+
+		Button cancelButton = new Button("Cancelar", e -> dialog.close());
+		Button openButton = new Button("Abrir", e -> {
+			QuestionEncodingTemplate selected = templateGrid.asSingleSelect().getValue();
+			if (selected == null) {
+				Notification.show("Debe seleccionar un template");
+				return;
+			}
+			templateName.setValue(selected.getName() != null ? selected.getName() : "");
+			dialog.close();
+		});
+
+		dialog.add(new VerticalLayout(templateGrid));
+		dialog.getFooter().add(cancelButton, openButton);
 		dialog.open();
 	}
 
