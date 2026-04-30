@@ -323,6 +323,8 @@ public class QuestionCodingView extends VerticalLayout {
 
 					// Extract data for the prompt
 					List<String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
+					if (questionResponses.isEmpty())
+						throw new Exception("El archivo no contiene respuestas para " + mapping.getQuestionVariable());
 					Integer size = questionResponses.size();
 					int batchSize = 50;
 					int iterCount = size / batchSize + 1;
@@ -360,7 +362,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				Notification.show("Error al procesar los archivos. ");
+				Notification.show("Error al procesar los archivos. " + e.getMessage());
 			}
 
 			dialog.getHeaderComponent().setText("Proceso completado");
