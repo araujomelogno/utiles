@@ -5,16 +5,16 @@ import java.util.List;
 
 public class Question {
     @JsonProperty("question_id")
-    private String caseId;
+    private String questionId;
     
     private List<Coding> codings;
 
-    public String getCaseId() {
-        return caseId;
+    public String getQuestionId() {
+        return questionId;
     }
 
-    public void caseId(String questionId) {
-        this.caseId = questionId;
+    public void setQuestionId(String questionId) {
+        this.questionId = questionId;
     }
 
     public List<Coding> getCodings() {
