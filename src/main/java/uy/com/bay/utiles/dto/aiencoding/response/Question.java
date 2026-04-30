@@ -6,6 +6,7 @@ import java.util.List;
 public class Question {
     @JsonProperty("question_id")
     private String questionId;
+    
     private List<Coding> codings;
 
     public String getQuestionId() {

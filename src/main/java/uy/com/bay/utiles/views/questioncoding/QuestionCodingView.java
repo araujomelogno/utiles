@@ -451,7 +451,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private void openLoadTemplateDialog() {
 		Dialog dialog = new Dialog();
 		dialog.setHeaderTitle("Abrir template");
-		dialog.setWidth("280px");
+		dialog.setWidth("680px");
 
 		Grid<QuestionEncodingTemplate> templateGrid = new Grid<>();
 		templateGrid.setItems(questionEncodingTemplateService.findAll());
