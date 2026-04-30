@@ -119,6 +119,23 @@ public class QuestionCodingView extends VerticalLayout {
 				Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
 				Sheet sheet = workbook.getSheetAt(0);
 				Row headerRow = sheet.getRow(0);
+				boolean hasCaseId = false;
+				if (headerRow != null) {
+					for (Cell cell : headerRow) {
+						if (cell.getCellType() == CellType.STRING
+								&& "CaseId".equals(cell.getStringCellValue())) {
+							hasCaseId = true;
+							break;
+						}
+					}
+				}
+				if (!hasCaseId) {
+					surveyFileContent = null;
+					fileName = null;
+					Notification.show("Error: el archivo no contiene una columna 'CaseId'.", 5000,
+							Notification.Position.MIDDLE);
+					return;
+				}
 				columnMappings = new ArrayList<>();
 				for (Cell cell : headerRow) {
 					columnMappings.add(new ColumnMapping(cell.getStringCellValue()));
