@@ -556,6 +556,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private StreamResource createExcelStreamResource(Workbook workbook) {
 		return new StreamResource(fileName + "_codificada.xlsx", () -> {
 			try {
+				reorderColumnsAlphabetically(workbook);
 				ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				workbook.write(bos);
 				workbook.close();
@@ -565,6 +566,103 @@ public class QuestionCodingView extends VerticalLayout {
 				return null;
 			}
 		});
+	}
+
+	private static void reorderColumnsAlphabetically(Workbook workbook) {
+		Sheet sheet = workbook.getSheetAt(0);
+		Row headerRow = sheet.getRow(0);
+		if (headerRow == null) {
+			return;
+		}
+
+		int columnCount = headerRow.getLastCellNum();
+		if (columnCount <= 0) {
+			return;
+		}
+
+		List<Integer> sortedIndices = new ArrayList<>();
+		for (int i = 0; i < columnCount; i++) {
+			sortedIndices.add(i);
+		}
+		sortedIndices.sort((a, b) -> {
+			String nameA = getHeaderName(headerRow, a);
+			String nameB = getHeaderName(headerRow, b);
+			return nameA.compareToIgnoreCase(nameB);
+		});
+
+		boolean alreadySorted = true;
+		for (int i = 0; i < sortedIndices.size(); i++) {
+			if (sortedIndices.get(i) != i) {
+				alreadySorted = false;
+				break;
+			}
+		}
+		if (alreadySorted) {
+			return;
+		}
+
+		int lastRowNum = sheet.getLastRowNum();
+		List<List<Object>> allData = new ArrayList<>();
+		for (int rowIdx = 0; rowIdx <= lastRowNum; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			List<Object> rowData = new ArrayList<>();
+			for (int colIdx = 0; colIdx < columnCount; colIdx++) {
+				rowData.add(readCellValue(row != null ? row.getCell(colIdx) : null));
+			}
+			allData.add(rowData);
+		}
+
+		for (int rowIdx = 0; rowIdx <= lastRowNum; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			if (row == null) {
+				row = sheet.createRow(rowIdx);
+			}
+			List<Object> rowData = allData.get(rowIdx);
+			for (int newColIdx = 0; newColIdx < sortedIndices.size(); newColIdx++) {
+				Object value = rowData.get(sortedIndices.get(newColIdx));
+				Cell cell = row.getCell(newColIdx);
+				if (cell == null) {
+					cell = row.createCell(newColIdx);
+				}
+				writeCellValue(cell, value);
+			}
+		}
+	}
+
+	private static String getHeaderName(Row headerRow, int columnIndex) {
+		Cell cell = headerRow.getCell(columnIndex);
+		if (cell == null || cell.getCellType() != CellType.STRING) {
+			return "";
+		}
+		return cell.getStringCellValue();
+	}
+
+	private static Object readCellValue(Cell cell) {
+		if (cell == null) {
+			return null;
+		}
+		switch (cell.getCellType()) {
+		case STRING:
+			return cell.getStringCellValue();
+		case NUMERIC:
+			return cell.getNumericCellValue();
+		case BOOLEAN:
+			return cell.getBooleanCellValue();
+		default:
+			return null;
+		}
+	}
+
+	private static void writeCellValue(Cell cell, Object value) {
+		if (value == null) {
+			cell.setBlank();
+		} else if (value instanceof Double) {
+			cell.setCellValue((Double) value);
+		} else if (value instanceof Boolean) {
+			cell.setCellValue((Boolean) value);
+		} else {
+			cell.setCellValue(value.toString());
+		}
 	}
 
 	private void showStep(int step) {
