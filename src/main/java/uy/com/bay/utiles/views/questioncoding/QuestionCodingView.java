@@ -374,7 +374,8 @@ public class QuestionCodingView extends VerticalLayout {
 					aiInput.getQuestions().add(question);
 
 					// Extract data for the prompt
-					Map<String, String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
+					Map<String, String> questionResponses = getColumnData(surveyWorkbook,
+							mapping.getQuestionVariable());
 					if (questionResponses.isEmpty())
 						throw new Exception("El archivo no contiene respuestas para " + mapping.getQuestionVariable());
 					Integer size = questionResponses.size();
@@ -382,11 +383,13 @@ public class QuestionCodingView extends VerticalLayout {
 					int iterCount = size / batchSize + 1;
 					for (int i = 0; i < iterCount; i++) {
 						Integer row = 1 + i * batchSize;
+
 						for (int j = i * batchSize; j < batchSize * (i + 1) && j < questionResponses.size(); j++) {
-							String answer = null;
+							String caseId = questionResponses.keySet().toArray()[j].toString();
+							String answer = questionResponses.get(caseId);
 							QuestionAIAnswer aianswer = new QuestionAIAnswer();
 							aianswer.setAnswer(answer);
-							aianswer.setResponse_id(row.toString());
+							aianswer.setResponse_id(caseId);
 							question.getResponses().add(aianswer);
 							row++;
 
