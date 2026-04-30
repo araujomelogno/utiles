@@ -609,7 +609,7 @@ public class QuestionCodingView extends VerticalLayout {
 			for (Question question : codedResponse.getQuestions()) {
 				for (Coding coding : question.getCodings()) {
 					try {
-						int responseId = Integer.parseInt(coding.getResponseId());
+						int responseId = Integer.parseInt(question.getCaseId());
 						Row dataRow = sheet.getRow(responseId);
 						if (dataRow == null) {
 							dataRow = sheet.createRow(responseId);
@@ -619,10 +619,10 @@ public class QuestionCodingView extends VerticalLayout {
 						for (AssignedCode assignedCode : coding.getCodes()) {
 							codeIndex++;
 							int codeColumnIndex = this.getOrCreateColumnIndex(headerRow,
-									question.getQuestionId() + "-" + codeIndex + "-" + "CODIGO");
+									question.getCaseId() + "-" + codeIndex + "-" + "CODIGO");
 
 							int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
-									question.getQuestionId() + "-" + codeIndex + "-" + "COMENTARIO");
+									question.getCaseId() + "-" + codeIndex + "-" + "COMENTARIO");
 
 							Cell codeCell = dataRow.createCell(codeColumnIndex);
 							codeCell.setCellValue(assignedCode.getAssignedCode());
