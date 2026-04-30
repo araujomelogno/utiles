@@ -287,7 +287,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private VerticalLayout createStep4() {
 		H2 header = new H2("Paso 4: Procesar codificación");
 		Button prevButton = new Button("Anterior");
-		Button saveButton = new Button("guardar como template");
+		Button saveButton = new Button("Guardar template");
 		Button processButton = new Button("Procesar");
 		Button downloadButton = new Button("Descargar");
 		downloadButton.setVisible(false);
