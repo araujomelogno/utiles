@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
@@ -42,6 +44,9 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.ColumnMapping;
+import uy.com.bay.utiles.data.QuestionEncodingTemplate;
+import uy.com.bay.utiles.data.service.QuestionEncodingTemplateService;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIAnswer;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAICode;
 import uy.com.bay.utiles.dto.aiencoding.QuestionAIInput;
@@ -63,14 +68,17 @@ public class QuestionCodingView extends VerticalLayout {
 	private final VerticalLayout step4;
 	private List<ColumnMapping> columnMappings;
 	private final ChatClient chatClient;
+	private final QuestionEncodingTemplateService questionEncodingTemplateService;
 	private byte[] surveyFileContent;
 	private byte[] codeMappingFileContent;
 	private String fileName;
 	private String basePrompt;
 	Grid<ColumnMapping> grid;
 
-	public QuestionCodingView(ChatClient.Builder chatClientBuilder) {
+	public QuestionCodingView(ChatClient.Builder chatClientBuilder,
+			QuestionEncodingTemplateService questionEncodingTemplateService) {
 		this.chatClient = chatClientBuilder.build();
+		this.questionEncodingTemplateService = questionEncodingTemplateService;
 		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/questionEncoding.txt")) {
 			byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
 			this.basePrompt = new String(byteArray, StandardCharsets.UTF_8);
@@ -279,6 +287,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private VerticalLayout createStep4() {
 		H2 header = new H2("Paso 4: Procesar codificación");
 		Button prevButton = new Button("Anterior");
+		Button saveButton = new Button("guardar como template");
 		Button processButton = new Button("Procesar");
 		Button downloadButton = new Button("Descargar");
 		downloadButton.setVisible(false);
@@ -286,6 +295,8 @@ public class QuestionCodingView extends VerticalLayout {
 		Anchor downloadLink = new Anchor();
 		downloadLink.getElement().setAttribute("download", true);
 		downloadLink.add(downloadButton);
+
+		saveButton.addClickListener(event -> openSaveTemplateDialog());
 
 		processButton.addClickListener(event -> {
 			ProgressDialog dialog = new ProgressDialog();
@@ -375,12 +386,46 @@ public class QuestionCodingView extends VerticalLayout {
 		prevButton.addClickListener(event -> showStep(3));
 
 		VerticalLayout layout = new VerticalLayout(header,
-				new HorizontalLayout(prevButton, processButton, downloadLink));
+				new HorizontalLayout(prevButton, saveButton, processButton, downloadLink));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 		layout.getStyle().set("text-align", "center");
 		return layout;
+	}
+
+	private void openSaveTemplateDialog() {
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("Guardar template");
+
+		TextField nameField = new TextField("Nombre del template a guardar");
+		nameField.setWidthFull();
+
+		Button cancelButton = new Button("Cancelar", e -> dialog.close());
+		Button saveDialogButton = new Button("Guardar", e -> {
+			String name = nameField.getValue();
+			if (name == null || name.trim().isEmpty()) {
+				Notification.show("Debe ingresar un nombre");
+				return;
+			}
+			QuestionEncodingTemplate template = new QuestionEncodingTemplate();
+			template.setCreated(LocalDate.now());
+			template.setName(name);
+			template.setCodeMappingFileContent(codeMappingFileContent);
+			if (columnMappings != null) {
+				for (ColumnMapping mapping : columnMappings) {
+					mapping.setQuestionEncodingTemplate(template);
+					template.getColumnMappings().add(mapping);
+				}
+			}
+			questionEncodingTemplateService.save(template);
+			Notification.show("Template guardado");
+			dialog.close();
+		});
+
+		dialog.add(new VerticalLayout(nameField));
+		dialog.getFooter().add(cancelButton, saveDialogButton);
+		dialog.open();
 	}
 
 	private StreamResource createExcelStreamResource(Workbook workbook) {
@@ -493,82 +538,4 @@ public class QuestionCodingView extends VerticalLayout {
 		return newColumnIndex;
 	}
 
-	public static class ColumnMapping {
-		private String questionVariable = "";
-		private boolean toCode;
-		private boolean generateCodes;
-		private String fineTuning = "";
-		private String question = "";
-		private Integer minimumCodifications = 1;
-		private Integer maximumCodifications = 1;
-		private Integer minimunQuestionsWithCode = 1;
-
-		public ColumnMapping(String originalName) {
-			this.questionVariable = originalName;
-		}
-
-		public String getQuestionVariable() {
-			return questionVariable;
-		}
-
-		public boolean isToCode() {
-			return toCode;
-		}
-
-		public void setToCode(boolean toCode) {
-			this.toCode = toCode;
-		}
-
-		public String getFineTuning() {
-			return fineTuning;
-		}
-
-		public void setFineTuning(String fineTuning) {
-			this.fineTuning = fineTuning;
-		}
-
-		public String getQuestion() {
-			return question;
-		}
-
-		public void setQuestion(String question) {
-			this.question = question;
-		}
-
-		public boolean isGenerateCodes() {
-			return generateCodes;
-		}
-
-		public void setGenerateCodes(boolean generateCodes) {
-			this.generateCodes = generateCodes;
-		}
-
-		public Integer getMinimumCodifications() {
-			return minimumCodifications;
-		}
-
-		public void setMinimumCodifications(Integer minimumCodifications) {
-			this.minimumCodifications = minimumCodifications;
-		}
-
-		public Integer getMaximumCodifications() {
-			return maximumCodifications;
-		}
-
-		public void setMaximumCodifications(Integer maximumCodifications) {
-			this.maximumCodifications = maximumCodifications;
-		}
-
-		public Integer getMinimunQuestionsWithCode() {
-			return minimunQuestionsWithCode;
-		}
-
-		public void setMinimunQuestionsWithCode(Integer minimunQuestionsWithCode) {
-			this.minimunQuestionsWithCode = minimunQuestionsWithCode;
-		}
-
-		public void setQuestionVariable(String questionVariable) {
-			this.questionVariable = questionVariable;
-		}
-	}
 }
