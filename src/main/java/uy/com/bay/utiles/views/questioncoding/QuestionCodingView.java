@@ -122,8 +122,7 @@ public class QuestionCodingView extends VerticalLayout {
 				boolean hasCaseId = false;
 				if (headerRow != null) {
 					for (Cell cell : headerRow) {
-						if (cell.getCellType() == CellType.STRING
-								&& "CaseId".equals(cell.getStringCellValue())) {
+						if (cell.getCellType() == CellType.STRING && "CaseId".equals(cell.getStringCellValue())) {
 							hasCaseId = true;
 							break;
 						}
@@ -131,6 +130,7 @@ public class QuestionCodingView extends VerticalLayout {
 				}
 				if (!hasCaseId) {
 					surveyFileContent = null;
+					upload.clearFileList();
 					fileName = null;
 					Notification.show("Error: el archivo no contiene una columna 'CaseId'.", 5000,
 							Notification.Position.MIDDLE);
@@ -195,8 +195,8 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(
 					mapping.getMinimumCodifications() != null ? String.valueOf(mapping.getMinimumCodifications())
 							: "1");
-			textField.setWidth("1ch");
-			textField.getStyle().set("min-width", "1ch");
+			textField.setWidth("5ch");
+			textField.getStyle().set("min-width", "5ch");
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
@@ -205,7 +205,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMinimumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Códigos min").setWidth("5em").setFlexGrow(0);
+		})).setHeader("C.min").setWidth("10em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -213,8 +213,8 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(
 					mapping.getMaximumCodifications() != null ? String.valueOf(mapping.getMaximumCodifications())
 							: "1");
-			textField.setWidth("1ch");
-			textField.getStyle().set("min-width", "1ch");
+			textField.setWidth("5ch");
+			textField.getStyle().set("min-width", "5ch");
 			textField.setEnabled(mapping.isToCode());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
@@ -223,7 +223,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMaximumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Códigos max").setWidth("5em").setFlexGrow(0);
+		})).setHeader("C.max").setWidth("10em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -231,8 +231,8 @@ public class QuestionCodingView extends VerticalLayout {
 			textField.setValue(mapping.getMinimunQuestionsWithCode() != null
 					? String.valueOf(mapping.getMinimunQuestionsWithCode())
 					: "1");
-			textField.setWidth("1ch");
-			textField.getStyle().set("min-width", "1ch");
+			textField.setWidth("5ch");
+			textField.getStyle().set("min-width", "5ch");
 			textField.setEnabled(mapping.isGenerateCodes());
 			textField.getElement().addEventListener("click", e -> {
 			}).addEventData("event.stopPropagation()");
@@ -751,6 +751,8 @@ public class QuestionCodingView extends VerticalLayout {
 							commentCell.setCellValue(assignedCode.getComment());
 						}
 					} catch (NumberFormatException e) {
+						e.printStackTrace();
+						logger.error(e.getMessage());
 						System.err.println("Invalid response_id format: " + coding.getResponseId());
 					}
 				}
@@ -795,7 +797,8 @@ public class QuestionCodingView extends VerticalLayout {
 								Cell caseIdCell = row.getCell(caseIdColumnIndex);
 								if (caseIdCell != null) {
 									if (caseIdCell.getCellType().equals(CellType.NUMERIC))
-										key = Double.valueOf(caseIdCell.getNumericCellValue()).toString();
+										key = String.valueOf((long) caseIdCell.getNumericCellValue());
+									
 									else
 										key = caseIdCell.getStringCellValue();
 								}
