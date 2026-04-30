@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -362,9 +364,9 @@ public class QuestionCodingView extends VerticalLayout {
 
 					String columnName = mapping.getQuestionVariable();
 
-					List<String> questionCodes = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
+					Map<String, String> questionCodes = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
 
-					for (String questionCode : questionCodes) {
+					for (String questionCode : questionCodes.values()) {
 						QuestionAICode qCode = new QuestionAICode();
 						qCode.setCode(questionCode);
 						question.getCodes().add(qCode);
@@ -372,7 +374,7 @@ public class QuestionCodingView extends VerticalLayout {
 					aiInput.getQuestions().add(question);
 
 					// Extract data for the prompt
-					List<String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
+					Map<String, String> questionResponses = getColumnData(surveyWorkbook, mapping.getQuestionVariable());
 					if (questionResponses.isEmpty())
 						throw new Exception("El archivo no contiene respuestas para " + mapping.getQuestionVariable());
 					Integer size = questionResponses.size();
@@ -381,7 +383,7 @@ public class QuestionCodingView extends VerticalLayout {
 					for (int i = 0; i < iterCount; i++) {
 						Integer row = 1 + i * batchSize;
 						for (int j = i * batchSize; j < batchSize * (i + 1) && j < questionResponses.size(); j++) {
-							String answer = questionResponses.get(j);
+							String answer = null;
 							QuestionAIAnswer aianswer = new QuestionAIAnswer();
 							aianswer.setAnswer(answer);
 							aianswer.setResponse_id(row.toString());
@@ -739,16 +741,20 @@ public class QuestionCodingView extends VerticalLayout {
 		}
 	}
 
-	private List<String> getColumnData(Workbook workbook, String columnName) {
-		List<String> data = new ArrayList<>();
+	private Map<String, String> getColumnData(Workbook workbook, String columnName) {
+		Map<String, String> data = new LinkedHashMap<>();
 		if (workbook != null) {
 			Sheet sheet = workbook.getSheetAt(0);
 			int columnIndex = -1;
+			int caseIdColumnIndex = -1;
 			Row headerRow = sheet.getRow(0);
 			for (Cell cell : headerRow) {
-				if (cell.getStringCellValue().equals(columnName)) {
+				String headerValue = cell.getStringCellValue();
+				if (headerValue.equals(columnName)) {
 					columnIndex = cell.getColumnIndex();
-					break;
+				}
+				if (headerValue.equals("CaseId")) {
+					caseIdColumnIndex = cell.getColumnIndex();
 				}
 			}
 
@@ -758,10 +764,23 @@ public class QuestionCodingView extends VerticalLayout {
 					if (row != null) {
 						Cell cell = row.getCell(columnIndex);
 						if (cell != null) {
+							String value;
 							if (cell.getCellType().equals(CellType.NUMERIC))
-								data.add(Double.valueOf(cell.getNumericCellValue()).toString());
+								value = Double.valueOf(cell.getNumericCellValue()).toString();
 							else
-								data.add(cell.getStringCellValue());
+								value = cell.getStringCellValue();
+
+							String key = null;
+							if (caseIdColumnIndex != -1) {
+								Cell caseIdCell = row.getCell(caseIdColumnIndex);
+								if (caseIdCell != null) {
+									if (caseIdCell.getCellType().equals(CellType.NUMERIC))
+										key = Double.valueOf(caseIdCell.getNumericCellValue()).toString();
+									else
+										key = caseIdCell.getStringCellValue();
+								}
+							}
+							data.put(key, value);
 						}
 					}
 				}
