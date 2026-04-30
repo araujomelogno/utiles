@@ -728,32 +728,27 @@ public class QuestionCodingView extends VerticalLayout {
 
 			for (Question question : codedResponse.getQuestions()) {
 				for (Coding coding : question.getCodings()) {
-					try {
-						int responseId = Integer.parseInt(coding.getResponseId());
-						Row dataRow = sheet.getRow(responseId);
-						if (dataRow == null) {
-							dataRow = sheet.createRow(responseId);
-						}
+					String responseId = coding.getResponseId();
+					Row dataRow = findRowByCaseId(sheet, responseId);
+					if (dataRow == null) {
+						logger.warn("No se encontró fila con CaseId: {}", responseId);
+						continue;
+					}
 
-						int codeIndex = 0;
-						for (AssignedCode assignedCode : coding.getCodes()) {
-							codeIndex++;
-							int codeColumnIndex = this.getOrCreateColumnIndex(headerRow,
-									question.getQuestionId() + "-" + codeIndex + "-" + "CODIGO");
+					int codeIndex = 0;
+					for (AssignedCode assignedCode : coding.getCodes()) {
+						codeIndex++;
+						int codeColumnIndex = this.getOrCreateColumnIndex(headerRow,
+								question.getQuestionId() + "-" + codeIndex + "-" + "CODIGO");
 
-							int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
-									question.getQuestionId() + "-" + codeIndex + "-" + "COMENTARIO");
+						int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
+								question.getQuestionId() + "-" + codeIndex + "-" + "COMENTARIO");
 
-							Cell codeCell = dataRow.createCell(codeColumnIndex);
-							codeCell.setCellValue(assignedCode.getAssignedCode());
+						Cell codeCell = dataRow.createCell(codeColumnIndex);
+						codeCell.setCellValue(assignedCode.getAssignedCode());
 
-							Cell commentCell = dataRow.createCell(commentColumnIndex);
-							commentCell.setCellValue(assignedCode.getComment());
-						}
-					} catch (NumberFormatException e) {
-						e.printStackTrace();
-						logger.error(e.getMessage());
-						System.err.println("Invalid response_id format: " + coding.getResponseId());
+						Cell commentCell = dataRow.createCell(commentColumnIndex);
+						commentCell.setCellValue(assignedCode.getComment());
 					}
 				}
 			}
@@ -810,6 +805,47 @@ public class QuestionCodingView extends VerticalLayout {
 			}
 		}
 		return data;
+	}
+
+	private static Row findRowByCaseId(Sheet sheet, String caseId) {
+		if (sheet == null || caseId == null) {
+			return null;
+		}
+		Row headerRow = sheet.getRow(0);
+		if (headerRow == null) {
+			return null;
+		}
+		int caseIdColumnIndex = -1;
+		for (Cell cell : headerRow) {
+			if (cell.getCellType() == CellType.STRING
+					&& "CaseId".equalsIgnoreCase(cell.getStringCellValue().trim())) {
+				caseIdColumnIndex = cell.getColumnIndex();
+				break;
+			}
+		}
+		if (caseIdColumnIndex == -1) {
+			return null;
+		}
+		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+			Row row = sheet.getRow(i);
+			if (row == null) {
+				continue;
+			}
+			Cell cell = row.getCell(caseIdColumnIndex);
+			if (cell == null) {
+				continue;
+			}
+			String value;
+			if (cell.getCellType() == CellType.NUMERIC) {
+				value = String.valueOf((long) cell.getNumericCellValue());
+			} else {
+				value = cell.getStringCellValue();
+			}
+			if (caseId.equals(value)) {
+				return row;
+			}
+		}
+		return null;
 	}
 
 	private static int getOrCreateColumnIndex(Row headerRow, String headerName) {
