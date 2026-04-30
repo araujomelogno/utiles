@@ -80,7 +80,7 @@ public class QuestionCodingView extends VerticalLayout {
 			QuestionEncodingTemplateService questionEncodingTemplateService) {
 		this.chatClient = chatClientBuilder.build();
 		this.questionEncodingTemplateService = questionEncodingTemplateService;
-		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/questionEncoding.txt")) {
+		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/questionEncoding2.txt")) {
 			byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
 			this.basePrompt = new String(byteArray, StandardCharsets.UTF_8);
 		} catch (IOException e) {
@@ -104,6 +104,9 @@ public class QuestionCodingView extends VerticalLayout {
 		Upload upload = new Upload(buffer);
 		templateName = new TextField("Template cargado:");
 		templateName.setReadOnly(true);
+		Button loadButton = new Button("Abrir template");
+		loadButton.addClickListener(event -> openLoadTemplateDialog());
+		loadButton.setEnabled(false);
 		Button nextButton = new Button("Siguiente");
 
 		upload.addSucceededListener(event -> {
@@ -118,14 +121,19 @@ public class QuestionCodingView extends VerticalLayout {
 					columnMappings.add(new ColumnMapping(cell.getStringCellValue()));
 				}
 				grid.setItems(columnMappings);
+				loadButton.setEnabled(true);
 			} catch (Exception e) {
 				e.printStackTrace();
+				Notification.show("Error al cargar el archivo", 5000, Notification.Position.MIDDLE);
 			}
 		});
 
-		nextButton.addClickListener(event -> this.showStep(2));
+		nextButton.addClickListener(event -> {
+			this.showStep(2);
+		});
 
-		VerticalLayout layout = new VerticalLayout(header, subHeader, upload, templateName, nextButton);
+		VerticalLayout layout = new VerticalLayout(header, subHeader, upload, templateName,
+				new HorizontalLayout(loadButton, nextButton));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -216,7 +224,14 @@ public class QuestionCodingView extends VerticalLayout {
 		})).setHeader("Fine Tuning ");
 
 		prevButton.addClickListener(event -> showStep(1));
-		nextButton.addClickListener(event -> showStep(3));
+
+		nextButton.addClickListener(event -> {
+			if (templateName.getValue() == null || templateName.getValue().isEmpty()) {
+				this.showStep(3);
+			} else {
+				this.showStep(4);
+			}
+		});
 
 		VerticalLayout layout = new VerticalLayout(header, grid, new HorizontalLayout(prevButton, nextButton));
 		layout.setSizeFull();
@@ -291,7 +306,7 @@ public class QuestionCodingView extends VerticalLayout {
 		H2 header = new H2("Paso 4: Procesar codificación");
 		Button prevButton = new Button("Anterior");
 		Button saveButton = new Button("Guardar template");
-		Button loadButton = new Button("Abrir template");
+
 		Button processButton = new Button("Procesar");
 		Button downloadButton = new Button("Descargar");
 		downloadButton.setVisible(false);
@@ -301,7 +316,6 @@ public class QuestionCodingView extends VerticalLayout {
 		downloadLink.add(downloadButton);
 
 		saveButton.addClickListener(event -> openSaveTemplateDialog());
-		loadButton.addClickListener(event -> openLoadTemplateDialog());
 
 		processButton.addClickListener(event -> {
 			ProgressDialog dialog = new ProgressDialog();
@@ -391,7 +405,7 @@ public class QuestionCodingView extends VerticalLayout {
 		prevButton.addClickListener(event -> showStep(3));
 
 		VerticalLayout layout = new VerticalLayout(header,
-				new HorizontalLayout(prevButton, saveButton, loadButton, processButton, downloadLink));
+				new HorizontalLayout(prevButton, saveButton, processButton, downloadLink));
 		layout.setSizeFull();
 		layout.setJustifyContentMode(JustifyContentMode.CENTER);
 		layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -436,6 +450,7 @@ public class QuestionCodingView extends VerticalLayout {
 	private void openLoadTemplateDialog() {
 		Dialog dialog = new Dialog();
 		dialog.setHeaderTitle("Abrir template");
+		dialog.setWidth("280px");
 
 		Grid<QuestionEncodingTemplate> templateGrid = new Grid<>();
 		templateGrid.setItems(questionEncodingTemplateService.findAll());
@@ -458,7 +473,46 @@ public class QuestionCodingView extends VerticalLayout {
 				return;
 			}
 			templateName.setValue(selected.getName() != null ? selected.getName() : "");
-			dialog.close();
+			columnMappings = selected.getColumnMappings();
+			grid.setItems(columnMappings);
+
+			codeMappingFileContent = selected.getCodeMappingFileContent();
+			Workbook workbook;
+			try {
+				workbook = new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
+
+				Sheet sheet = workbook.getSheetAt(0);
+				Row headerRow = sheet.getRow(0);
+				List<String> headers = new ArrayList<>();
+				for (Cell cell : headerRow) {
+					headers.add(cell.getStringCellValue());
+				}
+
+				List<ColumnMapping> selectedMappings = columnMappings.stream().filter(ColumnMapping::isToCode)
+						.collect(Collectors.toList());
+				boolean allHeadersValid = true;
+				for (ColumnMapping mapping : selectedMappings) {
+					String originalName = mapping.getQuestionVariable() != null ? mapping.getQuestionVariable() : "";
+					if (!headers.contains(originalName + "-CODIGO") && !mapping.isGenerateCodes()) {
+						allHeadersValid = false;
+						logger.warn("no se encontró " + originalName + "-CODIGO");
+						break;
+					}
+				}
+				if (allHeadersValid) {
+					Notification.show("Validación exitosa");
+				} else {
+					Notification
+							.show("Error de validación: El archivo de mapeo de códigos no tiene el formato correcto.");
+					logger.warn("Error de validación: El archivo de mapeo de códigos no tiene el formato correcto.");
+				}
+
+				dialog.close();
+			} catch (IOException e1) {
+				Notification.show("Error al cargar el template");
+				logger.warn("Error al cargar el tempalte" + e1.getMessage());
+				e1.printStackTrace();
+			}
 		});
 
 		dialog.add(new VerticalLayout(templateGrid));
@@ -495,13 +549,16 @@ public class QuestionCodingView extends VerticalLayout {
 			Row headerRow = sheet.getRow(0);
 
 			for (Question question : codedResponse.getQuestions()) {
-				// Create new headers for code and comment
-				int codeColumnIndex = this.getOrCreateColumnIndex(headerRow, question.getQuestionId() + "CODIGO");
-
-				int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
-						question.getQuestionId() + "COMENTARIO");
-
+				int codingIndex = 0;
 				for (Coding coding : question.getCodings()) {
+					codingIndex++;
+					// Create new headers for code and comment
+					int codeColumnIndex = this.getOrCreateColumnIndex(headerRow,
+							question.getQuestionId() + "-" + codingIndex + "-" + "CODIGO");
+
+					int commentColumnIndex = this.getOrCreateColumnIndex(headerRow,
+							question.getQuestionId() + "-" + codingIndex + "-" + "COMENTARIO");
+
 					try {
 						int responseId = Integer.parseInt(coding.getResponseId());
 						Row dataRow = sheet.getRow(responseId);
