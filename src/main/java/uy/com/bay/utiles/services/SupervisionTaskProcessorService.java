@@ -18,6 +18,7 @@ import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.retry.TransientAiException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -131,8 +132,7 @@ public class SupervisionTaskProcessorService {
 			String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
 			task.setFullPrompt(formattedPrompt);
 
-			String response = chatClient.prompt().user(formattedPrompt).call().content().replace("```json", "")
-					.replace("```", "");
+			String response = callChatClientWithRetry(formattedPrompt);
 
 			task.setEvaluationOutput(prettyPrint(response));
 
@@ -202,6 +202,31 @@ public class SupervisionTaskProcessorService {
 			supervisionTaskRepository.save(task);
 			supervisionTaskRepository.flush();
 		}
+	}
+
+	private String callChatClientWithRetry(String prompt) {
+		int maxAttempts = 3;
+		long backoffMs = 5_000L;
+		TransientAiException lastException = null;
+		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				return chatClient.prompt().user(prompt).call().content().replace("```json", "").replace("```", "");
+			} catch (TransientAiException e) {
+				lastException = e;
+				logger.warn("Llamada AI falló con error transitorio (intento {}/{}): {}", attempt, maxAttempts,
+						e.getMessage());
+				if (attempt < maxAttempts) {
+					try {
+						Thread.sleep(backoffMs);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						throw new TransientAiException("Interrumpido durante reintentos al servicio AI", ie);
+					}
+					backoffMs *= 2;
+				}
+			}
+		}
+		throw lastException;
 	}
 
 	public static String extractQuestionnaireText(byte[] data, String fileName) {
