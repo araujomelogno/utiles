@@ -184,7 +184,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMinimumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Códigos min").setWidth("8em").setFlexGrow(0);
+		})).setHeader("Códigos min").setWidth("11em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -200,7 +200,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMaximumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Códigos max").setWidth("8em").setFlexGrow(0);
+		})).setHeader("Códigos max").setWidth("11em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -217,7 +217,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMinimunQuestionsWithCode(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("Respuestas para nueva categoría").setWidth("16em").setFlexGrow(0);
+		})).setHeader("Respuestas para nueva categoría").setWidth("22em").setFlexGrow(0);
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextArea textField = new TextArea();
 			textField.setValue(mapping.getQuestion() != null ? mapping.getQuestion() : "");
