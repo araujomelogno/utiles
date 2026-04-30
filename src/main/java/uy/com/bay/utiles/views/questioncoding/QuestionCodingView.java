@@ -19,6 +19,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.retry.TransientAiException;
 import org.springframework.util.FileCopyUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -322,6 +323,7 @@ public class QuestionCodingView extends VerticalLayout {
 			ProgressDialog dialog = new ProgressDialog();
 			dialog.open();
 			Workbook surveyWorkbook = null;
+			List<String> failedBatches = new ArrayList<>();
 			try {
 				surveyWorkbook = new XSSFWorkbook(new ByteArrayInputStream(surveyFileContent));
 				Workbook codeMappingWorkbook = new XSSFWorkbook(new ByteArrayInputStream(codeMappingFileContent));
@@ -376,12 +378,18 @@ public class QuestionCodingView extends VerticalLayout {
 						String json = objectMapper.writeValueAsString(aiInput);
 						String formattedPrompt = basePrompt.formatted(json);
 						System.out.println("PROMPT" + formattedPrompt);
-						String response = chatClient.prompt().user(formattedPrompt).call().content()
-								.replace("```json", "").replace("```", "");
-						logger.info("RESPONSE:\n{}", response);
+						try {
+							String response = callChatClientWithRetry(formattedPrompt);
+							logger.info("RESPONSE:\n{}", response);
 
-						System.out.println("RESPONSE" + response);
-						this.updateSurveyWithCodedResponses(surveyWorkbook, response);
+							System.out.println("RESPONSE" + response);
+							this.updateSurveyWithCodedResponses(surveyWorkbook, response);
+						} catch (TransientAiException aiEx) {
+							String label = columnName + " (lote " + (i + 1) + "/" + iterCount + ")";
+							failedBatches.add(label);
+							logger.error("Servicio AI no disponible para {} tras varios reintentos: {}", label,
+									aiEx.getMessage());
+						}
 						// limpio las respuestas
 						question.getResponses().clear();
 
@@ -394,6 +402,13 @@ public class QuestionCodingView extends VerticalLayout {
 			} catch (Exception e) {
 				e.printStackTrace();
 				Notification.show("Error al procesar los archivos. " + e.getMessage());
+			}
+
+			if (!failedBatches.isEmpty()) {
+				String msg = "Algunos lotes no pudieron procesarse por errores del servicio AI (HTTP 502/transitorio): "
+						+ String.join(", ", failedBatches);
+				logger.warn(msg);
+				Notification.show(msg, 10000, Notification.Position.MIDDLE);
 			}
 
 			dialog.getHeaderComponent().setText("Proceso completado");
@@ -540,6 +555,31 @@ public class QuestionCodingView extends VerticalLayout {
 		step2.setVisible(step == 2);
 		step3.setVisible(step == 3);
 		step4.setVisible(step == 4);
+	}
+
+	private String callChatClientWithRetry(String prompt) {
+		int maxAttempts = 3;
+		long backoffMs = 5_000L;
+		TransientAiException lastException = null;
+		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				return chatClient.prompt().user(prompt).call().content().replace("```json", "").replace("```", "");
+			} catch (TransientAiException e) {
+				lastException = e;
+				logger.warn("Llamada AI falló con error transitorio (intento {}/{}): {}", attempt, maxAttempts,
+						e.getMessage());
+				if (attempt < maxAttempts) {
+					try {
+						Thread.sleep(backoffMs);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						throw new TransientAiException("Interrumpido durante reintentos al servicio AI", ie);
+					}
+					backoffMs *= 2;
+				}
+			}
+		}
+		throw lastException;
 	}
 
 	private void updateSurveyWithCodedResponses(Workbook workbook, String codedResponses) {
