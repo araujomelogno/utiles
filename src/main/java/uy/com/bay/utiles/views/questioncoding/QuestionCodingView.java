@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -381,9 +383,9 @@ public class QuestionCodingView extends VerticalLayout {
 
 					String columnName = mapping.getQuestionVariable();
 
-					Map<String, String> questionCodes = getColumnData(codeMappingWorkbook, columnName + "-CODIGO");
+					List<String> questionCodes = getColumnValues(codeMappingWorkbook, columnName + "-CODIGO");
 
-					for (String questionCode : questionCodes.values()) {
+					for (String questionCode : questionCodes) {
 						QuestionAICode qCode = new QuestionAICode();
 						qCode.setCode(questionCode);
 						question.getCodes().add(qCode);
@@ -391,7 +393,7 @@ public class QuestionCodingView extends VerticalLayout {
 					aiInput.getQuestions().add(question);
 
 					// Extract data for the prompt
-					Map<String, String> questionResponses = getColumnData(surveyWorkbook,
+					Map<String, String> questionResponses = getColumnDataMapByRepsonseId(surveyWorkbook,
 							mapping.getQuestionVariable());
 					if (questionResponses.isEmpty())
 						throw new Exception("El archivo no contiene respuestas para " + mapping.getQuestionVariable());
@@ -758,7 +760,55 @@ public class QuestionCodingView extends VerticalLayout {
 		}
 	}
 
-	private Map<String, String> getColumnData(Workbook workbook, String columnName) {
+	public static List<String> getColumnValues(Workbook workbook, String columnName) {
+		List<String> values = new ArrayList<>();
+		DataFormatter formatter = new DataFormatter();
+
+		Sheet sheet = workbook.getSheetAt(0); // primera hoja
+
+		if (sheet == null) {
+			return values;
+		}
+
+		Iterator<Row> rowIterator = sheet.iterator();
+
+		if (!rowIterator.hasNext()) {
+			return values;
+		}
+
+		// 👉 Leer header
+		Row headerRow = rowIterator.next();
+		int columnIndex = -1;
+
+		for (Cell cell : headerRow) {
+			String header = formatter.formatCellValue(cell).trim();
+			if (columnName.equalsIgnoreCase(header)) {
+				columnIndex = cell.getColumnIndex();
+				break;
+			}
+		}
+
+		if (columnIndex == -1) {
+			throw new RuntimeException("Columna no encontrada: " + columnName);
+		}
+
+		// 👉 Leer valores
+		while (rowIterator.hasNext()) {
+			Row row = rowIterator.next();
+			Cell cell = row.getCell(columnIndex);
+
+			if (cell != null) {
+				String value = formatter.formatCellValue(cell);
+				values.add(value);
+			} else {
+				values.add(""); // o null si preferís
+			}
+		}
+
+		return values;
+	}
+
+	private Map<String, String> getColumnDataMapByRepsonseId(Workbook workbook, String columnName) {
 		Map<String, String> data = new LinkedHashMap<>();
 		if (workbook != null) {
 			Sheet sheet = workbook.getSheetAt(0);
@@ -793,7 +843,7 @@ public class QuestionCodingView extends VerticalLayout {
 								if (caseIdCell != null) {
 									if (caseIdCell.getCellType().equals(CellType.NUMERIC))
 										key = String.valueOf((long) caseIdCell.getNumericCellValue());
-									
+
 									else
 										key = caseIdCell.getStringCellValue();
 								}
@@ -817,8 +867,7 @@ public class QuestionCodingView extends VerticalLayout {
 		}
 		int caseIdColumnIndex = -1;
 		for (Cell cell : headerRow) {
-			if (cell.getCellType() == CellType.STRING
-					&& "CaseId".equalsIgnoreCase(cell.getStringCellValue().trim())) {
+			if (cell.getCellType() == CellType.STRING && "CaseId".equalsIgnoreCase(cell.getStringCellValue().trim())) {
 				caseIdColumnIndex = cell.getColumnIndex();
 				break;
 			}
