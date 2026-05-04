@@ -3,7 +3,9 @@ package uy.com.bay.utiles.services;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.OdooCost;
 import uy.com.bay.utiles.repo.OdooCostRepository;
 
@@ -22,5 +24,10 @@ public class OdooCostService {
 
     public Optional<OdooCost> findByMoveId(String moveId) {
         return repository.findByMoveId(moveId);
+    }
+
+    @Transactional
+    public void deleteByBudgetEntry(BudgetEntry budgetEntry) {
+        repository.deleteByBudgetEntry(budgetEntry);
     }
 }
