@@ -54,6 +54,7 @@ import uy.com.bay.utiles.entities.Extra;
 import uy.com.bay.utiles.entities.OdooCost;
 import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.BudgetExporter;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.OdooCostService;
@@ -77,6 +78,7 @@ public class BudgetForm extends VerticalLayout {
 	private final Binder<Budget> binder = new BeanValidationBinder<>(Budget.class);
 	private final BudgetConceptService budgetConceptService;
 	private final BudgetService budgetService;
+	private final BudgetEntryService budgetEntryService;
 	private final FieldworkService fieldworkService;
 	private final AlchemerSurveyResponseHelper alchemerSurveyResponseHelper;
 	private final Editor<BudgetEntry> editor;
@@ -89,10 +91,12 @@ public class BudgetForm extends VerticalLayout {
 	private final OdooCostService odooCostService;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService,
-			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService,
-			DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService, OdooCostService odooCostService) {
+			BudgetEntryService budgetEntryService, AlchemerSurveyResponseHelper alchemerSurveyResponseHelper,
+			FieldworkService fieldworkService, DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService,
+			OdooCostService odooCostService) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
+		this.budgetEntryService = budgetEntryService;
 		this.fieldworkService = fieldworkService;
 		this.alchemerSurveyResponseHelper = alchemerSurveyResponseHelper;
 		this.doobloSurveyRetriever = doobloSurveyRetriever;
@@ -201,6 +205,8 @@ public class BudgetForm extends VerticalLayout {
 			if (concept == null || concept.getOdooProductId() == null || concept.getOdooProductId().isEmpty()) {
 				continue;
 			}
+			budgetEntry.getOdooCosts().clear();
+			budgetEntryService.save(budgetEntry);
 			BigDecimal totalOdooCost = BigDecimal.ZERO;
 			List<Map<String, Object>> moveLines = odooService.getOdooAccountMoveLines(budgetStudy.getOdooId(),
 					concept.getOdooProductId(), budgetEntry.getInit(), budgetEntry.getEnd());

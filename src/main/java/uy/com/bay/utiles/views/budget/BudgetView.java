@@ -20,6 +20,7 @@ import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.BudgetConceptService;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.OdooCostService;
 import uy.com.bay.utiles.services.OdooService;
@@ -37,16 +38,17 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 	private final BudgetForm form;
 	private final BudgetService budgetService;
 
-	public BudgetView(BudgetService budgetService, StudyService studyService, BudgetConceptService budgetConceptService,
-			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService,
-			DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService, OdooCostService odooCostService) {
+	public BudgetView(BudgetService budgetService, BudgetEntryService budgetEntryService, StudyService studyService,
+			BudgetConceptService budgetConceptService, AlchemerSurveyResponseHelper alchemerSurveyResponseHelper,
+			FieldworkService fieldworkService, DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService,
+			OdooCostService odooCostService) {
 		this.budgetService = budgetService;
 		addClassName("budget-view");
 		setSizeFull();
 		configureGrid();
 
-		form = new BudgetForm(studyService, budgetConceptService, budgetService, alchemerSurveyResponseHelper,
-				fieldworkService, doobloSurveyRetriever, odooService, odooCostService);
+		form = new BudgetForm(studyService, budgetConceptService, budgetService, budgetEntryService,
+				alchemerSurveyResponseHelper, fieldworkService, doobloSurveyRetriever, odooService, odooCostService);
 		form.addSaveListener(this::saveBudget);
 		form.addDeleteListener(this::deleteBudget);
 		form.addCloseListener(e -> closeEditor());
