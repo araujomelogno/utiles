@@ -243,6 +243,8 @@ public class GanttView extends VerticalLayout {
 	}
 
 	private ProgressBar createProgressBar(double initialProgress) {
+		if (initialProgress > 100)
+			initialProgress = 100;
 		ProgressBar bar = new ProgressBar(0, 100);
 		bar.setHeight("20%");
 		bar.setWidth("100%");
@@ -255,6 +257,8 @@ public class GanttView extends VerticalLayout {
 	}
 
 	private ProgressBar createBudgetBar(double actualCost) {
+		if (actualCost > 100)
+			actualCost = 100;
 		ProgressBar bar = new ProgressBar(0, 100);
 		bar.setHeight("20%");
 		bar.setWidth("100%");
