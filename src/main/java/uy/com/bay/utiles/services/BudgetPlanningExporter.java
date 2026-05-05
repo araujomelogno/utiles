@@ -12,8 +12,10 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -36,7 +38,7 @@ public class BudgetPlanningExporter {
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	public InputStream export(List<BudgetEntry> entries, LocalDate fechaDesde, LocalDate fechaHasta,
-			List<Study> selectedStudies) throws IOException {
+			List<Study> selectedStudies, boolean totalizarConceptos) throws IOException {
 		Workbook workbook = new XSSFWorkbook();
 		Sheet sheet = workbook.createSheet("Planificación presupuestal");
 
@@ -91,7 +93,9 @@ public class BudgetPlanningExporter {
 
 		List<String> headers = new ArrayList<>();
 		headers.add("Estudio");
-		headers.add("Concepto presupuesto");
+		if (!totalizarConceptos) {
+			headers.add("Concepto presupuesto");
+		}
 		headers.add("Tipo");
 		headers.add("Total");
 		for (YearMonth ym : months) {
@@ -107,24 +111,37 @@ public class BudgetPlanningExporter {
 			cell.setCellStyle(headerStyle);
 		}
 
-		List<BudgetEntry> sorted = new ArrayList<>(entries);
-		sorted.sort(Comparator
-				.comparing((BudgetEntry be) -> studyName(be), Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
-				.thenComparing(BudgetPlanningExporter::conceptName,
-						Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
-				.thenComparing(BudgetPlanningExporter::tipo,
-						Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+		if (totalizarConceptos) {
+			List<AggregatedRow> aggregated = aggregateByStudyAndTipo(entries, months);
+			for (AggregatedRow agg : aggregated) {
+				Row row = sheet.createRow(rowIndex++);
+				row.createCell(0).setCellValue(agg.estudio);
+				row.createCell(1).setCellValue(agg.tipo);
+				row.createCell(2).setCellValue(agg.total);
+				for (int i = 0; i < months.size(); i++) {
+					row.createCell(3 + i).setCellValue(agg.monthly[i]);
+				}
+			}
+		} else {
+			List<BudgetEntry> sorted = new ArrayList<>(entries);
+			sorted.sort(Comparator
+					.comparing((BudgetEntry be) -> studyName(be), Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+					.thenComparing(BudgetPlanningExporter::conceptName,
+							Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+					.thenComparing(BudgetPlanningExporter::tipo,
+							Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
 
-		for (BudgetEntry entry : sorted) {
-			Row row = sheet.createRow(rowIndex++);
-			row.createCell(0).setCellValue(studyName(entry));
-			row.createCell(1).setCellValue(conceptName(entry));
-			row.createCell(2).setCellValue(tipo(entry));
-			row.createCell(3).setCellValue(entry.getTotal() != null ? entry.getTotal() : 0d);
+			for (BudgetEntry entry : sorted) {
+				Row row = sheet.createRow(rowIndex++);
+				row.createCell(0).setCellValue(studyName(entry));
+				row.createCell(1).setCellValue(conceptName(entry));
+				row.createCell(2).setCellValue(tipo(entry));
+				row.createCell(3).setCellValue(entry.getTotal() != null ? entry.getTotal() : 0d);
 
-			double[] distribution = distribute(entry, months);
-			for (int i = 0; i < months.size(); i++) {
-				row.createCell(4 + i).setCellValue(distribution[i]);
+				double[] distribution = distribute(entry, months);
+				for (int i = 0; i < months.size(); i++) {
+					row.createCell(4 + i).setCellValue(distribution[i]);
+				}
 			}
 		}
 
@@ -209,5 +226,38 @@ public class BudgetPlanningExporter {
 			}
 		}
 		return result;
+	}
+
+	private List<AggregatedRow> aggregateByStudyAndTipo(List<BudgetEntry> entries, List<YearMonth> months) {
+		Map<String, AggregatedRow> map = new LinkedHashMap<>();
+		for (BudgetEntry entry : entries) {
+			String estudio = studyName(entry);
+			String tipo = tipo(entry);
+			String key = estudio + "||" + tipo;
+			AggregatedRow agg = map.computeIfAbsent(key, k -> new AggregatedRow(estudio, tipo, months.size()));
+			agg.total += entry.getTotal() != null ? entry.getTotal() : 0d;
+			double[] distribution = distribute(entry, months);
+			for (int i = 0; i < months.size(); i++) {
+				agg.monthly[i] += distribution[i];
+			}
+		}
+		List<AggregatedRow> list = new ArrayList<>(map.values());
+		list.sort(Comparator
+				.comparing((AggregatedRow a) -> a.estudio, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+				.thenComparing(a -> a.tipo, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+		return list;
+	}
+
+	private static class AggregatedRow {
+		final String estudio;
+		final String tipo;
+		double total;
+		final double[] monthly;
+
+		AggregatedRow(String estudio, String tipo, int monthCount) {
+			this.estudio = estudio;
+			this.tipo = tipo;
+			this.monthly = new double[monthCount];
+		}
 	}
 }
