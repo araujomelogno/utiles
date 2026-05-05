@@ -36,6 +36,8 @@ import uy.com.bay.utiles.data.FieldworkStatus;
 import uy.com.bay.utiles.data.FieldworkType;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.service.FieldworkService;
+import uy.com.bay.utiles.entities.BudgetEntry;
+import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.StudyService;
 
 @Route("fieldworks/:fieldworkID?/:action?(edit)")
@@ -78,12 +80,14 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
 	private final uy.com.bay.utiles.services.AreaService areaService;
+	private final BudgetEntryService budgetEntryService;
 
 	public FieldworksView(FieldworkService fieldworkService, StudyService studyService,
-			uy.com.bay.utiles.services.AreaService areaService) {
+			uy.com.bay.utiles.services.AreaService areaService, BudgetEntryService budgetEntryService) {
 		this.fieldworkService = fieldworkService;
 		this.studyService = studyService;
 		this.areaService = areaService;
+		this.budgetEntryService = budgetEntryService;
 		addClassNames("fieldworks-view");
 
 		// Create UI
@@ -181,6 +185,15 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 						&& !this.fieldwork.getStudy().getFieldworks().contains(this.fieldwork)) {
 					this.fieldwork.getStudy().getFieldworks().add(this.fieldwork);
 					this.studyService.save(this.fieldwork.getStudy());
+				}
+
+				if (this.fieldwork.getStudy() != null && this.fieldwork.getStudy().getBudget() != null
+						&& this.fieldwork.getStudy().getBudget().getEntries() != null) {
+					for (BudgetEntry entry : this.fieldwork.getStudy().getBudget().getEntries()) {
+						entry.setInit(this.fieldwork.getInitPlannedDate());
+						entry.setEnd(this.fieldwork.getEndPlannedDate());
+						this.budgetEntryService.save(entry);
+					}
 				}
 
 				clearForm();
