@@ -32,11 +32,14 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import uy.com.bay.utiles.data.User;
 import uy.com.bay.utiles.security.AuthenticatedUser;
+import uy.com.bay.utiles.services.BudgetEntryService;
+import uy.com.bay.utiles.services.BudgetPlanningExporter;
 import uy.com.bay.utiles.services.ExcelExportService;
 import uy.com.bay.utiles.services.ExtraService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.services.SurveyorService;
+import uy.com.bay.utiles.views.budget.BudgetPlanningReportDialog;
 import uy.com.bay.utiles.views.expenses.ReportesDialog;
 import uy.com.bay.utiles.views.extras.ExtrasReportDialog;
 
@@ -57,10 +60,13 @@ public class MainLayout extends AppLayout {
 	private final JournalEntryService journalEntryService;
 	private final ExtraService extraService;
 	private final ExcelExportService excelExportService;
+	private final BudgetEntryService budgetEntryService;
+	private final BudgetPlanningExporter budgetPlanningExporter;
 
 	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
 			SurveyorService surveyorService, StudyService studyService, JournalEntryService journalEntryService,
-			ExtraService extraService, ExcelExportService excelExportService) {
+			ExtraService extraService, ExcelExportService excelExportService, BudgetEntryService budgetEntryService,
+			BudgetPlanningExporter budgetPlanningExporter) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
 		this.surveyorService = surveyorService;
@@ -68,6 +74,8 @@ public class MainLayout extends AppLayout {
 		this.journalEntryService = journalEntryService;
 		this.extraService = extraService;
 		this.excelExportService = excelExportService;
+		this.budgetEntryService = budgetEntryService;
+		this.budgetPlanningExporter = budgetPlanningExporter;
 
 		setPrimarySection(Section.DRAWER);
 		addDrawerContent();
@@ -173,6 +181,14 @@ public class MainLayout extends AppLayout {
 		SideNavItem crearPresupuestoItem = new SideNavItem("Listar", "budgets");
 		crearPresupuestoItem.setPrefixComponent(new Icon("vaadin", "plus"));
 		presupuestosItem.addItem(crearPresupuestoItem);
+		SideNavItem reportePlanificacionItem = new SideNavItem("Reporte planificación presupuestal");
+		reportePlanificacionItem.setPrefixComponent(new Icon("vaadin", "file-chart"));
+		reportePlanificacionItem.getElement().addEventListener("click", e -> {
+			BudgetPlanningReportDialog dialog = new BudgetPlanningReportDialog(studyService, budgetEntryService,
+					budgetPlanningExporter);
+			dialog.open();
+		});
+		presupuestosItem.addItem(reportePlanificacionItem);
 		nav.addItem(presupuestosItem);
 
 		SideNavItem surveyorPortalItem = new SideNavItem("Portal Encuestador");
