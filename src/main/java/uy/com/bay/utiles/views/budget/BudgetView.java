@@ -70,8 +70,7 @@ public class BudgetView extends VerticalLayout implements BeforeEnterObserver {
 
 	private Component getContent() {
 		HorizontalLayout content = new HorizontalLayout(grid, form);
-		content.setFlexGrow(1, grid);
-		content.setFlexGrow(2, form);
+		grid.setWidth("30%");
 		form.setWidth("70%");
 		content.addClassNames("content");
 		content.setSizeFull();
