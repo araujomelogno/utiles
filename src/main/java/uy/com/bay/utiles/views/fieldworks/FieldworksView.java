@@ -190,9 +190,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				if (this.fieldwork.getStudy() != null && this.fieldwork.getStudy().getBudget() != null
 						&& this.fieldwork.getStudy().getBudget().getEntries() != null) {
 					for (BudgetEntry entry : this.fieldwork.getStudy().getBudget().getEntries()) {
-						entry.setInit(this.fieldwork.getInitPlannedDate());
-						entry.setEnd(this.fieldwork.getEndPlannedDate());
-						this.budgetEntryService.save(entry);
+						this.budgetEntryService.updateDates(entry.getId(),
+								this.fieldwork.getInitPlannedDate(), this.fieldwork.getEndPlannedDate());
 					}
 				}
 
