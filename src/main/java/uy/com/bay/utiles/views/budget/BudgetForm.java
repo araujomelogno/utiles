@@ -196,14 +196,13 @@ public class BudgetForm extends VerticalLayout {
 		if (budgetStudy == null || budgetStudy.getOdooId() == null || budgetStudy.getOdooId().isEmpty()) {
 			return;
 		}
+		Long budgetId = binder.getBean().getId();
 		for (BudgetEntry budgetEntry : binder.getBean().getEntries()) {
 			BudgetConcept concept = budgetEntry.getConcept();
 			if (concept == null || concept.getOdooProductId() == null || concept.getOdooProductId().isEmpty()) {
 				continue;
 			}
 			odooCostService.deleteByBudgetEntry(budgetEntry);
-			budgetEntry.getOdooCosts().clear();
-			BigDecimal totalOdooCost = BigDecimal.ZERO;
 			List<Map<String, Object>> moveLines = odooService.getOdooAccountMoveLines(budgetStudy.getOdooId(),
 					concept.getOdooProductId(), budgetEntry.getInit(), budgetEntry.getEnd());
 			for (Map<String, Object> line : moveLines) {
@@ -225,12 +224,16 @@ public class BudgetForm extends VerticalLayout {
 				cost.setBalance(odooValueToBigDecimal(line.get("balance")));
 				cost.setBudgetEntry(budgetEntry);
 				odooCostService.save(cost);
-				if (cost.getBalance() != null) {
-					totalOdooCost = totalOdooCost.add(cost.getBalance());
-				}
 			}
 		}
-		entriesGrid.setItems(binder.getBean().getEntries());
+		if (budgetId != null) {
+			budgetService.findByIdWithEntries(budgetId).ifPresent(refreshed -> {
+				binder.setBean(refreshed);
+				entriesGrid.setItems(refreshed.getEntries());
+			});
+		} else {
+			entriesGrid.setItems(binder.getBean().getEntries());
+		}
 		updateTotal();
 	}
 
