@@ -12,6 +12,7 @@ public class BudgetConcept extends AbstractEntity {
     private String name;
     private String description;
     private String odooProductId;
+    private boolean salaryCost;
 
     @Enumerated(EnumType.STRING)
     private MatchType matchType;
@@ -46,5 +47,13 @@ public class BudgetConcept extends AbstractEntity {
 
     public void setMatchType(MatchType matchType) {
         this.matchType = matchType;
+    }
+
+    public boolean isSalaryCost() {
+        return salaryCost;
+    }
+
+    public void setSalaryCost(boolean salaryCost) {
+        this.salaryCost = salaryCost;
     }
 }

@@ -48,6 +48,7 @@ public class BudgetConceptView extends Div implements BeforeEnterObserver {
 	private TextArea description;
 	private TextField odooProductId;
 	private ComboBox<MatchType> matchType;
+	private Checkbox salaryCost;
 	
 
 	private final Button cancel = new Button("Cerrar");
@@ -177,9 +178,9 @@ public class BudgetConceptView extends Div implements BeforeEnterObserver {
 		odooProductId = new TextField("Id de producto ODOO");
 		matchType = new ComboBox<>("Tipo de Coincidencia");
 		matchType.setItems(MatchType.values());
-		
+		salaryCost = new Checkbox("Costo Salarial");
 
-		formLayout.add(name, description, odooProductId, matchType);
+		formLayout.add(name, description, odooProductId, matchType, salaryCost);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(editorLayoutDiv);
