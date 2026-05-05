@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -26,6 +27,7 @@ public class BudgetPlanningReportDialog extends Dialog {
 	private final DatePicker fechaDesde = new DatePicker("Fecha desde");
 	private final DatePicker fechaHasta = new DatePicker("Fecha hasta");
 	private final MultiSelectComboBox<Study> estudios = new MultiSelectComboBox<>("Estudios");
+	private final Checkbox totalizarConceptos = new Checkbox("Totalizar conceptos");
 
 	public BudgetPlanningReportDialog(StudyService studyService, BudgetEntryService budgetEntryService,
 			BudgetPlanningExporter exporter) {
@@ -47,7 +49,7 @@ public class BudgetPlanningReportDialog extends Dialog {
 		estudios.setItemLabelGenerator(s -> s == null ? "" : s.getName());
 
 		FormLayout layout = new FormLayout();
-		layout.add(fechaDesde, fechaHasta, estudios);
+		layout.add(fechaDesde, fechaHasta, estudios, totalizarConceptos);
 		add(layout);
 
 		Button descargar = new Button("Descargar");
@@ -80,7 +82,8 @@ public class BudgetPlanningReportDialog extends Dialog {
 		}
 
 		try {
-			InputStream in = exporter.export(entries, fechaDesde.getValue(), fechaHasta.getValue(), selectedStudies);
+			InputStream in = exporter.export(entries, fechaDesde.getValue(), fechaHasta.getValue(), selectedStudies,
+					totalizarConceptos.getValue());
 			StreamResource resource = new StreamResource("planificacion-presupuestal.xlsx", () -> in);
 			Anchor downloadLink = new Anchor(resource, "");
 			downloadLink.getElement().setAttribute("download", true);
