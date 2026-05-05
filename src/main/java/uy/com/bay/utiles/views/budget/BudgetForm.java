@@ -329,9 +329,14 @@ public class BudgetForm extends VerticalLayout {
 			editor.save();
 			Budget budget = binder.getBean();
 			if (budget != null) {
-				Budget updatedBudget = budgetService.save(budget);
-				binder.setBean(updatedBudget);
-				entriesGrid.setItems(updatedBudget.getEntries());
+				Budget savedBudget = budgetService.save(budget);
+				budgetService.findByIdWithEntries(savedBudget.getId()).ifPresentOrElse(refreshed -> {
+					binder.setBean(refreshed);
+					entriesGrid.setItems(refreshed.getEntries());
+				}, () -> {
+					binder.setBean(savedBudget);
+					entriesGrid.setItems(savedBudget.getEntries());
+				});
 				updateTotal();
 			}
 		});
