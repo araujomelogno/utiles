@@ -325,7 +325,16 @@ public class BudgetForm extends VerticalLayout {
 		Grid.Column<BudgetEntry> totalColumn = entriesGrid.addColumn(entry -> currencyFormat.format(entry.getTotal()))
 				.setHeader("Total").setResizable(true);
 
-		Button saveButton = new Button("Guardar", e -> editor.save());
+		Button saveButton = new Button("Guardar", e -> {
+			editor.save();
+			Budget budget = binder.getBean();
+			if (budget != null) {
+				Budget updatedBudget = budgetService.save(budget);
+				binder.setBean(updatedBudget);
+				entriesGrid.setItems(updatedBudget.getEntries());
+				updateTotal();
+			}
+		});
 		HorizontalLayout actions = new HorizontalLayout(saveButton);
 		actions.setPadding(false);
 
