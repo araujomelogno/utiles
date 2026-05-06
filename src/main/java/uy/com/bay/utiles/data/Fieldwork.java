@@ -2,12 +2,21 @@ package uy.com.bay.utiles.data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.TemporalType;
 import uy.com.bay.utiles.entities.BudgetEntry;
 
 @Entity
@@ -42,6 +51,13 @@ public class Fieldwork extends AbstractEntity {
 
 	private String doobloId;
 	private String alchemerId;
+
+	@ElementCollection
+	@CollectionTable(name = "fieldwork_completed_by_month", joinColumns = @JoinColumn(name = "fieldwork_id"))
+	@MapKeyColumn(name = "month")
+	@MapKeyTemporal(TemporalType.DATE)
+	@Column(name = "completed")
+	private Map<Date, Integer> completedByMonth = new HashMap<>();
 
 	public String getDoobloId() {
 		return doobloId;
@@ -158,5 +174,13 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setBudgetEntry(BudgetEntry budgetEntry) {
 		this.budgetEntry = budgetEntry;
+	}
+
+	public Map<Date, Integer> getCompletedByMonth() {
+		return completedByMonth;
+	}
+
+	public void setCompletedByMonth(Map<Date, Integer> completedByMonth) {
+		this.completedByMonth = completedByMonth;
 	}
 }
