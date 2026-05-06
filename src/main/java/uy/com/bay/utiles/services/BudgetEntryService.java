@@ -3,8 +3,10 @@ package uy.com.bay.utiles.services;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.repo.BudgetEntryRepository;
@@ -30,10 +32,20 @@ public class BudgetEntryService {
         });
     }
 
+    @Transactional(readOnly = true)
     public List<BudgetEntry> findForPlanningReport(LocalDate fechaDesde, LocalDate fechaHasta, List<Study> studies) {
-        if (studies == null || studies.isEmpty()) {
-            return repository.findByDateRange(fechaDesde, fechaHasta);
+        List<BudgetEntry> entries = (studies == null || studies.isEmpty())
+                ? repository.findByDateRange(fechaDesde, fechaHasta)
+                : repository.findByDateRangeAndStudies(fechaDesde, fechaHasta, studies);
+        for (BudgetEntry entry : entries) {
+            Hibernate.initialize(entry.getExtras());
+            Hibernate.initialize(entry.getExpenseRequests());
+            Hibernate.initialize(entry.getOdooCosts());
+            Hibernate.initialize(entry.getFieldworks());
+            for (Fieldwork fieldwork : entry.getFieldworks()) {
+                Hibernate.initialize(fieldwork.getCompletedByMonth());
+            }
         }
-        return repository.findByDateRangeAndStudies(fechaDesde, fechaHasta, studies);
+        return entries;
     }
 }
