@@ -747,7 +747,7 @@ public class QuestionCodingView extends VerticalLayout {
 								question.getQuestionId() + "-" + codeIndex + "-" + "COMENTARIO");
 
 						Cell codeCell = dataRow.createCell(codeColumnIndex);
-						codeCell.setCellValue(assignedCode.getAssignedCode());
+						codeCell.setCellValue(assignedCode.getAssignedCode().split("-")[0]);
 
 						Cell commentCell = dataRow.createCell(commentColumnIndex);
 						commentCell.setCellValue(assignedCode.getComment());
@@ -763,48 +763,48 @@ public class QuestionCodingView extends VerticalLayout {
 	public static List<String> getColumnValues(Workbook workbook, String columnName) {
 		List<String> values = new ArrayList<>();
 		DataFormatter formatter = new DataFormatter();
+		if (workbook != null) {
+			Sheet sheet = workbook.getSheetAt(0); // primera hoja
 
-		Sheet sheet = workbook.getSheetAt(0); // primera hoja
+			if (sheet == null) {
+				return values;
+			}
 
-		if (sheet == null) {
-			return values;
-		}
+			Iterator<Row> rowIterator = sheet.iterator();
 
-		Iterator<Row> rowIterator = sheet.iterator();
+			if (!rowIterator.hasNext()) {
+				return values;
+			}
 
-		if (!rowIterator.hasNext()) {
-			return values;
-		}
+			// 👉 Leer header
+			Row headerRow = rowIterator.next();
+			int columnIndex = -1;
 
-		// 👉 Leer header
-		Row headerRow = rowIterator.next();
-		int columnIndex = -1;
+			for (Cell cell : headerRow) {
+				String header = formatter.formatCellValue(cell).trim();
+				if (columnName.equalsIgnoreCase(header)) {
+					columnIndex = cell.getColumnIndex();
+					break;
+				}
+			}
 
-		for (Cell cell : headerRow) {
-			String header = formatter.formatCellValue(cell).trim();
-			if (columnName.equalsIgnoreCase(header)) {
-				columnIndex = cell.getColumnIndex();
-				break;
+			if (columnIndex == -1) {
+				throw new RuntimeException("Columna no encontrada: " + columnName);
+			}
+
+			// 👉 Leer valores
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				Cell cell = row.getCell(columnIndex);
+
+				if (cell != null) {
+					String value = formatter.formatCellValue(cell);
+					values.add(value);
+				} else {
+					values.add(""); // o null si preferís
+				}
 			}
 		}
-
-		if (columnIndex == -1) {
-			throw new RuntimeException("Columna no encontrada: " + columnName);
-		}
-
-		// 👉 Leer valores
-		while (rowIterator.hasNext()) {
-			Row row = rowIterator.next();
-			Cell cell = row.getCell(columnIndex);
-
-			if (cell != null) {
-				String value = formatter.formatCellValue(cell);
-				values.add(value);
-			} else {
-				values.add(""); // o null si preferís
-			}
-		}
-
 		return values;
 	}
 
