@@ -747,7 +747,7 @@ public class QuestionCodingView extends VerticalLayout {
 								question.getQuestionId() + "-" + codeIndex + "-" + "COMENTARIO");
 
 						Cell codeCell = dataRow.createCell(codeColumnIndex);
-						codeCell.setCellValue(assignedCode.getAssignedCode().split("-")[0]);
+						codeCell.setCellValue((assignedCode.getAssignedCode()));
 
 						Cell commentCell = dataRow.createCell(commentColumnIndex);
 						commentCell.setCellValue(assignedCode.getComment());

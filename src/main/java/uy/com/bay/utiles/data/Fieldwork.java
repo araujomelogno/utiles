@@ -135,14 +135,13 @@ public class Fieldwork extends AbstractEntity {
 	}
 
 	public Integer getCompleted() {
-		if (completed == null)
-			return 0;
-		return completed;
+		Integer sum = 0;
+		for (Integer c : completedByMonth.values())
+			sum += c;
+		return sum;
 	}
 
-	public void setCompleted(Integer completed) {
-		this.completed = completed;
-	}
+	 
 
 	public String getObs() {
 		return obs;

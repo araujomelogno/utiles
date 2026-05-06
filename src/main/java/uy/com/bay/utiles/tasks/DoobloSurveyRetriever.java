@@ -159,7 +159,8 @@ public class DoobloSurveyRetriever {
 			if (fieldworkOpt.get() != null) {
 				Fieldwork fw = new Fieldwork();
 				doobloResponse.setFieldwork(fw);
-				fw.setCompleted(fw.getCompleted() + 1);
+//				fw.setCompleted(fw.getCompleted() + 1);
+
 				fieldworkRepository.save(fw);
 
 //				// Se afecta elbudget si ya tiene asignado

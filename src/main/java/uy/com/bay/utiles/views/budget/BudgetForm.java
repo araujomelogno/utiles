@@ -161,7 +161,7 @@ public class BudgetForm extends VerticalLayout {
 					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
 						Integer completedSurveys = alchemerSurveyResponseHelper
 								.getCompletedSurveys(fieldwork.getAlchemerId());
-						fieldwork.setCompleted(completedSurveys);
+//						fieldwork.setCompleted(completedSurveys);
 						fieldworkService.save(fieldwork);
 						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
 							totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
@@ -170,7 +170,7 @@ public class BudgetForm extends VerticalLayout {
 						if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
 							Integer completedSurveys = doobloSurveyRetriever
 									.getCompletedSurveys(fieldwork.getDoobloId());
-							fieldwork.setCompleted(completedSurveys);
+//							fieldwork.setCompleted(completedSurveys);
 							fieldworkService.save(fieldwork);
 							if (completedSurveys != null && budgetEntry.getAmmount() != null) {
 								totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
