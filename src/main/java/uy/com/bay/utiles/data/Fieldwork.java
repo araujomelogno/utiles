@@ -31,8 +31,7 @@ public class Fieldwork extends AbstractEntity {
 	private LocalDate initDate;
 	private LocalDate endDate;
 	private Integer goalQuantity;
-	private Integer completed;
-
+ 
 	private String obs;
 
 	@Enumerated(EnumType.STRING)

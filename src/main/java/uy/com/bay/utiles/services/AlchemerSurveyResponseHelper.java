@@ -59,7 +59,8 @@ public class AlchemerSurveyResponseHelper {
         }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+        
+ 
         Calendar cursor = Calendar.getInstance();
         cursor.setTime(startDate);
         cursor.set(Calendar.DAY_OF_MONTH, 1);

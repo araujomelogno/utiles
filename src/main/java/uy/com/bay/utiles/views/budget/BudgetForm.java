@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashSet;
@@ -158,24 +159,28 @@ public class BudgetForm extends VerticalLayout {
 			if (budgetEntry.getFieldworks() != null) {
 				Double totalFielwdorkCost = 0.0;
 				for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
+					// se obtienen las completas un mes antes de la fecha planificada de inicio y
+					// hasta 3 meses despues.
+					Date initDate = Date.from((fieldwork.getInitPlannedDate().minusMonths(1))
+							.atStartOfDay(ZoneId.systemDefault()).toInstant());
+					Date endDate = Date.from((fieldwork.getEndPlannedDate().plusMonths(3))
+							.atStartOfDay(ZoneId.systemDefault()).toInstant());
 					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
-						Integer completedSurveys = 0;
-//								alchemerSurveyResponseHelper
-//								.getCompletedSurveys(fieldwork.getAlchemerId());
-//						fieldwork.setCompleted(completedSurveys);
+						Map<Date, Integer> completedSurveys = alchemerSurveyResponseHelper
+								.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate);
+						fieldwork.setCompletedByMonth(completedSurveys);
 						fieldworkService.save(fieldwork);
 						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
-							totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
+							totalFielwdorkCost += fieldwork.getCompleted() * budgetEntry.getAmmount();
 						}
 					} else {
 						if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
-							Integer completedSurveys = 0;
-//							doobloSurveyRetriever
-//									.getCompletedSurveys(fieldwork.getDoobloId(), fromDate, toDate);
-//							fieldwork.setCompleted(completedSurveys);
+							Map<Date, Integer> completedSurveys = doobloSurveyRetriever
+									.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate);
+							fieldwork.setCompletedByMonth(completedSurveys);
 							fieldworkService.save(fieldwork);
 							if (completedSurveys != null && budgetEntry.getAmmount() != null) {
-								totalFielwdorkCost += completedSurveys * budgetEntry.getAmmount();
+								totalFielwdorkCost += fieldwork.getCompleted() * budgetEntry.getAmmount();
 							}
 						}
 					}
