@@ -65,6 +65,8 @@ public class BudgetPlanningExporter {
 				totalizarConceptos, months, labelStyle, headerStyle, this::distribute);
 		writeSheet(workbook, "Ejecución presupuestal", entries, fechaDesde, fechaHasta, selectedStudies,
 				totalizarConceptos, months, labelStyle, headerStyle, this::distributeExecution);
+		writeSheet(workbook, "Presupuestado - Ejecutado ACUMULADO", entries, fechaDesde, fechaHasta, selectedStudies,
+				totalizarConceptos, months, labelStyle, headerStyle, this::distributeCumulativeDifference);
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		workbook.write(out);
@@ -315,6 +317,21 @@ public class BudgetPlanningExporter {
 			}
 		}
 
+		return result;
+	}
+
+	private double[] distributeCumulativeDifference(BudgetEntry entry, List<YearMonth> months) {
+		double[] result = new double[months.size()];
+		if (months.isEmpty()) {
+			return result;
+		}
+		double[] planned = distribute(entry, months);
+		double[] executed = distributeExecution(entry, months);
+		double accumulated = 0d;
+		for (int i = 0; i < months.size(); i++) {
+			accumulated += executed[i] - planned[i];
+			result[i] = accumulated;
+		}
 		return result;
 	}
 
