@@ -169,8 +169,9 @@ public class BudgetForm extends VerticalLayout {
 						}
 					} else {
 						if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
-							Integer completedSurveys = doobloSurveyRetriever
-									.getCompletedSurveys(fieldwork.getDoobloId());
+							Integer completedSurveys = 0;
+//							doobloSurveyRetriever
+//									.getCompletedSurveys(fieldwork.getDoobloId(), fromDate, toDate);
 //							fieldwork.setCompleted(completedSurveys);
 							fieldworkService.save(fieldwork);
 							if (completedSurveys != null && budgetEntry.getAmmount() != null) {

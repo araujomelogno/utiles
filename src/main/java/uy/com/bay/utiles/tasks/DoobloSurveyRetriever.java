@@ -1,9 +1,13 @@
 package uy.com.bay.utiles.tasks;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -179,26 +183,60 @@ public class DoobloSurveyRetriever {
 		}
 	}
 
-	public Integer getCompletedSurveys(String surveyId) {
-		try {
-			HttpEntity<String> entity = createAuthHeaders();
-			String interviewsUrl = String
-					.format("http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&completed=True", surveyId);
-			ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,
-					String.class);
-			LOGGER.info("Successfully retrieved interview IDs for SurveyID {}. Response: {}", surveyId,
-					interviewsResponse.getBody());
-
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
-			if (interviewsRoot.isArray()) {
-				return interviewsRoot.size();
-			}
-			return 0;
-		} catch (Exception e) {
-			LOGGER.error("Failed to retrieve completed surveys for SurveyID: {}", surveyId, e);
-			return 0;
+	public Map<Date, Integer> getCompletedSurveys(String surveyId, Date fromDate, Date toDate) {
+		Map<Date, Integer> result = new LinkedHashMap<>();
+		if (fromDate == null || toDate == null || fromDate.after(toDate)) {
+			return result;
 		}
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		HttpEntity<String> entity = createAuthHeaders();
+		ObjectMapper mapper = new ObjectMapper();
+
+		Calendar cursor = Calendar.getInstance();
+		cursor.setTime(fromDate);
+		cursor.set(Calendar.DAY_OF_MONTH, 1);
+		cursor.set(Calendar.HOUR_OF_DAY, 0);
+		cursor.set(Calendar.MINUTE, 0);
+		cursor.set(Calendar.SECOND, 0);
+		cursor.set(Calendar.MILLISECOND, 0);
+
+		while (!cursor.getTime().after(toDate)) {
+			Date monthStart = cursor.getTime();
+
+			Calendar monthEndCal = (Calendar) cursor.clone();
+			monthEndCal.set(Calendar.DAY_OF_MONTH, monthEndCal.getActualMaximum(Calendar.DAY_OF_MONTH));
+			monthEndCal.set(Calendar.HOUR_OF_DAY, 23);
+			monthEndCal.set(Calendar.MINUTE, 59);
+			monthEndCal.set(Calendar.SECOND, 59);
+			Date monthEnd = monthEndCal.getTime();
+
+			try {
+				String fromStr = URLEncoder.encode(dateFormat.format(monthStart), StandardCharsets.UTF_8);
+				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
+
+				String interviewsUrl = String.format(
+						"http://api.dooblo.net/newapi/SurveyInterviewIDsByLastModified?surveyIDs=%s&completed=True&fromDate=%s&toDate=%s",
+						surveyId, fromStr, toStr);
+
+				ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,
+						String.class);
+				LOGGER.info("Successfully retrieved interview IDs for SurveyID {} between {} and {}. Response: {}",
+						surveyId, monthStart, monthEnd, interviewsResponse.getBody());
+
+				JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
+				int count = (interviewsRoot != null && interviewsRoot.isArray()) ? interviewsRoot.size() : 0;
+				result.put(monthStart, count);
+			} catch (Exception e) {
+				LOGGER.error("Failed to retrieve completed surveys for SurveyID {} for month {}", surveyId, monthStart,
+						e);
+				result.put(monthStart, 0);
+			}
+
+			cursor.add(Calendar.MONTH, 1);
+		}
+
+		return result;
 	}
 
 	private HttpEntity<String> createAuthHeaders() {
