@@ -159,8 +159,9 @@ public class BudgetForm extends VerticalLayout {
 				Double totalFielwdorkCost = 0.0;
 				for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
 					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
-						Integer completedSurveys = alchemerSurveyResponseHelper
-								.getCompletedSurveys(fieldwork.getAlchemerId());
+						Integer completedSurveys = 0;
+//								alchemerSurveyResponseHelper
+//								.getCompletedSurveys(fieldwork.getAlchemerId());
 //						fieldwork.setCompleted(completedSurveys);
 						fieldworkService.save(fieldwork);
 						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
