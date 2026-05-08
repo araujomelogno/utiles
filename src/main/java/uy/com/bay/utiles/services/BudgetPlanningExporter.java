@@ -136,18 +136,31 @@ public class BudgetPlanningExporter {
 			cell.setCellStyle(headerStyle);
 		}
 
+		int totalColumnIndex;
+		int firstMonthColumnIndex;
+		double totalSum = 0d;
+		double[] monthlySums = new double[months.size()];
+
 		if (totalizarConceptos) {
+			totalColumnIndex = 2;
+			firstMonthColumnIndex = 3;
 			List<AggregatedRow> aggregated = aggregateByStudyAndTipo(entries, months, distributor);
 			for (AggregatedRow agg : aggregated) {
 				Row row = sheet.createRow(rowIndex++);
 				row.createCell(0).setCellValue(agg.estudio);
 				row.createCell(1).setCellValue(agg.tipo);
-				row.createCell(2).setCellValue(agg.total);
+				double rowTotal = 0d;
 				for (int i = 0; i < months.size(); i++) {
-					row.createCell(3 + i).setCellValue(agg.monthly[i]);
+					row.createCell(firstMonthColumnIndex + i).setCellValue(agg.monthly[i]);
+					rowTotal += agg.monthly[i];
+					monthlySums[i] += agg.monthly[i];
 				}
+				row.createCell(totalColumnIndex).setCellValue(rowTotal);
+				totalSum += rowTotal;
 			}
 		} else {
+			totalColumnIndex = 3;
+			firstMonthColumnIndex = 4;
 			List<BudgetEntry> sorted = new ArrayList<>(entries);
 			sorted.sort(Comparator
 					.comparing((BudgetEntry be) -> studyName(be), Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
@@ -161,13 +174,34 @@ public class BudgetPlanningExporter {
 				row.createCell(0).setCellValue(studyName(entry));
 				row.createCell(1).setCellValue(conceptName(entry));
 				row.createCell(2).setCellValue(tipo(entry));
-				row.createCell(3).setCellValue(entry.getTotal() != null ? entry.getTotal() : 0d);
 
 				double[] distribution = distributor.apply(entry, months);
+				double rowTotal = 0d;
 				for (int i = 0; i < months.size(); i++) {
-					row.createCell(4 + i).setCellValue(distribution[i]);
+					row.createCell(firstMonthColumnIndex + i).setCellValue(distribution[i]);
+					rowTotal += distribution[i];
+					monthlySums[i] += distribution[i];
 				}
+				row.createCell(totalColumnIndex).setCellValue(rowTotal);
+				totalSum += rowTotal;
 			}
+		}
+
+		Row totalsRow = sheet.createRow(rowIndex++);
+		Cell totalsLabel = totalsRow.createCell(0);
+		totalsLabel.setCellValue("Total");
+		totalsLabel.setCellStyle(headerStyle);
+		for (int i = 1; i < totalColumnIndex; i++) {
+			Cell emptyCell = totalsRow.createCell(i);
+			emptyCell.setCellStyle(headerStyle);
+		}
+		Cell totalSumCell = totalsRow.createCell(totalColumnIndex);
+		totalSumCell.setCellValue(totalSum);
+		totalSumCell.setCellStyle(headerStyle);
+		for (int i = 0; i < months.size(); i++) {
+			Cell monthSumCell = totalsRow.createCell(firstMonthColumnIndex + i);
+			monthSumCell.setCellValue(monthlySums[i]);
+			monthSumCell.setCellStyle(headerStyle);
 		}
 
 		for (int i = 0; i < headers.size(); i++) {
