@@ -127,22 +127,32 @@ public class BudgetExporter {
 			}
 
 			for (Fieldwork fieldwork : entry.getFieldworks()) {
-				Row fieldworkRow = sheet.createRow(rowNum++);
-				fieldworkRow.createCell(0).setCellValue("Campo");
-				fieldworkRow.createCell(1).setCellValue(fieldwork.getType().name());
-				fieldworkRow.createCell(3).setCellValue(fieldwork.getObs());
-				fieldworkRow.createCell(5).setCellValue(
-						fieldwork.getBudgetEntry().getAmmount() != null ? fieldwork.getBudgetEntry().getAmmount() : 0);
+				for (Date date : fieldwork.getCompletedByMonth().keySet()) {
+					Row fieldworkRow = sheet.createRow(rowNum++);
+					fieldworkRow.createCell(0).setCellValue("Campo");
+					fieldworkRow.createCell(1).setCellValue(fieldwork.getType().name());
+					fieldworkRow.createCell(3).setCellValue(fieldwork.getObs());
+					fieldworkRow.createCell(5)
+							.setCellValue(fieldwork.getBudgetEntry().getAmmount() != null
+									? fieldwork.getBudgetEntry().getAmmount()
+									: 0);
 
-				fieldworkRow.createCell(6)
-						.setCellValue(Objects.nonNull(fieldwork.getCompleted()) ? fieldwork.getCompleted() : 0);
-				double total = (fieldwork.getBudgetEntry().getAmmount() != null
-						? fieldwork.getBudgetEntry().getAmmount()
-						: 0) * (Objects.nonNull(fieldwork.getCompleted()) ? fieldwork.getCompleted() : 0);
-				fieldworkRow.createCell(7).setCellValue(fieldwork.getInitDate());
-				fieldworkRow.getCell(7).setCellStyle(dateStyle);
-				fieldworkRow.createCell(9).setCellValue(-total);
-				totalSpentSum -= total;
+					fieldworkRow.createCell(6)
+							.setCellValue(Objects.nonNull(fieldwork.getCompletedByMonth().get(date))
+									? fieldwork.getCompletedByMonth().get(date)
+									: 0);
+					double total = (fieldwork.getBudgetEntry().getAmmount() != null
+							? fieldwork.getBudgetEntry().getAmmount()
+							: 0)
+							* (Objects.nonNull(fieldwork.getCompletedByMonth().get(date))
+									? fieldwork.getCompletedByMonth().get(date)
+									: 0);
+					fieldworkRow.createCell(7).setCellValue(fieldwork.getInitDate());
+					fieldworkRow.getCell(7).setCellStyle(dateStyle);
+					fieldworkRow.createCell(9).setCellValue(-total);
+					totalSpentSum -= total;
+				}
+
 			}
 		}
 

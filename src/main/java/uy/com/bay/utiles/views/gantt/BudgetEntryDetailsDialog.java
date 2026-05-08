@@ -2,8 +2,10 @@ package uy.com.bay.utiles.views.gantt;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -31,6 +33,7 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
 		currencyFormat.setMinimumFractionDigits(0);
 		currencyFormat.setMaximumFractionDigits(0);
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
 		VerticalLayout layout = new VerticalLayout();
 		add(layout);
@@ -52,10 +55,11 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		// Process Fieldworks
 		if (budgetEntry.getFieldworks() != null) {
 			for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
-				items.add(new BudgetEntryDetailItem("Campo",
-						fieldwork.getType() != null ? fieldwork.getType().toString() : "", fieldwork.getCompleted(),
-						budgetEntry.getAmmount(), "N/A",
-						fieldwork.getEndPlannedDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
+				for (Date date : fieldwork.getCompletedByMonth().keySet())
+					items.add(new BudgetEntryDetailItem("Campo",
+							fieldwork.getType() != null ? fieldwork.getType().toString() : "",
+							fieldwork.getCompletedByMonth().get(date), budgetEntry.getAmmount(), "N/A",
+							sdf.format(date)));
 			}
 		}
 
