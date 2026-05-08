@@ -216,7 +216,7 @@ public class DoobloSurveyRetriever {
 				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
 
 				String interviewsUrl = String.format(
-						"http://api.dooblo.net/newapi/SurveyInterviewIDsByLastModified?surveyIDs=%s&completed=True&fromDate=%s&toDate=%s",
+						"https://api.dooblo.net/newapi/SurveyInterviewIDsByLastModified?surveyIDs=%s&completed=True&fromDate=%s&toDate=%s",
 						surveyId, fromStr, toStr);
 
 				ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,
