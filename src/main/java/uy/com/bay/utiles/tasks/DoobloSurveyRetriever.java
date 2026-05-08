@@ -212,6 +212,8 @@ public class DoobloSurveyRetriever {
 			Date monthEnd = monthEndCal.getTime();
 
 			try {
+				Thread.sleep(600);
+
 				String fromStr = URLEncoder.encode(dateFormat.format(monthStart), StandardCharsets.UTF_8);
 				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
 
