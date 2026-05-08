@@ -189,7 +189,7 @@ public class DoobloSurveyRetriever {
 			return result;
 		}
 
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		HttpEntity<String> entity = createAuthHeaders();
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -218,7 +218,7 @@ public class DoobloSurveyRetriever {
 				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
 
 				String interviewsUrl = String.format(
-						"https://api.dooblo.net/newapi/SurveyInterviewIDsByLastModified?surveyIDs=%s&completed=True&fromDate=%s&toDate=%s",
+						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&completed=True&filtered=False&dateStart=%s&dateEnd=%s",
 						surveyId, fromStr, toStr);
 
 				ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,

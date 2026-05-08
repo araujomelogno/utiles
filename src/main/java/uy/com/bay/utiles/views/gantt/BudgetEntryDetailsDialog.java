@@ -56,10 +56,11 @@ public class BudgetEntryDetailsDialog extends Dialog {
 		if (budgetEntry.getFieldworks() != null) {
 			for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
 				for (Date date : fieldwork.getCompletedByMonth().keySet())
-					items.add(new BudgetEntryDetailItem("Campo",
-							fieldwork.getType() != null ? fieldwork.getType().toString() : "",
-							fieldwork.getCompletedByMonth().get(date), budgetEntry.getAmmount(), "N/A",
-							sdf.format(date)));
+					if (fieldwork.getCompletedByMonth().get(date) != 0)
+						items.add(new BudgetEntryDetailItem("Campo",
+								fieldwork.getType() != null ? fieldwork.getType().toString() : "",
+								fieldwork.getCompletedByMonth().get(date), budgetEntry.getAmmount(), "N/A",
+								sdf.format(date)));
 			}
 		}
 
