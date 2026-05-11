@@ -2,17 +2,20 @@ package uy.com.bay.utiles.entities;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import uy.com.bay.utiles.data.AbstractEntity;
 import uy.com.bay.utiles.data.Study;
 
 @Entity
-@Table(name = "study_invoice")
+@Table(name = "study_invoice", uniqueConstraints = @UniqueConstraint(name = "uk_study_invoice_move_id", columnNames = "move_id"))
 public class StudyInvoice extends AbstractEntity {
 
+	@Column(name = "move_id", unique = true)
 	private String moveId;
 
 	private LocalDate invoiceDate;

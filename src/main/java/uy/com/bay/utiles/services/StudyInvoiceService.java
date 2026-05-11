@@ -26,6 +26,12 @@ public class StudyInvoiceService {
 	}
 
 	public StudyInvoice save(StudyInvoice entity) {
+		if (entity.getId() == null && entity.getMoveId() != null) {
+			Optional<StudyInvoice> existing = repository.findByMoveId(entity.getMoveId());
+			if (existing.isPresent()) {
+				return existing.get();
+			}
+		}
 		return repository.save(entity);
 	}
 
