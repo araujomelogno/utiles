@@ -78,9 +78,13 @@ public class OdooProjectSyncTask {
 				}
 			}
 
-			invoice.setAmountUntaxed(toDouble(line.get("amount_untaxed")));
-			invoice.setTax(toDouble(line.get("amount_tax")));
-			invoice.setAmountTotal(toDouble(line.get("amount_total")));
+			Double priceSubtotal = toDouble(line.get("price_subtotal"));
+			Double priceTotal = toDouble(line.get("price_total"));
+			invoice.setAmountUntaxed(priceSubtotal);
+			invoice.setAmountTotal(priceTotal);
+			if (priceSubtotal != null && priceTotal != null) {
+				invoice.setTax(priceTotal - priceSubtotal);
+			}
 			invoice.setCurrency(extractRelationName(line.get("currency_id")));
 
 			studyInvoiceService.save(invoice);
