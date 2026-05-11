@@ -62,11 +62,11 @@ public class BudgetPlanningExporter {
 		List<YearMonth> months = monthsBetween(fechaDesde, fechaHasta);
 
 		writeSheet(workbook, "Planificación presupuestal", entries, fechaDesde, fechaHasta, selectedStudies,
-				totalizarConceptos, months, labelStyle, headerStyle, this::distribute, true);
+				totalizarConceptos, months, labelStyle, headerStyle, this::distribute, true, true);
 		writeSheet(workbook, "Ejecución presupuestal", entries, fechaDesde, fechaHasta, selectedStudies,
-				totalizarConceptos, months, labelStyle, headerStyle, this::distributeExecution, true);
+				totalizarConceptos, months, labelStyle, headerStyle, this::distributeExecution, true, false);
 		writeSheet(workbook, "Presupuestado - Ejecutado ACUMULADO", entries, fechaDesde, fechaHasta, selectedStudies,
-				totalizarConceptos, months, labelStyle, headerStyle, this::distributeCumulativeDifference, false);
+				totalizarConceptos, months, labelStyle, headerStyle, this::distributeCumulativeDifference, false, false);
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		workbook.write(out);
@@ -77,7 +77,8 @@ public class BudgetPlanningExporter {
 	private void writeSheet(Workbook workbook, String sheetName, List<BudgetEntry> entries, LocalDate fechaDesde,
 			LocalDate fechaHasta, List<Study> selectedStudies, boolean totalizarConceptos, List<YearMonth> months,
 			CellStyle labelStyle, CellStyle headerStyle,
-			BiFunction<BudgetEntry, List<YearMonth>, double[]> distributor, boolean includeTotalColumn) {
+			BiFunction<BudgetEntry, List<YearMonth>, double[]> distributor, boolean includeTotalColumn,
+			boolean includeExpectedRevenue) {
 		Sheet sheet = workbook.createSheet(sheetName);
 
 		int rowIndex = 0;
@@ -118,6 +119,9 @@ public class BudgetPlanningExporter {
 
 		List<String> headers = new ArrayList<>();
 		headers.add("Estudio");
+		if (includeExpectedRevenue) {
+			headers.add("Ingreso esperado");
+		}
 		if (!totalizarConceptos) {
 			headers.add("Concepto presupuesto");
 		}
@@ -138,7 +142,8 @@ public class BudgetPlanningExporter {
 			cell.setCellStyle(headerStyle);
 		}
 
-		int baseColumnsCount = totalizarConceptos ? 2 : 3;
+		int expectedRevenueOffset = includeExpectedRevenue ? 1 : 0;
+		int baseColumnsCount = (totalizarConceptos ? 2 : 3) + expectedRevenueOffset;
 		int totalColumnIndex = includeTotalColumn ? baseColumnsCount : -1;
 		int firstMonthColumnIndex = baseColumnsCount + (includeTotalColumn ? 1 : 0);
 		double totalSum = 0d;
@@ -149,7 +154,10 @@ public class BudgetPlanningExporter {
 			for (AggregatedRow agg : aggregated) {
 				Row row = sheet.createRow(rowIndex++);
 				row.createCell(0).setCellValue(agg.estudio);
-				row.createCell(1).setCellValue(agg.tipo);
+				if (includeExpectedRevenue) {
+					row.createCell(1).setCellValue(agg.expectedRevenue);
+				}
+				row.createCell(1 + expectedRevenueOffset).setCellValue(agg.tipo);
 				double rowTotal = 0d;
 				for (int i = 0; i < months.size(); i++) {
 					row.createCell(firstMonthColumnIndex + i).setCellValue(agg.monthly[i]);
@@ -173,8 +181,11 @@ public class BudgetPlanningExporter {
 			for (BudgetEntry entry : sorted) {
 				Row row = sheet.createRow(rowIndex++);
 				row.createCell(0).setCellValue(studyName(entry));
-				row.createCell(1).setCellValue(conceptName(entry));
-				row.createCell(2).setCellValue(tipo(entry));
+				if (includeExpectedRevenue) {
+					row.createCell(1).setCellValue(expectedRevenue(entry));
+				}
+				row.createCell(1 + expectedRevenueOffset).setCellValue(conceptName(entry));
+				row.createCell(2 + expectedRevenueOffset).setCellValue(tipo(entry));
 
 				double[] distribution = distributor.apply(entry, months);
 				double rowTotal = 0d;
@@ -217,6 +228,13 @@ public class BudgetPlanningExporter {
 			return entry.getBudget().getStudy().getName();
 		}
 		return "";
+	}
+
+	private static double expectedRevenue(BudgetEntry entry) {
+		if (entry.getBudget() != null && entry.getBudget().getStudy() != null) {
+			return entry.getBudget().getStudy().getExpectedRevenue();
+		}
+		return 0d;
 	}
 
 	private static String conceptName(BudgetEntry entry) {
@@ -401,6 +419,7 @@ public class BudgetPlanningExporter {
 			String key = estudio + "||" + tipo;
 			AggregatedRow agg = map.computeIfAbsent(key, k -> new AggregatedRow(estudio, tipo, months.size()));
 			agg.total += entry.getTotal() != null ? entry.getTotal() : 0d;
+			agg.expectedRevenue = expectedRevenue(entry);
 			double[] distribution = distributor.apply(entry, months);
 			for (int i = 0; i < months.size(); i++) {
 				agg.monthly[i] += distribution[i];
@@ -417,6 +436,7 @@ public class BudgetPlanningExporter {
 		final String estudio;
 		final String tipo;
 		double total;
+		double expectedRevenue;
 		final double[] monthly;
 
 		AggregatedRow(String estudio, String tipo, int monthCount) {

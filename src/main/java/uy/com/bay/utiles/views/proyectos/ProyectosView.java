@@ -64,6 +64,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private Checkbox showSurveyor;
 	private TextField totalTransfered;
 	private TextField totalReportedCost;
+	private TextField clientName;
+	private TextField expectedRevenue;
 
 	private Button addButton;
 	private TextField nameFilter;
@@ -332,7 +334,12 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		totalTransfered.setReadOnly(true);
 		totalReportedCost = new TextField("Total de gastos rendidos");
 		totalReportedCost.setReadOnly(true);
-		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost);
+		clientName = new TextField("Cliente");
+		clientName.setReadOnly(true);
+		expectedRevenue = new TextField("Ingreso esperado");
+		expectedRevenue.setReadOnly(true);
+		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost, clientName,
+				expectedRevenue);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
@@ -388,9 +395,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		if (value != null) {
 			totalTransfered.setValue(Double.valueOf(value.getTotalTransfered()).toString());
 			totalReportedCost.setValue(Double.valueOf(value.getTotalReportedCost()).toString());
+			clientName.setValue(value.getClientName() != null ? value.getClientName() : "");
+			expectedRevenue.setValue(Double.valueOf(value.getExpectedRevenue()).toString());
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");
+			clientName.setValue("");
+			expectedRevenue.setValue("");
 		}
 		if (this.editorLayoutDiv != null) {
 			this.editorLayoutDiv.setVisible(value != null);
