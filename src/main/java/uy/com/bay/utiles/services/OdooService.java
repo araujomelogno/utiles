@@ -369,7 +369,7 @@ public class OdooService {
 			}
 
 			List<String> fieldsToFetch = Arrays.asList("id", "date", "move_id", "name", "analytic_account_id",
-					"currency_id", "amount_untaxed", "amount_tax", "amount_total");
+					"currency_id", "price_subtotal", "price_total");
 
 			List<Object> domain = new ArrayList<>();
 			domain.add(Arrays.asList("move_id.move_type", "in", Arrays.asList("out_invoice", "out_refund")));
