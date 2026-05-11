@@ -18,4 +18,6 @@ public interface StudyRepository extends JpaRepository<Study, Long>, JpaSpecific
 
     List<Study> findAllByShowSurveyor(boolean showSurveyor);
 
+    Optional<Study> findByOdooId(String odooId);
+
 }

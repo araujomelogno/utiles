@@ -1,16 +1,21 @@
 package uy.com.bay.utiles.tasks;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.entities.StudyInvoice;
 import uy.com.bay.utiles.services.OdooService;
+import uy.com.bay.utiles.services.StudyInvoiceService;
 import uy.com.bay.utiles.services.StudyService;
 
 @Component
@@ -18,10 +23,98 @@ public class OdooProjectSyncTask {
 
 	private final OdooService odooService;
 	private final StudyService proyectoService;
+	private final StudyInvoiceService studyInvoiceService;
 
-	public OdooProjectSyncTask(OdooService odooService, StudyService proyectoService) {
+	@Value("${odoo.invoices.sync.days:7}")
+	private int invoicesSyncDays;
+
+	public OdooProjectSyncTask(OdooService odooService, StudyService proyectoService,
+			StudyInvoiceService studyInvoiceService) {
 		this.odooService = odooService;
 		this.proyectoService = proyectoService;
+		this.studyInvoiceService = studyInvoiceService;
+	}
+
+	@Scheduled(cron = "0 0 7 * * *")
+	public void updateInvoices() {
+		System.out.println("Starting Odoo Invoices Update Task...");
+
+		LocalDate end = LocalDate.now();
+		LocalDate init = end.minusDays(invoicesSyncDays);
+
+		List<Map<String, Object>> lines = odooService.getOdooInvoiceAccountMoveLines(init, end);
+
+		int newInvoicesCount = 0;
+		for (Map<String, Object> line : lines) {
+			String moveId = extractRelationName(line.get("move_id"));
+			if (moveId == null || moveId.trim().isEmpty()) {
+				continue;
+			}
+
+			Optional<StudyInvoice> existing = studyInvoiceService.findByMoveId(moveId);
+			if (existing.isPresent()) {
+				continue;
+			}
+
+			String analyticAccountId = extractRelationId(line.get("analytic_account_id"));
+			if (analyticAccountId == null) {
+				continue;
+			}
+
+			Optional<Study> studyOpt = proyectoService.findByOdooId(analyticAccountId);
+			if (studyOpt.isEmpty()) {
+				continue;
+			}
+
+			StudyInvoice invoice = new StudyInvoice();
+			invoice.setMoveId(moveId);
+			invoice.setStudy(studyOpt.get());
+
+			Object dateObj = line.get("date");
+			if (dateObj != null && !(dateObj instanceof Boolean)) {
+				try {
+					invoice.setInvoiceDate(LocalDate.parse(String.valueOf(dateObj)));
+				} catch (Exception ignored) {
+				}
+			}
+
+			invoice.setAmountUntaxed(toDouble(line.get("amount_untaxed")));
+			invoice.setTax(toDouble(line.get("amount_tax")));
+			invoice.setAmountTotal(toDouble(line.get("amount_total")));
+			invoice.setCurrency(extractRelationName(line.get("currency_id")));
+
+			studyInvoiceService.save(invoice);
+			newInvoicesCount++;
+		}
+
+		System.out.println("Odoo Invoices Update Task finished. Added " + newInvoicesCount + " new invoice(s).");
+	}
+
+	private static String extractRelationId(Object value) {
+		if (value instanceof Object[] arr && arr.length >= 1 && arr[0] != null) {
+			return String.valueOf(arr[0]);
+		}
+		if (value instanceof List<?> list && !list.isEmpty() && list.get(0) != null) {
+			return String.valueOf(list.get(0));
+		}
+		return null;
+	}
+
+	private static String extractRelationName(Object value) {
+		if (value instanceof Object[] arr && arr.length >= 2 && arr[1] != null) {
+			return String.valueOf(arr[1]);
+		}
+		if (value instanceof List<?> list && list.size() >= 2 && list.get(1) != null) {
+			return String.valueOf(list.get(1));
+		}
+		return null;
+	}
+
+	private static Double toDouble(Object value) {
+		if (value instanceof Number number) {
+			return number.doubleValue();
+		}
+		return null;
 	}
 
 	// @Scheduled(cron = "0 0 * * * ?") // Runs every hour at the beginning of the
