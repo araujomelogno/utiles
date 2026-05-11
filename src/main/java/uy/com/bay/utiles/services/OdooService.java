@@ -203,7 +203,7 @@ public class OdooService {
 				return Collections.emptyList();
 			}
 
-			List<String> fieldsToFetch = Arrays.asList("id", "name");
+			List<String> fieldsToFetch = Arrays.asList("id", "name", "partner_id");
 			List<Object> domain = Collections.emptyList(); // Fetch all analytic accounts
 
 			HashMap<String, Object> keywordArgs = new HashMap<>();
@@ -220,7 +220,32 @@ public class OdooService {
 			List<Map<String, Object>> accountsList = new ArrayList<>();
 			for (Object accountObj : accountsRaw) {
 				if (accountObj instanceof Map) {
-					accountsList.add((Map<String, Object>) accountObj);
+					Map<String, Object> accountMap = (Map<String, Object>) accountObj;
+
+					String clientName = null;
+					Object partnerIdObj = accountMap.get("partner_id");
+					if (partnerIdObj instanceof Object[]) {
+						Object[] partnerArr = (Object[]) partnerIdObj;
+						if (partnerArr.length >= 2 && partnerArr[1] != null) {
+							clientName = String.valueOf(partnerArr[1]);
+						}
+					} else if (partnerIdObj instanceof List) {
+						List<Object> partnerList = (List<Object>) partnerIdObj;
+						if (partnerList.size() >= 2 && partnerList.get(1) != null) {
+							clientName = String.valueOf(partnerList.get(1));
+						}
+					}
+					accountMap.put("client_name", clientName);
+
+					Object nameObj = accountMap.get("name");
+					if (nameObj != null) {
+						Double expectedRevenue = findLeadExpectedRevenueByName(uid, String.valueOf(nameObj));
+						if (expectedRevenue != null) {
+							accountMap.put("expected_revenue", expectedRevenue);
+						}
+					}
+
+					accountsList.add(accountMap);
 				} else {
 					logger.warn("Received an object that is not a Map from Odoo: {}", accountObj);
 				}
@@ -240,6 +265,40 @@ public class OdooService {
 			logger.error("Unexpected exception while fetching analytic accounts from Odoo: {}", e.getMessage(), e);
 		}
 		return Collections.emptyList(); // Return empty list in case of any error
+	}
+
+	@SuppressWarnings("unchecked")
+	private Double findLeadExpectedRevenueByName(Integer uid, String leadName) {
+		if (leadName == null || leadName.trim().isEmpty()) {
+			return null;
+		}
+		try {
+			List<Object> domain = Collections.singletonList(Arrays.asList("name", "=", leadName));
+
+			HashMap<String, Object> keywordArgs = new HashMap<>();
+			keywordArgs.put("fields", Arrays.asList("id", "name", "expected_revenue"));
+			keywordArgs.put("limit", 1);
+
+			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(), "crm.lead",
+					"search_read", Collections.singletonList(domain), keywordArgs };
+
+			Object[] leadsRaw = (Object[]) objectClient.execute("execute_kw", params);
+			if (leadsRaw == null || leadsRaw.length == 0) {
+				return null;
+			}
+			Object first = leadsRaw[0];
+			if (first instanceof Map) {
+				Object revenue = ((Map<String, Object>) first).get("expected_revenue");
+				if (revenue instanceof Number) {
+					return ((Number) revenue).doubleValue();
+				}
+			}
+		} catch (XmlRpcException e) {
+			logger.error("XmlRpcException while searching crm.lead by name '{}': {}", leadName, e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected exception while searching crm.lead by name '{}': {}", leadName, e.getMessage(), e);
+		}
+		return null;
 	}
 	
 	

@@ -101,6 +101,15 @@ public class OdooProjectSyncTask {
 			String odooName = nameObj == null ? null : String.valueOf(nameObj);
 			String key = odooName == null ? null : odooName.toLowerCase(Locale.ROOT);
 			Study existing = key == null ? null : existingByName.get(key);
+
+			Object clientNameObj = odooProjectMap.get("client_name");
+			String clientName = clientNameObj == null ? null : String.valueOf(clientNameObj);
+
+			Object expectedRevenueObj = odooProjectMap.get("expected_revenue");
+			double expectedRevenue = expectedRevenueObj instanceof Number
+					? ((Number) expectedRevenueObj).doubleValue()
+					: 0d;
+
 			if (existing == null) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);
@@ -111,10 +120,8 @@ public class OdooProjectSyncTask {
 					newProyecto.setName("Default Name - ID: " + odooId); // Or handle as an error
 				}
 
-				// Map other fields as necessary from odooProjectMap to newProyecto
-				// For example:
-				// String description = (String) odooProjectMap.get("description");
-				// newProyecto.setObs(description);
+				newProyecto.setClientName(clientName);
+				newProyecto.setExpectedRevenue(expectedRevenue);
 
 				Study saved = proyectoService.save(newProyecto);
 				if (saved.getName() != null && !saved.getName().isEmpty()) {
@@ -122,10 +129,24 @@ public class OdooProjectSyncTask {
 				}
 				newProjectsCount++;
 				System.out.println("Saved new project: " + saved.getName() + " (Odoo ID: " + odooId + ")");
-			} else if (!Objects.equals(existing.getOdooId(), odooId)) {
-				existing.setOdooId(odooId);
-				Study saved = proyectoService.save(existing);
-				existingByName.put(key, saved);
+			} else {
+				boolean changed = false;
+				if (!Objects.equals(existing.getOdooId(), odooId)) {
+					existing.setOdooId(odooId);
+					changed = true;
+				}
+				if (!Objects.equals(existing.getClientName(), clientName)) {
+					existing.setClientName(clientName);
+					changed = true;
+				}
+				if (Double.compare(existing.getExpectedRevenue(), expectedRevenue) != 0) {
+					existing.setExpectedRevenue(expectedRevenue);
+					changed = true;
+				}
+				if (changed) {
+					Study saved = proyectoService.save(existing);
+					existingByName.put(key, saved);
+				}
 			}
 		}
 

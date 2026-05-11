@@ -22,6 +22,8 @@ public class Study extends AbstractEntity {
 	private double totalReportedCost;
 	private double totalTransfered;
 	private boolean showSurveyor;
+	private String clientName;
+	private double expectedRevenue;
 
 	public boolean isShowSurveyor() {
 		return showSurveyor;
@@ -88,5 +90,21 @@ public class Study extends AbstractEntity {
 
 	public void setBudget(Budget budget) {
 		this.budget = budget;
+	}
+
+	public String getClientName() {
+		return clientName;
+	}
+
+	public void setClientName(String clientName) {
+		this.clientName = clientName;
+	}
+
+	public double getExpectedRevenue() {
+		return expectedRevenue;
+	}
+
+	public void setExpectedRevenue(double expectedRevenue) {
+		this.expectedRevenue = expectedRevenue;
 	}
 }
