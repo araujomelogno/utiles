@@ -35,7 +35,7 @@ public class OdooProjectSyncTask {
 		this.studyInvoiceService = studyInvoiceService;
 	}
 
-	@Scheduled(cron = "0 0 7 * * *")
+	@Scheduled(cron = "* * 7 * * *")
 	public void updateInvoices() {
 		System.out.println("Starting Odoo Invoices Update Task...");
 
