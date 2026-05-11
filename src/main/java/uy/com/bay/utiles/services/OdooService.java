@@ -356,6 +356,64 @@ public class OdooService {
 	}
 
 	@SuppressWarnings("unchecked")
+	public List<Map<String, Object>> getOdooInvoiceAccountMoveLines(LocalDate init, LocalDate end) {
+		if (objectClient == null) {
+			logger.error("Odoo object client not initialized. Cannot fetch invoice account move lines.");
+			return Collections.emptyList();
+		}
+		try {
+			Integer uid = authenticate();
+			if (uid == null) {
+				logger.error("Cannot fetch invoice account move lines: Authentication failed.");
+				return Collections.emptyList();
+			}
+
+			List<String> fieldsToFetch = Arrays.asList("id", "date", "move_id", "name", "analytic_account_id",
+					"currency_id", "amount_untaxed", "amount_tax", "amount_total");
+
+			List<Object> domain = new ArrayList<>();
+			domain.add(Arrays.asList("move_id.move_type", "in", Arrays.asList("out_invoice", "out_refund")));
+			if (init != null && end != null) {
+				domain.add(Arrays.asList("date", ">=", init.toString()));
+				domain.add(Arrays.asList("date", "<=", end.toString()));
+			}
+
+			HashMap<String, Object> keywordArgs = new HashMap<>();
+			keywordArgs.put("fields", fieldsToFetch);
+
+			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(), "account.move.line",
+					"search_read", Collections.singletonList(domain), keywordArgs };
+
+			logger.info("Executing Odoo search_read on 'account.move.line' (invoices) with fields: {}", fieldsToFetch);
+			Object[] linesRaw = (Object[]) objectClient.execute("execute_kw", params);
+
+			List<Map<String, Object>> linesList = new ArrayList<>();
+			for (Object lineObj : linesRaw) {
+				if (lineObj instanceof Map) {
+					linesList.add((Map<String, Object>) lineObj);
+				} else {
+					logger.warn("Received an object that is not a Map from Odoo: {}", lineObj);
+				}
+			}
+			logger.info("Successfully fetched {} invoice account move lines from Odoo.", linesList.size());
+
+			return linesList;
+
+		} catch (XmlRpcException e) {
+			logger.error(
+					"XmlRpcException while fetching invoice account move lines from Odoo: {}. Check Odoo XML-RPC endpoint and network.",
+					e.getMessage(), e);
+		} catch (ClassCastException e) {
+			logger.error("ClassCastException while processing Odoo response. Unexpected data structure: {}",
+					e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected exception while fetching invoice account move lines from Odoo: {}", e.getMessage(),
+					e);
+		}
+		return Collections.emptyList();
+	}
+
+	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> getOdooAccountMoveLines(String analitycAccountId, String productId, LocalDate init,
 			LocalDate end) {
 		if (objectClient == null) {

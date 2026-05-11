@@ -62,4 +62,8 @@ public class StudyService {
     public List<Study> findAllByShowSurveyor(boolean showSurveyor) {
         return repository.findAllByShowSurveyor(showSurveyor);
     }
+
+    public Optional<Study> findByOdooId(String odooId) {
+        return repository.findByOdooId(odooId);
+    }
 }
