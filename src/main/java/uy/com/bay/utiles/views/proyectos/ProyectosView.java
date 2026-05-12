@@ -43,6 +43,7 @@ import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
+import uy.com.bay.utiles.services.StudyInvoiceService;
 import uy.com.bay.utiles.services.StudyService;
 
 @PageTitle("Proyectos")
@@ -66,6 +67,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private TextField totalReportedCost;
 	private TextField clientName;
 	private TextField expectedRevenue;
+	private TextField invoiced;
 
 	private Button addButton;
 	private TextField nameFilter;
@@ -78,6 +80,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private Button viewMovementsButton;
 	private Button viewFieldworksButton;
 	private Button viewBudgetButton;
+	private Button viewInvoicesButton;
 
 	private final BeanValidationBinder<Study> binder;
 
@@ -92,12 +95,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final FieldworkService fieldworkService;
 	private final uy.com.bay.utiles.services.ExcelExportService excelExportService;
 	private final BudgetService budgetService;
+	private final StudyInvoiceService studyInvoiceService;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
 			ExpenseReportFileService expenseReportFileService, ExpenseTransferFileService expenseTransferFileService,
 			FieldworkService fieldworkService, uy.com.bay.utiles.services.ExcelExportService excelExportService,
-			BudgetService budgetService) {
+			BudgetService budgetService, StudyInvoiceService studyInvoiceService) {
 		this.proyectoService = proyectoService;
 		this.journalEntryService = journalEntryService;
 		this.fieldworkService = fieldworkService;
@@ -106,6 +110,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.expenseTransferFileService = expenseTransferFileService;
 		this.excelExportService = excelExportService;
 		this.budgetService = budgetService;
+		this.studyInvoiceService = studyInvoiceService;
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
 
@@ -127,6 +132,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 
 		viewBudgetButton = new Button("Ver presupuesto");
 		viewBudgetButton.setEnabled(false);
+
+		viewInvoicesButton = new Button("Ver Facturas");
+		viewInvoicesButton.setEnabled(false);
 
 		nameFilter = new TextField();
 		nameFilter.setPlaceholder("Nombre...");
@@ -262,6 +270,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 				UI.getCurrent().navigate("budgets/" + this.proyecto.getBudget().getId() + "/edit");
 			}
 		});
+
+		viewInvoicesButton.addClickListener(e -> {
+			if (this.proyecto != null) {
+				StudyInvoiceDialog dialog = new StudyInvoiceDialog(this.proyecto, studyInvoiceService);
+				dialog.open();
+			}
+		});
 	}
 
 	private void validateAndSave() {
@@ -338,13 +353,16 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		clientName.setReadOnly(true);
 		expectedRevenue = new TextField("Ingreso esperado");
 		expectedRevenue.setReadOnly(true);
+		invoiced = new TextField("Facturado");
+		invoiced.setReadOnly(true);
 		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost, clientName,
-				expectedRevenue);
+				expectedRevenue, invoiced);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
 		editorDiv.add(viewFieldworksButton);
 		editorDiv.add(viewBudgetButton);
+		editorDiv.add(viewInvoicesButton);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -397,11 +415,13 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 			totalReportedCost.setValue(Double.valueOf(value.getTotalReportedCost()).toString());
 			clientName.setValue(value.getClientName() != null ? value.getClientName() : "");
 			expectedRevenue.setValue(Double.valueOf(value.getExpectedRevenue()).toString());
+			invoiced.setValue(Double.valueOf(studyInvoiceService.sumAmountTotalByStudy(value)).toString());
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");
 			clientName.setValue("");
 			expectedRevenue.setValue("");
+			invoiced.setValue("");
 		}
 		if (this.editorLayoutDiv != null) {
 			this.editorLayoutDiv.setVisible(value != null);
@@ -417,6 +437,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		}
 		if (this.viewBudgetButton != null) {
 			this.viewBudgetButton.setEnabled(value != null && value.getBudget() != null);
+		}
+		if (this.viewInvoicesButton != null) {
+			this.viewInvoicesButton.setEnabled(value != null && value.getId() != null);
 		}
 	}
 }
