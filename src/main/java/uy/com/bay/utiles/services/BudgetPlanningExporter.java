@@ -15,10 +15,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -161,8 +163,14 @@ public class BudgetPlanningExporter {
 		int firstMonthColumnIndex = baseColumnsCount + (includeTotalColumn ? 1 : 0);
 		double totalSum = 0d;
 		double[] monthlySums = new double[months.size()];
+		double salaryTotalSum = 0d;
+		double[] salaryMonthlySums = new double[months.size()];
+		double otherTotalSum = 0d;
+		double[] otherMonthlySums = new double[months.size()];
 
 		Map<Long, Double> invoicedCache = new HashMap<>();
+		Set<String> studiesWithExpectedShown = new HashSet<>();
+		Set<String> studiesWithInvoicedShown = new HashSet<>();
 
 		if (totalizarConceptos) {
 			List<AggregatedRow> aggregated = aggregateByStudyAndTipo(entries, months, distributor, invoicedCache,
@@ -171,22 +179,35 @@ public class BudgetPlanningExporter {
 				Row row = sheet.createRow(rowIndex++);
 				row.createCell(0).setCellValue(agg.estudio);
 				if (includeInvoicedRevenue) {
-					row.createCell(1).setCellValue(agg.invoicedRevenue);
+					double invoicedValue = studiesWithInvoicedShown.add(agg.estudio) ? agg.invoicedRevenue : 0d;
+					row.createCell(1).setCellValue(invoicedValue);
 				}
 				if (includeExpectedRevenue) {
-					row.createCell(1 + invoicedRevenueOffset).setCellValue(agg.expectedRevenue);
+					double expectedValue = studiesWithExpectedShown.add(agg.estudio) ? agg.expectedRevenue : 0d;
+					row.createCell(1 + invoicedRevenueOffset).setCellValue(expectedValue);
 				}
 				row.createCell(1 + extraOffset).setCellValue(agg.tipo);
 				double rowTotal = 0d;
+				boolean isSalary = "Costo Salarial".equals(agg.tipo);
 				for (int i = 0; i < months.size(); i++) {
 					row.createCell(firstMonthColumnIndex + i).setCellValue(agg.monthly[i]);
 					rowTotal += agg.monthly[i];
 					monthlySums[i] += agg.monthly[i];
+					if (isSalary) {
+						salaryMonthlySums[i] += agg.monthly[i];
+					} else {
+						otherMonthlySums[i] += agg.monthly[i];
+					}
 				}
 				if (includeTotalColumn) {
 					row.createCell(totalColumnIndex).setCellValue(rowTotal);
 				}
 				totalSum += rowTotal;
+				if (isSalary) {
+					salaryTotalSum += rowTotal;
+				} else {
+					otherTotalSum += rowTotal;
+				}
 			}
 		} else {
 			List<BudgetEntry> sorted = new ArrayList<>(entries);
@@ -199,49 +220,76 @@ public class BudgetPlanningExporter {
 
 			for (BudgetEntry entry : sorted) {
 				Row row = sheet.createRow(rowIndex++);
-				row.createCell(0).setCellValue(studyName(entry));
+				String estudio = studyName(entry);
+				row.createCell(0).setCellValue(estudio);
 				if (includeInvoicedRevenue) {
-					row.createCell(1).setCellValue(invoicedRevenue(entry, invoicedCache));
+					double invoicedValue = studiesWithInvoicedShown.add(estudio)
+							? invoicedRevenue(entry, invoicedCache)
+							: 0d;
+					row.createCell(1).setCellValue(invoicedValue);
 				}
 				if (includeExpectedRevenue) {
-					row.createCell(1 + invoicedRevenueOffset).setCellValue(expectedRevenue(entry));
+					double expectedValue = studiesWithExpectedShown.add(estudio) ? expectedRevenue(entry) : 0d;
+					row.createCell(1 + invoicedRevenueOffset).setCellValue(expectedValue);
 				}
 				row.createCell(1 + extraOffset).setCellValue(conceptName(entry));
-				row.createCell(2 + extraOffset).setCellValue(tipo(entry));
+				String tipo = tipo(entry);
+				row.createCell(2 + extraOffset).setCellValue(tipo);
 
 				double[] distribution = distributor.apply(entry, months);
 				double rowTotal = 0d;
+				boolean isSalary = "Costo Salarial".equals(tipo);
 				for (int i = 0; i < months.size(); i++) {
 					row.createCell(firstMonthColumnIndex + i).setCellValue(distribution[i]);
 					rowTotal += distribution[i];
 					monthlySums[i] += distribution[i];
+					if (isSalary) {
+						salaryMonthlySums[i] += distribution[i];
+					} else {
+						otherMonthlySums[i] += distribution[i];
+					}
 				}
 				if (includeTotalColumn) {
 					row.createCell(totalColumnIndex).setCellValue(rowTotal);
 				}
 				totalSum += rowTotal;
+				if (isSalary) {
+					salaryTotalSum += rowTotal;
+				} else {
+					otherTotalSum += rowTotal;
+				}
 			}
 		}
 
-		Row totalsRow = sheet.createRow(rowIndex++);
-		Cell totalsLabel = totalsRow.createCell(0);
-		totalsLabel.setCellValue("Total");
-		totalsLabel.setCellStyle(headerStyle);
-		for (int i = 1; i < firstMonthColumnIndex; i++) {
-			Cell cell = totalsRow.createCell(i);
-			if (includeTotalColumn && i == totalColumnIndex) {
-				cell.setCellValue(totalSum);
-			}
-			cell.setCellStyle(headerStyle);
-		}
-		for (int i = 0; i < months.size(); i++) {
-			Cell monthSumCell = totalsRow.createCell(firstMonthColumnIndex + i);
-			monthSumCell.setCellValue(monthlySums[i]);
-			monthSumCell.setCellStyle(headerStyle);
-		}
+		writeSummaryRow(sheet, rowIndex++, "Subtotal-Otros Costos", otherMonthlySums, otherTotalSum,
+				firstMonthColumnIndex, includeTotalColumn, totalColumnIndex, labelStyle);
+		writeSummaryRow(sheet, rowIndex++, "Subtotal-Costos Salariales", salaryMonthlySums, salaryTotalSum,
+				firstMonthColumnIndex, includeTotalColumn, totalColumnIndex, labelStyle);
+		writeSummaryRow(sheet, rowIndex++, "Total", monthlySums, totalSum, firstMonthColumnIndex, includeTotalColumn,
+				totalColumnIndex, headerStyle);
 
 		for (int i = 0; i < headers.size(); i++) {
 			sheet.autoSizeColumn(i);
+		}
+	}
+
+	private void writeSummaryRow(Sheet sheet, int rowIndex, String label, double[] monthlySums, double totalSum,
+			int firstMonthColumnIndex, boolean includeTotalColumn, int totalColumnIndex, CellStyle style) {
+		Row row = sheet.createRow(rowIndex);
+		Cell labelCell = row.createCell(0);
+		labelCell.setCellValue(label);
+		labelCell.setCellStyle(style);
+		for (int i = 1; i < firstMonthColumnIndex; i++) {
+			Cell cell = row.createCell(i);
+			if (includeTotalColumn && i == totalColumnIndex) {
+				cell.setCellValue(totalSum);
+			}
+			cell.setCellStyle(style);
+		}
+		for (int i = 0; i < monthlySums.length; i++) {
+			Cell monthCell = row.createCell(firstMonthColumnIndex + i);
+			monthCell.setCellValue(monthlySums[i]);
+			monthCell.setCellStyle(style);
 		}
 	}
 
