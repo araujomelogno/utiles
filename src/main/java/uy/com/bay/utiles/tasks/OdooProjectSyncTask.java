@@ -207,6 +207,9 @@ public class OdooProjectSyncTask {
 					? ((Number) expectedRevenueObj).doubleValue()
 					: 0d;
 
+			Object areaObj = odooProjectMap.get("crm_team");
+			String area = areaObj == null ? null : String.valueOf(areaObj);
+
 			if (existing == null) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);
@@ -219,6 +222,7 @@ public class OdooProjectSyncTask {
 
 				newProyecto.setClientName(clientName);
 				newProyecto.setExpectedRevenue(expectedRevenue);
+				newProyecto.setArea(area);
 
 				Study saved = proyectoService.save(newProyecto);
 				if (saved.getName() != null && !saved.getName().isEmpty()) {
@@ -238,6 +242,10 @@ public class OdooProjectSyncTask {
 				}
 				if (Double.compare(existing.getExpectedRevenue(), expectedRevenue) != 0) {
 					existing.setExpectedRevenue(expectedRevenue);
+					changed = true;
+				}
+				if (!Objects.equals(existing.getArea(), area)) {
+					existing.setArea(area);
 					changed = true;
 				}
 				if (changed) {

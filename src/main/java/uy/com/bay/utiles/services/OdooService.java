@@ -239,9 +239,16 @@ public class OdooService {
 
 					Object nameObj = accountMap.get("name");
 					if (nameObj != null) {
-						Double expectedRevenue = findLeadExpectedRevenueByName(uid, String.valueOf(nameObj));
-						if (expectedRevenue != null) {
-							accountMap.put("expected_revenue", expectedRevenue);
+						Map<String, Object> leadInfo = findLeadInfoByName(uid, String.valueOf(nameObj));
+						if (leadInfo != null) {
+							Object revenue = leadInfo.get("expected_revenue");
+							if (revenue instanceof Number) {
+								accountMap.put("expected_revenue", ((Number) revenue).doubleValue());
+							}
+							String teamName = findCrmTeamNameByLeadInfo(uid, leadInfo);
+							if (teamName != null) {
+								accountMap.put("crm_team", teamName);
+							}
 						}
 					}
 
@@ -268,7 +275,7 @@ public class OdooService {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Double findLeadExpectedRevenueByName(Integer uid, String leadName) {
+	private Map<String, Object> findLeadInfoByName(Integer uid, String leadName) {
 		if (leadName == null || leadName.trim().isEmpty()) {
 			return null;
 		}
@@ -276,7 +283,7 @@ public class OdooService {
 			List<Object> domain = Collections.singletonList(Arrays.asList("name", "=", leadName));
 
 			HashMap<String, Object> keywordArgs = new HashMap<>();
-			keywordArgs.put("fields", Arrays.asList("id", "name", "expected_revenue"));
+			keywordArgs.put("fields", Arrays.asList("id", "name", "expected_revenue", "team_id"));
 			keywordArgs.put("limit", 1);
 
 			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(), "crm.lead",
@@ -288,15 +295,78 @@ public class OdooService {
 			}
 			Object first = leadsRaw[0];
 			if (first instanceof Map) {
-				Object revenue = ((Map<String, Object>) first).get("expected_revenue");
-				if (revenue instanceof Number) {
-					return ((Number) revenue).doubleValue();
-				}
+				return (Map<String, Object>) first;
 			}
 		} catch (XmlRpcException e) {
 			logger.error("XmlRpcException while searching crm.lead by name '{}': {}", leadName, e.getMessage(), e);
 		} catch (Exception e) {
 			logger.error("Unexpected exception while searching crm.lead by name '{}': {}", leadName, e.getMessage(), e);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String findCrmTeamNameByLeadInfo(Integer uid, Map<String, Object> leadInfo) {
+		if (leadInfo == null) {
+			return null;
+		}
+		Object teamIdObj = leadInfo.get("team_id");
+		if (teamIdObj == null || teamIdObj instanceof Boolean) {
+			return null;
+		}
+
+		Integer teamId = null;
+		String teamName = null;
+		if (teamIdObj instanceof Object[]) {
+			Object[] teamArr = (Object[]) teamIdObj;
+			if (teamArr.length >= 1 && teamArr[0] instanceof Number) {
+				teamId = ((Number) teamArr[0]).intValue();
+			}
+			if (teamArr.length >= 2 && teamArr[1] != null) {
+				teamName = String.valueOf(teamArr[1]);
+			}
+		} else if (teamIdObj instanceof List) {
+			List<Object> teamList = (List<Object>) teamIdObj;
+			if (!teamList.isEmpty() && teamList.get(0) instanceof Number) {
+				teamId = ((Number) teamList.get(0)).intValue();
+			}
+			if (teamList.size() >= 2 && teamList.get(1) != null) {
+				teamName = String.valueOf(teamList.get(1));
+			}
+		}
+
+		if (teamName != null && !teamName.trim().isEmpty()) {
+			return teamName;
+		}
+		if (teamId == null) {
+			return null;
+		}
+
+		try {
+			List<Object> domain = Collections.singletonList(Arrays.asList("id", "=", teamId));
+
+			HashMap<String, Object> keywordArgs = new HashMap<>();
+			keywordArgs.put("fields", Arrays.asList("id", "name"));
+			keywordArgs.put("limit", 1);
+
+			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(), "crm.team",
+					"search_read", Collections.singletonList(domain), keywordArgs };
+
+			Object[] teamsRaw = (Object[]) objectClient.execute("execute_kw", params);
+			if (teamsRaw == null || teamsRaw.length == 0) {
+				return null;
+			}
+			Object first = teamsRaw[0];
+			if (first instanceof Map) {
+				Object name = ((Map<String, Object>) first).get("name");
+				if (name != null) {
+					return String.valueOf(name);
+				}
+			}
+		} catch (XmlRpcException e) {
+			logger.error("XmlRpcException while searching crm.team by id '{}': {}", teamId, e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Unexpected exception while searching crm.team by id '{}': {}", teamId, e.getMessage(), e);
 		}
 		return null;
 	}

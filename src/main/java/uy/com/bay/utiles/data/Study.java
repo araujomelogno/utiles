@@ -24,6 +24,7 @@ public class Study extends AbstractEntity {
 	private boolean showSurveyor;
 	private String clientName;
 	private double expectedRevenue;
+	private String area;
 
 	public boolean isShowSurveyor() {
 		return showSurveyor;
@@ -106,5 +107,13 @@ public class Study extends AbstractEntity {
 
 	public void setExpectedRevenue(double expectedRevenue) {
 		this.expectedRevenue = expectedRevenue;
+	}
+
+	public String getArea() {
+		return area;
+	}
+
+	public void setArea(String area) {
+		this.area = area;
 	}
 }

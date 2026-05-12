@@ -129,6 +129,7 @@ public class BudgetPlanningExporter {
 
 		List<String> headers = new ArrayList<>();
 		headers.add("Estudio");
+		headers.add("Area");
 		if (includeInvoicedRevenue) {
 			headers.add("Ingreso Facturado");
 		}
@@ -158,7 +159,7 @@ public class BudgetPlanningExporter {
 		int invoicedRevenueOffset = includeInvoicedRevenue ? 1 : 0;
 		int expectedRevenueOffset = includeExpectedRevenue ? 1 : 0;
 		int extraOffset = invoicedRevenueOffset + expectedRevenueOffset;
-		int baseColumnsCount = (totalizarConceptos ? 2 : 3) + extraOffset;
+		int baseColumnsCount = (totalizarConceptos ? 3 : 4) + extraOffset;
 		int totalColumnIndex = includeTotalColumn ? baseColumnsCount : -1;
 		int firstMonthColumnIndex = baseColumnsCount + (includeTotalColumn ? 1 : 0);
 		double totalSum = 0d;
@@ -178,15 +179,16 @@ public class BudgetPlanningExporter {
 			for (AggregatedRow agg : aggregated) {
 				Row row = sheet.createRow(rowIndex++);
 				row.createCell(0).setCellValue(agg.estudio);
+				row.createCell(1).setCellValue(agg.area != null ? agg.area : "");
 				if (includeInvoicedRevenue) {
 					double invoicedValue = studiesWithInvoicedShown.add(agg.estudio) ? agg.invoicedRevenue : 0d;
-					row.createCell(1).setCellValue(invoicedValue);
+					row.createCell(2).setCellValue(invoicedValue);
 				}
 				if (includeExpectedRevenue) {
 					double expectedValue = studiesWithExpectedShown.add(agg.estudio) ? agg.expectedRevenue : 0d;
-					row.createCell(1 + invoicedRevenueOffset).setCellValue(expectedValue);
+					row.createCell(2 + invoicedRevenueOffset).setCellValue(expectedValue);
 				}
-				row.createCell(1 + extraOffset).setCellValue(agg.tipo);
+				row.createCell(2 + extraOffset).setCellValue(agg.tipo);
 				double rowTotal = 0d;
 				boolean isSalary = "Costo Salarial".equals(agg.tipo);
 				for (int i = 0; i < months.size(); i++) {
@@ -222,19 +224,20 @@ public class BudgetPlanningExporter {
 				Row row = sheet.createRow(rowIndex++);
 				String estudio = studyName(entry);
 				row.createCell(0).setCellValue(estudio);
+				row.createCell(1).setCellValue(area(entry));
 				if (includeInvoicedRevenue) {
 					double invoicedValue = studiesWithInvoicedShown.add(estudio)
 							? invoicedRevenue(entry, invoicedCache)
 							: 0d;
-					row.createCell(1).setCellValue(invoicedValue);
+					row.createCell(2).setCellValue(invoicedValue);
 				}
 				if (includeExpectedRevenue) {
 					double expectedValue = studiesWithExpectedShown.add(estudio) ? expectedRevenue(entry) : 0d;
-					row.createCell(1 + invoicedRevenueOffset).setCellValue(expectedValue);
+					row.createCell(2 + invoicedRevenueOffset).setCellValue(expectedValue);
 				}
-				row.createCell(1 + extraOffset).setCellValue(conceptName(entry));
+				row.createCell(2 + extraOffset).setCellValue(conceptName(entry));
 				String tipo = tipo(entry);
-				row.createCell(2 + extraOffset).setCellValue(tipo);
+				row.createCell(3 + extraOffset).setCellValue(tipo);
 
 				double[] distribution = distributor.apply(entry, months);
 				double rowTotal = 0d;
@@ -296,6 +299,14 @@ public class BudgetPlanningExporter {
 	private static String studyName(BudgetEntry entry) {
 		if (entry.getBudget() != null && entry.getBudget().getStudy() != null) {
 			return entry.getBudget().getStudy().getName();
+		}
+		return "";
+	}
+
+	private static String area(BudgetEntry entry) {
+		if (entry.getBudget() != null && entry.getBudget().getStudy() != null
+				&& entry.getBudget().getStudy().getArea() != null) {
+			return entry.getBudget().getStudy().getArea();
 		}
 		return "";
 	}
@@ -502,6 +513,7 @@ public class BudgetPlanningExporter {
 			AggregatedRow agg = map.computeIfAbsent(key, k -> new AggregatedRow(estudio, tipo, months.size()));
 			agg.total += entry.getTotal() != null ? entry.getTotal() : 0d;
 			agg.expectedRevenue = expectedRevenue(entry);
+			agg.area = area(entry);
 			if (includeInvoicedRevenue) {
 				agg.invoicedRevenue = invoicedRevenue(entry, invoicedCache);
 			}
@@ -520,6 +532,7 @@ public class BudgetPlanningExporter {
 	private static class AggregatedRow {
 		final String estudio;
 		final String tipo;
+		String area;
 		double total;
 		double expectedRevenue;
 		double invoicedRevenue;
