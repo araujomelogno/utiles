@@ -41,10 +41,7 @@ public class Fieldwork extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private FieldworkType type;;
 
-	@ManyToOne
-	@JoinColumn(name = "area_id")
-	private Area area;
-
+ 
 	@ManyToOne
 	@JoinColumn(name = "budget_entry_id")
 	private BudgetEntry budgetEntry;
@@ -75,13 +72,8 @@ public class Fieldwork extends AbstractEntity {
 		this.alchemerId = alchemerId;
 	}
 
-	public Area getArea() {
-		return area;
-	}
+	
 
-	public void setArea(Area area) {
-		this.area = area;
-	}
 
 	public Study getStudy() {
 		return study;

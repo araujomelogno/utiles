@@ -18,7 +18,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -30,7 +29,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
-import uy.com.bay.utiles.data.Area;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.FieldworkStatus;
 import uy.com.bay.utiles.data.FieldworkType;
@@ -62,7 +60,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private TextArea obs;
 	private ComboBox<FieldworkStatus> status;
 	private ComboBox<FieldworkType> type;
-	private ComboBox<Area> area;
 
 	private ComboBox<Study> studyFilter;
 	private ComboBox<FieldworkStatus> statusFilter;
@@ -79,14 +76,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
-	private final uy.com.bay.utiles.services.AreaService areaService;
 	private final BudgetEntryService budgetEntryService;
 
 	public FieldworksView(FieldworkService fieldworkService, StudyService studyService,
-			uy.com.bay.utiles.services.AreaService areaService, BudgetEntryService budgetEntryService) {
+			BudgetEntryService budgetEntryService) {
 		this.fieldworkService = fieldworkService;
 		this.studyService = studyService;
-		this.areaService = areaService;
 		this.budgetEntryService = budgetEntryService;
 		addClassNames("fieldworks-view");
 
@@ -110,7 +105,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
-		grid.addColumn("area").setHeader("Area").setAutoWidth(true);
 
 		grid.setItems(query -> {
 			Specification<Fieldwork> spec = (root, q, cb) -> {
@@ -190,8 +184,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				if (this.fieldwork.getStudy() != null && this.fieldwork.getStudy().getBudget() != null
 						&& this.fieldwork.getStudy().getBudget().getEntries() != null) {
 					for (BudgetEntry entry : this.fieldwork.getStudy().getBudget().getEntries()) {
-						this.budgetEntryService.updateDates(entry.getId(),
-								this.fieldwork.getInitPlannedDate(), this.fieldwork.getEndPlannedDate());
+						this.budgetEntryService.updateDates(entry.getId(), this.fieldwork.getInitPlannedDate(),
+								this.fieldwork.getEndPlannedDate());
 					}
 				}
 
@@ -287,11 +281,9 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		status.setItems(FieldworkStatus.values());
 		type = new ComboBox<>("Tipo");
 		type.setItems(FieldworkType.values());
-		area = new ComboBox<>("Area");
-		area.setItems(areaService.listAll());
-		area.setItemLabelGenerator(Area::getNombre);
+
 		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity,
-				completed, area, status, type, obs);
+				completed, status, type, obs);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);

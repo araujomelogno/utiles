@@ -7,6 +7,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+
 import uy.com.bay.utiles.data.Fieldwork;
 
 public class FieldworkDetailsDialog extends Dialog {
@@ -19,10 +20,6 @@ public class FieldworkDetailsDialog extends Dialog {
 		TextField study = new TextField("Estudio");
 		study.setValue(fieldwork.getStudy() != null ? fieldwork.getStudy().getName() : "");
 		study.setReadOnly(true);
-
-		TextField area = new TextField("Area");
-		area.setValue(fieldwork.getArea() != null ? fieldwork.getArea().getNombre() : "");
-		area.setReadOnly(true);
 
 		TextField status = new TextField("Estado");
 		status.setValue(fieldwork.getStatus() != null ? fieldwork.getStatus().toString() : "");
@@ -65,13 +62,12 @@ public class FieldworkDetailsDialog extends Dialog {
 		completed.setValue(fieldwork.getCompleted() != null ? fieldwork.getCompleted().toString() : "");
 		completed.setReadOnly(true);
 
- 
 		TextArea obs = new TextArea("Observaciones");
 		obs.setValue(fieldwork.getObs() != null ? fieldwork.getObs() : "");
 		obs.setReadOnly(true);
 
-		formLayout.add(study, type, status, area, doobloId, alchemerId, initPlannedDate, endPlannedDate, initDate,
-				endDate, goalQuantity, completed, obs);
+		formLayout.add(study, type, status, doobloId, alchemerId, initPlannedDate, endPlannedDate, initDate, endDate,
+				goalQuantity, completed, obs);
 		add(formLayout);
 
 		Button editButton = new Button("Editar");
