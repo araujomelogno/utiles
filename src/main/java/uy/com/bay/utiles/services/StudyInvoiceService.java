@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.entities.StudyInvoice;
 import uy.com.bay.utiles.repo.StudyInvoiceRepository;
 
@@ -23,6 +24,18 @@ public class StudyInvoiceService {
 
 	public Optional<StudyInvoice> findByMoveId(String moveId) {
 		return repository.findByMoveId(moveId);
+	}
+
+	public List<StudyInvoice> findByStudy(Study study) {
+		return repository.findByStudy(study);
+	}
+
+	public double sumAmountTotalByStudy(Study study) {
+		if (study == null) {
+			return 0d;
+		}
+		Double sum = repository.sumAmountTotalByStudy(study);
+		return sum != null ? sum : 0d;
 	}
 
 	public StudyInvoice save(StudyInvoice entity) {
