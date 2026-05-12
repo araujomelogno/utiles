@@ -68,6 +68,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private TextField clientName;
 	private TextField expectedRevenue;
 	private TextField invoiced;
+	private TextField area;
 
 	private Button addButton;
 	private TextField nameFilter;
@@ -337,6 +338,8 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		editorLayoutDiv.add(editorDiv);
 
 		FormLayout formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
+				new FormLayout.ResponsiveStep("500px", 2));
 		name = new TextField("Name");
 		name.setReadOnly(true);
 		odooId = new TextField("Odoo Id");
@@ -355,8 +358,10 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		expectedRevenue.setReadOnly(true);
 		invoiced = new TextField("Facturado");
 		invoiced.setReadOnly(true);
+		area = new TextField("Area");
+		area.setReadOnly(true);
 		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost, clientName,
-				expectedRevenue, invoiced);
+				expectedRevenue, invoiced, area);
 
 		editorDiv.add(formLayout);
 		editorDiv.add(viewMovementsButton);
