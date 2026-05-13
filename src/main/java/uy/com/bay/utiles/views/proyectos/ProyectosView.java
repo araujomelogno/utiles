@@ -360,14 +360,17 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		invoiced.setReadOnly(true);
 		area = new TextField("Area");
 		area.setReadOnly(true);
-		formLayout.add(name, odooId, budget, obs, showSurveyor, totalTransfered, totalReportedCost, clientName,
+		formLayout.add(name, odooId, budget, showSurveyor, obs, totalTransfered, totalReportedCost, clientName,
 				expectedRevenue, invoiced, area);
+		formLayout.setColspan(obs, 2);
+
+		HorizontalLayout viewActionsLayout = new HorizontalLayout(viewMovementsButton, viewFieldworksButton,
+				viewBudgetButton, viewInvoicesButton);
+		viewActionsLayout.setClassName("view-actions-layout");
+		viewActionsLayout.setSpacing(true);
 
 		editorDiv.add(formLayout);
-		editorDiv.add(viewMovementsButton);
-		editorDiv.add(viewFieldworksButton);
-		editorDiv.add(viewBudgetButton);
-		editorDiv.add(viewInvoicesButton);
+		editorDiv.add(viewActionsLayout);
 		createButtonLayout(this.editorLayoutDiv);
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);

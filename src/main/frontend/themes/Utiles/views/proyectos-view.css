@@ -16,7 +16,15 @@
 .proyectos-view .editor-layout {
   display: flex;
   flex-direction: column;
-  width: 700px;
+  width: 1000px;
+}
+
+.proyectos-view .view-actions-layout {
+  width: 100%;
+  flex-wrap: wrap;
+  gap: var(--lumo-space-m);
+  padding-top: var(--lumo-space-m);
+  padding-bottom: var(--lumo-space-m);
 }
 
 .proyectos-view .editor {
