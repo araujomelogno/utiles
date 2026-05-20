@@ -210,7 +210,7 @@ public class OdooProjectSyncTask {
 
 			Object areaObj = odooProjectMap.get("crm_team");
 			String area = areaObj == null ? null : String.valueOf(areaObj);
-
+			area = area.replace("Opinión Publica", "Opinion Publica");
 			if (existing == null) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);
