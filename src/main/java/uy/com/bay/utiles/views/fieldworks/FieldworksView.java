@@ -3,9 +3,11 @@ package uy.com.bay.utiles.views.fieldworks;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -92,7 +94,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private Fieldwork fieldwork;
 	private Div editorLayoutDiv;
-
+	private final NumberFormat currencyFormat;
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
 	private final BudgetEntryService budgetEntryService;
@@ -104,6 +106,9 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		this.studyService = studyService;
 		this.budgetEntryService = budgetEntryService;
 		this.fieldworkUpdateTask = fieldworkUpdateTask;
+		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat.setMinimumFractionDigits(0);
+		currencyFormat.setMaximumFractionDigits(0);
 		addClassNames("fieldworks-view");
 		setHeight("100%");
 
@@ -422,7 +427,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		if (value == null) {
 			return "";
 		}
-		return String.format("$%.2f", value);
+		return currencyFormat.format(value);
 	}
 
 	private void exportToExcel() {
@@ -491,10 +496,10 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				Row row = sheet.createRow(rowIdx++);
 				row.createCell(0).setCellValue(fw.getStudy() != null ? fw.getStudy().getName() : "");
 				row.createCell(1).setCellValue(fw.getObs() != null ? fw.getObs() : "");
-				row.createCell(2)
-						.setCellValue(fw.getInitPlannedDate() != null ? fw.getInitPlannedDate().format(dateFormatter) : "");
-				row.createCell(3)
-						.setCellValue(fw.getEndPlannedDate() != null ? fw.getEndPlannedDate().format(dateFormatter) : "");
+				row.createCell(2).setCellValue(
+						fw.getInitPlannedDate() != null ? fw.getInitPlannedDate().format(dateFormatter) : "");
+				row.createCell(3).setCellValue(
+						fw.getEndPlannedDate() != null ? fw.getEndPlannedDate().format(dateFormatter) : "");
 				row.createCell(4).setCellValue(fw.getGoalQuantity() != null ? fw.getGoalQuantity() : 0);
 				row.createCell(5).setCellValue(fw.getCompleted() != null ? fw.getCompleted() : 0);
 				row.createCell(6).setCellValue(fw.getStatus() != null ? fw.getStatus().toString() : "");
