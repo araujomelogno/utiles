@@ -13,9 +13,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -25,6 +23,7 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
@@ -39,6 +38,7 @@ import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.tasks.FieldworkUpdateTask;
 
+@PageTitle("Solicitudes de campo")
 @Route("fieldworks/:fieldworkID?/:action?(edit)")
 @RolesAllowed("ADMIN")
 public class FieldworksView extends Div implements BeforeEnterObserver {
@@ -54,8 +54,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private ComboBox<uy.com.bay.utiles.entities.BudgetEntry> budgetEntry;
 	private DatePicker initPlannedDate;
 	private DatePicker endPlannedDate;
-	private DatePicker initDate;
-	private DatePicker endDate;
+
 	private IntegerField goalQuantity;
 	private IntegerField completed;
 	private TextArea obs;
@@ -273,8 +272,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		budgetEntry.setItemLabelGenerator(be -> be.getConcept() != null ? be.getConcept().getName() : "N/A");
 		initPlannedDate = new DatePicker("Fecha Planificada Inicio");
 		endPlannedDate = new DatePicker("Fecha Planificada Fin");
-		initDate = new DatePicker("Fecha Inicio");
-		endDate = new DatePicker("Fecha Fin");
+
 		goalQuantity = new IntegerField("Cantidad Objetivo");
 		completed = new IntegerField("Completas");
 		completed.setReadOnly(true);
@@ -308,7 +306,6 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		wrapper.setClassName("grid-wrapper");
 		splitLayout.addToPrimary(wrapper);
 
-		H2 title = new H2("Solicitudes de Campo");
 		Button addButton = new Button("Agregar Solicitud");
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addButton.addClickListener(e -> {
@@ -326,15 +323,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 				refreshGrid();
 				Notification.show("Actualización de campos finalizada.", 3000, Notification.Position.BOTTOM_START);
 			} catch (Exception ex) {
-				Notification.show("Error al actualizar campos: " + ex.getMessage(), 5000,
-						Notification.Position.MIDDLE);
+				Notification.show("Error al actualizar campos: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
 			}
 		});
 
-		HorizontalLayout actionsLayout = new HorizontalLayout(addButton, updateButton);
-		HorizontalLayout topLayout = new HorizontalLayout(title, actionsLayout);
-		topLayout.setWidth("100%");
-		topLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
+//		HorizontalLayout actionsLayout = new HorizontalLayout(addButton, updateButton);
+//		HorizontalLayout topLayout = new HorizontalLayout(actionsLayout);
 
 		studyFilter = new ComboBox<>("Estudio");
 		studyFilter.setItems(studyService.listAll());
@@ -352,10 +346,13 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		typeFilter.setClearButtonVisible(true);
 		typeFilter.addValueChangeListener(e -> refreshGrid());
 
-		HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, statusFilter, typeFilter);
+		HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, statusFilter, typeFilter, addButton,
+				updateButton);
+		filterLayout.setWidth("100%");
+//		filterLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 		filterLayout.setWidth("100%");
 
-		wrapper.add(topLayout, filterLayout, grid);
+		wrapper.add(filterLayout, grid);
 	}
 
 	private void refreshGrid() {

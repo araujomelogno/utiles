@@ -55,5 +55,25 @@ public class Budget extends AbstractEntity {
 
 	public void setName(String name) {
 		this.name = name;
+
 	}
+
+	public Double getTotal() {
+		Double result = 0d;
+		for (BudgetEntry entry : entries) {
+			result = result + entry.getTotal();
+
+		}
+		return result;
+	}
+
+	public Double getSpent() {
+		Double result = 0d;
+		for (BudgetEntry entry : entries) {
+			result = result + entry.getSpent();
+
+		}
+		return result;
+	}
+
 }
