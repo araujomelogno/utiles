@@ -32,6 +32,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -340,10 +341,11 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 	}
 
 	private void createGridLayout(SplitLayout splitLayout) {
-		Div wrapper = new Div();
+		VerticalLayout wrapper = new VerticalLayout();
 		wrapper.setClassName("grid-wrapper");
 		wrapper.setSizeFull();
-//		grid.setSizeFull();
+		wrapper.setPadding(false);
+		wrapper.setSpacing(false);
 		HorizontalLayout filterLayout = new HorizontalLayout();
 		filterLayout.setWidthFull();
 
@@ -395,6 +397,7 @@ public class ExpenseReportsView extends Div implements BeforeEnterObserver {
 		topLayout.setJustifyContentMode(com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode.END);
 		splitLayout.addToPrimary(wrapper);
 		wrapper.add(topLayout, filterLayout, grid);
+		wrapper.setFlexGrow(1, grid);
 	}
 
 	private Specification<ExpenseReport> createFilterSpecification() {
