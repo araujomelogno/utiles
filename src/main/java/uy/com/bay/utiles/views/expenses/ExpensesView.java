@@ -498,7 +498,7 @@ public class ExpensesView extends Div implements BeforeEnterObserver {
 		budgetEntry.setItems((study.getValue() != null && study.getValue().getBudget() != null)
 				? new ArrayList(study.getValue().getBudget().getEntries())
 				: new ArrayList());
-		budgetEntry.setItemLabelGenerator(bc -> bc == null ? "" : bc.getConcept().getName());
+		budgetEntry.setItemLabelGenerator(bc -> bc == null || bc.getConcept() == null ? "" : bc.getConcept().getName());
 		study.addValueChangeListener(e -> {
 			budgetEntry.setItems((study.getValue() != null && study.getValue().getBudget() != null)
 					? new ArrayList(study.getValue().getBudget().getEntries())

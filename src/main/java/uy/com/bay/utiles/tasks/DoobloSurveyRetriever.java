@@ -18,13 +18,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 
 import uy.com.bay.utiles.data.DoobloResponse;
 import uy.com.bay.utiles.data.Fieldwork;
@@ -33,7 +34,6 @@ import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.SurveyorRepository;
 import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
-import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetEntryService;
 
 @Component
@@ -68,81 +68,6 @@ public class DoobloSurveyRetriever {
 		this.fieldworkRepository = fieldworkRepository;
 		this.budgetEntryService = budgetEntryService;
 		this.restTemplate = new RestTemplate();
-	}
-
-	// @Scheduled(cron = "0 0 0 * * *")
-	public void retrieveDoobloSurveys() {
-		LOGGER.info("Starting Dooblo Survey Retriever task...");
-		try {
-			String url = "http://api.dooblo.net/newapi/Surveys/GetActiveSurveys?daysBack=" + activeSurveyDaysBack;
-			HttpEntity<String> entity = createAuthHeaders();
-			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-			LOGGER.info("Successfully retrieved active surveys. Response: {}", response.getBody());
-
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode root = mapper.readTree(response.getBody());
-
-			if (root.isArray()) {
-				LOGGER.info("Found {} active surveys.", root.size());
-				for (JsonNode surveyNode : root) {
-					String surveyId = surveyNode.path("SurveyID").asText();
-					if (surveyId.isEmpty()) {
-						LOGGER.warn("Found a survey object with no SurveyID. Skipping.");
-						continue;
-					}
-
-					try {
-						String interviewsUrl = String.format(
-								"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&completed=True",
-								surveyId);
-						ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET,
-								entity, String.class);
-						LOGGER.info("Successfully retrieved interview IDs for SurveyID {}. Response: {}", surveyId,
-								interviewsResponse.getBody());
-
-						JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
-						if (interviewsRoot.isArray()) {
-							LOGGER.info("Found {} interviews for SurveyID {}.", interviewsRoot.size(), surveyId);
-							for (JsonNode interviewIdNode : interviewsRoot) {
-								String interviewId = interviewIdNode.asText();
-								if (interviewId.isEmpty()) {
-									LOGGER.warn("Found an empty interview ID for SurveyID {}. Skipping.", surveyId);
-									continue;
-								}
-
-								if (doobloResponseRepository.existsByInterviewId(interviewId)) {
-									LOGGER.info("Interview ID {} already exists in the database. Skipping.",
-											interviewId);
-									continue;
-								}
-
-								try {
-									String dataUrl = String.format(
-											"http://api.dooblo.net/newapi/SurveyInterviewData?subjectIDs=%s&surveyID=%s&onlyHeaders=false&includeNulls=false&noAnswerData=true",
-											interviewId, surveyId);
-									ResponseEntity<String> dataResponse = restTemplate.exchange(dataUrl, HttpMethod.GET,
-											entity, String.class);
-									LOGGER.info("Successfully retrieved interview data for InterviewID {}.",
-											interviewId);
-									processAndSaveSurveyData(dataResponse.getBody(), surveyId, interviewId);
-
-								} catch (Exception e) {
-									LOGGER.error("Failed to retrieve interview data for InterviewID: {}", interviewId,
-											e);
-								}
-							}
-						}
-
-					} catch (Exception e) {
-						LOGGER.error("Failed to retrieve interview IDs for SurveyID: {}", surveyId, e);
-					}
-				}
-			}
-
-		} catch (Exception e) {
-			LOGGER.error("Failed to retrieve active surveys from Dooblo API.", e);
-		}
-		LOGGER.info("Dooblo Survey Retriever task finished.");
 	}
 
 	private void processAndSaveSurveyData(String xmlData, String surveyId, String interviewId) {
@@ -218,7 +143,7 @@ public class DoobloSurveyRetriever {
 				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
 
 				String interviewsUrl = String.format(
-						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&completed=True&filtered=False&dateStart=%s&dateEnd=%s",
+						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&testMode=False&completed=True&filtered=False&dateStart=%s&dateEnd=%s",
 						surveyId, fromStr, toStr);
 
 				ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,
@@ -228,10 +153,28 @@ public class DoobloSurveyRetriever {
 
 				JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
 				int count = (interviewsRoot != null && interviewsRoot.isArray()) ? interviewsRoot.size() : 0;
-				result.put(monthStart, count);
+
+				Thread.sleep(600);
+				String cancelledInterviewsUrl = String.format(
+						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&testMode=False&completed=True&filtered=False&statuses=7&dateStart=%s&dateEnd=%s",
+						surveyId, fromStr, toStr);
+
+				ResponseEntity<String> cancelledInterviewsResponse = restTemplate.exchange(cancelledInterviewsUrl,
+						HttpMethod.GET, entity, String.class);
+				LOGGER.info("Successfully retrieved interview IDs for SurveyID {} between {} and {}. Response: {}",
+						surveyId, monthStart, monthEnd, cancelledInterviewsResponse.getBody());
+
+				JsonNode canceledInterviewsRoot = mapper.readTree(cancelledInterviewsResponse.getBody());
+				int cancelledCount = (canceledInterviewsRoot != null && canceledInterviewsRoot.isArray())
+						? canceledInterviewsRoot.size()
+						: 0;
+
+				result.put(monthStart, count - cancelledCount);
 			} catch (Exception e) {
 				LOGGER.error("Failed to retrieve completed surveys for SurveyID {} for month {}", surveyId, monthStart,
 						e);
+				Notification.show("Failed to retrieve completed surveys for SurveyID {} for month {}", 5000,
+						Position.MIDDLE);
 				result.put(monthStart, 0);
 			}
 

@@ -94,13 +94,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		add(splitLayout);
 
 		// Configure Grid
-		grid.addColumn(fieldwork -> fieldwork.getStudy() != null ? fieldwork.getStudy().getName() : "")
-				.setHeader("Estudio").setAutoWidth(true);
+		grid.addColumn(fieldwork -> fieldwork.getStudy() != null
+				? fieldwork.getStudy().getName().substring(0, Math.min(40, fieldwork.getStudy().getName().length()))
+				: "").setHeader("Estudio").setAutoWidth(true);
 		grid.addColumn("obs").setHeader("Observaciones").setAutoWidth(true);
 		grid.addColumn("initPlannedDate").setHeader("Fecha Planificada Inicio").setAutoWidth(true);
 		grid.addColumn("endPlannedDate").setHeader("Fecha Planificada Fin").setAutoWidth(true);
-		grid.addColumn("initDate").setHeader("Fecha Inicio").setAutoWidth(true);
-		grid.addColumn("endDate").setHeader("Fecha Fin").setAutoWidth(true);
 		grid.addColumn("goalQuantity").setHeader("Cantidad Objetivo").setAutoWidth(true);
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);

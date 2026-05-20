@@ -125,6 +125,7 @@ public class OdooProjectSyncTask {
 	// hour
 	// For testing, you might use a more frequent cron like "*/30 * * * * ?" (every
 	// 30 seconds)
+//	@Scheduled(cron = "* */2 * * * *")
 	@Scheduled(cron = "* * 5 * * *")
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
