@@ -132,7 +132,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn(fw -> formatCurrency(getActualCost(fw))).setHeader("Costo actual").setAutoWidth(true);
 
 		grid.setItems(query -> fieldworkService
-				.list(VaadinSpringDataHelpers.toSpringPageRequest(query), buildSpecification()).stream());
+				.listWithBudget(VaadinSpringDataHelpers.toSpringPageRequest(query), buildSpecification()).stream());
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		grid.setSizeFull();
 
@@ -429,7 +429,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		try {
 			StreamResource sr = new StreamResource("solicitudes-de-campo.xlsx", () -> {
 				try {
-					List<Fieldwork> data = fieldworkService.list(Pageable.unpaged(), buildSpecification()).getContent();
+					List<Fieldwork> data = fieldworkService.listWithBudget(Pageable.unpaged(), buildSpecification())
+							.getContent();
 					return buildExcel(data);
 				} catch (IOException ex) {
 					Notification.show("Error al generar el archivo Excel.", 3000, Notification.Position.TOP_CENTER);
