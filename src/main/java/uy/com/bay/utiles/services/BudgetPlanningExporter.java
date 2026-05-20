@@ -127,6 +127,8 @@ public class BudgetPlanningExporter {
 
 		rowIndex++;
 
+		boolean includeCostoVariable = includeExpectedRevenue && includeTotalColumn;
+
 		List<String> headers = new ArrayList<>();
 		headers.add("Estudio");
 		headers.add("Area");
@@ -135,6 +137,9 @@ public class BudgetPlanningExporter {
 		}
 		if (includeExpectedRevenue) {
 			headers.add("Ingreso esperado");
+		}
+		if (includeCostoVariable) {
+			headers.add("Costo Variable Presupuestado");
 		}
 		if (!totalizarConceptos) {
 			headers.add("Concepto presupuesto");
@@ -158,10 +163,23 @@ public class BudgetPlanningExporter {
 
 		int invoicedRevenueOffset = includeInvoicedRevenue ? 1 : 0;
 		int expectedRevenueOffset = includeExpectedRevenue ? 1 : 0;
-		int extraOffset = invoicedRevenueOffset + expectedRevenueOffset;
+		int costoVariableOffset = includeCostoVariable ? 1 : 0;
+		int extraOffset = invoicedRevenueOffset + expectedRevenueOffset + costoVariableOffset;
 		int baseColumnsCount = (totalizarConceptos ? 3 : 4) + extraOffset;
 		int totalColumnIndex = includeTotalColumn ? baseColumnsCount : -1;
 		int firstMonthColumnIndex = baseColumnsCount + (includeTotalColumn ? 1 : 0);
+
+		CellStyle percentStyle = null;
+		String estudioColLetter = null;
+		String ierColLetter = null;
+		String totalColLetter = null;
+		if (includeCostoVariable) {
+			percentStyle = workbook.createCellStyle();
+			percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
+			estudioColLetter = columnLetter(0);
+			ierColLetter = columnLetter(2 + invoicedRevenueOffset);
+			totalColLetter = columnLetter(totalColumnIndex);
+		}
 		double totalSum = 0d;
 		double[] monthlySums = new double[months.size()];
 		double salaryTotalSum = 0d;
@@ -184,9 +202,20 @@ public class BudgetPlanningExporter {
 					double invoicedValue = studiesWithInvoicedShown.add(agg.estudio) ? agg.invoicedRevenue : 0d;
 					row.createCell(2).setCellValue(invoicedValue);
 				}
+				double expectedValue = 0d;
 				if (includeExpectedRevenue) {
-					double expectedValue = studiesWithExpectedShown.add(agg.estudio) ? agg.expectedRevenue : 0d;
+					expectedValue = studiesWithExpectedShown.add(agg.estudio) ? agg.expectedRevenue : 0d;
 					row.createCell(2 + invoicedRevenueOffset).setCellValue(expectedValue);
+				}
+				if (includeCostoVariable && expectedValue != 0d) {
+					Cell cvpCell = row.createCell(2 + invoicedRevenueOffset + expectedRevenueOffset);
+					int excelRow = row.getRowNum() + 1;
+					cvpCell.setCellFormula(String.format("SUMIF(%s:%s,%s%d,%s:%s)/%s%d",
+							estudioColLetter, estudioColLetter,
+							estudioColLetter, excelRow,
+							totalColLetter, totalColLetter,
+							ierColLetter, excelRow));
+					cvpCell.setCellStyle(percentStyle);
 				}
 				row.createCell(2 + extraOffset).setCellValue(agg.tipo);
 				double rowTotal = 0d;
@@ -231,9 +260,20 @@ public class BudgetPlanningExporter {
 							: 0d;
 					row.createCell(2).setCellValue(invoicedValue);
 				}
+				double expectedValue = 0d;
 				if (includeExpectedRevenue) {
-					double expectedValue = studiesWithExpectedShown.add(estudio) ? expectedRevenue(entry) : 0d;
+					expectedValue = studiesWithExpectedShown.add(estudio) ? expectedRevenue(entry) : 0d;
 					row.createCell(2 + invoicedRevenueOffset).setCellValue(expectedValue);
+				}
+				if (includeCostoVariable && expectedValue != 0d) {
+					Cell cvpCell = row.createCell(2 + invoicedRevenueOffset + expectedRevenueOffset);
+					int excelRow = row.getRowNum() + 1;
+					cvpCell.setCellFormula(String.format("SUMIF(%s:%s,%s%d,%s:%s)/%s%d",
+							estudioColLetter, estudioColLetter,
+							estudioColLetter, excelRow,
+							totalColLetter, totalColLetter,
+							ierColLetter, excelRow));
+					cvpCell.setCellStyle(percentStyle);
 				}
 				row.createCell(2 + extraOffset).setCellValue(conceptName(entry));
 				String tipo = tipo(entry);
@@ -480,6 +520,16 @@ public class BudgetPlanningExporter {
 			result[i] = accumulated;
 		}
 		return result;
+	}
+
+	private static String columnLetter(int index) {
+		StringBuilder sb = new StringBuilder();
+		int n = index;
+		while (n >= 0) {
+			sb.insert(0, (char) ('A' + n % 26));
+			n = n / 26 - 1;
+		}
+		return sb.toString();
 	}
 
 	private static int monthIndex(LocalDate date, List<YearMonth> months) {
