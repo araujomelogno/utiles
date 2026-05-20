@@ -1,7 +1,21 @@
 package uy.com.bay.utiles.views.fieldworks;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.vaadin.flow.component.UI;
@@ -12,9 +26,11 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -25,6 +41,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -64,6 +81,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private ComboBox<Study> studyFilter;
 	private ComboBox<FieldworkStatus> statusFilter;
 	private ComboBox<FieldworkType> typeFilter;
+	private DatePicker fromDateFilter;
+	private DatePicker toDateFilter;
 
 	private final Button cancel = new Button("Cancelar");
 	private final Button save = new Button("Guardar");
@@ -86,9 +105,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		this.budgetEntryService = budgetEntryService;
 		this.fieldworkUpdateTask = fieldworkUpdateTask;
 		addClassNames("fieldworks-view");
+		setHeight("100%");
 
 		// Create UI
 		SplitLayout splitLayout = new SplitLayout();
+		splitLayout.setSizeFull();
+		splitLayout.setSplitterPosition(70);
 
 		createGridLayout(splitLayout);
 		createEditorLayout(splitLayout);
@@ -106,23 +128,13 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("completed").setHeader("Completadas").setAutoWidth(true);
 		grid.addColumn("status").setHeader("Estado").setAutoWidth(true);
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
+		grid.addColumn(fw -> formatCurrency(getBudgetedCost(fw))).setHeader("Costo presupuestado").setAutoWidth(true);
+		grid.addColumn(fw -> formatCurrency(getActualCost(fw))).setHeader("Costo actual").setAutoWidth(true);
 
-		grid.setItems(query -> {
-			Specification<Fieldwork> spec = (root, q, cb) -> {
-				return cb.and();
-			};
-			if (studyFilter.getValue() != null) {
-				spec = spec.and((root, q, cb) -> cb.equal(root.get("study"), studyFilter.getValue()));
-			}
-			if (statusFilter.getValue() != null) {
-				spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), statusFilter.getValue()));
-			}
-			if (typeFilter.getValue() != null) {
-				spec = spec.and((root, q, cb) -> cb.equal(root.get("type"), typeFilter.getValue()));
-			}
-			return fieldworkService.list(VaadinSpringDataHelpers.toSpringPageRequest(query), spec).stream();
-		});
+		grid.setItems(query -> fieldworkService
+				.list(VaadinSpringDataHelpers.toSpringPageRequest(query), buildSpecification()).stream());
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+		grid.setSizeFull();
 
 		// when a row is selected or deselected, populate form
 		grid.asSingleSelect().addValueChangeListener(event -> {
@@ -302,9 +314,11 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	}
 
 	private void createGridLayout(SplitLayout splitLayout) {
-		Div wrapper = new Div();
+		VerticalLayout wrapper = new VerticalLayout();
 		wrapper.setClassName("grid-wrapper");
-		splitLayout.addToPrimary(wrapper);
+		wrapper.setSizeFull();
+		wrapper.setPadding(false);
+		wrapper.setSpacing(false);
 
 		Button addButton = new Button("Agregar Solicitud");
 		addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -327,8 +341,9 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 			}
 		});
 
-//		HorizontalLayout actionsLayout = new HorizontalLayout(addButton, updateButton);
-//		HorizontalLayout topLayout = new HorizontalLayout(actionsLayout);
+		Button exportButton = new Button("Exportar");
+		exportButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		exportButton.addClickListener(e -> exportToExcel());
 
 		studyFilter = new ComboBox<>("Estudio");
 		studyFilter.setItems(studyService.listAll());
@@ -346,13 +361,173 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		typeFilter.setClearButtonVisible(true);
 		typeFilter.addValueChangeListener(e -> refreshGrid());
 
-		HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, statusFilter, typeFilter, addButton,
-				updateButton);
+		int currentYear = LocalDate.now().getYear();
+		fromDateFilter = new DatePicker("Desde");
+		fromDateFilter.setValue(LocalDate.of(currentYear, 1, 1));
+		fromDateFilter.setClearButtonVisible(true);
+		fromDateFilter.addValueChangeListener(e -> refreshGrid());
+
+		toDateFilter = new DatePicker("Hasta");
+		toDateFilter.setValue(LocalDate.of(currentYear, 12, 31));
+		toDateFilter.setClearButtonVisible(true);
+		toDateFilter.addValueChangeListener(e -> refreshGrid());
+
+		HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, statusFilter, typeFilter, fromDateFilter,
+				toDateFilter, addButton, updateButton, exportButton);
 		filterLayout.setWidth("100%");
-//		filterLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
-		filterLayout.setWidth("100%");
+		filterLayout.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.END);
 
 		wrapper.add(filterLayout, grid);
+		wrapper.setFlexGrow(1, grid);
+		splitLayout.addToPrimary(wrapper);
+	}
+
+	private Specification<Fieldwork> buildSpecification() {
+		Specification<Fieldwork> spec = (root, q, cb) -> cb.and();
+		if (studyFilter != null && studyFilter.getValue() != null) {
+			spec = spec.and((root, q, cb) -> cb.equal(root.get("study"), studyFilter.getValue()));
+		}
+		if (statusFilter != null && statusFilter.getValue() != null) {
+			spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), statusFilter.getValue()));
+		}
+		if (typeFilter != null && typeFilter.getValue() != null) {
+			spec = spec.and((root, q, cb) -> cb.equal(root.get("type"), typeFilter.getValue()));
+		}
+		if (fromDateFilter != null && fromDateFilter.getValue() != null) {
+			LocalDate fromDate = fromDateFilter.getValue();
+			spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("initPlannedDate"), fromDate));
+		}
+		if (toDateFilter != null && toDateFilter.getValue() != null) {
+			LocalDate toDate = toDateFilter.getValue();
+			spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("endPlannedDate"), toDate));
+		}
+		return spec;
+	}
+
+	private Double getBudgetedCost(Fieldwork fw) {
+		if (fw == null || fw.getBudgetEntry() == null || fw.getBudgetEntry().getBudget() == null) {
+			return null;
+		}
+		return fw.getBudgetEntry().getBudget().getTotal();
+	}
+
+	private Double getActualCost(Fieldwork fw) {
+		if (fw == null || fw.getBudgetEntry() == null || fw.getBudgetEntry().getBudget() == null) {
+			return null;
+		}
+		return fw.getBudgetEntry().getBudget().getSpent();
+	}
+
+	private String formatCurrency(Double value) {
+		if (value == null) {
+			return "";
+		}
+		return String.format("$%.2f", value);
+	}
+
+	private void exportToExcel() {
+		try {
+			StreamResource sr = new StreamResource("solicitudes-de-campo.xlsx", () -> {
+				try {
+					List<Fieldwork> data = fieldworkService.list(Pageable.unpaged(), buildSpecification()).getContent();
+					return buildExcel(data);
+				} catch (IOException ex) {
+					Notification.show("Error al generar el archivo Excel.", 3000, Notification.Position.TOP_CENTER);
+					return null;
+				}
+			});
+			Anchor anchor = new Anchor(sr, "");
+			anchor.getElement().setAttribute("download", true);
+			anchor.getStyle().set("display", "none");
+			add(anchor);
+			anchor.getElement().callJsFunction("click");
+		} catch (Exception ex) {
+			Notification.show("Error al exportar a Excel.", 3000, Notification.Position.TOP_CENTER);
+		}
+	}
+
+	private ByteArrayInputStream buildExcel(List<Fieldwork> data) throws IOException {
+		String[] columns = { "Estudio", "Observaciones", "Fecha Planificada Inicio", "Fecha Planificada Fin",
+				"Cantidad Objetivo", "Completadas", "Estado", "Tipo", "Costo presupuestado", "Costo actual" };
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+		try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			Sheet sheet = workbook.createSheet("Solicitudes de campo");
+
+			Font boldFont = workbook.createFont();
+			boldFont.setBold(true);
+			CellStyle boldStyle = workbook.createCellStyle();
+			boldStyle.setFont(boldFont);
+
+			int rowIdx = 0;
+
+			Row title = sheet.createRow(rowIdx++);
+			Cell titleCell = title.createCell(0);
+			titleCell.setCellValue("Filtros aplicados");
+			titleCell.setCellStyle(boldStyle);
+
+			rowIdx = writeFilterRow(sheet, rowIdx, boldStyle, "Estudio",
+					studyFilter.getValue() != null ? studyFilter.getValue().getName() : "Todos");
+			rowIdx = writeFilterRow(sheet, rowIdx, boldStyle, "Estado",
+					statusFilter.getValue() != null ? statusFilter.getValue().toString() : "Todos");
+			rowIdx = writeFilterRow(sheet, rowIdx, boldStyle, "Tipo",
+					typeFilter.getValue() != null ? typeFilter.getValue().toString() : "Todos");
+			rowIdx = writeFilterRow(sheet, rowIdx, boldStyle, "Desde",
+					fromDateFilter.getValue() != null ? fromDateFilter.getValue().format(dateFormatter) : "");
+			rowIdx = writeFilterRow(sheet, rowIdx, boldStyle, "Hasta",
+					toDateFilter.getValue() != null ? toDateFilter.getValue().format(dateFormatter) : "");
+
+			rowIdx++;
+
+			Row headerRow = sheet.createRow(rowIdx++);
+			for (int col = 0; col < columns.length; col++) {
+				Cell cell = headerRow.createCell(col);
+				cell.setCellValue(columns[col]);
+				cell.setCellStyle(boldStyle);
+			}
+
+			for (Fieldwork fw : data) {
+				Row row = sheet.createRow(rowIdx++);
+				row.createCell(0).setCellValue(fw.getStudy() != null ? fw.getStudy().getName() : "");
+				row.createCell(1).setCellValue(fw.getObs() != null ? fw.getObs() : "");
+				row.createCell(2)
+						.setCellValue(fw.getInitPlannedDate() != null ? fw.getInitPlannedDate().format(dateFormatter) : "");
+				row.createCell(3)
+						.setCellValue(fw.getEndPlannedDate() != null ? fw.getEndPlannedDate().format(dateFormatter) : "");
+				row.createCell(4).setCellValue(fw.getGoalQuantity() != null ? fw.getGoalQuantity() : 0);
+				row.createCell(5).setCellValue(fw.getCompleted() != null ? fw.getCompleted() : 0);
+				row.createCell(6).setCellValue(fw.getStatus() != null ? fw.getStatus().toString() : "");
+				row.createCell(7).setCellValue(fw.getType() != null ? fw.getType().toString() : "");
+				Double budgeted = getBudgetedCost(fw);
+				if (budgeted != null) {
+					row.createCell(8).setCellValue(budgeted);
+				} else {
+					row.createCell(8).setCellValue("");
+				}
+				Double actual = getActualCost(fw);
+				if (actual != null) {
+					row.createCell(9).setCellValue(actual);
+				} else {
+					row.createCell(9).setCellValue("");
+				}
+			}
+
+			for (int col = 0; col < columns.length; col++) {
+				sheet.autoSizeColumn(col);
+			}
+
+			workbook.write(out);
+			return new ByteArrayInputStream(out.toByteArray());
+		}
+	}
+
+	private int writeFilterRow(Sheet sheet, int rowIdx, CellStyle labelStyle, String label, String value) {
+		Row row = sheet.createRow(rowIdx);
+		Cell labelCell = row.createCell(0);
+		labelCell.setCellValue(label + ":");
+		labelCell.setCellStyle(labelStyle);
+		row.createCell(1).setCellValue(value);
+		return rowIdx + 1;
 	}
 
 	private void refreshGrid() {
