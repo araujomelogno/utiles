@@ -37,6 +37,7 @@ import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.services.BudgetEntryService;
 import uy.com.bay.utiles.services.StudyService;
+import uy.com.bay.utiles.tasks.FieldworkUpdateTask;
 
 @Route("fieldworks/:fieldworkID?/:action?(edit)")
 @RolesAllowed("ADMIN")
@@ -77,12 +78,14 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
 	private final BudgetEntryService budgetEntryService;
+	private final FieldworkUpdateTask fieldworkUpdateTask;
 
 	public FieldworksView(FieldworkService fieldworkService, StudyService studyService,
-			BudgetEntryService budgetEntryService) {
+			BudgetEntryService budgetEntryService, FieldworkUpdateTask fieldworkUpdateTask) {
 		this.fieldworkService = fieldworkService;
 		this.studyService = studyService;
 		this.budgetEntryService = budgetEntryService;
+		this.fieldworkUpdateTask = fieldworkUpdateTask;
 		addClassNames("fieldworks-view");
 
 		// Create UI
@@ -315,7 +318,21 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 			this.editorLayoutDiv.setVisible(true);
 		});
 
-		HorizontalLayout topLayout = new HorizontalLayout(title, addButton);
+		Button updateButton = new Button("Actualizar Campos");
+		updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		updateButton.addClickListener(e -> {
+			try {
+				fieldworkUpdateTask.updateFieldworks();
+				refreshGrid();
+				Notification.show("Actualización de campos finalizada.", 3000, Notification.Position.BOTTOM_START);
+			} catch (Exception ex) {
+				Notification.show("Error al actualizar campos: " + ex.getMessage(), 5000,
+						Notification.Position.MIDDLE);
+			}
+		});
+
+		HorizontalLayout actionsLayout = new HorizontalLayout(addButton, updateButton);
+		HorizontalLayout topLayout = new HorizontalLayout(title, actionsLayout);
 		topLayout.setWidth("100%");
 		topLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
