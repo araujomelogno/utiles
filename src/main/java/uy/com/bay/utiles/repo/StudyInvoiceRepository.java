@@ -18,6 +18,6 @@ public interface StudyInvoiceRepository extends JpaRepository<StudyInvoice, Long
 
 	List<StudyInvoice> findByStudy(Study study);
 
-	@Query("SELECT COALESCE(SUM(si.amountTotal), 0) FROM StudyInvoice si WHERE si.study = :study")
+	@Query("SELECT COALESCE(SUM(si.totalSigned), 0) FROM StudyInvoice si WHERE si.study = :study")
 	Double sumAmountTotalByStudy(@Param("study") Study study);
 }

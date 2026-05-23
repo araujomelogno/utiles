@@ -370,9 +370,7 @@ public class OdooService {
 		}
 		return null;
 	}
-	
-	
-	
+
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> getOdooProducts() {
 		if (objectClient == null) {
@@ -392,8 +390,12 @@ public class OdooService {
 			HashMap<String, Object> keywordArgs = new HashMap<>();
 			keywordArgs.put("fields", fieldsToFetch);
 
-			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(),
-					"product.product", // Odoo model name for analytic accounts
+			Object[] params = new Object[] { odooConfig.getDb(), uid, odooConfig.getPassword(), "product.product", // Odoo
+																													// model
+																													// name
+																													// for
+																													// analytic
+																													// accounts
 					"search_read", // Method to call
 					Collections.singletonList(domain), keywordArgs };
 
@@ -439,7 +441,7 @@ public class OdooService {
 			}
 
 			List<String> fieldsToFetch = Arrays.asList("id", "date", "move_id", "name", "analytic_account_id",
-					"currency_id", "price_subtotal", "price_total");
+					"currency_id", "price_subtotal", "price_total", "balance");
 
 			List<Object> domain = new ArrayList<>();
 			domain.add(Arrays.asList("move_id.move_type", "in", Arrays.asList("out_invoice", "out_refund")));

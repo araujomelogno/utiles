@@ -25,8 +25,11 @@ public class StudyInvoice extends AbstractEntity {
 	private Double tax;
 
 	private Double amountTotal;
+	
+	private Double totalSigned;
 
 	private String currency;
+	
 
 	@ManyToOne
 	@JoinColumn(name = "study_id")
@@ -86,5 +89,13 @@ public class StudyInvoice extends AbstractEntity {
 
 	public void setStudy(Study study) {
 		this.study = study;
+	}
+
+	public Double getTotalSigned() {
+		return totalSigned;
+	}
+
+	public void setTotalSigned(Double totalSigned) {
+		this.totalSigned = totalSigned;
 	}
 }

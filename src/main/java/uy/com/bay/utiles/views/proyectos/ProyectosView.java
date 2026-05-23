@@ -1,7 +1,10 @@
 package uy.com.bay.utiles.views.proyectos;
 
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.Optional;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
@@ -34,7 +37,6 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
-import org.springframework.data.jpa.domain.Specification;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.repository.AlchemerSurveyResponseDataRepository;
 import uy.com.bay.utiles.data.service.FieldworkService;
@@ -96,7 +98,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 	private final FieldworkService fieldworkService;
 	private final uy.com.bay.utiles.services.ExcelExportService excelExportService;
 	private final BudgetService budgetService;
+
 	private final StudyInvoiceService studyInvoiceService;
+	private final NumberFormat currencyFormat;
 
 	public ProyectosView(StudyService proyectoService, JournalEntryService journalEntryService,
 			AlchemerSurveyResponseDataRepository alchemerSurveyResponseDataRepository,
@@ -115,6 +119,9 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.binder = new BeanValidationBinder<>(Study.class); // Moved initialization here
 		addClassNames("proyectos-view");
 
+		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat.setMinimumFractionDigits(0);
+		currencyFormat.setMaximumFractionDigits(0);
 		// Create UI
 		SplitLayout splitLayout = new SplitLayout();
 
@@ -338,8 +345,7 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		editorLayoutDiv.add(editorDiv);
 
 		FormLayout formLayout = new FormLayout();
-		formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-				new FormLayout.ResponsiveStep("500px", 2));
+		formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1), new FormLayout.ResponsiveStep("500px", 2));
 		name = new TextField("Name");
 		name.setReadOnly(true);
 		odooId = new TextField("Odoo Id");
@@ -419,11 +425,11 @@ public class ProyectosView extends Div implements BeforeEnterObserver {
 		this.proyecto = value;
 		binder.readBean(this.proyecto);
 		if (value != null) {
-			totalTransfered.setValue(Double.valueOf(value.getTotalTransfered()).toString());
-			totalReportedCost.setValue(Double.valueOf(value.getTotalReportedCost()).toString());
+			totalTransfered.setValue(currencyFormat.format(value.getTotalTransfered()));
+			totalReportedCost.setValue(currencyFormat.format(value.getTotalReportedCost()));
 			clientName.setValue(value.getClientName() != null ? value.getClientName() : "");
-			expectedRevenue.setValue(Double.valueOf(value.getExpectedRevenue()).toString());
-			invoiced.setValue(Double.valueOf(studyInvoiceService.sumAmountTotalByStudy(value)).toString());
+			expectedRevenue.setValue(currencyFormat.format(value.getExpectedRevenue()));
+			invoiced.setValue((currencyFormat.format(studyInvoiceService.sumAmountTotalByStudy(value))));
 		} else {
 			totalTransfered.setValue("");
 			totalReportedCost.setValue("");

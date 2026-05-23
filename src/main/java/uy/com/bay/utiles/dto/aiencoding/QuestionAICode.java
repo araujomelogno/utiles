@@ -11,6 +11,25 @@ public class QuestionAICode {
 		this.code = code;
 	}
 
-	
-	
+	// contains() usará esto
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		QuestionAICode otro = (QuestionAICode) o;
+
+		// comparar SOLO por id
+		return code != null && code.equals(otro.getCode());
+	}
+
+	@Override
+	public int hashCode() {
+		return code != null ? code.hashCode() : 0;
+	}
+
 }

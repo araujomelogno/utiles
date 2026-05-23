@@ -20,17 +20,23 @@ public class StudyInvoiceDialog extends Dialog {
 		setHeaderTitle("Facturas de: " + study.getName());
 		setWidth("80%");
 
+		NumberFormat currencyFormat;
+		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat.setMinimumFractionDigits(0);
+		currencyFormat.setMaximumFractionDigits(0);
+
 		Grid<StudyInvoice> grid = new Grid<>(StudyInvoice.class, false);
 		grid.addColumn("moveId").setHeader("Move ID").setAutoWidth(true);
 		grid.addColumn("invoiceDate").setHeader("Fecha").setAutoWidth(true);
-		grid.addColumn(new NumberRenderer<>(StudyInvoice::getAmountUntaxed, NumberFormat.getNumberInstance(Locale.US)))
-				.setHeader("Subtotal").setAutoWidth(true);
-		grid.addColumn(new NumberRenderer<>(StudyInvoice::getTax, NumberFormat.getNumberInstance(Locale.US)))
-				.setHeader("Impuestos").setAutoWidth(true);
-		grid.addColumn(new NumberRenderer<>(StudyInvoice::getAmountTotal, NumberFormat.getNumberInstance(Locale.US)))
-				.setHeader("Total").setAutoWidth(true);
+		grid.addColumn(new NumberRenderer<>(StudyInvoice::getAmountUntaxed, currencyFormat)).setHeader("Subtotal")
+				.setAutoWidth(true);
+		grid.addColumn(new NumberRenderer<>(StudyInvoice::getTax, currencyFormat)).setHeader("Impuestos")
+				.setAutoWidth(true);
+		grid.addColumn(new NumberRenderer<>(StudyInvoice::getAmountTotal, currencyFormat)).setHeader("Total")
+				.setAutoWidth(true);
 		grid.addColumn("currency").setHeader("Moneda").setAutoWidth(true);
-
+		grid.addColumn(new NumberRenderer<>(StudyInvoice::getTotalSigned, currencyFormat)).setHeader("Total $")
+				.setAutoWidth(true);
 		grid.setItems(studyInvoiceService.findByStudy(study));
 
 		Button closeButton = new Button("Cerrar", e -> close());

@@ -25,7 +25,7 @@ public class OdooProjectSyncTask {
 	private final StudyService proyectoService;
 	private final StudyInvoiceService studyInvoiceService;
 
-	@Value("${odoo.invoices.sync.days:7}")
+	@Value("${odoo.invoices.sync.days:180}")
 	private int invoicesSyncDays;
 
 	public OdooProjectSyncTask(OdooService odooService, StudyService proyectoService,
@@ -35,7 +35,7 @@ public class OdooProjectSyncTask {
 		this.studyInvoiceService = studyInvoiceService;
 	}
 
-	@Scheduled(cron = "* * 7 * * *")
+	@Scheduled(cron = "0 0 7 * * *")
 	public void updateInvoices() {
 		System.out.println("Starting Odoo Invoices Update Task...");
 
@@ -80,8 +80,10 @@ public class OdooProjectSyncTask {
 
 			Double priceSubtotal = toDouble(line.get("price_subtotal"));
 			Double priceTotal = toDouble(line.get("price_total"));
+			Double totalSigned = toDouble(line.get("balance")) * -1d;
 			invoice.setAmountUntaxed(priceSubtotal);
 			invoice.setAmountTotal(priceTotal);
+			invoice.setTotalSigned(totalSigned);
 			if (priceSubtotal != null && priceTotal != null) {
 				invoice.setTax(priceTotal - priceSubtotal);
 			}
@@ -118,7 +120,7 @@ public class OdooProjectSyncTask {
 		if (value instanceof Number number) {
 			return number.doubleValue();
 		}
-		return null;
+		return 0d;
 	}
 
 	// @Scheduled(cron = "0 0 * * * ?") // Runs every hour at the beginning of the
@@ -126,7 +128,7 @@ public class OdooProjectSyncTask {
 	// For testing, you might use a more frequent cron like "*/30 * * * * ?" (every
 	// 30 seconds)
 //	@Scheduled(cron = "* */2 * * * *")
-	@Scheduled(cron = "* * 5 * * *")
+	@Scheduled(cron = "0 0  5 * * *")
 	public void syncOdooProjects() {
 		System.out.println("Starting Odoo Project Sync Task...");
 
@@ -204,13 +206,13 @@ public class OdooProjectSyncTask {
 			String clientName = clientNameObj == null ? null : String.valueOf(clientNameObj);
 
 			Object expectedRevenueObj = odooProjectMap.get("expected_revenue");
-			double expectedRevenue = expectedRevenueObj instanceof Number
-					? ((Number) expectedRevenueObj).doubleValue()
+			double expectedRevenue = expectedRevenueObj instanceof Number ? ((Number) expectedRevenueObj).doubleValue()
 					: 0d;
 
 			Object areaObj = odooProjectMap.get("crm_team");
 			String area = areaObj == null ? null : String.valueOf(areaObj);
-			area = area.replace("Opinión Publica", "Opinion Publica");
+			if (area != null)
+				area = area.replace("Opinión Publica", "Opinion Publica");
 			if (existing == null) {
 				Study newProyecto = new Study();
 				newProyecto.setOdooId(odooId);

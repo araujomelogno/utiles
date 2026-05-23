@@ -85,7 +85,7 @@ public class QuestionCodingView extends VerticalLayout {
 			QuestionEncodingTemplateService questionEncodingTemplateService) {
 		this.chatClient = chatClientBuilder.build();
 		this.questionEncodingTemplateService = questionEncodingTemplateService;
-		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/questionEncoding2.txt")) {
+		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/questionEncoding3.txt")) {
 			byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
 			this.basePrompt = new String(byteArray, StandardCharsets.UTF_8);
 		} catch (IOException e) {
@@ -192,6 +192,17 @@ public class QuestionCodingView extends VerticalLayout {
 		})).setHeader("Generar códigos");
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
+			Checkbox checkbox = new Checkbox();
+			checkbox.setValue(mapping.isAddCodes());
+			checkbox.setEnabled(mapping.isToCode() && !mapping.isGenerateCodes());
+			checkbox.addValueChangeListener(event -> {
+				mapping.setAddCodes(event.getValue());
+				grid.getDataProvider().refreshItem(mapping);
+			});
+			return checkbox;
+		})).setHeader("Cod. adicional");
+
+		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
 			textField.setAllowedCharPattern("[0-9]");
 			textField.setValue(
@@ -207,7 +218,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMinimumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("C.min").setWidth("10em").setFlexGrow(0);
+		})).setHeader("Cod.min").setWidth("10em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -225,7 +236,7 @@ public class QuestionCodingView extends VerticalLayout {
 				mapping.setMaximumCodifications(v != null && !v.isEmpty() ? Integer.parseInt(v) : 1);
 			});
 			return textField;
-		})).setHeader("C.max").setWidth("10em").setFlexGrow(0);
+		})).setHeader("Cod.max").setWidth("10em").setFlexGrow(0);
 
 		grid.addColumn(new ComponentRenderer<>(mapping -> {
 			TextField textField = new TextField();
@@ -376,6 +387,7 @@ public class QuestionCodingView extends VerticalLayout {
 					QuestionAIInput question = new QuestionAIInput();
 					question.setQuestion_text(mapping.getQuestion());
 					question.setQuestion_id(mapping.getQuestionVariable());
+					question.setAddCodes(mapping.isAddCodes());
 					question.setQuestion_fineTunning(mapping.getFineTuning());
 					question.setMaximumCodifications(mapping.getMaximumCodifications());
 					question.setMinimumCodifications(mapping.getMinimumCodifications());
@@ -414,7 +426,7 @@ public class QuestionCodingView extends VerticalLayout {
 
 						}
 
-						/////
+						///// ag
 						ObjectMapper objectMapper = new ObjectMapper();
 						String json = objectMapper.writeValueAsString(aiInput);
 						String formattedPrompt = basePrompt.formatted(json);
@@ -424,7 +436,11 @@ public class QuestionCodingView extends VerticalLayout {
 							logger.info("RESPONSE:\n{}", response);
 
 							System.out.println("RESPONSE" + response);
-							this.updateSurveyWithCodedResponses(surveyWorkbook, response);
+							List<QuestionAICode> usedCodes = this.updateSurveyWithCodedResponses(surveyWorkbook,
+									response);
+							for (QuestionAICode u : usedCodes)// agrego los códigos utilizados para los siguientes llamados 
+								if (!question.getCodes().contains(u))
+									question.getCodes().add(u);
 						} catch (TransientAiException aiEx) {
 							String label = columnName + " (lote " + (i + 1) + "/" + iterCount + ")";
 							failedBatches.add(label);
@@ -721,7 +737,9 @@ public class QuestionCodingView extends VerticalLayout {
 		throw lastException;
 	}
 
-	private void updateSurveyWithCodedResponses(Workbook workbook, String codedResponses) {
+	private List<QuestionAICode> updateSurveyWithCodedResponses(Workbook workbook, String codedResponses) {
+		List<QuestionAICode> usedCodes = new ArrayList<QuestionAICode>();
+		List<String> usedCodesAux = new ArrayList<String>();
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
 			CodedResponse codedResponse = objectMapper.readValue(codedResponses.replace('`', ' '), CodedResponse.class);
@@ -748,16 +766,25 @@ public class QuestionCodingView extends VerticalLayout {
 
 						Cell codeCell = dataRow.createCell(codeColumnIndex);
 						codeCell.setCellValue((assignedCode.getAssignedCode()));
+						if (!usedCodesAux.contains(assignedCode.getAssignedCode()))
+							usedCodesAux.add(assignedCode.getAssignedCode());
 
 						Cell commentCell = dataRow.createCell(commentColumnIndex);
 						commentCell.setCellValue(assignedCode.getComment());
 					}
 				}
 			}
+			for (String s : usedCodesAux) {
+				QuestionAICode c = new QuestionAICode();
+				c.setCode(s);
+				usedCodes.add(c);
+
+			}
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 			Notification.show("Error al parsear la respuesta JSON.");
 		}
+		return usedCodes;
 	}
 
 	public static List<String> getColumnValues(Workbook workbook, String columnName) {

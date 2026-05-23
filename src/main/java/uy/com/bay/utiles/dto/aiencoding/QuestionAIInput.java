@@ -12,6 +12,7 @@ public class QuestionAIInput {
 	private Integer minimunQuestionsWithCode = 1;
 	private List<QuestionAICode> codes = new ArrayList();
 	private List<QuestionAIAnswer> responses = new ArrayList();
+	private boolean addCodes = false;
 
 	public String getQuestion_fineTunning() {
 		return question_fineTunning;
@@ -75,6 +76,14 @@ public class QuestionAIInput {
 
 	public void setMinimunQuestionsWithCode(Integer minimunQuestionsWithCode) {
 		this.minimunQuestionsWithCode = minimunQuestionsWithCode;
+	}
+
+	public boolean isAddCodes() {
+		return addCodes;
+	}
+
+	public void setAddCodes(boolean addCodes) {
+		this.addCodes = addCodes;
 	}
 
 }
