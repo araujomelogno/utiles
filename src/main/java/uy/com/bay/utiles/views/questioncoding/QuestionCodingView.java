@@ -471,6 +471,7 @@ public class QuestionCodingView extends VerticalLayout {
 			dialog.getHeaderComponent().setText("Proceso completado");
 			downloadButton.setVisible(true);
 			if (surveyWorkbook != null) {
+				addVariablesAndCodesSheets(surveyWorkbook);
 				downloadLink.setHref(createExcelStreamResource(surveyWorkbook));
 			}
 		});
@@ -606,6 +607,167 @@ public class QuestionCodingView extends VerticalLayout {
 				return null;
 			}
 		});
+	}
+
+	private static void addVariablesAndCodesSheets(Workbook workbook) {
+		Sheet sourceSheet = workbook.getSheetAt(0);
+		if (sourceSheet == null) {
+			return;
+		}
+		Row headerRow = sourceSheet.getRow(0);
+		if (headerRow == null) {
+			return;
+		}
+
+		DataFormatter formatter = new DataFormatter();
+		int columnCount = headerRow.getLastCellNum();
+
+		int caseIdColumnIndex = -1;
+		List<Integer> codigoColumnIndices = new ArrayList<>();
+		List<String> codigoHeaders = new ArrayList<>();
+
+		for (int i = 0; i < columnCount; i++) {
+			Cell cell = headerRow.getCell(i);
+			if (cell == null) {
+				continue;
+			}
+			String header = formatter.formatCellValue(cell).trim();
+			if ("CaseId".equalsIgnoreCase(header)) {
+				caseIdColumnIndex = i;
+			}
+			if (header.endsWith("-CODIGO")) {
+				codigoColumnIndices.add(i);
+				codigoHeaders.add(header);
+			}
+		}
+
+		int existingVariablesIdx = workbook.getSheetIndex("Variables");
+		if (existingVariablesIdx != -1) {
+			workbook.removeSheetAt(existingVariablesIdx);
+		}
+		int existingCodigosIdx = workbook.getSheetIndex("Códigos");
+		if (existingCodigosIdx != -1) {
+			workbook.removeSheetAt(existingCodigosIdx);
+		}
+
+		Sheet variablesSheet = workbook.createSheet("Variables");
+		Row variablesHeader = variablesSheet.createRow(0);
+		int vCol = 0;
+		variablesHeader.createCell(vCol++).setCellValue("CaseId");
+		for (String h : codigoHeaders) {
+			variablesHeader.createCell(vCol++).setCellValue(h);
+		}
+
+		int lastRowNum = sourceSheet.getLastRowNum();
+		for (int r = 1; r <= lastRowNum; r++) {
+			Row sourceRow = sourceSheet.getRow(r);
+			if (sourceRow == null) {
+				continue;
+			}
+			Row targetRow = variablesSheet.createRow(r);
+			int tCol = 0;
+			if (caseIdColumnIndex != -1) {
+				Cell caseIdCell = sourceRow.getCell(caseIdColumnIndex);
+				String caseIdValue = caseIdCell != null ? formatter.formatCellValue(caseIdCell) : "";
+				targetRow.createCell(tCol).setCellValue(caseIdValue);
+			}
+			tCol++;
+			for (Integer sourceIdx : codigoColumnIndices) {
+				Cell sourceCell = sourceRow.getCell(sourceIdx);
+				String value = sourceCell != null ? formatter.formatCellValue(sourceCell) : "";
+				targetRow.createCell(tCol++).setCellValue(extractCodePart(value));
+			}
+		}
+
+		Sheet codigosSheet = workbook.createSheet("Códigos");
+		Row codigosHeader = codigosSheet.createRow(0);
+		int cCol = 0;
+		List<List<String[]>> distinctValuesPerColumn = new ArrayList<>();
+		for (int k = 0; k < codigoColumnIndices.size(); k++) {
+			Integer sourceIdx = codigoColumnIndices.get(k);
+			String codigoHeader = codigoHeaders.get(k);
+			String etiquetaHeader = codigoHeader.substring(0, codigoHeader.length() - "-CODIGO".length())
+					+ "-ETIQUETA";
+			codigosHeader.createCell(cCol++).setCellValue(codigoHeader);
+			codigosHeader.createCell(cCol++).setCellValue(etiquetaHeader);
+
+			LinkedHashMap<String, String[]> distinct = new LinkedHashMap<>();
+			for (int r = 1; r <= lastRowNum; r++) {
+				Row sourceRow = sourceSheet.getRow(r);
+				if (sourceRow == null) {
+					continue;
+				}
+				Cell sourceCell = sourceRow.getCell(sourceIdx);
+				if (sourceCell == null) {
+					continue;
+				}
+				String value = formatter.formatCellValue(sourceCell);
+				if (value == null || value.trim().isEmpty()) {
+					continue;
+				}
+				if (!distinct.containsKey(value)) {
+					distinct.put(value, new String[] { extractCodePart(value), extractLabelPart(value) });
+				}
+			}
+			distinctValuesPerColumn.add(new ArrayList<>(distinct.values()));
+		}
+
+		int maxValues = 0;
+		for (List<String[]> list : distinctValuesPerColumn) {
+			if (list.size() > maxValues) {
+				maxValues = list.size();
+			}
+		}
+
+		for (int r = 0; r < maxValues; r++) {
+			Row row = codigosSheet.createRow(r + 1);
+			int rCol = 0;
+			for (List<String[]> values : distinctValuesPerColumn) {
+				if (r < values.size()) {
+					String[] pair = values.get(r);
+					row.createCell(rCol).setCellValue(pair[0]);
+					row.createCell(rCol + 1).setCellValue(pair[1]);
+				}
+				rCol += 2;
+			}
+		}
+	}
+
+	private static int firstSplitIndex(String value) {
+		int dotIdx = value.indexOf('.');
+		int dashIdx = value.indexOf('-');
+		if (dotIdx == -1 && dashIdx == -1) {
+			return -1;
+		}
+		if (dotIdx == -1) {
+			return dashIdx;
+		}
+		if (dashIdx == -1) {
+			return dotIdx;
+		}
+		return Math.min(dotIdx, dashIdx);
+	}
+
+	private static String extractCodePart(String value) {
+		if (value == null) {
+			return "";
+		}
+		int splitIdx = firstSplitIndex(value);
+		if (splitIdx == -1) {
+			return value.trim();
+		}
+		return value.substring(0, splitIdx).trim();
+	}
+
+	private static String extractLabelPart(String value) {
+		if (value == null) {
+			return "";
+		}
+		int splitIdx = firstSplitIndex(value);
+		if (splitIdx == -1) {
+			return "";
+		}
+		return value.substring(splitIdx + 1).trim();
 	}
 
 	private static void reorderColumnsAlphabetically(Workbook workbook) {
