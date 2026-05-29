@@ -137,7 +137,7 @@ public class DoobloSurveyRetriever {
 			Date monthEnd = monthEndCal.getTime();
 
 			try {
-				Thread.sleep(600);
+				Thread.sleep(2000);
 
 				String fromStr = URLEncoder.encode(dateFormat.format(monthStart), StandardCharsets.UTF_8);
 				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
@@ -154,7 +154,7 @@ public class DoobloSurveyRetriever {
 				JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
 				int count = (interviewsRoot != null && interviewsRoot.isArray()) ? interviewsRoot.size() : 0;
 
-				Thread.sleep(600);
+				Thread.sleep(2000);
 				String cancelledInterviewsUrl = String.format(
 						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&testMode=False&completed=True&filtered=False&statuses=7&dateStart=%s&dateEnd=%s",
 						surveyId, fromStr, toStr);

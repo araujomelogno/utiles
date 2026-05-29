@@ -25,7 +25,7 @@ public class OdooProjectSyncTask {
 	private final StudyService proyectoService;
 	private final StudyInvoiceService studyInvoiceService;
 
-	@Value("${odoo.invoices.sync.days:180}")
+	@Value("${odoo.invoices.sync.days:7}")
 	private int invoicesSyncDays;
 
 	public OdooProjectSyncTask(OdooService odooService, StudyService proyectoService,
