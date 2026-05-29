@@ -103,6 +103,10 @@ public class SupervisionTaskProcessorService {
 
 			// Transcripción
 			String transcription = openAiService.transcribeAudioTotal(audioFile);
+			if (transcription == null || transcription.isBlank()) {
+				throw new IllegalStateException(
+						"La transcripción del audio devolvió un resultado vacío para la tarea " + task.getId());
+			}
 			task.setOutput(prettyPrint(transcription));
 
 			// Segmentos diarize
@@ -133,6 +137,11 @@ public class SupervisionTaskProcessorService {
 			task.setFullPrompt(formattedPrompt);
 
 			String response = callChatClientWithRetry(formattedPrompt);
+
+			if (response == null || response.isBlank()) {
+				throw new IllegalStateException(
+						"La evaluación AI devolvió una respuesta vacía para la tarea " + task.getId());
+			}
 
 			task.setEvaluationOutput(prettyPrint(response));
 
@@ -282,6 +291,9 @@ public class SupervisionTaskProcessorService {
 	}
 
 	public String prettyPrint(String json) throws Exception {
+		if (json == null || json.isBlank()) {
+			return json;
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		Object jsonObject = mapper.readValue(json, Object.class);
 		ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
