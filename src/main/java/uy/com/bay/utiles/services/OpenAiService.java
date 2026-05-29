@@ -27,6 +27,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
@@ -73,7 +75,9 @@ public class OpenAiService {
 	}
 
 	protected String callApi(byte[] bytes, String filename) {
-		int maxRetries = 3;
+		int maxRetries = 5;
+		long baseBackoffMs = 5_000L;
+		long maxBackoffMs = 120_000L;
 		for (int attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				RestTemplate restTemplate = buildRestTemplate();
@@ -104,19 +108,56 @@ public class OpenAiService {
 
 				return response.getBody();
 			} catch (ResourceAccessException e) {
-				logger.warn("API call failed (attempt {}/{}): {}", attempt, maxRetries, e.getMessage());
+				// Errores transitorios a nivel de red/socket (timeouts de lectura, conexión)
+				logger.warn("API call failed - network error (attempt {}/{}): {}", attempt, maxRetries, e.getMessage());
 				if (attempt == maxRetries) {
 					throw e;
 				}
-				try {
-					Thread.sleep(1000L * attempt);
-				} catch (InterruptedException ie) {
-					Thread.currentThread().interrupt();
+				sleepBeforeRetry(backoffMs(baseBackoffMs, maxBackoffMs, attempt));
+			} catch (HttpServerErrorException | HttpClientErrorException.TooManyRequests e) {
+				// 5xx (incluye 504 Gateway Timeout) y 429 Too Many Requests son reintentables
+				logger.warn("API call failed - server returned {} (attempt {}/{}): {}", e.getStatusCode(), attempt,
+						maxRetries, e.getMessage());
+				if (attempt == maxRetries) {
 					throw e;
 				}
+				long retryAfterMs = parseRetryAfterMs(e.getResponseHeaders());
+				long backoff = retryAfterMs > 0 ? Math.min(retryAfterMs, maxBackoffMs)
+						: backoffMs(baseBackoffMs, maxBackoffMs, attempt);
+				sleepBeforeRetry(backoff);
 			}
 		}
 		throw new RuntimeException("API call failed after retries");
+	}
+
+	private static long backoffMs(long baseMs, long maxMs, int attempt) {
+		long backoff = baseMs * (1L << (attempt - 1)); // exponencial: base, 2x, 4x, ...
+		return Math.min(backoff, maxMs);
+	}
+
+	private static long parseRetryAfterMs(HttpHeaders headers) {
+		if (headers == null) {
+			return -1L;
+		}
+		String retryAfter = headers.getFirst(HttpHeaders.RETRY_AFTER);
+		if (retryAfter == null || retryAfter.isBlank()) {
+			return -1L;
+		}
+		try {
+			return Long.parseLong(retryAfter.trim()) * 1000L;
+		} catch (NumberFormatException ignored) {
+			// El header puede venir como fecha HTTP; en ese caso usamos el backoff por defecto
+			return -1L;
+		}
+	}
+
+	private static void sleepBeforeRetry(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException ie) {
+			Thread.currentThread().interrupt();
+			throw new RuntimeException("Interrumpido durante reintentos al servicio de transcripción", ie);
+		}
 	}
 
 	public String transcribeAudioTotal(AudioFile audioFile) throws Exception {
