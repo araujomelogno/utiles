@@ -49,6 +49,8 @@ public class Fieldwork extends AbstractEntity {
 	private String doobloId;
 	private String alchemerId;
 
+	private Double campaignSpent;
+
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "fieldwork_completed_by_month", joinColumns = @JoinColumn(name = "fieldwork_id"))
 	@MapKeyColumn(name = "month")
@@ -173,5 +175,13 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setCompletedByMonth(Map<Date, Integer> completedByMonth) {
 		this.completedByMonth = completedByMonth;
+	}
+
+	public Double getCampaignSpent() {
+		return campaignSpent;
+	}
+
+	public void setCampaignSpent(Double campaignSpent) {
+		this.campaignSpent = campaignSpent;
 	}
 }

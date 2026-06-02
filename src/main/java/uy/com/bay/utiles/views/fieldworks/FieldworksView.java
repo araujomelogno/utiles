@@ -76,6 +76,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private IntegerField goalQuantity;
 	private IntegerField completed;
+	private TextField campaignSpent;
 	private TextArea obs;
 	private ComboBox<FieldworkStatus> status;
 	private ComboBox<FieldworkType> type;
@@ -135,6 +136,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn(fw -> formatCurrency(getBudgetedCost(fw))).setHeader("Costo presupuestado").setAutoWidth(true);
 		grid.addColumn(fw -> formatCurrency(getActualCost(fw))).setHeader("Costo actual").setAutoWidth(true);
+		grid.addColumn(fw -> formatCurrency(fw.getCampaignSpent())).setHeader("Gasto Meta").setAutoWidth(true);
 
 		grid.setItems(query -> fieldworkService
 				.listWithBudget(VaadinSpringDataHelpers.toSpringPageRequest(query), buildSpecification()).stream());
@@ -156,6 +158,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		binder.forField(doobloId).bind(Fieldwork::getDoobloId, Fieldwork::setDoobloId);
 		binder.forField(alchemerId).bind(Fieldwork::getAlchemerId, Fieldwork::setAlchemerId);
 		binder.forField(budgetEntry).bind(Fieldwork::getBudgetEntry, Fieldwork::setBudgetEntry);
+		binder.forField(campaignSpent).bind(fw -> formatCurrency(fw.getCampaignSpent()), null);
 		binder.bindInstanceFields(this);
 
 		cancel.addClickListener(e -> {
@@ -293,6 +296,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		goalQuantity = new IntegerField("Cantidad Objetivo");
 		completed = new IntegerField("Completas");
 		completed.setReadOnly(true);
+		campaignSpent = new TextField("Gasto Meta");
+		campaignSpent.setReadOnly(true);
 		obs = new TextArea("Observaciones");
 		status = new ComboBox<>("Estado");
 		status.setItems(FieldworkStatus.values());
@@ -300,7 +305,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		type.setItems(FieldworkType.values());
 
 		formLayout.add(study, budgetEntry, doobloId, alchemerId, initPlannedDate, endPlannedDate, goalQuantity,
-				completed, status, type, obs);
+				completed, campaignSpent, status, type, obs);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);
@@ -454,7 +459,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private ByteArrayInputStream buildExcel(List<Fieldwork> data) throws IOException {
 		String[] columns = { "Estudio", "Observaciones", "Fecha Planificada Inicio", "Fecha Planificada Fin",
-				"Cantidad Objetivo", "Completadas", "Estado", "Tipo", "Costo presupuestado", "Costo actual" };
+				"Cantidad Objetivo", "Completadas", "Estado", "Tipo", "Costo presupuestado", "Costo actual",
+				"Gasto Meta" };
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 		try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -515,6 +521,12 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 					row.createCell(9).setCellValue(actual);
 				} else {
 					row.createCell(9).setCellValue("");
+				}
+				Double campaignSpentValue = fw.getCampaignSpent();
+				if (campaignSpentValue != null) {
+					row.createCell(10).setCellValue(campaignSpentValue);
+				} else {
+					row.createCell(10).setCellValue("");
 				}
 			}
 
