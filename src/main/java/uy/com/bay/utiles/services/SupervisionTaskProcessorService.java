@@ -138,6 +138,7 @@ public class SupervisionTaskProcessorService {
 
 			String response = callChatClientWithRetry(formattedPrompt);
 
+			System.out.println("respuesta:::" + response);
 			if (response == null || response.isBlank()) {
 				throw new IllegalStateException(
 						"La evaluación AI devolvió una respuesta vacía para la tarea " + task.getId());
@@ -205,7 +206,9 @@ public class SupervisionTaskProcessorService {
 
 		} catch (Exception e) {
 			logger.error("Error processing supervision task {}", task.getId(), e);
+			e.printStackTrace();
 			task.setStatus(Status.ERROR);
+
 		} finally {
 			// Persist final
 			supervisionTaskRepository.save(task);
@@ -219,11 +222,15 @@ public class SupervisionTaskProcessorService {
 		TransientAiException lastException = null;
 		for (int attempt = 1; attempt <= maxAttempts; attempt++) {
 			try {
-				return chatClient.prompt().user(prompt).call().content().replace("```json", "").replace("```", "");
+				System.out.println("este es el prompt " + prompt);
+				String response = chatClient.prompt().user(prompt).call().content();
+				response = response.replace("```json", "").replace("```", "");
+				return response;
 			} catch (TransientAiException e) {
 				lastException = e;
 				logger.warn("Llamada AI falló con error transitorio (intento {}/{}): {}", attempt, maxAttempts,
 						e.getMessage());
+				e.printStackTrace();
 				if (attempt < maxAttempts) {
 					try {
 						Thread.sleep(backoffMs);
