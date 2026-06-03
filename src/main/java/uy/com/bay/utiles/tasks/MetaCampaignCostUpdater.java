@@ -75,63 +75,83 @@ public class MetaCampaignCostUpdater {
 				.encode(StandardCharsets.UTF_8)
 				.toUri();
 
+		String nextUrl = uri.toString();
+		int pageCount = 0;
 		try {
-			String response = restTemplate.getForObject(uri, String.class);
-			if (response == null) {
-				logger.warn("MetaCampaignCostUpdater: empty response from Meta API");
-				return;
-			}
-
-			JsonNode root = objectMapper.readTree(response);
-			JsonNode data = root.path("data");
-			if (!data.isArray()) {
-				logger.warn("MetaCampaignCostUpdater: response does not contain a data array");
-				return;
-			}
-
-			for (JsonNode campaign : data) {
-				String name = campaign.path("name").asText("");
-				JsonNode insightsData = campaign.path("insights").path("data");
-				if (!insightsData.isArray() || insightsData.size() == 0) {
-					continue;
-				}
-				JsonNode spendNode = insightsData.get(0).path("spend");
-				if (spendNode.isMissingNode() || spendNode.isNull()) {
-					continue;
+			while (nextUrl != null) {
+				pageCount++;
+				logger.info("MetaCampaignCostUpdater: fetching page {}", pageCount);
+				String response = restTemplate.getForObject(URI.create(nextUrl), String.class);
+				if (response == null) {
+					logger.warn("MetaCampaignCostUpdater: empty response from Meta API");
+					break;
 				}
 
-				double spend;
-				try {
-					spend = Double.parseDouble(spendNode.asText("0"));
-				} catch (NumberFormatException e) {
-					logger.warn("MetaCampaignCostUpdater: could not parse spend value '{}'", spendNode.asText());
-					continue;
+				JsonNode root = objectMapper.readTree(response);
+				JsonNode data = root.path("data");
+				if (!data.isArray()) {
+					logger.warn("MetaCampaignCostUpdater: response does not contain a data array");
+					break;
 				}
 
-				if (spend == 0d) {
-					continue;
-				}
-				if (name == null || !name.startsWith("S00")) {
-					continue;
-				}
+				processCampaigns(data);
 
-				int spaceIdx = name.indexOf(' ');
-				String fragment = spaceIdx > 0 ? name.substring(0, spaceIdx) : name;
-
-				List<Fieldwork> matches = fieldworkRepository.findAllByStudy_NameContainingIgnoreCase(fragment);
-				if (matches.isEmpty()) {
-					logger.info("MetaCampaignCostUpdater: no fieldwork found for fragment '{}'", fragment);
-					continue;
+				JsonNode nextNode = root.path("paging").path("next");
+				if (nextNode.isMissingNode() || nextNode.isNull()) {
+					nextNode = root.path("next");
 				}
-				for (Fieldwork fw : matches) {
-					fw.setCampaignSpent(spend);
-					fieldworkService.save(fw);
+				if (nextNode.isMissingNode() || nextNode.isNull() || nextNode.asText("").isEmpty()) {
+					nextUrl = null;
+				} else {
+					nextUrl = nextNode.asText();
 				}
 			}
 		} catch (Exception e) {
 			logger.error("MetaCampaignCostUpdater: error while updating Meta campaign costs", e);
 		}
 
-		logger.info("MetaCampaignCostUpdater finished.");
+		logger.info("MetaCampaignCostUpdater finished after {} page(s).", pageCount);
+	}
+
+	private void processCampaigns(JsonNode data) {
+		for (JsonNode campaign : data) {
+			String name = campaign.path("name").asText("");
+			JsonNode insightsData = campaign.path("insights").path("data");
+			if (!insightsData.isArray() || insightsData.size() == 0) {
+				continue;
+			}
+			JsonNode spendNode = insightsData.get(0).path("spend");
+			if (spendNode.isMissingNode() || spendNode.isNull()) {
+				continue;
+			}
+
+			double spend;
+			try {
+				spend = Double.parseDouble(spendNode.asText("0"));
+			} catch (NumberFormatException e) {
+				logger.warn("MetaCampaignCostUpdater: could not parse spend value '{}'", spendNode.asText());
+				continue;
+			}
+
+			if (spend == 0d) {
+				continue;
+			}
+			if (name == null || !name.startsWith("S00")) {
+				continue;
+			}
+
+			int spaceIdx = name.indexOf(' ');
+			String fragment = spaceIdx > 0 ? name.substring(0, spaceIdx) : name;
+
+			List<Fieldwork> matches = fieldworkRepository.findAllByStudy_NameContainingIgnoreCase(fragment);
+			if (matches.isEmpty()) {
+				logger.info("MetaCampaignCostUpdater: no fieldwork found for fragment '{}'", fragment);
+				continue;
+			}
+			for (Fieldwork fw : matches) {
+				fw.setCampaignSpent(spend);
+				fieldworkService.save(fw);
+			}
+		}
 	}
 }
