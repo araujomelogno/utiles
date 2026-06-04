@@ -67,10 +67,11 @@ public class MetaCampaignCostUpdater {
 		String timeRange = String.format("{\"since\":\"%s\",\"until\":\"%s\"}", dateInit, dateEnd);
 
 		URI uri = UriComponentsBuilder
-				.fromHttpUrl("https://graph.facebook.com/v21.0/" + campaignId + "/campaigns")
+				.fromHttpUrl("https://graph.facebook.com/v25.0/" + campaignId + "/campaigns")
 				.queryParam("access_token", accessToken)
-				.queryParam("fields", "name,status,insights{spend}")
+				.queryParam("fields", "name,insights{spend,impressions,clicks}")
 				.queryParam("time_range", timeRange)
+				.queryParam("limit", 99)
 				.build()
 				.encode(StandardCharsets.UTF_8)
 				.toUri();
@@ -115,12 +116,13 @@ public class MetaCampaignCostUpdater {
 
 	private void processCampaigns(JsonNode data) {
 		for (JsonNode campaign : data) {
-			String name = campaign.path("name").asText("");
 			JsonNode insightsData = campaign.path("insights").path("data");
 			if (!insightsData.isArray() || insightsData.size() == 0) {
 				continue;
 			}
-			JsonNode spendNode = insightsData.get(0).path("spend");
+			JsonNode insight = insightsData.get(0);
+			String campaignName = insight.path("campaign_name").asText("");
+			JsonNode spendNode = insight.path("spend");
 			if (spendNode.isMissingNode() || spendNode.isNull()) {
 				continue;
 			}
@@ -136,12 +138,12 @@ public class MetaCampaignCostUpdater {
 			if (spend == 0d) {
 				continue;
 			}
-			if (name == null || !name.startsWith("S00")) {
+			if (campaignName == null || !campaignName.startsWith("S00")) {
 				continue;
 			}
 
-			int spaceIdx = name.indexOf(' ');
-			String fragment = spaceIdx > 0 ? name.substring(0, spaceIdx) : name;
+			int spaceIdx = campaignName.indexOf(' ');
+			String fragment = spaceIdx > 0 ? campaignName.substring(0, spaceIdx) : campaignName;
 
 			List<Fieldwork> matches = fieldworkRepository.findAllByStudy_NameContainingIgnoreCase(fragment);
 			if (matches.isEmpty()) {
