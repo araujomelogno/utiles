@@ -3,9 +3,12 @@ package uy.com.bay.utiles.views.fieldworks;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -96,6 +99,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private Fieldwork fieldwork;
 	private Div editorLayoutDiv;
 	private final NumberFormat currencyFormat;
+	private final NumberFormat usCurrencyFormat;
 	private final FieldworkService fieldworkService;
 	private final StudyService studyService;
 	private final BudgetEntryService budgetEntryService;
@@ -110,6 +114,17 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
 		currencyFormat.setMinimumFractionDigits(0);
 		currencyFormat.setMaximumFractionDigits(0);
+		
+		usCurrencyFormat =  NumberFormat.getCurrencyInstance(Locale.US);
+		currencyFormat.setCurrency(Currency.getInstance("USD"));
+
+	    DecimalFormat decimalFormat = (DecimalFormat) usCurrencyFormat;
+	    DecimalFormatSymbols symbols = decimalFormat.getDecimalFormatSymbols();
+	    symbols.setCurrencySymbol("USD ");
+	    decimalFormat.setDecimalFormatSymbols(symbols);
+	    
+		usCurrencyFormat.setMinimumFractionDigits(0);
+		usCurrencyFormat.setMaximumFractionDigits(0);
 		addClassNames("fieldworks-view");
 		setHeight("100%");
 
@@ -136,7 +151,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 		grid.addColumn(fw -> formatCurrency(getBudgetedCost(fw))).setHeader("Costo presupuestado").setAutoWidth(true);
 		grid.addColumn(fw -> formatCurrency(getActualCost(fw))).setHeader("Costo actual").setAutoWidth(true);
-		grid.addColumn(fw -> formatCurrency(fw.getCampaignSpent())).setHeader("Gasto Meta").setAutoWidth(true);
+		grid.addColumn(fw -> formatUSCurrency(fw.getCampaignSpent())).setHeader("Gasto Meta").setAutoWidth(true);
 
 		grid.setItems(query -> fieldworkService
 				.listWithBudget(VaadinSpringDataHelpers.toSpringPageRequest(query), buildSpecification()).stream());
@@ -433,6 +448,13 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 			return "";
 		}
 		return currencyFormat.format(value);
+	}
+
+	private String formatUSCurrency(Double value) {
+		if (value == null) {
+			return "";
+		}
+		return usCurrencyFormat.format(value);
 	}
 
 	private void exportToExcel() {

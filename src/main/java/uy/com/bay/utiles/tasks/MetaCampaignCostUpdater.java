@@ -56,6 +56,7 @@ public class MetaCampaignCostUpdater {
 	}
 
 	@Scheduled(cron = "0 0 4 * * *")
+//	@Scheduled(cron = "2 * * * * *")
 	@Transactional
 	public void updateMetaCampaignCosts() {
 		logger.info("Starting MetaCampaignCostUpdater...");
@@ -66,14 +67,9 @@ public class MetaCampaignCostUpdater {
 
 		String timeRange = String.format("{\"since\":\"%s\",\"until\":\"%s\"}", dateInit, dateEnd);
 
-		URI uri = UriComponentsBuilder
-				.fromHttpUrl("https://graph.facebook.com/v21.0/" + campaignId + "/campaigns")
-				.queryParam("access_token", accessToken)
-				.queryParam("fields", "name,status,insights{spend}")
-				.queryParam("time_range", timeRange)
-				.build()
-				.encode(StandardCharsets.UTF_8)
-				.toUri();
+		URI uri = UriComponentsBuilder.fromHttpUrl("https://graph.facebook.com/v21.0/" + campaignId + "/campaigns")
+				.queryParam("access_token", accessToken).queryParam("fields", "name,status,insights{spend}")
+				.queryParam("time_range", timeRange).build().encode(StandardCharsets.UTF_8).toUri();
 
 		String nextUrl = uri.toString();
 		int pageCount = 0;
@@ -140,6 +136,7 @@ public class MetaCampaignCostUpdater {
 				continue;
 			}
 
+			logger.info("Se encontró spend'{}'", spend);
 			int spaceIdx = name.indexOf(' ');
 			String fragment = spaceIdx > 0 ? name.substring(0, spaceIdx) : name;
 
