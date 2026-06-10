@@ -131,7 +131,8 @@ public class MetaCostsView extends Div {
 		Grid<Map.Entry<Date, Double>> detailGrid = new Grid<>();
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 		detailGrid.addColumn(entry -> entry.getKey() == null ? ""
-				: entry.getKey().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter))
+				: java.time.Instant.ofEpochMilli(entry.getKey().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()
+						.format(dateFormatter))
 				.setHeader("Fecha").setAutoWidth(true);
 		detailGrid.addColumn(entry -> formatCurrency(entry.getValue())).setHeader("Costo").setAutoWidth(true);
 
