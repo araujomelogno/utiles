@@ -17,12 +17,17 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -40,6 +45,9 @@ public class MetaCostsView extends Div {
 	private final DatePicker toDate;
 	private final Grid<StudyMetaCostRow> grid = new Grid<>(StudyMetaCostRow.class, false);
 	private final NumberFormat currencyFormat;
+	private ListDataProvider<StudyMetaCostRow> dataProvider;
+	private final TextField studyNameFilter = new TextField();
+	private final NumberField totalCostFilter = new NumberField();
 
 	public MetaCostsView(StudyService studyService) {
 		this.studyService = studyService;
@@ -62,8 +70,11 @@ public class MetaCostsView extends Div {
 		HorizontalLayout filterLayout = new HorizontalLayout(fromDate, toDate);
 		filterLayout.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.END);
 
-		grid.addColumn(StudyMetaCostRow::getStudyName).setHeader("Estudio").setAutoWidth(true);
-		grid.addColumn(row -> formatCurrency(row.getTotalCost())).setHeader("Costo").setAutoWidth(true);
+		Grid.Column<StudyMetaCostRow> studyColumn = grid.addColumn(StudyMetaCostRow::getStudyName)
+				.setHeader("Estudio").setAutoWidth(true).setSortable(true).setKey("studyName");
+		Grid.Column<StudyMetaCostRow> costColumn = grid.addColumn(row -> formatCurrency(row.getTotalCost()))
+				.setHeader("Costo").setAutoWidth(true).setSortable(true).setKey("totalCost")
+				.setComparator(Comparator.comparingDouble(StudyMetaCostRow::getTotalCost));
 		grid.addComponentColumn(row -> {
 			Button detailButton = new Button(new Icon(VaadinIcon.SEARCH));
 			detailButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -73,6 +84,26 @@ public class MetaCostsView extends Div {
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		grid.setSizeFull();
 
+		dataProvider = new ListDataProvider<>(new ArrayList<>());
+		grid.setItems(dataProvider);
+
+		HeaderRow filterRow = grid.appendHeaderRow();
+		studyNameFilter.setPlaceholder("Filtrar...");
+		studyNameFilter.setClearButtonVisible(true);
+		studyNameFilter.setValueChangeMode(ValueChangeMode.EAGER);
+		studyNameFilter.setWidthFull();
+		studyNameFilter.addValueChangeListener(e -> dataProvider.refreshAll());
+		filterRow.getCell(studyColumn).setComponent(studyNameFilter);
+
+		totalCostFilter.setPlaceholder("Mínimo");
+		totalCostFilter.setClearButtonVisible(true);
+		totalCostFilter.setValueChangeMode(ValueChangeMode.EAGER);
+		totalCostFilter.setWidthFull();
+		totalCostFilter.addValueChangeListener(e -> dataProvider.refreshAll());
+		filterRow.getCell(costColumn).setComponent(totalCostFilter);
+
+		dataProvider.addFilter(this::matchesFilters);
+
 		VerticalLayout wrapper = new VerticalLayout(filterLayout, grid);
 		wrapper.setSizeFull();
 		wrapper.setFlexGrow(1, grid);
@@ -81,8 +112,25 @@ public class MetaCostsView extends Div {
 		refreshGrid();
 	}
 
+	private boolean matchesFilters(StudyMetaCostRow row) {
+		String nameFilterValue = studyNameFilter.getValue();
+		if (nameFilterValue != null && !nameFilterValue.isBlank()) {
+			String name = row.getStudyName() == null ? "" : row.getStudyName();
+			if (!name.toLowerCase(Locale.ROOT).contains(nameFilterValue.toLowerCase(Locale.ROOT))) {
+				return false;
+			}
+		}
+		Double minCost = totalCostFilter.getValue();
+		if (minCost != null && row.getTotalCost() < minCost) {
+			return false;
+		}
+		return true;
+	}
+
 	private void refreshGrid() {
-		grid.setItems(loadRows());
+		dataProvider.getItems().clear();
+		dataProvider.getItems().addAll(loadRows());
+		dataProvider.refreshAll();
 	}
 
 	private List<StudyMetaCostRow> loadRows() {
