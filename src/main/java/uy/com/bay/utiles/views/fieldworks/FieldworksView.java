@@ -116,7 +116,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		currencyFormat.setMaximumFractionDigits(0);
 		
 		usCurrencyFormat =  NumberFormat.getCurrencyInstance(Locale.US);
-		currencyFormat.setCurrency(Currency.getInstance("USD"));
+		usCurrencyFormat.setCurrency(Currency.getInstance("USD"));
 
 	    DecimalFormat decimalFormat = (DecimalFormat) usCurrencyFormat;
 	    DecimalFormatSymbols symbols = decimalFormat.getDecimalFormatSymbols();
