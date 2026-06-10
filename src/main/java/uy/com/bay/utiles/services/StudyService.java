@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.services;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -65,5 +66,17 @@ public class StudyService {
 
     public Optional<Study> findByOdooId(String odooId) {
         return repository.findByOdooId(odooId);
+    }
+
+    public Optional<Study> findFirstByNameStartingWith(String prefix) {
+        return repository.findFirstByNameStartingWith(prefix);
+    }
+
+    public Optional<Study> findByName(String name) {
+        return repository.findByName(name);
+    }
+
+    public List<Study> findAllWithMetaCostBetween(Date from, Date to) {
+        return repository.findAllWithMetaCostBetween(from, to);
     }
 }

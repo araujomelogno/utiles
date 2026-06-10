@@ -266,6 +266,13 @@ public class MainLayout extends AppLayout {
 		toolsItem.addItem(supervisionTasksItem);
 		nav.addItem(toolsItem);
 
+		SideNavItem metaItem = new SideNavItem("Meta");
+		metaItem.setPrefixComponent(new Icon("vaadin", "money"));
+		SideNavItem listarCostosItem = new SideNavItem("Listar costos", "meta-costs");
+		listarCostosItem.setPrefixComponent(new Icon("vaadin", "list"));
+		metaItem.addItem(listarCostosItem);
+		nav.addItem(metaItem);
+
 		SideNavItem whatsappItem = new SideNavItem("Whatsapp");
 		whatsappItem.setPrefixComponent(new Icon("vaadin", "comments"));
 		SideNavItem sendMessagesItem = new SideNavItem("Enviar mensajes", "whatsapp-sender");

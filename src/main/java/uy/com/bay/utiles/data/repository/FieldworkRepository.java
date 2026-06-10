@@ -32,6 +32,4 @@ public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, Jpa
 			@Param("startDate") LocalDate startDate);
 
 	List<Fieldwork> findAllByInitPlannedDateAfterAndAlchemerIdIsNotNull(LocalDate date);
-
-	List<Fieldwork> findAllByStudy_NameContainingIgnoreCase(String fragment);
 }

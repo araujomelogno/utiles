@@ -1,11 +1,21 @@
 package uy.com.bay.utiles.data;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.TemporalType;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import uy.com.bay.utiles.entities.Budget;
 
 @Entity
@@ -25,6 +35,13 @@ public class Study extends AbstractEntity {
 	private String clientName;
 	private double expectedRevenue;
 	private String area;
+
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "study_meta_cost_by_date", joinColumns = @JoinColumn(name = "study_id"))
+	@MapKeyColumn(name = "cost_date")
+	@MapKeyTemporal(TemporalType.DATE)
+	@Column(name = "cost")
+	private Map<Date, Double> metaCostByDate = new HashMap<>();
 
 	public boolean isShowSurveyor() {
 		return showSurveyor;
@@ -115,5 +132,13 @@ public class Study extends AbstractEntity {
 
 	public void setArea(String area) {
 		this.area = area;
+	}
+
+	public Map<Date, Double> getMetaCostByDate() {
+		return metaCostByDate;
+	}
+
+	public void setMetaCostByDate(Map<Date, Double> metaCostByDate) {
+		this.metaCostByDate = metaCostByDate;
 	}
 }
