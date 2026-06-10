@@ -3,8 +3,12 @@ package uy.com.bay.utiles.tasks;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +24,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
-import uy.com.bay.utiles.data.Fieldwork;
-import uy.com.bay.utiles.data.repository.FieldworkRepository;
-import uy.com.bay.utiles.data.service.FieldworkService;
+import uy.com.bay.utiles.data.Study;
+import uy.com.bay.utiles.data.StudyRepository;
 
 @Component
 public class MetaCampaignCostUpdater {
@@ -30,9 +33,9 @@ public class MetaCampaignCostUpdater {
 	private static final Logger logger = LoggerFactory.getLogger(MetaCampaignCostUpdater.class);
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	private static final String CENTRAL_STUDY_NAME = "S0000- CENTRAL";
 
-	private final FieldworkRepository fieldworkRepository;
-	private final FieldworkService fieldworkService;
+	private final StudyRepository studyRepository;
 	private final RestTemplate restTemplate;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -42,10 +45,8 @@ public class MetaCampaignCostUpdater {
 	@Value("${meta.access.token}")
 	private String accessToken;
 
-	public MetaCampaignCostUpdater(FieldworkRepository fieldworkRepository, FieldworkService fieldworkService,
-			RestTemplateBuilder restTemplateBuilder) {
-		this.fieldworkRepository = fieldworkRepository;
-		this.fieldworkService = fieldworkService;
+	public MetaCampaignCostUpdater(StudyRepository studyRepository, RestTemplateBuilder restTemplateBuilder) {
+		this.studyRepository = studyRepository;
 		this.restTemplate = restTemplateBuilder.setConnectTimeout(java.time.Duration.ofSeconds(30))
 				.setReadTimeout(java.time.Duration.ofSeconds(60)).build();
 	}
@@ -73,6 +74,7 @@ public class MetaCampaignCostUpdater {
 
 		String nextUrl = uri.toString();
 		int pageCount = 0;
+		Map<String, Double> aggregated = new HashMap<>();
 		try {
 			while (nextUrl != null) {
 				pageCount++;
@@ -90,7 +92,10 @@ public class MetaCampaignCostUpdater {
 					break;
 				}
 
-				processCampaigns(data);
+				Map<String, Double> pageResult = processCampaigns(data);
+				for (Map.Entry<String, Double> entry : pageResult.entrySet()) {
+					aggregated.merge(entry.getKey(), entry.getValue(), Double::sum);
+				}
 
 				JsonNode nextNode = root.path("paging").path("next");
 				if (nextNode.isMissingNode() || nextNode.isNull()) {
@@ -106,10 +111,13 @@ public class MetaCampaignCostUpdater {
 			logger.error("MetaCampaignCostUpdater: error while updating Meta campaign costs", e);
 		}
 
+		applyAggregatedSpendToStudies(aggregated);
+
 		logger.info("MetaCampaignCostUpdater finished after {} page(s).", pageCount);
 	}
 
-	private void processCampaigns(JsonNode data) {
+	private Map<String, Double> processCampaigns(JsonNode data) {
+		Map<String, Double> result = new HashMap<>();
 		for (JsonNode campaign : data) {
 
 			String campaignName = campaign.path("campaign_name").asText("");
@@ -135,15 +143,42 @@ public class MetaCampaignCostUpdater {
 
 			int spaceIdx = campaignName.indexOf(' ');
 			String fragment = spaceIdx > 0 ? campaignName.substring(0, spaceIdx) : campaignName;
-			List<Fieldwork> matches = fieldworkRepository.findAllByStudy_NameContainingIgnoreCase(fragment);
-			if (matches.isEmpty()) {
-				logger.info("MetaCampaignCostUpdater: no fieldwork found for fragment '{}'", fragment);
-				continue;
+			result.merge(fragment, spend, Double::sum);
+		}
+		return result;
+	}
+
+	private void applyAggregatedSpendToStudies(Map<String, Double> aggregated) {
+		Date today = Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant());
+		for (Map.Entry<String, Double> entry : aggregated.entrySet()) {
+			String fragment = entry.getKey();
+			Double totalSpend = entry.getValue();
+
+			Optional<Study> studyOpt = studyRepository.findFirstByNameStartingWith(fragment);
+			if (studyOpt.isEmpty()) {
+				studyOpt = studyRepository.findByName(CENTRAL_STUDY_NAME);
+				if (studyOpt.isEmpty()) {
+					Study central = new Study();
+					central.setName(CENTRAL_STUDY_NAME);
+					studyOpt = Optional.of(studyRepository.save(central));
+				}
 			}
-			for (Fieldwork fw : matches) {
-				fw.setCampaignSpent(spend);
-				fieldworkService.save(fw);
+
+			Study study = studyOpt.get();
+			double previousSum = 0d;
+			if (study.getMetaCostByDate() != null) {
+				for (Double v : study.getMetaCostByDate().values()) {
+					if (v != null) {
+						previousSum += v;
+					}
+				}
 			}
+			double delta = totalSpend - previousSum;
+			if (study.getMetaCostByDate() == null) {
+				study.setMetaCostByDate(new HashMap<>());
+			}
+			study.getMetaCostByDate().merge(today, delta, Double::sum);
+			studyRepository.save(study);
 		}
 	}
 }
