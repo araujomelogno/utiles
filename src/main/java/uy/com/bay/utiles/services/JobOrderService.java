@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import uy.com.bay.utiles.data.JobOrder;
+import uy.com.bay.utiles.data.Provider;
 import uy.com.bay.utiles.data.repository.JobOrderRepository;
 
 @Service
@@ -45,5 +46,13 @@ public class JobOrderService {
 
     public List<JobOrder> findAll() {
         return repository.findAll();
+    }
+
+    public List<JobOrder> findByProvider(Provider provider) {
+        return repository.findByProvider(provider);
+    }
+
+    public List<JobOrder> findByProviderOrderByCreatedDesc(Provider provider) {
+        return repository.findByProviderOrderByCreatedDesc(provider);
     }
 }

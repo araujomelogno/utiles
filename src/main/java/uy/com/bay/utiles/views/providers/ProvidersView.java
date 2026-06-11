@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views.providers;
 
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -9,16 +13,19 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -31,8 +38,10 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.JobOrder;
 import uy.com.bay.utiles.data.Provider;
 import uy.com.bay.utiles.data.ProviderType;
+import uy.com.bay.utiles.services.JobOrderService;
 import uy.com.bay.utiles.services.ProviderService;
 
 @PageTitle("Proveedores")
@@ -49,7 +58,11 @@ public class ProvidersView extends Div implements BeforeEnterObserver {
     private IntegerField monthlyCapacity;
     private ComboBox<ProviderType> type;
 
+    private Div availableHoursLayout;
+    private Grid<AvailableHoursRow> availableHoursGrid;
+
     private Button addButton;
+    private final Button viewJobOrders = new Button("Ver trabajos");
 
     private final Button cancel = new Button("Cerrar");
     private final Button save = new Button("Guardar");
@@ -61,9 +74,11 @@ public class ProvidersView extends Div implements BeforeEnterObserver {
     private Div editorLayoutDiv;
 
     private final ProviderService providerService;
+    private final JobOrderService jobOrderService;
 
-    public ProvidersView(ProviderService providerService) {
+    public ProvidersView(ProviderService providerService, JobOrderService jobOrderService) {
         this.providerService = providerService;
+        this.jobOrderService = jobOrderService;
         this.binder = new BeanValidationBinder<>(Provider.class);
         addClassNames("providers-view");
 
@@ -201,9 +216,23 @@ public class ProvidersView extends Div implements BeforeEnterObserver {
         monthlyCapacity = new IntegerField("Capacidad Mensual");
         type = new ComboBox<>("Tipo");
         type.setItems(ProviderType.values());
+        type.addValueChangeListener(e -> updateAvailableHours());
+        monthlyCapacity.addValueChangeListener(e -> updateAvailableHours());
         formLayout.add(name, monthlyCapacity, type);
 
         editorDiv.add(formLayout);
+
+        availableHoursLayout = new Div();
+        availableHoursLayout.add(new H3("Horas Disponibles"));
+        availableHoursGrid = new Grid<>(AvailableHoursRow.class, false);
+        availableHoursGrid.addColumn(AvailableHoursRow::getMonth).setHeader("Fecha").setAutoWidth(true);
+        availableHoursGrid.addColumn(AvailableHoursRow::getHours).setHeader("Horas").setAutoWidth(true);
+        availableHoursGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        availableHoursGrid.setAllRowsVisible(true);
+        availableHoursLayout.add(availableHoursGrid);
+        availableHoursLayout.setVisible(false);
+        editorDiv.add(availableHoursLayout);
+
         createButtonLayout(this.editorLayoutDiv);
 
         splitLayout.addToSecondary(this.editorLayoutDiv);
@@ -211,13 +240,91 @@ public class ProvidersView extends Div implements BeforeEnterObserver {
     }
 
     private void createButtonLayout(Div editorLayoutDiv) {
+        viewJobOrders.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        viewJobOrders.addClickListener(e -> openJobOrdersDialog());
+        HorizontalLayout viewLayout = new HorizontalLayout(viewJobOrders);
+
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setClassName("button-layout");
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         buttonLayout.add(save, deleteButton, cancel);
-        editorLayoutDiv.add(buttonLayout);
+        editorLayoutDiv.add(viewLayout, buttonLayout);
+    }
+
+    private void openJobOrdersDialog() {
+        if (this.provider == null || this.provider.getId() == null) {
+            Notification.show("Debe guardar el proveedor antes de ver sus trabajos.", 3000,
+                    Notification.Position.MIDDLE);
+            return;
+        }
+
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Trabajos de " + this.provider.getName());
+        dialog.setWidth("800px");
+
+        Grid<JobOrder> jobOrdersGrid = new Grid<>(JobOrder.class, false);
+        jobOrdersGrid.addColumn("created").setHeader("Fecha").setAutoWidth(true);
+        jobOrdersGrid.addColumn(jo -> jo.getStudy() != null ? jo.getStudy().getName() : "").setHeader("Estudio")
+                .setAutoWidth(true);
+        jobOrdersGrid.addColumn("hours").setHeader("Horas").setAutoWidth(true);
+        jobOrdersGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        jobOrdersGrid.setItems(jobOrderService.findByProviderOrderByCreatedDesc(this.provider));
+
+        VerticalLayout dialogLayout = new VerticalLayout(jobOrdersGrid);
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(false);
+        dialog.add(dialogLayout);
+
+        Button closeButton = new Button("Cerrar", e -> dialog.close());
+        dialog.getFooter().add(closeButton);
+
+        dialog.open();
+    }
+
+    private void updateAvailableHours() {
+        boolean show = type.getValue() == ProviderType.HORA;
+        availableHoursLayout.setVisible(show);
+        if (!show) {
+            availableHoursGrid.setItems(new ArrayList<>());
+            return;
+        }
+
+        int capacity = monthlyCapacity.getValue() != null ? monthlyCapacity.getValue() : 0;
+        List<JobOrder> jobOrders = (this.provider != null && this.provider.getId() != null)
+                ? jobOrderService.findByProvider(this.provider)
+                : new ArrayList<>();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
+        List<AvailableHoursRow> rows = new ArrayList<>();
+        YearMonth current = YearMonth.now();
+        for (int i = 0; i <= 6; i++) {
+            YearMonth month = current.plusMonths(i);
+            int usedHours = jobOrders.stream()
+                    .filter(jo -> jo.getCreated() != null && YearMonth.from(jo.getCreated()).equals(month))
+                    .mapToInt(jo -> jo.getHours() != null ? jo.getHours() : 0).sum();
+            rows.add(new AvailableHoursRow(month.format(formatter), capacity - usedHours));
+        }
+        availableHoursGrid.setItems(rows);
+    }
+
+    public static class AvailableHoursRow {
+        private final String month;
+        private final int hours;
+
+        public AvailableHoursRow(String month, int hours) {
+            this.month = month;
+            this.hours = hours;
+        }
+
+        public String getMonth() {
+            return month;
+        }
+
+        public int getHours() {
+            return hours;
+        }
     }
 
     private void createGridLayout(SplitLayout splitLayout) {
