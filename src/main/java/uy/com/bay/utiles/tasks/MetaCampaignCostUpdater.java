@@ -56,7 +56,7 @@ public class MetaCampaignCostUpdater {
 		logger.info("[SCHED] MetaCampaignCostUpdater bean initialized");
 	}
 
-	@Scheduled(cron = "0 0 4 * * *")
+	@Scheduled(cron = "0 0 19 * * *")
 	@Transactional
 	public void updateMetaCampaignCosts() {
 		logger.info("Starting MetaCampaignCostUpdater...");
