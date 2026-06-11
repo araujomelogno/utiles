@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views.joborders;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import com.vaadin.flow.component.UI;
@@ -33,6 +34,7 @@ import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.JobOrder;
 import uy.com.bay.utiles.data.Provider;
+import uy.com.bay.utiles.data.ProviderType;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.JobOrderService;
 import uy.com.bay.utiles.services.ProviderService;
@@ -52,6 +54,9 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 	private ComboBox<Study> study;
 	private IntegerField hours;
 	private ComboBox<Provider> provider;
+
+	private ComboBox<Study> studyFilter;
+	private ComboBox<Provider> providerFilter;
 
 	private Button addButton;
 
@@ -98,7 +103,8 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 		grid.addColumn(jo -> jo.getProvider() != null ? jo.getProvider().getName() : "").setHeader("Proveedor")
 				.setAutoWidth(true);
 
-		grid.setItems(query -> jobOrderService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
+		grid.setItems(query -> jobOrderService
+				.list(VaadinSpringDataHelpers.toSpringPageRequest(query), buildSpecification()).stream());
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
 		grid.asSingleSelect().addValueChangeListener(event -> {
@@ -215,6 +221,7 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 		provider = new ComboBox<>("Proveedor");
 		provider.setItems(providerService.findAll());
 		provider.setItemLabelGenerator(Provider::getName);
+		provider.addValueChangeListener(e -> applyProviderHoursRule(e.getValue()));
 
 		formLayout.add(created, study, provider, hours);
 
@@ -246,9 +253,46 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 		titleLayout.setAlignItems(Alignment.BASELINE);
 		titleLayout.setFlexGrow(1, title);
 
+		studyFilter = new ComboBox<>("Estudio");
+		studyFilter.setItems(studyService.findAll());
+		studyFilter.setItemLabelGenerator(Study::getName);
+		studyFilter.setClearButtonVisible(true);
+		studyFilter.addValueChangeListener(e -> refreshGrid());
+
+		providerFilter = new ComboBox<>("Proveedor");
+		providerFilter.setItems(providerService.findAll());
+		providerFilter.setItemLabelGenerator(Provider::getName);
+		providerFilter.setClearButtonVisible(true);
+		providerFilter.addValueChangeListener(e -> refreshGrid());
+
+		HorizontalLayout filterLayout = new HorizontalLayout(studyFilter, providerFilter);
+		filterLayout.setWidthFull();
+		filterLayout.setAlignItems(Alignment.END);
+
 		wrapper.add(titleLayout);
+		wrapper.add(filterLayout);
 		wrapper.add(grid);
 		splitLayout.addToPrimary(wrapper);
+	}
+
+	private Specification<JobOrder> buildSpecification() {
+		Specification<JobOrder> spec = (root, q, cb) -> cb.and();
+		if (studyFilter != null && studyFilter.getValue() != null) {
+			spec = spec.and((root, q, cb) -> cb.equal(root.get("study"), studyFilter.getValue()));
+		}
+		if (providerFilter != null && providerFilter.getValue() != null) {
+			spec = spec.and((root, q, cb) -> cb.equal(root.get("provider"), providerFilter.getValue()));
+		}
+		return spec;
+	}
+
+	private void applyProviderHoursRule(Provider selectedProvider) {
+		if (selectedProvider != null && selectedProvider.getType() == ProviderType.PROYECTO) {
+			hours.setValue(1);
+			hours.setReadOnly(true);
+		} else {
+			hours.setReadOnly(false);
+		}
 	}
 
 	private void refreshGrid() {
