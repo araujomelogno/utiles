@@ -32,6 +32,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.services.StudyService;
 
@@ -51,7 +52,7 @@ public class MetaCostsView extends Div {
 
 	public MetaCostsView(StudyService studyService) {
 		this.studyService = studyService;
-		currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "UY"));
+		currencyFormat = NumberFormat.getNumberInstance(new Locale("es", "UY"));
 		currencyFormat.setMinimumFractionDigits(0);
 		currencyFormat.setMaximumFractionDigits(0);
 
@@ -75,6 +76,9 @@ public class MetaCostsView extends Div {
 		Grid.Column<StudyMetaCostRow> costColumn = grid.addColumn(row -> formatCurrency(row.getTotalCost()))
 				.setHeader("Costo").setAutoWidth(true).setSortable(true).setKey("totalCost")
 				.setComparator(Comparator.comparingDouble(StudyMetaCostRow::getTotalCost));
+		grid.addColumn(StudyMetaCostRow::getTotalCases)
+				.setHeader("Casos").setAutoWidth(true).setSortable(true).setKey("totalCases")
+				.setComparator(Comparator.comparingInt(StudyMetaCostRow::getTotalCases));
 		grid.addComponentColumn(row -> {
 			Button detailButton = new Button(new Icon(VaadinIcon.SEARCH));
 			detailButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -202,7 +206,7 @@ public class MetaCostsView extends Div {
 		if (value == null) {
 			return "";
 		}
-		return currencyFormat.format(value);
+		return "U$ " + currencyFormat.format(value);
 	}
 
 	private static class StudyMetaCostRow {
@@ -222,6 +226,20 @@ public class MetaCostsView extends Div {
 
 		public double getTotalCost() {
 			return totalCost;
+		}
+
+		public int getTotalCases() {
+			if (study.getFieldworks() == null) {
+				return 0;
+			}
+			int total = 0;
+			for (Fieldwork fieldwork : study.getFieldworks()) {
+				Integer completed = fieldwork.getCompleted();
+				if (completed != null) {
+					total += completed;
+				}
+			}
+			return total;
 		}
 
 		public List<Map.Entry<Date, Double>> getEntries() {
