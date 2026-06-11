@@ -84,7 +84,7 @@ public class ProvidersView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         grid.addColumn("name").setHeader("Nombre").setAutoWidth(true);
-        grid.addColumn("monthlyCapacity").setHeader("Capacidad Mensual").setAutoWidth(true);
+        grid.addColumn("monthlyCapacity").setHeader("Capacidad Mensual (hs)").setAutoWidth(true);
         grid.addColumn("type").setHeader("Tipo").setAutoWidth(true);
 
         grid.setItems(query -> providerService.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream());
