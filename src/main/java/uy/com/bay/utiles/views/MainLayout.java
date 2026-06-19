@@ -173,6 +173,16 @@ public class MainLayout extends AppLayout {
 		});
 		gastosItem.addItem(reportesNavItem);
 
+		SideNavItem workOrdersItem = new SideNavItem("Ordenes de trabajo");
+		workOrdersItem.setPrefixComponent(new Icon("vaadin", "clipboard-text"));
+		SideNavItem providersItem = new SideNavItem("Proveedores", "providers");
+		providersItem.setPrefixComponent(new Icon("vaadin", "factory"));
+		workOrdersItem.addItem(providersItem);
+		SideNavItem listarJobOrdersItem = new SideNavItem("Listar", "joborders");
+		listarJobOrdersItem.setPrefixComponent(new Icon("vaadin", "list"));
+		workOrdersItem.addItem(listarJobOrdersItem);
+		nav.addItem(workOrdersItem);
+
 		SideNavItem presupuestosItem = new SideNavItem("Presupuestos");
 		presupuestosItem.setPrefixComponent(new Icon("vaadin", "archive"));
 		SideNavItem budgetConceptsItem = new SideNavItem("Conceptos de presupuesto", "budgetconcepts");
@@ -272,16 +282,6 @@ public class MainLayout extends AppLayout {
 		listarCostosItem.setPrefixComponent(new Icon("vaadin", "list"));
 		metaItem.addItem(listarCostosItem);
 		nav.addItem(metaItem);
-
-		SideNavItem workOrdersItem = new SideNavItem("Ordenes de trabajo");
-		workOrdersItem.setPrefixComponent(new Icon("vaadin", "clipboard-text"));
-		SideNavItem providersItem = new SideNavItem("Proveedores", "providers");
-		providersItem.setPrefixComponent(new Icon("vaadin", "factory"));
-		workOrdersItem.addItem(providersItem);
-		SideNavItem listarJobOrdersItem = new SideNavItem("Listar", "joborders");
-		listarJobOrdersItem.setPrefixComponent(new Icon("vaadin", "list"));
-		workOrdersItem.addItem(listarJobOrdersItem);
-		nav.addItem(workOrdersItem);
 
 		SideNavItem whatsappItem = new SideNavItem("Whatsapp");
 		whatsappItem.setPrefixComponent(new Icon("vaadin", "comments"));
