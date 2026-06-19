@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.ExpenseReportDTO;
@@ -51,8 +52,34 @@ public class ExpenseReportService {
 		return repository.save(entity);
 	}
 
+	@Transactional
 	public void delete(Long id) {
+		Optional<ExpenseReport> reportOpt = repository.findById(id);
+		if (reportOpt.isPresent()) {
+			ExpenseReport report = reportOpt.get();
+			List<JournalEntry> entries = journalEntryRepository.findAllByExpenseReport(report);
+			for (JournalEntry entry : entries) {
+				reverseJournalEntry(entry);
+				journalEntryRepository.delete(entry);
+			}
+		}
 		repository.deleteById(id);
+	}
+
+	private void reverseJournalEntry(JournalEntry entry) {
+		Surveyor surveyor = entry.getSurveyor();
+		if (surveyor != null) {
+			surveyor.setBalance(surveyor.getBalance() + entry.getAmount());
+			surveyorRepository.save(surveyor);
+		}
+		ExpenseReport report = entry.getExpenseReport();
+		if (report != null && report.getConcept() != null && !report.getConcept().isRefund()) {
+			Study study = entry.getStudy();
+			if (study != null) {
+				study.setTotalReportedCost(study.getTotalReportedCost() - entry.getAmount());
+				studyRepository.save(study);
+			}
+		}
 	}
 
 	public Page<ExpenseReport> list(Pageable pageable) {
