@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import uy.com.bay.utiles.data.ExpenseReport;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
@@ -15,4 +16,6 @@ public interface JournalEntryRepository
 	List<JournalEntry> findAllBySurveyorOrderByDateAsc(Surveyor surveyor);
 
 	List<JournalEntry> findAllByStudyOrderByDateAsc(Study study);
+
+	List<JournalEntry> findAllByExpenseReport(ExpenseReport expenseReport);
 }
