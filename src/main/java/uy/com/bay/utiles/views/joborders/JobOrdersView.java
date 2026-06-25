@@ -215,8 +215,8 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 		editorLayoutDiv.add(editorDiv);
 
 		FormLayout formLayout = new FormLayout();
-		init = new DatePicker("inicio");
-		end = new DatePicker("fin");
+		init = new DatePicker("Inicio");
+		end = new DatePicker("Fin");
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.findAll());
 		study.setItemLabelGenerator(Study::getName);
