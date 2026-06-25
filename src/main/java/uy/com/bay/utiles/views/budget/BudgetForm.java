@@ -474,6 +474,12 @@ public class BudgetForm extends VerticalLayout {
 	}
 
 	private void validateAndSave() {
+		// Commit any in-progress row edit in the entries grid so its changes are
+		// written back to the BudgetEntry bean even if the inline "Guardar" of the
+		// grid editor was not pressed.
+		if (editor.isOpen()) {
+			editor.save();
+		}
 		if (binder.isValid()) {
 			Budget budget = binder.getBean();
 			if (budget.getStudy() != null) {
