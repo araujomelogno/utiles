@@ -181,6 +181,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem listarJobOrdersItem = new SideNavItem("Listar", "joborders");
 		listarJobOrdersItem.setPrefixComponent(new Icon("vaadin", "list"));
 		workOrdersItem.addItem(listarJobOrdersItem);
+		SideNavItem verDisponibilidadItem = new SideNavItem("Ver disponibilidad", "joborder-availability");
+		verDisponibilidadItem.setPrefixComponent(new Icon("vaadin", "grid-big"));
+		workOrdersItem.addItem(verDisponibilidadItem);
 		nav.addItem(workOrdersItem);
 
 		SideNavItem presupuestosItem = new SideNavItem("Presupuestos");
