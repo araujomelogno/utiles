@@ -51,7 +51,10 @@ public class BudgetService {
 				entry.setBudget(entity);
 			}
 		}
-		return repository.save(entity);
+		// saveAndFlush forces the cascade-persist of new BudgetEntry instances to
+		// happen within this transaction, so the returned graph always has managed,
+		// persisted entries and any constraint/ordering problem surfaces here.
+		return repository.saveAndFlush(entity);
 	}
 
 	@Transactional

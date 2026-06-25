@@ -210,8 +210,24 @@ public class BudgetForm extends VerticalLayout {
 		if (budgetStudy == null || budgetStudy.getOdooId() == null || budgetStudy.getOdooId().isEmpty()) {
 			return;
 		}
+		// OdooCost owns the budget_entry_id FK and is not cascaded, so it can only
+		// reference a persisted BudgetEntry. Persist the budget first if it (or any
+		// of its entries) is still transient, otherwise saving the costs would fail
+		// with "references an unsaved transient instance of BudgetEntry".
+		boolean hasTransientEntries = binder.getBean().getId() == null
+				|| binder.getBean().getEntries().stream().anyMatch(e -> e.getId() == null);
+		if (hasTransientEntries) {
+			binder.getBean().getEntries().forEach(e -> e.setBudget(binder.getBean()));
+			Budget saved = budgetService.save(binder.getBean());
+			Budget reloaded = budgetService.findByIdWithEntries(saved.getId()).orElse(saved);
+			binder.setBean(reloaded);
+			entriesGrid.setItems(reloaded.getEntries());
+		}
 		Long budgetId = binder.getBean().getId();
 		for (BudgetEntry budgetEntry : binder.getBean().getEntries()) {
+			if (budgetEntry.getId() == null) {
+				continue;
+			}
 			BudgetConcept concept = budgetEntry.getConcept();
 			if (concept == null || concept.getOdooProductId() == null || concept.getOdooProductId().isEmpty()) {
 				continue;
