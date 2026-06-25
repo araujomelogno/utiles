@@ -13,6 +13,7 @@ public class BudgetConcept extends AbstractEntity {
     private String description;
     private String odooProductId;
     private boolean salaryCost;
+    private boolean generatesWorkOrder;
 
     @Enumerated(EnumType.STRING)
     private MatchType matchType;
@@ -55,5 +56,13 @@ public class BudgetConcept extends AbstractEntity {
 
     public void setSalaryCost(boolean salaryCost) {
         this.salaryCost = salaryCost;
+    }
+
+    public boolean isGeneratesWorkOrder() {
+        return generatesWorkOrder;
+    }
+
+    public void setGeneratesWorkOrder(boolean generatesWorkOrder) {
+        this.generatesWorkOrder = generatesWorkOrder;
     }
 }

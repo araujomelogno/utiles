@@ -50,7 +50,8 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 
 	private final Grid<JobOrder> grid = new Grid<>(JobOrder.class, false);
 
-	private DatePicker created;
+	private DatePicker init;
+	private DatePicker end;
 	private ComboBox<Study> study;
 	private IntegerField hours;
 	private ComboBox<Provider> provider;
@@ -96,7 +97,8 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 
 		add(splitLayout);
 
-		grid.addColumn("created").setHeader("Fecha").setAutoWidth(true);
+		grid.addColumn("init").setHeader("Inicio").setAutoWidth(true);
+		grid.addColumn("end").setHeader("Fin").setAutoWidth(true);
 		grid.addColumn(jo -> jo.getStudy() != null ? jo.getStudy().getName() : "").setHeader("Estudio")
 				.setAutoWidth(true);
 		grid.addColumn("hours").setHeader("Horas").setAutoWidth(true);
@@ -213,7 +215,8 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 		editorLayoutDiv.add(editorDiv);
 
 		FormLayout formLayout = new FormLayout();
-		created = new DatePicker("Fecha");
+		init = new DatePicker("inicio");
+		end = new DatePicker("fin");
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.findAll());
 		study.setItemLabelGenerator(Study::getName);
@@ -223,7 +226,7 @@ public class JobOrdersView extends Div implements BeforeEnterObserver {
 		provider.setItemLabelGenerator(Provider::getName);
 		provider.addValueChangeListener(e -> applyProviderHoursRule(e.getValue()));
 
-		formLayout.add(created, study, provider, hours);
+		formLayout.add(init, end, study, provider, hours);
 
 		editorDiv.add(formLayout);
 		createButtonLayout(this.editorLayoutDiv);

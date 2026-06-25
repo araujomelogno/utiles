@@ -4,15 +4,18 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
 import uy.com.bay.utiles.data.AbstractEntity;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Fieldwork;
+import uy.com.bay.utiles.data.JobOrder;
 
 @Entity
 public class BudgetEntry extends AbstractEntity {
@@ -35,6 +38,10 @@ public class BudgetEntry extends AbstractEntity {
 	@ManyToOne
 	@JoinColumn(name = "budget_id")
 	private Budget budget;
+
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name = "job_order_id")
+	private JobOrder jobOrder;
 
 	@OneToMany(mappedBy = "budgetEntry")
 	private Set<Extra> extras = new HashSet<>();
@@ -127,6 +134,14 @@ public class BudgetEntry extends AbstractEntity {
 
 	public void setBudget(Budget budget) {
 		this.budget = budget;
+	}
+
+	public JobOrder getJobOrder() {
+		return jobOrder;
+	}
+
+	public void setJobOrder(JobOrder jobOrder) {
+		this.jobOrder = jobOrder;
 	}
 
 	public Set<Extra> getExtras() {

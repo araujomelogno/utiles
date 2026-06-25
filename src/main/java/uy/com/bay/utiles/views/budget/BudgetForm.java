@@ -23,6 +23,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.FooterRow;
 import com.vaadin.flow.component.grid.Grid;
@@ -46,6 +47,8 @@ import com.vaadin.flow.shared.Registration;
 import uy.com.bay.utiles.data.ExpenseRequest;
 import uy.com.bay.utiles.data.ExpenseStatus;
 import uy.com.bay.utiles.data.Fieldwork;
+import uy.com.bay.utiles.data.JobOrder;
+import uy.com.bay.utiles.data.Provider;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.service.FieldworkService;
 import uy.com.bay.utiles.entities.Budget;
@@ -59,6 +62,7 @@ import uy.com.bay.utiles.services.BudgetExporter;
 import uy.com.bay.utiles.services.BudgetService;
 import uy.com.bay.utiles.services.OdooCostService;
 import uy.com.bay.utiles.services.OdooService;
+import uy.com.bay.utiles.services.ProviderService;
 import uy.com.bay.utiles.services.StudyService;
 import uy.com.bay.utiles.tasks.DoobloSurveyRetriever;
 import uy.com.bay.utiles.views.gantt.BudgetEntryDetailsDialog;
@@ -88,10 +92,12 @@ public class BudgetForm extends VerticalLayout {
 	private final DoobloSurveyRetriever doobloSurveyRetriever;
 	private final OdooService odooService;
 	private final OdooCostService odooCostService;
+	private final ProviderService providerService;
 
 	public BudgetForm(StudyService studyService, BudgetConceptService budgetConceptService, BudgetService budgetService,
 			AlchemerSurveyResponseHelper alchemerSurveyResponseHelper, FieldworkService fieldworkService,
-			DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService, OdooCostService odooCostService) {
+			DoobloSurveyRetriever doobloSurveyRetriever, OdooService odooService, OdooCostService odooCostService,
+			ProviderService providerService) {
 		this.budgetConceptService = budgetConceptService;
 		this.budgetService = budgetService;
 		this.fieldworkService = fieldworkService;
@@ -99,6 +105,7 @@ public class BudgetForm extends VerticalLayout {
 		this.doobloSurveyRetriever = doobloSurveyRetriever;
 		this.odooService = odooService;
 		this.odooCostService = odooCostService;
+		this.providerService = providerService;
 		addClassName("budget-form");
 		binder.bindInstanceFields(this);
 		study.setItems(studyService.listAll());
@@ -307,6 +314,16 @@ public class BudgetForm extends VerticalLayout {
 		conceptComboBox.setItems(budgetConceptService.list(Pageable.unpaged()).getContent());
 		conceptComboBox.setItemLabelGenerator(BudgetConcept::getName);
 		entryBinder.forField(conceptComboBox).bind(BudgetEntry::getConcept, BudgetEntry::setConcept);
+		conceptComboBox.addValueChangeListener(e -> {
+			if (!e.isFromClient()) {
+				return;
+			}
+			BudgetConcept selectedConcept = e.getValue();
+			BudgetEntry editedEntry = editor.getItem();
+			if (selectedConcept != null && selectedConcept.isGeneratesWorkOrder() && editedEntry != null) {
+				openProviderSelectionDialog(editedEntry);
+			}
+		});
 		entriesGrid.addColumn(entry -> entry.getConcept() != null ? entry.getConcept().getName() : "")
 				.setHeader("Concepto").setEditorComponent(conceptComboBox).setResizable(true);
 		entriesGrid.addColumn(entry -> currencyFormat.format(entry.getAmmount())).setHeader("Costo unitario")
@@ -336,6 +353,7 @@ public class BudgetForm extends VerticalLayout {
 			editor.save();
 			Budget budget = binder.getBean();
 			if (budget != null) {
+				syncJobOrderDates();
 				Budget savedBudget = budgetService.save(budget);
 				budgetService.findByIdWithEntries(savedBudget.getId()).ifPresentOrElse(refreshed -> {
 					binder.setBean(refreshed);
@@ -458,8 +476,55 @@ public class BudgetForm extends VerticalLayout {
 				if (binder.getBean().getCreated() == null)
 					binder.getBean().setCreated(LocalDate.now());
 			}
+			syncJobOrderDates();
 			fireEvent(new SaveEvent(this, binder.getBean()));
 
+		}
+	}
+
+	private void openProviderSelectionDialog(BudgetEntry budgetEntry) {
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("Seleccionar proveedor");
+
+		ComboBox<Provider> providerComboBox = new ComboBox<>("Proveedor");
+		providerComboBox.setItems(providerService.findAll());
+		providerComboBox.setItemLabelGenerator(Provider::getName);
+		providerComboBox.setWidthFull();
+		dialog.add(providerComboBox);
+
+		Button acceptButton = new Button("Aceptar", e -> {
+			Provider selectedProvider = providerComboBox.getValue();
+			JobOrder jobOrder = budgetEntry.getJobOrder();
+			if (jobOrder == null) {
+				jobOrder = new JobOrder();
+				jobOrder.setCreated(LocalDate.now());
+			}
+			jobOrder.setProvider(selectedProvider);
+			if (binder.getBean() != null) {
+				jobOrder.setStudy(binder.getBean().getStudy());
+			}
+			budgetEntry.setJobOrder(jobOrder);
+			dialog.close();
+		});
+		acceptButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+		Button cancelButton = new Button("Cancelar", e -> dialog.close());
+		cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		dialog.getFooter().add(cancelButton, acceptButton);
+		dialog.open();
+	}
+
+	private void syncJobOrderDates() {
+		if (binder.getBean() == null || binder.getBean().getEntries() == null) {
+			return;
+		}
+		for (BudgetEntry entry : binder.getBean().getEntries()) {
+			JobOrder jobOrder = entry.getJobOrder();
+			if (jobOrder != null) {
+				jobOrder.setInit(entry.getInit());
+				jobOrder.setEnd(entry.getEnd());
+			}
 		}
 	}
 

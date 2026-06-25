@@ -11,6 +11,10 @@ public class JobOrder extends AbstractEntity {
 
     private LocalDate created;
 
+    private LocalDate init;
+
+    private LocalDate end;
+
     @ManyToOne
     @JoinColumn(name = "study_id")
     private Study study;
@@ -27,6 +31,22 @@ public class JobOrder extends AbstractEntity {
 
     public void setCreated(LocalDate created) {
         this.created = created;
+    }
+
+    public LocalDate getInit() {
+        return init;
+    }
+
+    public void setInit(LocalDate init) {
+        this.init = init;
+    }
+
+    public LocalDate getEnd() {
+        return end;
+    }
+
+    public void setEnd(LocalDate end) {
+        this.end = end;
     }
 
     public Study getStudy() {
