@@ -1,5 +1,6 @@
 package uy.com.bay.utiles.services;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -54,5 +55,9 @@ public class JobOrderService {
 
     public List<JobOrder> findByProviderOrderByCreatedDesc(Provider provider) {
         return repository.findByProviderOrderByCreatedDesc(provider);
+    }
+
+    public List<JobOrder> findOverlapping(LocalDate from, LocalDate to) {
+        return repository.findOverlapping(from, to);
     }
 }
