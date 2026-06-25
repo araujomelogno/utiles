@@ -1,355 +1,362 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>uy.com.bay.utiles</groupId>
-  <artifactId>utiles</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>war</packaging>
+	<groupId>uy.com.bay.utiles</groupId>
+	<artifactId>utiles</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>war</packaging>
 
-  <name>utiles</name>
+	<name>utiles</name>
 
- <properties>
-    <java.version>21</java.version>
-    <vaadin.version>24.7.5</vaadin.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-  </properties>
+	<properties>
+		<java.version>21</java.version>
+		<vaadin.version>24.7.5</vaadin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
 
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.4.5</version>
-    <relativePath/>
-  </parent>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.4.5</version>
+		<relativePath />
+	</parent>
 
-  <repositories>
-    <repository>
-      <id>central</id>
-      <url>https://repo.maven.apache.org/maven2</url>
-    </repository>
-    <repository>
-      <id>vaadin-addons</id>
-      <url>https://maven.vaadin.com/vaadin-addons</url>
-    </repository>
-  </repositories>
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+		</repository>
+		<repository>
+			<id>vaadin-addons</id>
+			<url>https://maven.vaadin.com/vaadin-addons</url>
+		</repository>
+	</repositories>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-bom</artifactId>
-        <version>${vaadin.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      
-      <dependency>
-      <groupId>org.springframework.ai</groupId>
-      <artifactId>spring-ai-bom</artifactId>
-      <version>1.1.4</version><!-- use the latest stable -->
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
-      
-    </dependencies>
-  </dependencyManagement>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-bom</artifactId>
+				<version>${vaadin.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 
-  <dependencies>
-  
-  <dependency>
-  <groupId>org.apache.httpcomponents.client5</groupId>
-  <artifactId>httpclient5</artifactId>
-</dependency>
-<dependency>
-  <groupId>org.apache.httpcomponents.core5</groupId>
-  <artifactId>httpcore5</artifactId>
-</dependency>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>1.1.4</version><!-- use the latest stable -->
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 
-<!-- MP3 SPI (habilita AudioSystem.getAudioInputStream en MP3) -->
-  <dependency>
-    <groupId>com.googlecode.soundlibs</groupId>
-    <artifactId>mp3spi</artifactId>
-    <version>1.9.5.4</version>
-  </dependency>
+		</dependencies>
+	</dependencyManagement>
 
-  <!-- A veces necesario para providers (según entorno) -->
-  <dependency>
-    <groupId>com.googlecode.soundlibs</groupId>
-    <artifactId>tritonus-share</artifactId>
-    <version>0.3.7.4</version>
-  </dependency>
-  <dependency>
-    <groupId>com.googlecode.soundlibs</groupId>
-    <artifactId>jlayer</artifactId>
-    <version>1.0.1.4</version>
-  </dependency>
-  
-    <!-- OpenAI LLM via Spring AI -->
-    <dependency>
-        <groupId>org.springframework.ai</groupId>
-        <artifactId>spring-ai-starter-model-openai</artifactId>
-    </dependency>
-  <!-- Gantt -->
-  <dependency>
-   <groupId>org.vaadin.addons.tltv.gantt</groupId>
-   <artifactId>gantt-flow-addon</artifactId>
-   <version>24.0.2</version>
-</dependency>
-    <!-- Vaadin y Spring Boot -->
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-spring-boot-starter</artifactId>
-    </dependency>
+	<dependencies>
 
-    <!-- Tomcat como WAR (no embebido) -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-tomcat</artifactId>
-      <scope>provided</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents.client5</groupId>
+			<artifactId>httpclient5</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents.core5</groupId>
+			<artifactId>httpcore5</artifactId>
+		</dependency>
 
-    <!-- Base de datos -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.mysql</groupId>
-      <artifactId>mysql-connector-j</artifactId>
-      <version>8.0.33</version>
-    </dependency>
-    <dependency>
-      <groupId>org.mariadb.jdbc</groupId>
-      <artifactId>mariadb-java-client</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.parttio</groupId>
-      <artifactId>line-awesome</artifactId>
-      <version>2.1.0</version>
-    </dependency>
+		<!-- MP3 SPI (habilita AudioSystem.getAudioInputStream en MP3) -->
+		<dependency>
+			<groupId>com.googlecode.soundlibs</groupId>
+			<artifactId>mp3spi</artifactId>
+			<version>1.9.5.4</version>
+		</dependency>
 
-    <!-- Seguridad -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
+		<!-- A veces necesario para providers (según entorno) -->
+		<dependency>
+			<groupId>com.googlecode.soundlibs</groupId>
+			<artifactId>tritonus-share</artifactId>
+			<version>0.3.7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.soundlibs</groupId>
+			<artifactId>jlayer</artifactId>
+			<version>1.0.1.4</version>
+		</dependency>
 
-    <!-- Otros -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-xml</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.xmlrpc</groupId>
-      <artifactId>xmlrpc-client</artifactId>
-      <version>3.1.3</version>
-<!--      <exclusions>-->
-<!--        <exclusion>-->
-<!--          <groupId>xml-apis</groupId>-->
-<!--          <artifactId>xml-apis</artifactId>-->
-<!--        </exclusion>-->
-<!--        <exclusion>-->
-<!--          <groupId>commons-httpclient</groupId>-->
-<!--          <artifactId>commons-httpclient</artifactId>-->
-<!--        </exclusion>-->
-<!--      </exclusions>-->
-    </dependency>
-    <dependency>
-      <groupId>org.apache.xmlrpc</groupId>
-      <artifactId>xmlrpc-common</artifactId>
-      <version>3.1.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-httpclient</groupId>
-          <artifactId>commons-httpclient</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ws.commons.util</groupId>
-      <artifactId>ws-commons-util</artifactId>
-      <version>1.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-   <groupId>org.vaadin.addons.componentfactory</groupId>
-   <artifactId>vcf-month-picker-flow</artifactId>
-   <version>2.0.0</version>
-</dependency>
+		<!-- OpenAI LLM via Spring AI -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-openai</artifactId>
+		</dependency>
+		<!-- Gantt -->
+		<dependency>
+			<groupId>org.vaadin.addons.tltv.gantt</groupId>
+			<artifactId>gantt-flow-addon</artifactId>
+			<version>24.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.appreciated</groupId>
+			<artifactId>apexcharts</artifactId>
+			<version>24.0.1</version>
+		</dependency>
+		<!-- Vaadin y Spring Boot -->
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-spring-boot-starter</artifactId>
+		</dependency>
+
+		<!-- Tomcat como WAR (no embebido) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Base de datos -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.0.33</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.parttio</groupId>
+			<artifactId>line-awesome</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+
+		<!-- Seguridad -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- Otros -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlrpc</groupId>
+			<artifactId>xmlrpc-client</artifactId>
+			<version>3.1.3</version>
+			<!--      <exclusions>-->
+			<!--        <exclusion>-->
+			<!--          <groupId>xml-apis</groupId>-->
+			<!--          <artifactId>xml-apis</artifactId>-->
+			<!--        </exclusion>-->
+			<!--        <exclusion>-->
+			<!--          <groupId>commons-httpclient</groupId>-->
+			<!--          <artifactId>commons-httpclient</artifactId>-->
+			<!--        </exclusion>-->
+			<!--      </exclusions>-->
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlrpc</groupId>
+			<artifactId>xmlrpc-common</artifactId>
+			<version>3.1.3</version>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-httpclient</groupId>
+					<artifactId>commons-httpclient</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.ws.commons.util</groupId>
+			<artifactId>ws-commons-util</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.vaadin.addons.componentfactory</groupId>
+			<artifactId>vcf-month-picker-flow</artifactId>
+			<version>2.0.0</version>
+		</dependency>
 
 
-    <!-- Force latest version of commons-io to resolve NoClassDefFoundError -->
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.20.0</version>
-    </dependency>
+		<!-- Force latest version of commons-io to resolve NoClassDefFoundError -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.20.0</version>
+		</dependency>
 
-    <!-- Apache POI for Excel generation -->
-    <dependency>
-        <groupId>org.apache.poi</groupId>
-        <artifactId>poi-ooxml</artifactId>
-        <version>5.2.3</version>
-    </dependency>
-    <dependency>
-    <groupId>org.apache.poi</groupId>
-    <artifactId>poi-scratchpad</artifactId>
-    <version>5.2.3</version> <!-- Usá la misma versión que tu poi-ooxml -->
-    </dependency>
+		<!-- Apache POI for Excel generation -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-scratchpad</artifactId>
+			<version>5.2.3</version> <!-- Usá la misma versión que tu poi-ooxml -->
+		</dependency>
 
-    <!-- jaudiotagger for audio duration -->
-    <dependency>
-        <groupId>org.jaudiotagger</groupId>
-        <artifactId>jaudiotagger</artifactId>
-        <version>2.0.1</version>
-    </dependency>
+		<!-- jaudiotagger for audio duration -->
+		<dependency>
+			<groupId>org.jaudiotagger</groupId>
+			<artifactId>jaudiotagger</artifactId>
+			<version>2.0.1</version>
+		</dependency>
 
-    <!-- Test -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-testbench-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+		<!-- Test -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-testbench-junit5</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
-  <build>
-    <finalName>utiles</finalName>
-    <plugins>
+	<build>
+		<finalName>utiles</finalName>
+		<plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <configuration>
-          <encoding>UTF-8</encoding>
-        </configuration>
-        <executions>
-          <execution>
-            <id>copy-vaadin-theme</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.outputDirectory}/META-INF/resources/frontend/themes</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/webapp/META-INF/themes</directory>
-                  <filtering>false</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+				<executions>
+					<execution>
+						<id>copy-vaadin-theme</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>
+								${project.build.outputDirectory}/META-INF/resources/frontend/themes</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/webapp/META-INF/themes</directory>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
-      <!-- Spring Boot plugin -->
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>repackage</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
+			<!-- Spring Boot plugin -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>repackage</id>
+						<phase>none</phase>
+					</execution>
+				</executions>
+			</plugin>
 
-      <!-- Plugin de Vaadin para producción -->
-      <plugin>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-maven-plugin</artifactId>
-        <version>${vaadin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>prepare-frontend</goal>
-              <goal>build-frontend</goal>
-            </goals>
-            <phase>prepare-package</phase>
-          </execution>
-        </executions>
-        <configuration>
-          <productionMode>true</productionMode>
-          <optimizeBundle>true</optimizeBundle>
-          <frontendDirectory>src/main/frontend</frontendDirectory>
-          <generateBundle>true</generateBundle>
-        </configuration>
-      </plugin>
+			<!-- Plugin de Vaadin para producción -->
+			<plugin>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-maven-plugin</artifactId>
+				<version>${vaadin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-frontend</goal>
+							<goal>build-frontend</goal>
+						</goals>
+						<phase>prepare-package</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<productionMode>true</productionMode>
+					<optimizeBundle>true</optimizeBundle>
+					<frontendDirectory>src/main/frontend</frontendDirectory>
+					<generateBundle>true</generateBundle>
+				</configuration>
+			</plugin>
 
-      <!-- Copiar dependencias y preparar classpath para patch-module -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.6.0</version>
-        <executions>
-<!--			<execution>-->
-<!--            <id>copy-dependencies</id>-->
-<!--            <phase>prepare-package</phase>-->
-<!--            <goals>-->
-<!--              <goal>copy-dependencies</goal>-->
-<!--            </goals>-->
-<!--            <configuration>-->
-<!--              <outputDirectory>${project.basedir}/lib</outputDirectory>-->
-<!--              <includeScope>runtime</includeScope>-->
-<!--            </configuration>-->
-<!--          </execution>-->
-        </executions>
-      </plugin>
+			<!-- Copiar dependencias y preparar classpath para patch-module -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<!--			<execution>-->
+					<!--            <id>copy-dependencies</id>-->
+					<!--            <phase>prepare-package</phase>-->
+					<!--            <goals>-->
+					<!--              <goal>copy-dependencies</goal>-->
+					<!--            </goals>-->
+					<!--            <configuration>-->
+					<!--
+					<outputDirectory>${project.basedir}/lib</outputDirectory>-->
+					<!--              <includeScope>runtime</includeScope>-->
+					<!--            </configuration>-->
+					<!--          </execution>-->
+				</executions>
+			</plugin>
 
-      <!-- Compiler plugin con patch-module portable -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
-      </plugin>
+			<!-- Compiler plugin con patch-module portable -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+			</plugin>
 
-      <!-- Surefire plugin para tests -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
+			<!-- Surefire plugin para tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+			</plugin>
 
-    </plugins>
-  </build>
+		</plugins>
+	</build>
 
-  <profiles>
-    <profile>
-      <id>production</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-    </profile>
-  </profiles>
+	<profiles>
+		<profile>
+			<id>production</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+	</profiles>
 
 </project>
