@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views.joborders;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -13,13 +14,17 @@ import com.github.appreciated.apexcharts.ApexCharts;
 import com.github.appreciated.apexcharts.ApexChartsBuilder;
 import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
 import com.github.appreciated.apexcharts.config.builder.DataLabelsBuilder;
+import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
 import com.github.appreciated.apexcharts.config.builder.PlotOptionsBuilder;
 import com.github.appreciated.apexcharts.config.builder.StrokeBuilder;
 import com.github.appreciated.apexcharts.config.builder.TitleSubtitleBuilder;
 import com.github.appreciated.apexcharts.config.builder.TooltipBuilder;
 import com.github.appreciated.apexcharts.config.builder.XAxisBuilder;
 import com.github.appreciated.apexcharts.config.chart.Type;
+import com.github.appreciated.apexcharts.config.legend.Position;
 import com.github.appreciated.apexcharts.config.plotoptions.Heatmap;
+import com.github.appreciated.apexcharts.config.plotoptions.xmap.ColorScale;
+import com.github.appreciated.apexcharts.config.plotoptions.xmap.Ranges;
 import com.github.appreciated.apexcharts.config.xaxis.XAxisType;
 import com.github.appreciated.apexcharts.helper.Series;
 import com.vaadin.flow.component.button.Button;
@@ -107,6 +112,7 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 		add(controls);
 
 		chartContainer.setWidthFull();
+		chartContainer.getStyle().set("overflow", "auto");
 		add(chartContainer);
 
 		rebuildChart();
@@ -199,25 +205,94 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 
 	@SuppressWarnings("rawtypes")
 	private ApexCharts buildChart(LocalDate from, LocalDate to, List<Series> series) {
+		int columns = (int) (ChronoUnit.MONTHS.between(YearMonth.from(from), YearMonth.from(to)) + 1);
+		int rows = series.size();
+		int max = maxValue(series);
+
+		// Fixed cell size so cells stay square (and therefore rounded as circles)
+		// regardless of how few providers/months there are.
+		int cellSize = 64;
+		int width = columns * cellSize + 200;
+		int height = rows * cellSize + 170;
+
 		Heatmap heatmap = new Heatmap();
-		heatmap.setRadius(12.0);
-		heatmap.setEnableShades(true);
-		heatmap.setShadeIntensity(0.5);
+		heatmap.setRadius(40.0);
+		heatmap.setEnableShades(false);
+		heatmap.setUseFillColorAsStroke(false);
+		heatmap.setColorScale(buildColorScale(max));
 
 		ApexCharts chart = ApexChartsBuilder.get()
-				.withChart(ChartBuilder.get().withType(Type.HEATMAP).withHeight("500").build())
+				.withChart(ChartBuilder.get().withType(Type.HEATMAP).withHeight(String.valueOf(height)).build())
 				.withPlotOptions(PlotOptionsBuilder.get().withHeatmap(heatmap).build())
-				.withDataLabels(DataLabelsBuilder.get().withEnabled(false).build())
-				.withStroke(StrokeBuilder.get().withWidth(1.0).withColors("#ffffff").build())
-				.withColors("#008FFB")
+				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
+				.withStroke(StrokeBuilder.get().withWidth(4.0).withColors("#ffffff").build())
+				.withLegend(LegendBuilder.get().withPosition(Position.TOP).build())
 				.withTitle(TitleSubtitleBuilder.get().withText("Órdenes de trabajo por proveedor y mes").build())
 				.withXaxis(XAxisBuilder.get().withType(XAxisType.CATEGORIES).build())
 				.withTooltip(TooltipBuilder.get().withCustom(TOOLTIP_FUNCTION).build())
 				.withSeries(series.toArray(new Series[0])).build();
 
-		chart.setWidthFull();
-		chart.setHeight("500px");
+		chart.setWidth(width + "px");
+		chart.setHeight(height + "px");
 		return chart;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private int maxValue(List<Series> series) {
+		int max = 0;
+		for (Series s : series) {
+			Object[] data = s.getData();
+			if (data == null) {
+				continue;
+			}
+			for (Object o : data) {
+				HeatmapDataPoint dp = (HeatmapDataPoint) o;
+				if (dp.getY() != null && dp.getY() > max) {
+					max = dp.getY();
+				}
+			}
+		}
+		return max;
+	}
+
+	/**
+	 * Discrete color ranges (no shades) plus a legend, mirroring the ApexCharts
+	 * "Rounded (Range without Shades)" demo. Zero gets a neutral gray; positive
+	 * counts are split into up to four blue bands between 1 and {@code max}.
+	 */
+	private ColorScale buildColorScale(int max) {
+		String[] colors = { "#bbdefb", "#64b5f6", "#1e88e5", "#0d47a1" };
+
+		List<Ranges> ranges = new ArrayList<>();
+		ranges.add(range(0, 0, "#eceff1", "#607d8b", "0"));
+
+		if (max >= 1) {
+			int bands = Math.min(colors.length, max);
+			int from = 1;
+			for (int i = 0; i < bands; i++) {
+				int to = (i == bands - 1) ? max : (int) Math.round((i + 1) * (max / (double) bands));
+				if (to < from) {
+					to = from;
+				}
+				String name = (from == to) ? String.valueOf(from) : (from + " - " + to);
+				ranges.add(range(from, to, colors[i], "#ffffff", name));
+				from = to + 1;
+			}
+		}
+
+		ColorScale colorScale = new ColorScale();
+		colorScale.setRanges(ranges);
+		return colorScale;
+	}
+
+	private Ranges range(int from, int to, String color, String foreColor, String name) {
+		Ranges r = new Ranges();
+		r.setFrom((double) from);
+		r.setTo((double) to);
+		r.setColor(color);
+		r.setForeColor(foreColor);
+		r.setName(name);
+		return r;
 	}
 
 	private String monthLabel(YearMonth month) {
