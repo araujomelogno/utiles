@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views.joborders;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -53,11 +54,14 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 	private static final String[] MONTH_NAMES = { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct",
 			"Nov", "Dic" };
 
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
 	/**
 	 * Custom tooltip rendered when hovering a cell. It reads the extra
-	 * {@code studies} field that we serialize into each data point and lists the
-	 * study names grouped in that cell. The wrapper {@code eval}s this string into
-	 * a real JS function.
+	 * {@code jobOrders} field that we serialize into each data point and lists every
+	 * job order grouped in that cell (one line per job order, so the list length
+	 * matches the displayed count). The wrapper {@code eval}s this string into a real
+	 * JS function.
 	 */
 	private static final String TOOLTIP_FUNCTION = """
 			function({ seriesIndex, dataPointIndex, w }) {
@@ -65,19 +69,19 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 			    var provider = w.config.series[seriesIndex].name || '';
 			    var month = dp.x || '';
 			    var count = (dp.y != null) ? dp.y : 0;
-			    var studies = dp.studies || [];
+			    var jobOrders = dp.jobOrders || [];
 			    function esc(s) {
 			        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 			    }
 			    var body;
-			    if (studies.length) {
+			    if (jobOrders.length) {
 			        body = '<ul style="margin:4px 0 0 16px; padding:0;">';
-			        for (var i = 0; i < studies.length; i++) {
-			            body += '<li>' + esc(studies[i]) + '</li>';
+			        for (var i = 0; i < jobOrders.length; i++) {
+			            body += '<li>' + esc(jobOrders[i]) + '</li>';
 			        }
 			        body += '</ul>';
 			    } else {
-			        body = '<div style="margin-top:4px;"><i>Sin estudios</i></div>';
+			        body = '<div style="margin-top:4px;"><i>Sin órdenes de trabajo</i></div>';
 			    }
 			    return '<div style="padding:8px; max-width:340px; white-space:normal;">'
 			         + '<b>' + esc(provider) + '</b> \\u2014 ' + esc(month)
@@ -169,11 +173,15 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 			for (int i = 0; i < months.size(); i++) {
 				YearMonth month = months.get(i);
 				List<JobOrder> matching = matching(jobOrders, provider, month);
-				List<String> studies = matching.stream()
-						.map(jo -> jo.getStudy() != null ? jo.getStudy().getName() : null)
-						.filter(name -> name != null && !name.isBlank()).distinct().sorted()
-						.collect(Collectors.toList());
-				data[i] = new HeatmapDataPoint(monthLabel(month), matching.size(), studies);
+				// One entry per job order (do NOT collapse by study name): several job
+				// orders may share the same study, and they must all be listed so the
+				// tooltip list matches the cell count.
+				List<String> jobOrderLabels = matching.stream()
+						.sorted(Comparator.comparing(
+								jo -> jo.getStudy() != null ? jo.getStudy().getName() : "",
+								String.CASE_INSENSITIVE_ORDER))
+						.map(this::jobOrderLabel).collect(Collectors.toList());
+				data[i] = new HeatmapDataPoint(monthLabel(month), matching.size(), jobOrderLabels);
 			}
 			series.add(new Series<>(provider.getName(), data));
 		}
@@ -299,19 +307,39 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 	}
 
 	/**
+	 * Human readable label for a single job order shown in the tooltip list. Includes
+	 * the study name plus the date range and hours so that several job orders sharing
+	 * the same study can still be told apart.
+	 */
+	private String jobOrderLabel(JobOrder jo) {
+		String study = (jo.getStudy() != null && !jo.getStudy().getName().isBlank()) ? jo.getStudy().getName()
+				: "Sin estudio";
+		StringBuilder sb = new StringBuilder(study);
+		if (jo.getInit() != null && jo.getEnd() != null) {
+			sb.append(" (").append(DATE_FORMAT.format(jo.getInit())).append(" - ")
+					.append(DATE_FORMAT.format(jo.getEnd())).append(")");
+		}
+		if (jo.getHours() != null) {
+			sb.append(", ").append(jo.getHours()).append(" h");
+		}
+		return sb.toString();
+	}
+
+	/**
 	 * Data point for a heatmap cell. Besides the {@code x}/{@code y} required by
-	 * ApexCharts, it carries the list of study names so the custom tooltip can
-	 * display them. Jackson serializes all three fields into the data object.
+	 * ApexCharts, it carries the list of job order labels so the custom tooltip can
+	 * display them (one entry per job order). Jackson serializes all three fields into
+	 * the data object.
 	 */
 	public static class HeatmapDataPoint {
 		private final String x;
 		private final Integer y;
-		private final List<String> studies;
+		private final List<String> jobOrders;
 
-		public HeatmapDataPoint(String x, Integer y, List<String> studies) {
+		public HeatmapDataPoint(String x, Integer y, List<String> jobOrders) {
 			this.x = x;
 			this.y = y;
-			this.studies = studies;
+			this.jobOrders = jobOrders;
 		}
 
 		public String getX() {
@@ -322,8 +350,8 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 			return y;
 		}
 
-		public List<String> getStudies() {
-			return studies;
+		public List<String> getJobOrders() {
+			return jobOrders;
 		}
 	}
 }
