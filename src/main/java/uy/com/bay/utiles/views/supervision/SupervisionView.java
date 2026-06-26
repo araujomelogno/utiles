@@ -23,6 +23,8 @@ import uy.com.bay.utiles.views.MainLayout;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,6 +84,7 @@ public class SupervisionView extends VerticalLayout {
 						task.setCreated(new java.util.Date());
 						task.setStatus(uy.com.bay.utiles.data.Status.PENDING);
 						task.setFileName(fileName);
+						parseFileName(task, fileName);
 						task.setAudioContent(audioContent);
 						task.setQuestionnaire(questionnaireContent);
 						task.setQuestionnaireFileName(questionnaireBuffer.getFileName());
@@ -112,5 +115,39 @@ public class SupervisionView extends VerticalLayout {
 				processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
+	}
+
+	/**
+	 * Parsea el nombre del archivo de audio y completa los atributos de la tarea.
+	 * El nombre tiene el formato:
+	 * {@code audioDate-surveyor-mobilePhone-phoneDisposition-surveyDisposition-...},
+	 * por ejemplo
+	 * {@code 202606081416-kgonzalez-098424586-Contesta_Completa-A_Benchmark_202606_S00541-_.mp3}.
+	 * El primer campo es la fecha del audio en formato {@code yyyyMMddHHmm}.
+	 */
+	private void parseFileName(SupervisionTask task, String fileName) {
+		if (fileName == null) {
+			return;
+		}
+		String[] parts = fileName.split("-");
+		if (parts.length > 0 && !parts[0].isBlank()) {
+			try {
+				task.setAudioDate(new SimpleDateFormat("yyyyMMddHHmm").parse(parts[0].trim()));
+			} catch (ParseException ex) {
+				ex.printStackTrace();
+			}
+		}
+		if (parts.length > 1) {
+			task.setSurveyor(parts[1]);
+		}
+		if (parts.length > 2) {
+			task.setMobilePhone(parts[2]);
+		}
+		if (parts.length > 3) {
+			task.setPhoneDisposition(parts[3]);
+		}
+		if (parts.length > 4) {
+			task.setSurveyDisposition(parts[4]);
+		}
 	}
 }

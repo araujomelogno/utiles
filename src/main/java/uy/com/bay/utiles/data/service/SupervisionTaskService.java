@@ -112,4 +112,8 @@ public class SupervisionTaskService {
 	public void saveAll(List<SupervisionTask> tasks) {
 		repository.saveAll(tasks);
 	}
+
+	public byte[] getAudioContent(Long id) {
+		return repository.findAudioContentById(id);
+	}
 }
