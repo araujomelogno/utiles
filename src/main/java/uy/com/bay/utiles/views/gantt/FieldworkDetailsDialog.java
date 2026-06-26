@@ -30,11 +30,11 @@ public class FieldworkDetailsDialog extends Dialog {
 		type.setReadOnly(true);
 
 		TextField doobloId = new TextField("Dooblo Id");
-		doobloId.setValue(fieldwork.getDoobloId() != null ? fieldwork.getDoobloId() : "");
+		doobloId.setValue(fieldwork.getDoobloId() != null ? String.join(", ", fieldwork.getDoobloId()) : "");
 		doobloId.setReadOnly(true);
 
 		TextField alchemerId = new TextField("Alchemer Id");
-		alchemerId.setValue(fieldwork.getAlchemerId() != null ? fieldwork.getAlchemerId() : "");
+		alchemerId.setValue(fieldwork.getAlchemerId() != null ? String.join(", ", fieldwork.getAlchemerId()) : "");
 		alchemerId.setReadOnly(true);
 
 		TextField initPlannedDate = new TextField("Fecha Planificada Inicio");
