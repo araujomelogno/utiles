@@ -122,6 +122,21 @@ public class SupervisionTasksView extends VerticalLayout {
 		}).setHeader("Output").setSortable(true)
 				.setComparator(task -> task.getOutput() != null && !task.getOutput().isEmpty());
 
+		grid.addComponentColumn(task -> {
+			StreamResource audioResource = new StreamResource(
+					task.getFileName() != null && !task.getFileName().isEmpty() ? task.getFileName()
+							: "audio_" + task.getId() + ".mp3",
+					() -> {
+						byte[] audioContent = supervisionTaskService.getAudioContent(task.getId());
+						return new ByteArrayInputStream(audioContent != null ? audioContent : new byte[0]);
+					});
+			Anchor downloadLink = new Anchor(audioResource, "");
+			downloadLink.getElement().setAttribute("download", true);
+			downloadLink.removeAll();
+			downloadLink.add(new Button("Descargar"));
+			return downloadLink;
+		}).setHeader("Audio");
+
 		HeaderRow headerRow = grid.appendHeaderRow();
 
 		alchemerStudyNameFilter.setValueChangeMode(ValueChangeMode.LAZY);

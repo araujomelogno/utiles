@@ -24,6 +24,16 @@ public class SupervisionTask extends AbstractEntity {
 
 	private String fileName;
 
+	private Date audioDate;
+
+	private String surveyor;
+
+	private String mobilePhone;
+
+	private String phoneDisposition;
+
+	private String surveyDisposition;
+
 	@Lob
 	private byte[] audioContent;
 
@@ -303,5 +313,45 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setScoreByItem(Map<String, Integer> scoreByItem) {
 		this.scoreByItem = scoreByItem;
+	}
+
+	public Date getAudioDate() {
+		return audioDate;
+	}
+
+	public void setAudioDate(Date audioDate) {
+		this.audioDate = audioDate;
+	}
+
+	public String getSurveyor() {
+		return surveyor;
+	}
+
+	public void setSurveyor(String surveyor) {
+		this.surveyor = surveyor;
+	}
+
+	public String getMobilePhone() {
+		return mobilePhone;
+	}
+
+	public void setMobilePhone(String mobilePhone) {
+		this.mobilePhone = mobilePhone;
+	}
+
+	public String getPhoneDisposition() {
+		return phoneDisposition;
+	}
+
+	public void setPhoneDisposition(String phoneDisposition) {
+		this.phoneDisposition = phoneDisposition;
+	}
+
+	public String getSurveyDisposition() {
+		return surveyDisposition;
+	}
+
+	public void setSurveyDisposition(String surveyDisposition) {
+		this.surveyDisposition = surveyDisposition;
 	}
 }

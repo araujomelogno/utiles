@@ -52,4 +52,7 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	@Query("SELECT st.id as id, KEY(s) as itemId, VALUE(s) as score "
 			+ "FROM SupervisionTask st JOIN st.scoreByItem s WHERE st.id IN :ids")
 	List<Tuple> findScoreByItemForIds(@Param("ids") Collection<Long> ids);
+
+	@Query("SELECT st.audioContent FROM SupervisionTask st WHERE st.id = :id")
+	byte[] findAudioContentById(@Param("id") Long id);
 }
