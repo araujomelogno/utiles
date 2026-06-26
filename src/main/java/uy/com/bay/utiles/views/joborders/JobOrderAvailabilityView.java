@@ -99,8 +99,6 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 		setSizeFull();
 		addClassName("joborder-availability-view");
 
-		add(new H2("Disponibilidad de proveedores"));
-
 		fromPicker.setValue(LocalDate.now());
 		toPicker.setValue(LocalDate.now().plusMonths(6));
 
@@ -162,7 +160,8 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 			}
 		}
 		List<Provider> providers = new ArrayList<>(providerMap.values());
-		providers.sort(Comparator.comparing(p -> p.getName() == null ? "" : p.getName(), String.CASE_INSENSITIVE_ORDER));
+		providers
+				.sort(Comparator.comparing(p -> p.getName() == null ? "" : p.getName(), String.CASE_INSENSITIVE_ORDER));
 
 		List<Series> series = new ArrayList<>();
 		for (Provider provider : providers) {
