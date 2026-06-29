@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -24,6 +27,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -36,7 +40,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -67,8 +70,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 	private final Grid<Fieldwork> grid = new Grid<>(Fieldwork.class, false);
 
-	private TextField doobloId;
-	private TextField alchemerId;
+	private MultiSelectComboBox<String> doobloId;
+	private MultiSelectComboBox<String> alchemerId;
 	private ComboBox<Study> study;
 	private ComboBox<uy.com.bay.utiles.entities.BudgetEntry> budgetEntry;
 	private DatePicker initPlannedDate;
@@ -154,8 +157,14 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 		// Configure Form
 		binder = new BeanValidationBinder<>(Fieldwork.class);
-		binder.forField(doobloId).bind(Fieldwork::getDoobloId, Fieldwork::setDoobloId);
-		binder.forField(alchemerId).bind(Fieldwork::getAlchemerId, Fieldwork::setAlchemerId);
+		binder.forField(doobloId)
+				.<List<String>>withConverter(set -> set == null ? new ArrayList<>() : new ArrayList<>(set),
+						list -> list == null ? new LinkedHashSet<>() : new LinkedHashSet<>(list))
+				.bind(Fieldwork::getDoobloId, Fieldwork::setDoobloId);
+		binder.forField(alchemerId)
+				.<List<String>>withConverter(set -> set == null ? new ArrayList<>() : new ArrayList<>(set),
+						list -> list == null ? new LinkedHashSet<>() : new LinkedHashSet<>(list))
+				.bind(Fieldwork::getAlchemerId, Fieldwork::setAlchemerId);
 		binder.forField(budgetEntry).bind(Fieldwork::getBudgetEntry, Fieldwork::setBudgetEntry);
 		binder.bindInstanceFields(this);
 
@@ -274,8 +283,8 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		this.editorLayoutDiv.add(editorDiv);
 
 		FormLayout formLayout = new FormLayout();
-		doobloId = new TextField("Dooblo Id");
-		alchemerId = new TextField("Alchemer Id");
+		doobloId = createCustomValueMultiSelect("Dooblo Id");
+		alchemerId = createCustomValueMultiSelect("Alchemer Id");
 		study = new ComboBox<>("Estudio");
 		study.setItems(studyService.listAll());
 		study.setItemLabelGenerator(Study::getName);
@@ -308,6 +317,25 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 		splitLayout.addToSecondary(this.editorLayoutDiv);
 		this.editorLayoutDiv.setVisible(false);
+	}
+
+	private MultiSelectComboBox<String> createCustomValueMultiSelect(String label) {
+		MultiSelectComboBox<String> combo = new MultiSelectComboBox<>(label);
+		combo.setAllowCustomValue(true);
+		combo.setItems(new ArrayList<>());
+		combo.addCustomValueSetListener(event -> {
+			String customValue = event.getDetail();
+			if (customValue == null || customValue.isBlank()) {
+				return;
+			}
+			Set<String> selected = new LinkedHashSet<>(combo.getValue());
+			selected.add(customValue);
+			// The selected items must be present in the data provider, otherwise the
+			// newly typed value would be discarded when the selection is applied.
+			combo.setItems(new ArrayList<>(selected));
+			combo.setValue(selected);
+		});
+		return combo;
 	}
 
 	private void createButtonLayout(Div editorLayoutDiv) {
@@ -553,6 +581,14 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 			if (value.getStudy() != null && value.getStudy().getBudget() != null) {
 				this.budgetEntry.setItems(value.getStudy().getBudget().getEntries());
 			}
+			// Seed the data providers with the existing values so they render as
+			// selected chips and remain selectable.
+			this.doobloId.setItems(value.getDoobloId() != null ? new ArrayList<>(value.getDoobloId()) : new ArrayList<>());
+			this.alchemerId.setItems(
+					value.getAlchemerId() != null ? new ArrayList<>(value.getAlchemerId()) : new ArrayList<>());
+		} else {
+			this.doobloId.setItems(new ArrayList<>());
+			this.alchemerId.setItems(new ArrayList<>());
 		}
 		binder.readBean(this.fieldwork);
 		this.editorLayoutDiv.setVisible(value != null);

@@ -12,9 +12,11 @@ import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.Study;
 
 public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, JpaSpecificationExecutor<Fieldwork> {
-	Optional<Fieldwork> findByAlchemerId(String alchemerId);
+	@Query("SELECT f FROM Fieldwork f JOIN f.alchemerId a WHERE a = :alchemerId")
+	Optional<Fieldwork> findByAlchemerId(@Param("alchemerId") String alchemerId);
 
-	Optional<Fieldwork> findByDoobloId(String doobloId);
+	@Query("SELECT f FROM Fieldwork f JOIN f.doobloId d WHERE d = :doobloId")
+	Optional<Fieldwork> findByDoobloId(@Param("doobloId") String doobloId);
 
 	List<Fieldwork> findAllByStudy(Study study);
 
@@ -31,5 +33,6 @@ public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, Jpa
 			@Param("endDate") LocalDate endDate,
 			@Param("startDate") LocalDate startDate);
 
-	List<Fieldwork> findAllByInitPlannedDateAfterAndAlchemerIdIsNotNull(LocalDate date);
+	@Query("SELECT DISTINCT f FROM Fieldwork f WHERE f.initPlannedDate > :date AND SIZE(f.alchemerId) > 0")
+	List<Fieldwork> findAllByInitPlannedDateAfterAndAlchemerIdIsNotNull(@Param("date") LocalDate date);
 }

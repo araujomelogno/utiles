@@ -52,6 +52,23 @@ public class AlchemerSurveyResponseHelper {
         this.objectMapper = objectMapper;
     }
 
+    public Map<Date, Integer> getCompletedSurveys(List<String> surveyIds, Date startDate, Date endDate) {
+        Map<Date, Integer> merged = new LinkedHashMap<>();
+        if (surveyIds == null) {
+            return merged;
+        }
+        for (String surveyId : surveyIds) {
+            if (surveyId == null || surveyId.isBlank()) {
+                continue;
+            }
+            Map<Date, Integer> partial = getCompletedSurveys(surveyId, startDate, endDate);
+            for (Map.Entry<Date, Integer> entry : partial.entrySet()) {
+                merged.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
+            }
+        }
+        return merged;
+    }
+
     public Map<Date, Integer> getCompletedSurveys(String surveyId, Date startDate, Date endDate) {
         Map<Date, Integer> result = new LinkedHashMap<>();
         if (startDate == null || endDate == null || startDate.after(endDate)) {

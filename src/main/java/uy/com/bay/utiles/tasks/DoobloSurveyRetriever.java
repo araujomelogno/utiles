@@ -7,6 +7,7 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -106,6 +107,23 @@ public class DoobloSurveyRetriever {
 		} catch (Exception e) {
 			LOGGER.error("Failed to process XML and save DoobloResponse for interview ID {}", interviewId, e);
 		}
+	}
+
+	public Map<Date, Integer> getCompletedSurveys(List<String> surveyIds, Date fromDate, Date toDate) {
+		Map<Date, Integer> merged = new LinkedHashMap<>();
+		if (surveyIds == null) {
+			return merged;
+		}
+		for (String surveyId : surveyIds) {
+			if (surveyId == null || surveyId.isBlank()) {
+				continue;
+			}
+			Map<Date, Integer> partial = getCompletedSurveys(surveyId, fromDate, toDate);
+			for (Map.Entry<Date, Integer> entry : partial.entrySet()) {
+				merged.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
+			}
+		}
+		return merged;
 	}
 
 	public Map<Date, Integer> getCompletedSurveys(String surveyId, Date fromDate, Date toDate) {

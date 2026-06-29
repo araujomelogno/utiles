@@ -2,8 +2,10 @@ package uy.com.bay.utiles.data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.CollectionTable;
@@ -17,6 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.TemporalType;
 import uy.com.bay.utiles.entities.BudgetEntry;
 
@@ -46,8 +49,17 @@ public class Fieldwork extends AbstractEntity {
 	@JoinColumn(name = "budget_entry_id")
 	private BudgetEntry budgetEntry;
 
-	private String doobloId;
-	private String alchemerId;
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "fieldwork_dooblo_id", joinColumns = @JoinColumn(name = "fieldwork_id"))
+	@OrderColumn(name = "id_order")
+	@Column(name = "dooblo_id")
+	private List<String> doobloId = new ArrayList<>();
+
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "fieldwork_alchemer_id", joinColumns = @JoinColumn(name = "fieldwork_id"))
+	@OrderColumn(name = "id_order")
+	@Column(name = "alchemer_id")
+	private List<String> alchemerId = new ArrayList<>();
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "fieldwork_completed_by_month", joinColumns = @JoinColumn(name = "fieldwork_id"))
@@ -56,20 +68,20 @@ public class Fieldwork extends AbstractEntity {
 	@Column(name = "completed")
 	private Map<Date, Integer> completedByMonth = new HashMap<>();
 
-	public String getDoobloId() {
+	public List<String> getDoobloId() {
 		return doobloId;
 	}
 
-	public void setDoobloId(String doobloId) {
-		this.doobloId = doobloId;
+	public void setDoobloId(List<String> doobloId) {
+		this.doobloId = doobloId != null ? doobloId : new ArrayList<>();
 	}
 
-	public String getAlchemerId() {
+	public List<String> getAlchemerId() {
 		return alchemerId;
 	}
 
-	public void setAlchemerId(String alchemerId) {
-		this.alchemerId = alchemerId;
+	public void setAlchemerId(List<String> alchemerId) {
+		this.alchemerId = alchemerId != null ? alchemerId : new ArrayList<>();
 	}
 
 	
