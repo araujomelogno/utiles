@@ -228,11 +228,16 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 
 		delete.addClickListener(e -> {
 			if (this.fieldwork != null) {
-				fieldworkService.delete(this.fieldwork.getId());
-				clearForm();
-				refreshGrid();
-				Notification.show("Solicitud de campo eliminada.");
-				UI.getCurrent().navigate(FieldworksView.class);
+				try {
+					fieldworkService.delete(this.fieldwork.getId());
+					clearForm();
+					refreshGrid();
+					Notification.show("Solicitud de campo eliminada.");
+					UI.getCurrent().navigate(FieldworksView.class);
+				} catch (Exception ex) {
+					Notification.show("No se pudo eliminar la solicitud de campo: " + ex.getMessage(), 5000,
+							Notification.Position.MIDDLE);
+				}
 			}
 		});
 	}
