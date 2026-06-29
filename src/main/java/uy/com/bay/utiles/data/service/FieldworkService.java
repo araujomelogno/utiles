@@ -1,6 +1,8 @@
 package uy.com.bay.utiles.data.service;
 
 import org.hibernate.Hibernate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,6 +21,8 @@ import java.util.Optional;
 
 @Service
 public class FieldworkService {
+
+    private static final Logger logger = LoggerFactory.getLogger(FieldworkService.class);
 
     private final FieldworkRepository repository;
     private final DoobloResponseRepository doobloResponseRepository;
@@ -41,27 +45,47 @@ public class FieldworkService {
 
     @Transactional
     public void delete(Long id) {
-        repository.findById(id).ifPresent(fieldwork -> {
+        if (id == null) {
+            return;
+        }
+        Fieldwork fieldwork = repository.findById(id).orElse(null);
+        if (fieldwork == null) {
+            logger.warn("delete: no se encontro Fieldwork con id={}", id);
+            return;
+        }
+        try {
             // Las respuestas de encuestas referencian al fieldwork mediante una FK; se
             // desvinculan (sin borrar los datos de encuesta) para no violar la restriccion.
             doobloResponseRepository.clearFieldwork(id);
             alchemerSurveyResponseRepository.clearFieldwork(id);
 
-            // El Study expone la coleccion con cascade = ALL. Si el fieldwork sigue en ella
-            // al hacer flush, Hibernate intenta re-guardarlo ("deleted object would be
-            // re-saved by cascade"), por lo que hay que quitarlo antes de eliminarlo.
+            // Romper la asociacion por ambos lados. El Study expone la coleccion con
+            // cascade = ALL: si el fieldwork sigue referenciado al hacer flush, Hibernate
+            // intenta re-guardarlo ("deleted object would be re-saved by cascade"). Se
+            // quita de las colecciones inversas y se anulan los lados propietarios (FK).
             Study study = fieldwork.getStudy();
             if (study != null && study.getFieldworks() != null) {
-                study.getFieldworks().remove(fieldwork);
+                study.getFieldworks().removeIf(f -> id.equals(f.getId()));
             }
+            fieldwork.setStudy(null);
 
             BudgetEntry budgetEntry = fieldwork.getBudgetEntry();
             if (budgetEntry != null && budgetEntry.getFieldworks() != null) {
-                budgetEntry.getFieldworks().remove(fieldwork);
+                budgetEntry.getFieldworks().removeIf(f -> id.equals(f.getId()));
             }
+            fieldwork.setBudgetEntry(null);
+
+            // Persistir la desvinculacion (FK study_id / budget_entry_id en null) antes
+            // de eliminar, para que el DELETE no choque con el grafo de cascada.
+            repository.saveAndFlush(fieldwork);
 
             repository.delete(fieldwork);
-        });
+            repository.flush();
+            logger.info("delete: Fieldwork id={} eliminado correctamente", id);
+        } catch (RuntimeException e) {
+            logger.error("delete: error al eliminar Fieldwork id={}", id, e);
+            throw e;
+        }
     }
 
     public Page<Fieldwork> list(Pageable pageable) {
