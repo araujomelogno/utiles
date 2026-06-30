@@ -55,4 +55,30 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 
 	@Query("SELECT st.audioContent FROM SupervisionTask st WHERE st.id = :id")
 	byte[] findAudioContentById(@Param("id") Long id);
+
+	/** Cantidad de proyectos distintos (valores distintos de alchemerStudyName). */
+	@Query("SELECT COUNT(DISTINCT st.alchemerStudyName) FROM SupervisionTask st WHERE st.alchemerStudyName IS NOT NULL")
+	long countDistinctAlchemerStudyName();
+
+	/** Identificadores de encuesta (alchemerSuerveyId) distintos presentes en las tareas. */
+	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st WHERE st.alchemerSuerveyId IS NOT NULL")
+	List<Integer> findDistinctAlchemerSuerveyIds();
+
+	/** Promedio del puntaje global (aiScore) sobre todas las tareas. */
+	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st")
+	Double averageAiScore();
+
+	/** Proyección de fecha de audio y puntaje, para agrupar la evolución por mes. */
+	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore FROM SupervisionTask st WHERE st.audioDate IS NOT NULL")
+	List<Tuple> findAudioDateAndAiScore();
+
+	/** Promedio de cada dimensión de calidad (para el gráfico de radar). */
+	@Query("SELECT AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
+			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st")
+	Tuple findAverageDimensionScores();
+
+	/** Promedio del puntaje global agrupado por proyecto (alchemerStudyName). */
+	@Query("SELECT st.alchemerStudyName as studyName, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
+			+ "WHERE st.alchemerStudyName IS NOT NULL GROUP BY st.alchemerStudyName ORDER BY st.alchemerStudyName")
+	List<Tuple> findAverageAiScoreByStudy();
 }
