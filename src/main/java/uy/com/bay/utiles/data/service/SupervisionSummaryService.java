@@ -18,6 +18,8 @@ import uy.com.bay.utiles.data.repository.FieldworkRepository;
 import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
+import uy.com.bay.utiles.dto.SupervisionSurveyorReportDTO;
+import uy.com.bay.utiles.dto.SupervisionSurveyorReportDTO.SurveyorProfile;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.MonthScore;
@@ -118,6 +120,48 @@ public class SupervisionSummaryService {
 
 		// Puntaje global por encuestador.
 		dto.setScoreBySurveyor(computeScoreBySurveyor(studyName));
+
+		return dto;
+	}
+
+	/**
+	 * Indicadores del reporte por encuestador: ranking por puntaje global promedio y
+	 * el perfil por dimensión del mejor encuestador frente al que requiere apoyo.
+	 */
+	@Transactional(readOnly = true)
+	public SupervisionSurveyorReportDTO computeSurveyorReport() {
+		SupervisionSurveyorReportDTO dto = new SupervisionSurveyorReportDTO();
+
+		List<SurveyorScore> ranking = new ArrayList<>();
+		Tuple bestTuple = null;
+		Tuple worstTuple = null;
+		double bestScore = Double.NEGATIVE_INFINITY;
+		double worstScore = Double.POSITIVE_INFINITY;
+
+		for (Tuple tuple : supervisionTaskRepository.findSurveyorStats()) {
+			String surveyor = tuple.get("surveyor", String.class);
+			double average = value(tuple, "avgScore");
+			ranking.add(new SurveyorScore(surveyor, round1(average)));
+			if (average > bestScore) {
+				bestScore = average;
+				bestTuple = tuple;
+			}
+			if (average < worstScore) {
+				worstScore = average;
+				worstTuple = tuple;
+			}
+		}
+
+		// Ranking de mayor a menor puntaje global promedio.
+		ranking.sort((a, b) -> Double.compare(b.score(), a.score()));
+		dto.setRanking(ranking);
+
+		if (bestTuple != null) {
+			dto.setBest(new SurveyorProfile(bestTuple.get("surveyor", String.class), toDimensionScores(bestTuple)));
+		}
+		if (worstTuple != null) {
+			dto.setWorst(new SurveyorProfile(worstTuple.get("surveyor", String.class), toDimensionScores(worstTuple)));
+		}
 
 		return dto;
 	}

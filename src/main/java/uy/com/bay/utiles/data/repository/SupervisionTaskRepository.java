@@ -118,4 +118,15 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "WHERE st.surveyor IS NOT NULL AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
 			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
 	List<Tuple> findAverageAiScoreBySurveyor(@Param("studyName") String studyName);
+
+	/**
+	 * Estadísticas por encuestador: promedio del puntaje global y promedio de cada
+	 * dimensión, agrupados por surveyor. Alimenta el ranking y el radar mejor/peor.
+	 */
+	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore, "
+			+ "AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
+			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez "
+			+ "FROM SupervisionTask st WHERE st.surveyor IS NOT NULL "
+			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
+	List<Tuple> findSurveyorStats();
 }
