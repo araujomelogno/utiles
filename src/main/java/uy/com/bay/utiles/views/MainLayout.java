@@ -279,6 +279,13 @@ public class MainLayout extends AppLayout {
 		toolsItem.addItem(supervisionTasksItem);
 		nav.addItem(toolsItem);
 
+		SideNavItem supervisionNavItem = new SideNavItem("Supervisión");
+		supervisionNavItem.setPrefixComponent(new Icon("vaadin", "eye"));
+		SideNavItem metodologiaItem = new SideNavItem("Metodología", "supervision-methodology");
+		metodologiaItem.setPrefixComponent(new Icon("vaadin", "chart"));
+		supervisionNavItem.addItem(metodologiaItem);
+		nav.addItem(supervisionNavItem);
+
 		SideNavItem metaItem = new SideNavItem("Meta");
 		metaItem.setPrefixComponent(new Icon("vaadin", "money"));
 		SideNavItem listarCostosItem = new SideNavItem("Listar costos", "meta-costs");
