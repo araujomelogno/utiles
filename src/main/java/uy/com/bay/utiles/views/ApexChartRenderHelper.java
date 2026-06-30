@@ -28,8 +28,11 @@ public final class ApexChartRenderHelper {
 	 *                view's own element)
 	 */
 	public static void scheduleResize(Element element) {
+		// Fire several times: after the next two animation frames (fast path) and at a
+		// few delays, to also cover slow first paints / data-driven charts that finish
+		// laying out a bit later.
 		element.executeJs("const fire = () => window.dispatchEvent(new Event('resize'));"
 				+ "requestAnimationFrame(() => requestAnimationFrame(fire));"
-				+ "setTimeout(fire, 200);");
+				+ "[150, 500, 1000].forEach(d => setTimeout(fire, d));");
 	}
 }
