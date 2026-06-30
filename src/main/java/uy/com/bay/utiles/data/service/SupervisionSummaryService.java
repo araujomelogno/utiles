@@ -16,6 +16,8 @@ import jakarta.persistence.Tuple;
 import uy.com.bay.utiles.data.Fieldwork;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
 import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
+import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
+import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.MonthScore;
@@ -54,7 +56,7 @@ public class SupervisionSummaryService {
 
 		// Encuestas completas: a partir de los alchemerSuerveyId distintos de las
 		// tareas se recuperan los fieldworks que los referencian y se suma getCompleted.
-		long completed = computeCompletedSurveys();
+		long completed = computeCompletedSurveys(supervisionTaskRepository.findDistinctAlchemerSuerveyIds());
 		dto.setCompletedSurveys(completed);
 
 		// Nivel de supervisión: cociente entre supervisadas y completas.
@@ -76,8 +78,61 @@ public class SupervisionSummaryService {
 		return dto;
 	}
 
-	private long computeCompletedSurveys() {
-		List<Integer> surveyIds = supervisionTaskRepository.findDistinctAlchemerSuerveyIds();
+	/** Nombres de proyecto distintos para alimentar el combobox del reporte. */
+	@Transactional(readOnly = true)
+	public List<String> findStudyNames() {
+		return supervisionTaskRepository.findDistinctAlchemerStudyNames();
+	}
+
+	/**
+	 * Indicadores del reporte por proyecto. Cuando {@code studyName} es {@code null}
+	 * se consideran todas las tareas de supervisión ("Todos los estudios").
+	 */
+	@Transactional(readOnly = true)
+	public SupervisionStudyReportDTO computeStudyReport(String studyName) {
+		SupervisionStudyReportDTO dto = new SupervisionStudyReportDTO();
+
+		// Encuestas supervisadas: cantidad de tareas del proyecto.
+		long supervised = supervisionTaskRepository.countByStudy(studyName);
+		dto.setSupervisedSurveys(supervised);
+
+		// Encuestas completas: suma de getCompleted de los fieldworks asociados a los
+		// alchemerSuerveyId distintos del proyecto.
+		long completed = computeCompletedSurveys(
+				supervisionTaskRepository.findDistinctAlchemerSuerveyIdsByStudy(studyName));
+		dto.setCompletedSurveys(completed);
+
+		// Nivel de supervisión: cociente entre supervisadas y completas.
+		dto.setSupervisionLevel(completed > 0 ? (double) supervised / completed : 0d);
+
+		// Puntaje global promedio del proyecto.
+		Double avg = supervisionTaskRepository.averageAiScoreByStudy(studyName);
+		dto.setGlobalScoreAverage(avg != null ? avg : 0d);
+
+		// Promedio por encuestador: supervisadas / encuestadores distintos.
+		long surveyors = supervisionTaskRepository.countDistinctSurveyorByStudy(studyName);
+		dto.setAveragePerSurveyor(surveyors > 0 ? (double) supervised / surveyors : 0d);
+
+		// Dimensiones del proyecto (promedios).
+		dto.setDimensionScores(toDimensionScores(supervisionTaskRepository.findAverageDimensionScoresByStudy(studyName)));
+
+		// Puntaje global por encuestador.
+		dto.setScoreBySurveyor(computeScoreBySurveyor(studyName));
+
+		return dto;
+	}
+
+	private List<SurveyorScore> computeScoreBySurveyor(String studyName) {
+		List<SurveyorScore> scores = new ArrayList<>();
+		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreBySurveyor(studyName)) {
+			String surveyor = tuple.get("surveyor", String.class);
+			Double average = tuple.get("avgScore", Double.class);
+			scores.add(new SurveyorScore(surveyor, round1(average != null ? average : 0d)));
+		}
+		return scores;
+	}
+
+	private long computeCompletedSurveys(List<Integer> surveyIds) {
 		if (surveyIds.isEmpty()) {
 			return 0;
 		}
@@ -123,7 +178,10 @@ public class SupervisionSummaryService {
 	}
 
 	private DimensionScores computeDimensionScores() {
-		Tuple tuple = supervisionTaskRepository.findAverageDimensionScores();
+		return toDimensionScores(supervisionTaskRepository.findAverageDimensionScores());
+	}
+
+	private DimensionScores toDimensionScores(Tuple tuple) {
 		if (tuple == null) {
 			return new DimensionScores(0, 0, 0, 0);
 		}

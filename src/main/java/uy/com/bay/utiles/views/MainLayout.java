@@ -284,6 +284,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem resumenEjecutivoItem = new SideNavItem("Resumen ejecutivo", "supervision-summary");
 		resumenEjecutivoItem.setPrefixComponent(new Icon("vaadin", "dashboard"));
 		supervisionMenuItem.addItem(resumenEjecutivoItem);
+		SideNavItem reportePorProyectoItem = new SideNavItem("Reporte por proyecto", "supervision-study-report");
+		reportePorProyectoItem.setPrefixComponent(new Icon("vaadin", "chart-grid"));
+		supervisionMenuItem.addItem(reportePorProyectoItem);
 		SideNavItem metodologiaItem = new SideNavItem("Metodología", "supervision-methodology");
 		metodologiaItem.setPrefixComponent(new Icon("vaadin", "book"));
 		supervisionMenuItem.addItem(metodologiaItem);

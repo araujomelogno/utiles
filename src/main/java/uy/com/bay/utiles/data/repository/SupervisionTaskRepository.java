@@ -81,4 +81,41 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	@Query("SELECT st.alchemerStudyName as studyName, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
 			+ "WHERE st.alchemerStudyName IS NOT NULL GROUP BY st.alchemerStudyName ORDER BY st.alchemerStudyName")
 	List<Tuple> findAverageAiScoreByStudy();
+
+	// ---- Reporte por proyecto (filtrado por alchemerStudyName; null = todos) ----
+
+	/** Nombres de proyecto (alchemerStudyName) distintos, para el combobox. */
+	@Query("SELECT DISTINCT st.alchemerStudyName FROM SupervisionTask st WHERE st.alchemerStudyName IS NOT NULL "
+			+ "ORDER BY st.alchemerStudyName")
+	List<String> findDistinctAlchemerStudyNames();
+
+	/** Identificadores de encuesta distintos del proyecto seleccionado (null = todos). */
+	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st WHERE st.alchemerSuerveyId IS NOT NULL "
+			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
+	List<Integer> findDistinctAlchemerSuerveyIdsByStudy(@Param("studyName") String studyName);
+
+	/** Cantidad de tareas de supervisión del proyecto seleccionado (null = todos). */
+	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
+	long countByStudy(@Param("studyName") String studyName);
+
+	/** Promedio del puntaje global del proyecto seleccionado (null = todos). */
+	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
+	Double averageAiScoreByStudy(@Param("studyName") String studyName);
+
+	/** Cantidad de encuestadores distintos del proyecto seleccionado (null = todos). */
+	@Query("SELECT COUNT(DISTINCT st.surveyor) FROM SupervisionTask st WHERE st.surveyor IS NOT NULL "
+			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
+	long countDistinctSurveyorByStudy(@Param("studyName") String studyName);
+
+	/** Promedio de cada dimensión de calidad del proyecto seleccionado (null = todos). */
+	@Query("SELECT AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
+			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st "
+			+ "WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
+	Tuple findAverageDimensionScoresByStudy(@Param("studyName") String studyName);
+
+	/** Promedio del puntaje global agrupado por encuestador del proyecto seleccionado (null = todos). */
+	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
+			+ "WHERE st.surveyor IS NOT NULL AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
+			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
+	List<Tuple> findAverageAiScoreBySurveyor(@Param("studyName") String studyName);
 }
