@@ -144,10 +144,17 @@ public class SupervisionView extends VerticalLayout {
 			task.setMobilePhone(parts[2]);
 		}
 		if (parts.length > 3) {
-			task.setPhoneDisposition(parts[3]);
+			String aux = parts[3];
+			String[] part2 = aux.split("_");
+			if (part2.length == 2) {
+				task.setPhoneDisposition(part2[0]);
+				task.setSurveyDisposition(part2[1]);
+			}
+
 		}
+
 		if (parts.length > 4) {
-			task.setSurveyDisposition(parts[4]);
+			task.setStudyName(parts[4]);
 		}
 	}
 }

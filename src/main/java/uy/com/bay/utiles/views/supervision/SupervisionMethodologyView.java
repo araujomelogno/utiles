@@ -24,16 +24,18 @@ import uy.com.bay.utiles.views.MainLayout;
 
 /**
  * Read-only methodology view that mirrors the "Metodología" tab of the
- * supervision dashboard mock-up. It explains the supervision scoring rubric: the
- * weight of each dimension (rendered as an ApexCharts donut), how the global
- * score is computed, the quality levels and a card per dimension.
+ * supervision dashboard mock-up. It explains the supervision scoring rubric:
+ * the weight of each dimension (rendered as an ApexCharts donut), how the
+ * global score is computed, the quality levels and a card per dimension.
  */
 @PageTitle("Metodología")
 @Route(value = "supervision-methodology", layout = MainLayout.class)
 @RolesAllowed("ADMIN")
 public class SupervisionMethodologyView extends VerticalLayout {
 
-	/** A single rubric dimension: name, weight (%), accent color and description. */
+	/**
+	 * A single rubric dimension: name, weight (%), accent color and description.
+	 */
 	private record RubricDimension(String name, int weight, String color, String description) {
 	}
 
@@ -41,9 +43,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 	private record QualityLevel(String label, String color) {
 	}
 
-	private static final List<RubricDimension> RUBRIC = List.of(
-			new RubricDimension("Cobertura", 40, "#2E6DB4",
-					"Porcentaje de ítems encontrados y leídos completos, incluyendo introducción e instrucciones obligatorias del cuestionario."),
+	private static final List<RubricDimension> RUBRIC = List.of(new RubricDimension("Cobertura", 40, "#2E6DB4",
+			"Porcentaje de ítems encontrados y leídos completos, incluyendo introducción e instrucciones obligatorias del cuestionario."),
 			new RubricDimension("Fidelidad / Exactitud", 35, "#2F8F6B",
 					"Mantiene significado, opciones, escala, condiciones y el wording crítico de cada pregunta."),
 			new RubricDimension("Neutralidad y protocolo", 15, "#E4A11B",
@@ -51,10 +52,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 			new RubricDimension("Fluidez operacional", 10, "#8A6FB0",
 					"Orden lógico, sin confusiones ni repeticiones excesivas durante la entrevista."));
 
-	private static final List<QualityLevel> LEVELS = List.of(
-			new QualityLevel("Excelente ≥ 85", "#2F8F6B"),
-			new QualityLevel("Sólido 70–84", "#2E6DB4"),
-			new QualityLevel("Atención 55–69", "#D9982B"),
+	private static final List<QualityLevel> LEVELS = List.of(new QualityLevel("Excelente ≥ 85", "#2F8F6B"),
+			new QualityLevel("Sólido 70–84", "#2E6DB4"), new QualityLevel("Atención 55–69", "#D9982B"),
 			new QualityLevel("Crítico < 55", "#C5503F"));
 
 	public SupervisionMethodologyView() {
@@ -72,13 +71,10 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		Div header = new Div();
 		header.getStyle().set("margin-bottom", "16px");
 
-		H2 title = new H2("Metodología");
-		title.getStyle().set("margin", "0").set("color", "#102A4E").set("font-size", "22px");
-
 		Span subtitle = new Span("Rúbrica y cálculo del puntaje de supervisión");
 		subtitle.getStyle().set("color", "#8A93A3").set("font-size", "13px");
 
-		header.add(title, subtitle);
+		header.add(subtitle);
 		return header;
 	}
 
@@ -112,15 +108,11 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		Double[] series = RUBRIC.stream().map(r -> (double) r.weight()).toArray(Double[]::new);
 		String[] colors = RUBRIC.stream().map(RubricDimension::color).toArray(String[]::new);
 
-		ApexCharts chart = ApexChartsBuilder.get()
-				.withChart(ChartBuilder.get().withType(Type.DONUT).build())
-				.withLabels(labels)
-				.withColors(colors)
-				.withSeries(series)
+		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.DONUT).build())
+				.withLabels(labels).withColors(colors).withSeries(series)
 				.withStroke(StrokeBuilder.get().withWidth(2.0).withColors("#ffffff").build())
 				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
-				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build())
-				.build();
+				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build()).build();
 		chart.setWidth("100%");
 		chart.setHeight("240px");
 		return chart;
@@ -139,8 +131,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 						+ "El <strong style=\"color:#102A4E;\">Puntaje Global</strong> es la suma ponderada de las "
 						+ "dimensiones según sus pesos. Permite comparar encuestadores dentro de un proyecto, entre "
 						+ "proyectos, de forma acumulada y a lo largo del tiempo.");
-		explanation.getStyle().set("font-size", "14px").set("color", "#4A5366").set("line-height", "1.65")
-				.set("margin", "12px 0 16px");
+		explanation.getStyle().set("font-size", "14px").set("color", "#4A5366").set("line-height", "1.65").set("margin",
+				"12px 0 16px");
 		card.add(explanation);
 
 		Html formula = new Html("<div style=\"background:#F4F7FB;border:1px solid #E1E6EE;border-radius:9px;"
@@ -155,8 +147,7 @@ public class SupervisionMethodologyView extends VerticalLayout {
 
 	private Div buildLevels() {
 		Div levels = new Div();
-		levels.getStyle().set("display", "flex").set("gap", "8px").set("flex-wrap", "wrap")
-				.set("margin-top", "18px");
+		levels.getStyle().set("display", "flex").set("gap", "8px").set("flex-wrap", "wrap").set("margin-top", "18px");
 
 		boolean first = true;
 		for (QualityLevel level : LEVELS) {
@@ -169,8 +160,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 			first = false;
 
 			Span dot = new Span();
-			dot.getStyle().set("width", "11px").set("height", "11px").set("border-radius", "3px")
-					.set("background", level.color());
+			dot.getStyle().set("width", "11px").set("height", "11px").set("border-radius", "3px").set("background",
+					level.color());
 			item.add(dot, new Span(level.label()));
 			levels.add(item);
 		}
@@ -195,8 +186,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 				.set("flex-direction", "column").set("gap", "10px");
 
 		Div headerRow = new Div();
-		headerRow.getStyle().set("display", "flex").set("align-items", "baseline")
-				.set("justify-content", "space-between");
+		headerRow.getStyle().set("display", "flex").set("align-items", "baseline").set("justify-content",
+				"space-between");
 
 		Span name = new Span(dimension.name());
 		name.getStyle().set("font-size", "14px").set("font-weight", "700").set("color", "#102A4E");
@@ -231,8 +222,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 
 	private Span cardCaption(String text) {
 		Span span = new Span(text);
-		span.getStyle().set("display", "block").set("font-size", "12px").set("color", "#8A93A3")
-				.set("margin", "2px 0 10px");
+		span.getStyle().set("display", "block").set("font-size", "12px").set("color", "#8A93A3").set("margin",
+				"2px 0 10px");
 		return span;
 	}
 }

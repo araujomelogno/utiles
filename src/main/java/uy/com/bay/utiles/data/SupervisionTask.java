@@ -33,6 +33,8 @@ public class SupervisionTask extends AbstractEntity {
 	private String phoneDisposition;
 
 	private String surveyDisposition;
+	
+	private String studyName;
 
 	@Lob
 	private byte[] audioContent;
@@ -353,5 +355,13 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setSurveyDisposition(String surveyDisposition) {
 		this.surveyDisposition = surveyDisposition;
+	}
+
+	public String getStudyName() {
+		return studyName;
+	}
+
+	public void setStudyName(String studyName) {
+		this.studyName = studyName;
 	}
 }
