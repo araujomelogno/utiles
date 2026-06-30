@@ -10,6 +10,7 @@ import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
 import com.github.appreciated.apexcharts.config.builder.StrokeBuilder;
 import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.legend.Position;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -20,6 +21,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 import uy.com.bay.utiles.views.MainLayout;
 
 /**
@@ -67,6 +69,19 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		add(buildRubricCards());
 	}
 
+	/**
+	 * ApexCharts measures its container size at render time. When the user navigates
+	 * straight to this view, the donut can be drawn before the layout has settled
+	 * (drawer animation / container still 0px wide), producing an empty SVG that only
+	 * appears after visiting other views. Once attached and painted we ask ApexCharts
+	 * to recompute its size; the chart keeps width:100% so it stays responsive.
+	 */
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		ApexChartRenderHelper.scheduleResize(getElement());
+	}
+
 	private Div buildHeader() {
 		Div header = new Div();
 		header.getStyle().set("margin-bottom", "16px");
@@ -95,8 +110,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		card.add(cardCaption("Ponderación de cada dimensión"));
 
 		Div chartContainer = new Div();
-		chartContainer.getStyle().set("height", "240px").set("display", "flex").set("align-items", "center")
-				.set("justify-content", "center");
+		chartContainer.setWidthFull();
+		chartContainer.setMinHeight("240px");
 		chartContainer.add(buildWeightsChart());
 		card.add(chartContainer);
 
