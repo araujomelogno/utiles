@@ -1,6 +1,7 @@
 package uy.com.bay.utiles.data.repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,9 @@ import uy.com.bay.utiles.data.Study;
 public interface FieldworkRepository extends JpaRepository<Fieldwork, Long>, JpaSpecificationExecutor<Fieldwork> {
 	@Query("SELECT f FROM Fieldwork f JOIN f.alchemerId a WHERE a = :alchemerId")
 	Optional<Fieldwork> findByAlchemerId(@Param("alchemerId") String alchemerId);
+
+	@Query("SELECT DISTINCT f FROM Fieldwork f JOIN f.alchemerId a WHERE a IN :alchemerIds")
+	List<Fieldwork> findDistinctByAlchemerIdIn(@Param("alchemerIds") Collection<String> alchemerIds);
 
 	@Query("SELECT f FROM Fieldwork f JOIN f.doobloId d WHERE d = :doobloId")
 	Optional<Fieldwork> findByDoobloId(@Param("doobloId") String doobloId);
