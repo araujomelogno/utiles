@@ -28,6 +28,7 @@ import com.github.appreciated.apexcharts.config.plotoptions.xmap.ColorScale;
 import com.github.appreciated.apexcharts.config.plotoptions.xmap.Ranges;
 import com.github.appreciated.apexcharts.config.xaxis.XAxisType;
 import com.github.appreciated.apexcharts.helper.Series;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -45,6 +46,7 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.JobOrder;
 import uy.com.bay.utiles.data.Provider;
 import uy.com.bay.utiles.services.JobOrderService;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 
 @PageTitle("Disponibilidad de proveedores")
 @Route("joborder-availability")
@@ -118,6 +120,14 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 		add(chartContainer);
 
 		rebuildChart();
+	}
+
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		// ApexCharts can be drawn at 0px width when the view is opened directly;
+		// force a resize once attached so the heatmap renders reliably.
+		ApexChartRenderHelper.scheduleResize(getElement());
 	}
 
 	private void rebuildChart() {
