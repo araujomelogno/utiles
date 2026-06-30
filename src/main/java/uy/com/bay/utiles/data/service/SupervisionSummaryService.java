@@ -20,6 +20,7 @@ import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
 import uy.com.bay.utiles.dto.SupervisionSurveyorReportDTO;
 import uy.com.bay.utiles.dto.SupervisionSurveyorReportDTO.SurveyorProfile;
+import uy.com.bay.utiles.dto.SupervisionTimelineReportDTO;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.MonthScore;
@@ -166,6 +167,49 @@ public class SupervisionSummaryService {
 		return dto;
 	}
 
+	/** Nombres de encuestador distintos para el combobox de la evolución temporal. */
+	@Transactional(readOnly = true)
+	public List<String> findSurveyorNames() {
+		return supervisionTaskRepository.findDistinctSurveyors();
+	}
+
+	/**
+	 * Evolución temporal del encuestador seleccionado (null = todos): promedio del
+	 * puntaje global y de cada dimensión, agrupados por mes del audioDate.
+	 */
+	@Transactional(readOnly = true)
+	public SupervisionTimelineReportDTO computeTimelineReport(String surveyor) {
+		// Acumuladores por año-mes: [sumScore, sumCob, sumFid, sumNeu, sumFlu, count].
+		Map<YearMonth, double[]> byMonth = new TreeMap<>();
+		for (Tuple tuple : supervisionTaskRepository.findMonthlyStatsBySurveyor(surveyor)) {
+			Date audioDate = tuple.get("audioDate", Date.class);
+			if (audioDate == null) {
+				continue;
+			}
+			YearMonth month = YearMonth.from(audioDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+			double[] acc = byMonth.computeIfAbsent(month, k -> new double[6]);
+			acc[0] += value(tuple, "aiScore");
+			acc[1] += intValue(tuple, "cobertura");
+			acc[2] += intValue(tuple, "fidelidad");
+			acc[3] += intValue(tuple, "neutralidad");
+			acc[4] += intValue(tuple, "fluidez");
+			acc[5] += 1;
+		}
+
+		SupervisionTimelineReportDTO dto = new SupervisionTimelineReportDTO();
+		for (Map.Entry<YearMonth, double[]> entry : byMonth.entrySet()) {
+			double[] acc = entry.getValue();
+			double n = acc[5];
+			dto.getMonths().add(monthLabel(entry.getKey()));
+			dto.getGlobalScore().add(round1(n > 0 ? acc[0] / n : 0d));
+			dto.getCobertura().add(round1(n > 0 ? acc[1] / n : 0d));
+			dto.getFidelidad().add(round1(n > 0 ? acc[2] / n : 0d));
+			dto.getNeutralidad().add(round1(n > 0 ? acc[3] / n : 0d));
+			dto.getFluidez().add(round1(n > 0 ? acc[4] / n : 0d));
+		}
+		return dto;
+	}
+
 	private List<SurveyorScore> computeScoreBySurveyor(String studyName) {
 		List<SurveyorScore> scores = new ArrayList<>();
 		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreBySurveyor(studyName)) {
@@ -245,6 +289,11 @@ public class SupervisionSummaryService {
 
 	private double value(Tuple tuple, String alias) {
 		Double v = tuple.get(alias, Double.class);
+		return v != null ? v : 0d;
+	}
+
+	private double intValue(Tuple tuple, String alias) {
+		Integer v = tuple.get(alias, Integer.class);
 		return v != null ? v : 0d;
 	}
 

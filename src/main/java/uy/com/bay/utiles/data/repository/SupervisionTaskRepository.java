@@ -129,4 +129,21 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "FROM SupervisionTask st WHERE st.surveyor IS NOT NULL "
 			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
 	List<Tuple> findSurveyorStats();
+
+	// ---- Evolución temporal (filtrado por surveyor; null = todos) ----
+
+	/** Encuestadores (surveyor) distintos, para el combobox de la evolución temporal. */
+	@Query("SELECT DISTINCT st.surveyor FROM SupervisionTask st WHERE st.surveyor IS NOT NULL ORDER BY st.surveyor")
+	List<String> findDistinctSurveyors();
+
+	/**
+	 * Proyección de fecha de audio, puntaje global y dimensiones del encuestador
+	 * seleccionado (null = todos), para agrupar la evolución por mes en memoria.
+	 */
+	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore, "
+			+ "st.scoreCobertura as cobertura, st.scoreFidelidad as fidelidad, "
+			+ "st.scoreNeutralidad as neutralidad, st.scoreFluidez as fluidez "
+			+ "FROM SupervisionTask st WHERE st.audioDate IS NOT NULL "
+			+ "AND (:surveyor IS NULL OR st.surveyor = :surveyor)")
+	List<Tuple> findMonthlyStatsBySurveyor(@Param("surveyor") String surveyor);
 }

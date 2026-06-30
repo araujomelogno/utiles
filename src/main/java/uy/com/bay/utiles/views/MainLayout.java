@@ -291,6 +291,9 @@ public class MainLayout extends AppLayout {
 				"supervision-surveyor-report");
 		resultadosPorEncuestadorItem.setPrefixComponent(new Icon("vaadin", "user-check"));
 		supervisionMenuItem.addItem(resultadosPorEncuestadorItem);
+		SideNavItem evolucionTemporalItem = new SideNavItem("Evolución temporal", "supervision-timeline-report");
+		evolucionTemporalItem.setPrefixComponent(new Icon("vaadin", "line-chart"));
+		supervisionMenuItem.addItem(evolucionTemporalItem);
 		SideNavItem metodologiaItem = new SideNavItem("Metodología", "supervision-methodology");
 		metodologiaItem.setPrefixComponent(new Icon("vaadin", "book"));
 		supervisionMenuItem.addItem(metodologiaItem);
