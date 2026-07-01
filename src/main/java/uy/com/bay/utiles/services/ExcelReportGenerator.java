@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class ExcelReportGenerator {
 
@@ -69,7 +70,8 @@ public class ExcelReportGenerator {
         }
     }
 
-    public static ByteArrayOutputStream generateSurveyorExcel(List<Surveyor> surveyors) throws IOException {
+    public static ByteArrayOutputStream generateSurveyorExcel(List<Surveyor> surveyors,
+            Map<Long, Double> transferSumsBySurveyorId) throws IOException {
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XSSFSheet sheet = workbook.createSheet("Encuestadores");
 
@@ -90,7 +92,16 @@ public class ExcelReportGenerator {
                 Row row = sheet.createRow(rowNum++);
                 int cellNum = 0;
                 for (Field field : surveyorFields) {
-                    cellNum = writeFieldToCell(surveyor, field, row, cellNum, dateCellStyle);
+                    if ("balance".equals(field.getName())) {
+                        double transferSum = 0.0;
+                        if (transferSumsBySurveyorId != null && surveyor.getId() != null) {
+                            transferSum = transferSumsBySurveyorId.getOrDefault(surveyor.getId(), 0.0);
+                        }
+                        Cell cell = row.createCell(cellNum++);
+                        cell.setCellValue(surveyor.getBalance() + transferSum);
+                    } else {
+                        cellNum = writeFieldToCell(surveyor, field, row, cellNum, dateCellStyle);
+                    }
                 }
             }
 
