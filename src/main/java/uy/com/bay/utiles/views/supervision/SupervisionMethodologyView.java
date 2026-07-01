@@ -10,6 +10,7 @@ import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
 import com.github.appreciated.apexcharts.config.builder.StrokeBuilder;
 import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.legend.Position;
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -20,6 +21,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 import uy.com.bay.utiles.views.MainLayout;
 
 /**
@@ -56,6 +58,9 @@ public class SupervisionMethodologyView extends VerticalLayout {
 			new QualityLevel("Sólido 70–84", "#2E6DB4"), new QualityLevel("Atención 55–69", "#D9982B"),
 			new QualityLevel("Crítico < 55", "#C5503F"));
 
+	/** Dedicated holder for the donut; the chart is added once the view is laid out. */
+	private final Div weightsChartContainer = new Div();
+
 	public SupervisionMethodologyView() {
 		setSizeFull();
 		setPadding(true);
@@ -65,6 +70,19 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		add(buildHeader());
 		add(buildTopRow());
 		add(buildRubricCards());
+	}
+
+	/**
+	 * The ApexCharts wrapper renders blank when created before its module is loaded
+	 * and the container is laid out (the addon builds the chart once in
+	 * {@code firstUpdated()} with no reactivity). Building it after the view is laid
+	 * out reproduces the working "navigate away and back" case. The donut keeps
+	 * width:100%, so it stays responsive.
+	 */
+	@Override
+	protected void onAttach(AttachEvent attachEvent) {
+		super.onAttach(attachEvent);
+		ApexChartRenderHelper.renderDeferred(weightsChartContainer, this::buildWeightsChart);
 	}
 
 	private Div buildHeader() {
@@ -94,11 +112,10 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		card.add(cardTitle("Pesos de la rúbrica"));
 		card.add(cardCaption("Ponderación de cada dimensión"));
 
-		Div chartContainer = new Div();
-		chartContainer.setWidthFull();
-		chartContainer.setMinHeight("240px");
-		chartContainer.add(buildWeightsChart());
-		card.add(chartContainer);
+		// The chart itself is added later, in onAttach, once the container is laid out.
+		weightsChartContainer.setWidthFull();
+		weightsChartContainer.setMinHeight("240px");
+		card.add(weightsChartContainer);
 
 		return card;
 	}
