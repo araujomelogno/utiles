@@ -45,6 +45,7 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.JobOrder;
 import uy.com.bay.utiles.data.Provider;
 import uy.com.bay.utiles.services.JobOrderService;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 
 @PageTitle("Disponibilidad de proveedores")
 @Route("joborder-availability")
@@ -142,7 +143,7 @@ public class JobOrderAvailabilityView extends VerticalLayout {
 		}
 
 		ApexCharts chart = buildChart(from, to, series);
-		chartContainer.add(chart);
+		chartContainer.add(ApexChartRenderHelper.deferred(chart));
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

@@ -2,6 +2,7 @@ package uy.com.bay.utiles.views;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.SerializableSupplier;
 
@@ -19,8 +20,8 @@ import com.vaadin.flow.function.SerializableSupplier;
  * created fresh while everything is already loaded and laid out.
  *
  * <p>
- * {@link #renderDeferred} reproduces that working scenario on purpose: it waits
- * for the browser to lay out the container and then builds/adds the chart, so the
+ * Both entry points here reproduce that working scenario on purpose: the chart is
+ * attached to the DOM only after the browser has laid out its container, so the
  * wrapper is created when the module is loaded and the container has a real width.
  * The chart keeps its percentage width, so responsiveness is preserved.
  */
@@ -34,14 +35,29 @@ public final class ApexChartRenderHelper {
 	}
 
 	/**
-	 * Builds and adds an ApexCharts component into {@code chartContainer} only after
-	 * the browser has laid out that container. Must be called while the container is
-	 * attached (typically from {@code onAttach}); the container should be dedicated
-	 * to the chart, since it is cleared before the chart is added.
+	 * Wraps a chart in a full-width holder that adds it to the DOM only once its
+	 * container has been laid out. Drop-in replacement for adding the chart
+	 * directly: {@code parent.add(deferred(chart))}.
 	 *
-	 * @param chartContainer the (attached) element that will hold the chart
-	 * @param chartFactory   builds a fresh chart component; invoked once the layout
-	 *                       is ready
+	 * @param chart the chart component to render once the layout is ready
+	 * @return a holder to add to the layout in place of the chart
+	 */
+	public static Component deferred(Component chart) {
+		Div holder = new Div();
+		holder.setWidthFull();
+		renderDeferred(holder, () -> chart);
+		return holder;
+	}
+
+	/**
+	 * Builds and adds an ApexCharts component into {@code chartContainer} only after
+	 * the browser has laid out that container. The container should be dedicated to
+	 * the chart, since it is cleared before the chart is added. Safe to call while
+	 * the container is still detached: the client script runs once it is attached.
+	 *
+	 * @param chartContainer the element that will hold the chart
+	 * @param chartFactory   supplies the chart component; invoked once the layout is
+	 *                       ready
 	 */
 	public static void renderDeferred(HasComponents chartContainer, SerializableSupplier<Component> chartFactory) {
 		Element container = ((Component) chartContainer).getElement();
@@ -49,19 +65,5 @@ public final class ApexChartRenderHelper {
 			chartContainer.removeAll();
 			chartContainer.add(chartFactory.get());
 		});
-	}
-
-	/**
-	 * Schedules a window {@code resize} event after the next paints so any already
-	 * created ApexCharts recompute their dimensions. Kept for charts that are known
-	 * to be created but drawn at the wrong size.
-	 *
-	 * @param element the element used to run the client-side script (typically the
-	 *                view's own element)
-	 */
-	public static void scheduleResize(Element element) {
-		element.executeJs("const fire = () => window.dispatchEvent(new Event('resize'));"
-				+ "requestAnimationFrame(() => requestAnimationFrame(fire));"
-				+ "setTimeout(fire, 200);");
 	}
 }

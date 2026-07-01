@@ -363,12 +363,6 @@ public class MainLayout extends AppLayout {
 	protected void afterNavigation() {
 		super.afterNavigation();
 		viewTitle.setText(getCurrentPageTitle());
-		// Some client-side components (notably ApexCharts) measure their container at
-		// render time and can be drawn blank when a view is opened before the layout
-		// has settled, only appearing after navigating elsewhere. Nudging a resize
-		// after each navigation forces every chart in the loaded view (including the
-		// supervision dashboards) to recompute its size and draw.
-		ApexChartRenderHelper.scheduleResize(getElement());
 	}
 
 	@Override
