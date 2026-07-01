@@ -25,6 +25,7 @@ import uy.com.bay.utiles.data.service.SupervisionSummaryService;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 import uy.com.bay.utiles.views.MainLayout;
 
 /**
@@ -160,7 +161,7 @@ public class SupervisionStudyReportView extends VerticalLayout {
 				.withSeries(new Series<>("Promedio", values)).build();
 		chart.setWidth("100%");
 		chart.setHeight("320px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 
@@ -188,7 +189,7 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		int height = Math.max(320, scoreBySurveyor.size() * 42 + 80);
 		chart.setWidth("100%");
 		chart.setHeight(height + "px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 

@@ -27,6 +27,7 @@ import uy.com.bay.utiles.dto.SupervisionSummaryDTO;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.MonthScore;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.StudyScore;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 import uy.com.bay.utiles.views.MainLayout;
 
 /**
@@ -146,7 +147,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 				.withSeries(new Series<>("Puntaje Global", points)).build();
 		chart.setWidth("100%");
 		chart.setHeight("300px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 
@@ -171,7 +172,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build()).build();
 		chart.setWidth("100%");
 		chart.setHeight("300px");
-		chartContainer.add(chart);
+		chartContainer.add(ApexChartRenderHelper.deferred(chart));
 		card.add(chartContainer);
 		return card;
 	}
@@ -192,7 +193,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 				.withSeries(new Series<>("Promedio", values)).build();
 		chart.setWidth("100%");
 		chart.setHeight("320px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 
@@ -222,7 +223,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 		int height = Math.max(320, scoreByStudy.size() * 42 + 80);
 		chart.setWidth("100%");
 		chart.setHeight(height + "px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 

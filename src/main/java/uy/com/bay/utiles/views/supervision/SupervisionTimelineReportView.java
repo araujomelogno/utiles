@@ -23,6 +23,7 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.service.SupervisionSummaryService;
 import uy.com.bay.utiles.dto.SupervisionTimelineReportDTO;
+import uy.com.bay.utiles.views.ApexChartRenderHelper;
 import uy.com.bay.utiles.views.MainLayout;
 
 /**
@@ -116,7 +117,7 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 				.build();
 		chart.setWidth("100%");
 		chart.setHeight("320px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 
@@ -146,7 +147,7 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build()).withSeries(series).build();
 		chart.setWidth("100%");
 		chart.setHeight("340px");
-		card.add(chart);
+		card.add(ApexChartRenderHelper.deferred(chart));
 		return card;
 	}
 
