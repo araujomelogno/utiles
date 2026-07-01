@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import com.github.appreciated.apexcharts.ApexCharts;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.html.Anchor;
@@ -49,6 +51,11 @@ import uy.com.bay.utiles.views.extras.ExtrasReportDialog;
 
 @Layout
 @AnonymousAllowed
+// Force the ApexCharts addon's frontend module to load eagerly at app startup.
+// Without this it loads lazily, so on a direct page load the <apex-charts-wrapper>
+// custom element is inserted before its module is registered and never upgrades
+// (firstUpdated() never runs), leaving the chart blank until a later navigation.
+@Uses(ApexCharts.class)
 public class MainLayout extends AppLayout {
 
 	private H1 viewTitle;
