@@ -3,7 +3,9 @@ package uy.com.bay.utiles.views.surveyors;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -13,6 +15,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -20,11 +23,13 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -336,11 +341,9 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 		Button exportButton = new Button("Exportar");
 		exportButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-		Anchor exportLink = new Anchor(createSurveyorExcelStreamResource(), "");
-		exportLink.getElement().setAttribute("download", true);
-		exportLink.add(exportButton);
+		exportButton.addClickListener(e -> showExportDialog());
 
-		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton, exportLink);
+		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton, exportButton);
 		titleLayout.setWidthFull();
 		titleLayout.setAlignItems(Alignment.BASELINE); // Align items nicely
 		titleLayout.setFlexGrow(1, title); // Title takes available space
@@ -407,11 +410,42 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		}
 	}
 
-	private StreamResource createSurveyorExcelStreamResource() {
+	private void showExportDialog() {
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("Exportar Encuestadores");
+		dialog.setCloseOnEsc(true);
+		dialog.setCloseOnOutsideClick(true);
+
+		Paragraph message = new Paragraph("Indicar la fecha hasta cuando se debe considerar las transferencias");
+		DateTimePicker transferDatePicker = new DateTimePicker();
+		transferDatePicker.setWidthFull();
+
+		VerticalLayout content = new VerticalLayout(message, transferDatePicker);
+		content.setPadding(false);
+		content.setSpacing(false);
+		dialog.add(content);
+
+		Button downloadButton = new Button("Descargar");
+		downloadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		Anchor downloadLink = new Anchor(createSurveyorExcelStreamResource(transferDatePicker), "");
+		downloadLink.getElement().setAttribute("download", true);
+		downloadLink.add(downloadButton);
+
+		Button closeButton = new Button("Cerrar", e -> dialog.close());
+		closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+		dialog.getFooter().add(downloadLink, closeButton);
+		dialog.open();
+	}
+
+	private StreamResource createSurveyorExcelStreamResource(DateTimePicker transferDatePicker) {
 		return new StreamResource("encuestadores.xlsx", () -> {
 			try {
 				List<Surveyor> surveyors = encuestadorService.findAll();
-				ByteArrayOutputStream excelOutput = ExcelReportGenerator.generateSurveyorExcel(surveyors);
+				LocalDate fromDate = transferDatePicker.getValue() != null ? transferDatePicker.getValue().toLocalDate()
+						: null;
+				Map<Long, Double> transferSums = journalEntryService.sumTransferAmountsBySurveyor(fromDate);
+				ByteArrayOutputStream excelOutput = ExcelReportGenerator.generateSurveyorExcel(surveyors, transferSums);
 				return new ByteArrayInputStream(excelOutput.toByteArray());
 			} catch (IOException e) {
 				Notification.show("Error al generar el archivo Excel", 3000, Notification.Position.MIDDLE)
