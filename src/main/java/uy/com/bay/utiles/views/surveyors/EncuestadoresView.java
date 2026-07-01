@@ -333,7 +333,14 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 		// Title Layout
 		H2 title = new H2("Encuestadores");
-		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton);
+
+		Button exportButton = new Button("Exportar");
+		exportButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+		Anchor exportLink = new Anchor(createSurveyorExcelStreamResource(), "");
+		exportLink.getElement().setAttribute("download", true);
+		exportLink.add(exportButton);
+
+		HorizontalLayout titleLayout = new HorizontalLayout(title, addButton, exportLink);
 		titleLayout.setWidthFull();
 		titleLayout.setAlignItems(Alignment.BASELINE); // Align items nicely
 		titleLayout.setFlexGrow(1, title); // Title takes available space
@@ -398,6 +405,20 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 			dialog.open();
 		}
+	}
+
+	private StreamResource createSurveyorExcelStreamResource() {
+		return new StreamResource("encuestadores.xlsx", () -> {
+			try {
+				List<Surveyor> surveyors = encuestadorService.findAll();
+				ByteArrayOutputStream excelOutput = ExcelReportGenerator.generateSurveyorExcel(surveyors);
+				return new ByteArrayInputStream(excelOutput.toByteArray());
+			} catch (IOException e) {
+				Notification.show("Error al generar el archivo Excel", 3000, Notification.Position.MIDDLE)
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				return new ByteArrayInputStream(new byte[0]);
+			}
+		});
 	}
 
 	private StreamResource createExcelStreamResource(List<JournalEntry> journalEntries) {

@@ -69,6 +69,36 @@ public class ExcelReportGenerator {
         }
     }
 
+    public static ByteArrayOutputStream generateSurveyorExcel(List<Surveyor> surveyors) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            XSSFSheet sheet = workbook.createSheet("Encuestadores");
+
+            List<Field> surveyorFields = getFields(Surveyor.class);
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < surveyorFields.size(); i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(surveyorFields.get(i).getName());
+            }
+
+            CellStyle dateCellStyle = workbook.createCellStyle();
+            CreationHelper createHelper = workbook.getCreationHelper();
+            dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/MM/yyyy"));
+
+            int rowNum = 1;
+            for (Surveyor surveyor : surveyors) {
+                Row row = sheet.createRow(rowNum++);
+                int cellNum = 0;
+                for (Field field : surveyorFields) {
+                    cellNum = writeFieldToCell(surveyor, field, row, cellNum, dateCellStyle);
+                }
+            }
+
+            workbook.write(out);
+            return out;
+        }
+    }
+
     private static List<Field> getFields(Class<?> clazz) {
         List<Field> fields = new ArrayList<>();
         while (clazz != null) {
