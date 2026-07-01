@@ -135,9 +135,6 @@ public class MainLayout extends AppLayout {
 				}
 			}
 		});
-		SideNavItem answersItem = new SideNavItem("Respuestas Alchemer", "answers");
-		answersItem.setPrefixComponent(new Icon("vaadin", "comment-ellipsis-o"));
-		nav.addItem(answersItem);
 
 		SideNavItem gastosItem = new SideNavItem("Gastos");
 		gastosItem.setPrefixComponent(new Icon("vaadin", "money"));
@@ -250,26 +247,6 @@ public class MainLayout extends AppLayout {
 
 		nav.addItem(extrasItem);
 
-		SideNavItem settingsItem = new SideNavItem("Configuración");
-		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
-		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
-		usersItem.setPrefixComponent(new Icon("vaadin", "users"));
-		settingsItem.addItem(usersItem);
-
-		SideNavItem areasItem = new SideNavItem("Areas", "areas");
-		areasItem.setPrefixComponent(new Icon("vaadin", "list"));
-		settingsItem.addItem(areasItem);
-
-		SideNavItem tasksItem = new SideNavItem("Tareas", "tasks");
-		tasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
-		settingsItem.addItem(tasksItem);
-
-		SideNavItem conceptsItem = new SideNavItem("Conceptos", "concepts");
-		conceptsItem.setPrefixComponent(new Icon("vaadin", "list"));
-		settingsItem.addItem(conceptsItem);
-
-		nav.addItem(settingsItem);
-
 		SideNavItem toolsItem = new SideNavItem("Herramientas IA");
 		toolsItem.setPrefixComponent(new Icon("vaadin", "tools"));
 		SideNavItem questionCodingItem = new SideNavItem("Codificación de preguntas", "question-coding");
@@ -286,7 +263,7 @@ public class MainLayout extends AppLayout {
 		toolsItem.addItem(supervisionTasksItem);
 		nav.addItem(toolsItem);
 
-		SideNavItem supervisionMenuItem = new SideNavItem("Supervisión");
+		SideNavItem supervisionMenuItem = new SideNavItem("Dashboard Supervisión");
 		supervisionMenuItem.setPrefixComponent(new Icon("vaadin", "clipboard-check"));
 		SideNavItem resumenEjecutivoItem = new SideNavItem("Resumen ejecutivo", "supervision-summary");
 		resumenEjecutivoItem.setPrefixComponent(new Icon("vaadin", "dashboard"));
@@ -322,6 +299,26 @@ public class MainLayout extends AppLayout {
 		messagesItem.setPrefixComponent(new Icon("vaadin", "list"));
 		whatsappItem.addItem(messagesItem);
 		nav.addItem(whatsappItem);
+
+		SideNavItem settingsItem = new SideNavItem("Configuración");
+		settingsItem.setPrefixComponent(new Icon("vaadin", "cog"));
+		SideNavItem usersItem = new SideNavItem("Usuarios", "useradmin");
+		usersItem.setPrefixComponent(new Icon("vaadin", "users"));
+		settingsItem.addItem(usersItem);
+
+		SideNavItem areasItem = new SideNavItem("Areas", "areas");
+		areasItem.setPrefixComponent(new Icon("vaadin", "list"));
+		settingsItem.addItem(areasItem);
+
+		SideNavItem tasksItem = new SideNavItem("Tareas", "tasks");
+		tasksItem.setPrefixComponent(new Icon("vaadin", "tasks"));
+		settingsItem.addItem(tasksItem);
+
+		SideNavItem conceptsItem = new SideNavItem("Conceptos", "concepts");
+		conceptsItem.setPrefixComponent(new Icon("vaadin", "list"));
+		settingsItem.addItem(conceptsItem);
+
+		nav.addItem(settingsItem);
 
 		return nav;
 	}
