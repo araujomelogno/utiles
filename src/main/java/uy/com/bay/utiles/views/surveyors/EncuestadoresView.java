@@ -4,7 +4,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -52,8 +54,6 @@ import uy.com.bay.utiles.services.ExpenseReportFileService;
 import uy.com.bay.utiles.services.ExpenseTransferFileService;
 import uy.com.bay.utiles.services.JournalEntryService;
 import uy.com.bay.utiles.services.SurveyorService;
-
-import java.util.Date;
 
 @PageTitle("Encuestadores")
 @Route("surveyors/:encuestadorID?/:action?(edit)")
@@ -418,8 +418,8 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 
 		Paragraph message = new Paragraph("Indicar la fecha hasta cuando se debe considerar las transferencias");
 		DatePicker transferDatePicker = new DatePicker();
-		transferDatePicker.setWidthFull();
 		
+		transferDatePicker.setLocale(new Locale("es", "UY"));
 
 		VerticalLayout content = new VerticalLayout(message, transferDatePicker);
 		content.setPadding(false);
