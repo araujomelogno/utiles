@@ -98,7 +98,7 @@ public class ExcelReportGenerator {
                             transferSum = transferSumsBySurveyorId.getOrDefault(surveyor.getId(), 0.0);
                         }
                         Cell cell = row.createCell(cellNum++);
-                        cell.setCellValue(surveyor.getBalance() + transferSum);
+                        cell.setCellValue(surveyor.getBalance() - transferSum);
                     } else {
                         cellNum = writeFieldToCell(surveyor, field, row, cellNum, dateCellStyle);
                     }
