@@ -15,7 +15,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -417,7 +417,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		dialog.setCloseOnOutsideClick(true);
 
 		Paragraph message = new Paragraph("Indicar la fecha hasta cuando se debe considerar las transferencias");
-		DateTimePicker transferDatePicker = new DateTimePicker();
+		DatePicker transferDatePicker = new DatePicker();
 		transferDatePicker.setWidthFull();
 		
 
@@ -439,12 +439,11 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		dialog.open();
 	}
 
-	private StreamResource createSurveyorExcelStreamResource(DateTimePicker transferDatePicker) {
+	private StreamResource createSurveyorExcelStreamResource(DatePicker transferDatePicker) {
 		return new StreamResource("encuestadores.xlsx", () -> {
 			try {
 				List<Surveyor> surveyors = encuestadorService.findAll();
-				LocalDate fromDate = transferDatePicker.getValue() != null ? transferDatePicker.getValue().toLocalDate()
-						: null;
+				LocalDate fromDate = transferDatePicker.getValue();
 				Map<Long, Double> transferSums = journalEntryService.sumTransferAmountsBySurveyor(fromDate);
 				ByteArrayOutputStream excelOutput = ExcelReportGenerator.generateSurveyorExcel(surveyors, transferSums);
 				return new ByteArrayInputStream(excelOutput.toByteArray());
