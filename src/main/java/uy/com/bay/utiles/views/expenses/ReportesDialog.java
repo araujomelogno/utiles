@@ -11,6 +11,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.server.StreamResource;
 
 import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.JournalEntryReportDTO;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExcelReportGenerator;
@@ -71,7 +72,7 @@ public class ReportesDialog extends Dialog {
     private void downloadReport() {
         Specification<JournalEntry> spec = journalEntryService.createFilterSpecification(fechaDesde.getValue(),
                 fechaHasta.getValue(), encuestadores.getValue(), estudios.getValue());
-        List<JournalEntry> journalEntries = journalEntryService.list(spec);
+        List<JournalEntryReportDTO> journalEntries = journalEntryService.listReport(spec);
 
         if (journalEntries.isEmpty()) {
             Notification.show("No hay datos para generar el reporte con los filtros seleccionados.");
@@ -79,7 +80,7 @@ public class ReportesDialog extends Dialog {
         }
 
         try {
-            ByteArrayOutputStream excelStream = ExcelReportGenerator.generateExcel(journalEntries);
+            ByteArrayOutputStream excelStream = ExcelReportGenerator.generateReport(journalEntries);
             StreamResource resource = new StreamResource("reporte.xlsx",
                     () -> new ByteArrayInputStream(excelStream.toByteArray()));
 

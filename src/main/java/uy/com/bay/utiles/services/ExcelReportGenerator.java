@@ -8,6 +8,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.JournalEntryReportDTO;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 
@@ -20,6 +21,91 @@ import java.util.List;
 import java.util.Map;
 
 public class ExcelReportGenerator {
+
+    /**
+     * Builds the expenses report from lightweight {@link JournalEntryReportDTO}
+     * projections instead of full {@link JournalEntry} entities.
+     *
+     * <p>
+     * Using the projection avoids eagerly loading the attachment collections
+     * (which carry {@code @Lob} binary content) of every entry, which previously
+     * caused {@link OutOfMemoryError} when a large number of entries was exported.
+     */
+    public static ByteArrayOutputStream generateReport(List<JournalEntryReportDTO> rows) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            XSSFSheet sheet = workbook.createSheet("Reporte de Gastos");
+
+            String[] headers = { "JournalEntry.detail", "JournalEntry.obs", "JournalEntry.date",
+                    "JournalEntry.operation", "JournalEntry.amount", "JournalEntry.source", "Study.name",
+                    "Study.odooId", "Study.obs", "Study.clientName", "Study.area", "Study.totalReportedCost",
+                    "Study.totalTransfered", "Study.expectedRevenue", "Surveyor.firstName", "Surveyor.lastName",
+                    "Surveyor.login", "Surveyor.ci", "Surveyor.surveyToGoId", "Surveyor.balance" };
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            CellStyle dateCellStyle = workbook.createCellStyle();
+            CreationHelper createHelper = workbook.getCreationHelper();
+            dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/MM/yyyy"));
+
+            int rowNum = 1;
+            for (JournalEntryReportDTO dto : rows) {
+                Row row = sheet.createRow(rowNum++);
+                int cellNum = 0;
+                cellNum = writeString(row, cellNum, dto.getDetail());
+                cellNum = writeString(row, cellNum, dto.getObs());
+                cellNum = writeDate(row, cellNum, dto.getDate(), dateCellStyle);
+                cellNum = writeString(row, cellNum, dto.getOperation() != null ? dto.getOperation().toString() : null);
+                cellNum = writeNumber(row, cellNum, dto.getAmount());
+                cellNum = writeString(row, cellNum, dto.getSource() != null ? dto.getSource().toString() : null);
+                cellNum = writeString(row, cellNum, dto.getStudyName());
+                cellNum = writeString(row, cellNum, dto.getStudyOdooId());
+                cellNum = writeString(row, cellNum, dto.getStudyObs());
+                cellNum = writeString(row, cellNum, dto.getStudyClientName());
+                cellNum = writeString(row, cellNum, dto.getStudyArea());
+                cellNum = writeNumber(row, cellNum, dto.getStudyTotalReportedCost());
+                cellNum = writeNumber(row, cellNum, dto.getStudyTotalTransfered());
+                cellNum = writeNumber(row, cellNum, dto.getStudyExpectedRevenue());
+                cellNum = writeString(row, cellNum, dto.getSurveyorFirstName());
+                cellNum = writeString(row, cellNum, dto.getSurveyorLastName());
+                cellNum = writeString(row, cellNum, dto.getSurveyorLogin());
+                cellNum = writeString(row, cellNum, dto.getSurveyorCi());
+                cellNum = writeString(row, cellNum, dto.getSurveyorSurveyToGoId());
+                cellNum = writeNumber(row, cellNum, dto.getSurveyorBalance());
+            }
+
+            workbook.write(out);
+            return out;
+        }
+    }
+
+    private static int writeString(Row row, int cellNum, String value) {
+        row.createCell(cellNum++).setCellValue(value != null ? value : "");
+        return cellNum;
+    }
+
+    private static int writeNumber(Row row, int cellNum, Double value) {
+        Cell cell = row.createCell(cellNum++);
+        if (value != null) {
+            cell.setCellValue(value);
+        } else {
+            cell.setCellValue("");
+        }
+        return cellNum;
+    }
+
+    private static int writeDate(Row row, int cellNum, Date value, CellStyle dateCellStyle) {
+        Cell cell = row.createCell(cellNum++);
+        if (value != null) {
+            cell.setCellValue(value);
+            cell.setCellStyle(dateCellStyle);
+        } else {
+            cell.setCellValue("");
+        }
+        return cellNum;
+    }
 
     public static ByteArrayOutputStream generateExcel(List<JournalEntry> journalEntries) throws IOException {
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {

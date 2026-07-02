@@ -7,7 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uy.com.bay.utiles.data.ExpenseTransferFile;
-import uy.com.bay.utiles.data.JournalEntry;
+import uy.com.bay.utiles.data.JournalEntryReportDTO;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.services.ExcelReportGenerator;
@@ -73,9 +73,10 @@ public class FileDownloadController {
             studyIds.forEach(id -> studyService.get(id).ifPresent(studies::add));
         }
 
-        List<JournalEntry> journalEntries = journalEntryService.list(journalEntryService.createFilterSpecification(desde, hasta, surveyors, studies));
+        List<JournalEntryReportDTO> journalEntries = journalEntryService.listReport(
+                journalEntryService.createFilterSpecification(desde, hasta, surveyors, studies));
 
-        ByteArrayOutputStream baos = ExcelReportGenerator.generateExcel(journalEntries);
+        ByteArrayOutputStream baos = ExcelReportGenerator.generateReport(journalEntries);
         ByteArrayResource resource = new ByteArrayResource(baos.toByteArray());
 
         return ResponseEntity.ok()
