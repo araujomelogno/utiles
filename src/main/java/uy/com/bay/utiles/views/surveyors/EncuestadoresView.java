@@ -419,6 +419,7 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		Paragraph message = new Paragraph("Indicar la fecha hasta cuando se debe considerar las transferencias");
 		DateTimePicker transferDatePicker = new DateTimePicker();
 		transferDatePicker.setWidthFull();
+		
 
 		VerticalLayout content = new VerticalLayout(message, transferDatePicker);
 		content.setPadding(false);
