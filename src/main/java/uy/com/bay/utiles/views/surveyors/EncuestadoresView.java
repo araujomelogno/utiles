@@ -4,12 +4,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
@@ -45,6 +47,7 @@ import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.persistence.criteria.Predicate;
 import uy.com.bay.utiles.data.JournalEntry;
 import uy.com.bay.utiles.data.Operation;
 import uy.com.bay.utiles.data.Source;
@@ -152,38 +155,10 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 		grid.addColumn("ci").setHeader("CI").setAutoWidth(true);
 		grid.addColumn("surveyToGoId").setHeader("Survey To Go Id").setAutoWidth(true);
 
-		grid.setItems(query -> {
-			String fnameFilter = firstNameFilter.getValue() != null ? firstNameFilter.getValue().trim().toLowerCase()
-					: "";
-			String lnameFilter = lastNameFilter.getValue() != null ? lastNameFilter.getValue().trim().toLowerCase()
-					: "";
-			String ciValFilter = ciFilter.getValue() != null ? ciFilter.getValue().trim().toLowerCase() : "";
-			String surveyToGoIdValFilter = surveyToGoIdFilter.getValue() != null
-					? surveyToGoIdFilter.getValue().trim().toLowerCase()
-					: "";
-
-			// Obtener el stream del servicio
-			java.util.stream.Stream<Surveyor> stream = encuestadorService
-					.list(VaadinSpringDataHelpers.toSpringPageRequest(query)).stream();
-
-			// Aplicar filtros si hay texto en los campos de filtro
-			if (!fnameFilter.isEmpty()) {
-				stream = stream.filter(
-						enc -> enc.getFirstName() != null && enc.getFirstName().toLowerCase().contains(fnameFilter));
-			}
-			if (!lnameFilter.isEmpty()) {
-				stream = stream.filter(
-						enc -> enc.getLastName() != null && enc.getLastName().toLowerCase().contains(lnameFilter));
-			}
-			if (!ciValFilter.isEmpty()) {
-				stream = stream.filter(enc -> enc.getCi() != null && enc.getCi().toLowerCase().contains(ciValFilter));
-			}
-			if (!surveyToGoIdValFilter.isEmpty()) {
-				stream = stream.filter(enc -> enc.getSurveyToGoId() != null
-						&& enc.getSurveyToGoId().toLowerCase().contains(surveyToGoIdValFilter));
-			}
-			return stream;
-		});
+		// Filtering is delegated to the database so it applies to the whole dataset
+		// (not just the page currently fetched) and pagination/count stay correct.
+		grid.setItems(query -> encuestadorService
+				.list(VaadinSpringDataHelpers.toSpringPageRequest(query), buildFilterSpecification()).stream());
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
 		// when a row is selected or deselected, populate form
@@ -362,6 +337,35 @@ public class EncuestadoresView extends Div implements BeforeEnterObserver {
 	private void refreshGrid() {
 		grid.select(null);
 		grid.getDataProvider().refreshAll();
+	}
+
+	/**
+	 * Builds a {@link Specification} from the current filter fields so the database
+	 * performs the filtering. The values are read lazily on every fetch, so a call
+	 * to {@link #refreshGrid()} after a filter changes re-applies them.
+	 */
+	private Specification<Surveyor> buildFilterSpecification() {
+		String firstNameValue = firstNameFilter.getValue() != null ? firstNameFilter.getValue().trim() : "";
+		String lastNameValue = lastNameFilter.getValue() != null ? lastNameFilter.getValue().trim() : "";
+		String ciValue = ciFilter.getValue() != null ? ciFilter.getValue().trim() : "";
+		String surveyToGoIdValue = surveyToGoIdFilter.getValue() != null ? surveyToGoIdFilter.getValue().trim() : "";
+
+		return (root, query, cb) -> {
+			List<Predicate> predicates = new ArrayList<>();
+			if (!firstNameValue.isEmpty()) {
+				predicates.add(cb.like(cb.lower(root.get("firstName")), "%" + firstNameValue.toLowerCase() + "%"));
+			}
+			if (!lastNameValue.isEmpty()) {
+				predicates.add(cb.like(cb.lower(root.get("lastName")), "%" + lastNameValue.toLowerCase() + "%"));
+			}
+			if (!ciValue.isEmpty()) {
+				predicates.add(cb.like(cb.lower(root.get("ci")), "%" + ciValue.toLowerCase() + "%"));
+			}
+			if (!surveyToGoIdValue.isEmpty()) {
+				predicates.add(cb.like(cb.lower(root.get("surveyToGoId")), "%" + surveyToGoIdValue.toLowerCase() + "%"));
+			}
+			return cb.and(predicates.toArray(new Predicate[0]));
+		};
 	}
 
 	private void clearForm() {
