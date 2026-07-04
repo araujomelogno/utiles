@@ -113,6 +113,8 @@ public class ExpenseTransferView extends VerticalLayout {
 		Grid.Column<ExpenseRequest> surveyorColumn = grid
 				.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getName() : "").setHeader("Encuestador")
 				.setSortable(true).setKey("surveyor.lastName");
+		grid.addColumn(er -> er.getSurveyor() != null ? er.getSurveyor().getCi() : "").setHeader("CI")
+				.setSortable(true).setKey("surveyor.ci");
 		Grid.Column<ExpenseRequest> studyColumn = grid
 				.addColumn(er -> er.getStudy() != null ? er.getStudy().getName() : "").setHeader("Proyecto")
 				.setSortable(true).setKey("study.name");
@@ -182,7 +184,8 @@ public class ExpenseTransferView extends VerticalLayout {
 		Sheet sheet = workbook.createSheet("Solicitudes de Gasto");
 
 		Row headerRow = sheet.createRow(0);
-		String[] columns = { "Encuestador", "Proyecto", "Fecha Solicitud", "Monto", "Concepto", "Observaciones" };
+		String[] columns = { "Encuestador", "CI", "Proyecto", "Fecha Solicitud", "Monto", "Concepto",
+				"Observaciones" };
 		for (int i = 0; i < columns.length; i++) {
 			Cell cell = headerRow.createCell(i);
 			cell.setCellValue(columns[i]);
@@ -197,15 +200,17 @@ public class ExpenseTransferView extends VerticalLayout {
 			row.createCell(0)
 					.setCellValue(expenseRequest.getSurveyor() != null ? expenseRequest.getSurveyor().getName() : "");
 			row.createCell(1)
-					.setCellValue(expenseRequest.getStudy() != null ? expenseRequest.getStudy().getName() : "");
+					.setCellValue(expenseRequest.getSurveyor() != null ? expenseRequest.getSurveyor().getCi() : "");
 			row.createCell(2)
+					.setCellValue(expenseRequest.getStudy() != null ? expenseRequest.getStudy().getName() : "");
+			row.createCell(3)
 					.setCellValue(expenseRequest.getRequestDate() != null
 							? new java.text.SimpleDateFormat("dd/MM/yyyy").format(expenseRequest.getRequestDate())
 							: "");
-			row.createCell(3).setCellValue(expenseRequest.getAmount());
-			row.createCell(4)
+			row.createCell(4).setCellValue(expenseRequest.getAmount());
+			row.createCell(5)
 					.setCellValue(expenseRequest.getConcept() != null ? expenseRequest.getConcept().getName() : "");
-			row.createCell(5).setCellValue(expenseRequest.getObs());
+			row.createCell(6).setCellValue(expenseRequest.getObs());
 		}
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
