@@ -46,37 +46,43 @@ public class SupervisionSummaryService {
 		this.fieldworkRepository = fieldworkRepository;
 	}
 
+	/**
+	 * Indicadores del resumen ejecutivo considerando únicamente las tareas de
+	 * supervisión cuyo {@code created} está comprendido entre {@code from} y
+	 * {@code to} (ambos inclusive).
+	 */
 	@Transactional(readOnly = true)
-	public SupervisionSummaryDTO computeSummary() {
+	public SupervisionSummaryDTO computeSummary(Date from, Date to) {
 		SupervisionSummaryDTO dto = new SupervisionSummaryDTO();
 
 		// Proyectos: cantidad de valores distintos de alchemerStudyName.
-		dto.setProjectCount(supervisionTaskRepository.countDistinctAlchemerStudyName());
+		dto.setProjectCount(supervisionTaskRepository.countDistinctAlchemerStudyNameBetween(from, to));
 
 		// Encuestas supervisadas: cantidad de tareas de supervisión.
-		long supervised = supervisionTaskRepository.count();
+		long supervised = supervisionTaskRepository.countByCreatedBetween(from, to);
 		dto.setSupervisedSurveys(supervised);
 
 		// Encuestas completas: a partir de los alchemerSuerveyId distintos de las
 		// tareas se recuperan los fieldworks que los referencian y se suma getCompleted.
-		long completed = computeCompletedSurveys(supervisionTaskRepository.findDistinctAlchemerSuerveyIds());
+		long completed = computeCompletedSurveys(
+				supervisionTaskRepository.findDistinctAlchemerSuerveyIdsBetween(from, to));
 		dto.setCompletedSurveys(completed);
 
 		// Nivel de supervisión: cociente entre supervisadas y completas.
 		dto.setSupervisionLevel(completed > 0 ? (double) supervised / completed : 0d);
 
 		// Puntaje global promedio: promedio de aiScore.
-		Double avg = supervisionTaskRepository.averageAiScore();
+		Double avg = supervisionTaskRepository.averageAiScoreBetween(from, to);
 		dto.setGlobalScoreAverage(avg != null ? avg : 0d);
 
 		// Evolución del puntaje global por mes del audioDate.
-		dto.setScoreEvolution(computeScoreEvolution());
+		dto.setScoreEvolution(computeScoreEvolution(from, to));
 
 		// Perfil de calidad por dimensión (promedios).
-		dto.setDimensionScores(computeDimensionScores());
+		dto.setDimensionScores(computeDimensionScores(from, to));
 
 		// Puntaje global por proyecto.
-		dto.setScoreByStudy(computeScoreByStudy());
+		dto.setScoreByStudy(computeScoreByStudy(from, to));
 
 		return dto;
 	}
@@ -240,10 +246,10 @@ public class SupervisionSummaryService {
 		return completed;
 	}
 
-	private List<MonthScore> computeScoreEvolution() {
+	private List<MonthScore> computeScoreEvolution(Date from, Date to) {
 		// Agrupado cronológicamente por año-mes para conservar el orden del eje X.
 		Map<YearMonth, double[]> byMonth = new TreeMap<>();
-		for (Tuple tuple : supervisionTaskRepository.findAudioDateAndAiScore()) {
+		for (Tuple tuple : supervisionTaskRepository.findAudioDateAndAiScoreBetween(from, to)) {
 			Date audioDate = tuple.get("audioDate", Date.class);
 			Double score = tuple.get("aiScore", Double.class);
 			if (audioDate == null) {
@@ -265,8 +271,8 @@ public class SupervisionSummaryService {
 		return evolution;
 	}
 
-	private DimensionScores computeDimensionScores() {
-		return toDimensionScores(supervisionTaskRepository.findAverageDimensionScores());
+	private DimensionScores computeDimensionScores(Date from, Date to) {
+		return toDimensionScores(supervisionTaskRepository.findAverageDimensionScoresBetween(from, to));
 	}
 
 	private DimensionScores toDimensionScores(Tuple tuple) {
@@ -277,9 +283,9 @@ public class SupervisionSummaryService {
 				round1(value(tuple, "neutralidad")), round1(value(tuple, "fluidez")));
 	}
 
-	private List<StudyScore> computeScoreByStudy() {
+	private List<StudyScore> computeScoreByStudy(Date from, Date to) {
 		List<StudyScore> scores = new ArrayList<>();
-		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreByStudy()) {
+		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreByStudyBetween(from, to)) {
 			String study = tuple.get("studyName", String.class);
 			Double average = tuple.get("avgScore", Double.class);
 			scores.add(new StudyScore(study, round1(average != null ? average : 0d)));

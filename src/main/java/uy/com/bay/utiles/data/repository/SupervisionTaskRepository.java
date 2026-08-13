@@ -56,31 +56,42 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	@Query("SELECT st.audioContent FROM SupervisionTask st WHERE st.id = :id")
 	byte[] findAudioContentById(@Param("id") Long id);
 
-	/** Cantidad de proyectos distintos (valores distintos de alchemerStudyName). */
-	@Query("SELECT COUNT(DISTINCT st.alchemerStudyName) FROM SupervisionTask st WHERE st.alchemerStudyName IS NOT NULL")
-	long countDistinctAlchemerStudyName();
+	// ---- Resumen ejecutivo filtrado por rango de fechas de creación (created) ----
 
-	/** Identificadores de encuesta (alchemerSuerveyId) distintos presentes en las tareas. */
-	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st WHERE st.alchemerSuerveyId IS NOT NULL")
-	List<Integer> findDistinctAlchemerSuerveyIds();
+	/** Cantidad de proyectos distintos de las tareas creadas dentro del rango. */
+	@Query("SELECT COUNT(DISTINCT st.alchemerStudyName) FROM SupervisionTask st "
+			+ "WHERE st.alchemerStudyName IS NOT NULL AND st.created BETWEEN :from AND :to")
+	long countDistinctAlchemerStudyNameBetween(@Param("from") Date from, @Param("to") Date to);
 
-	/** Promedio del puntaje global (aiScore) sobre todas las tareas. */
-	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st")
-	Double averageAiScore();
+	/** Cantidad de tareas de supervisión creadas dentro del rango. */
+	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to")
+	long countByCreatedBetween(@Param("from") Date from, @Param("to") Date to);
 
-	/** Proyección de fecha de audio y puntaje, para agrupar la evolución por mes. */
-	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore FROM SupervisionTask st WHERE st.audioDate IS NOT NULL")
-	List<Tuple> findAudioDateAndAiScore();
+	/** Identificadores de encuesta distintos de las tareas creadas dentro del rango. */
+	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st "
+			+ "WHERE st.alchemerSuerveyId IS NOT NULL AND st.created BETWEEN :from AND :to")
+	List<Integer> findDistinctAlchemerSuerveyIdsBetween(@Param("from") Date from, @Param("to") Date to);
 
-	/** Promedio de cada dimensión de calidad (para el gráfico de radar). */
+	/** Promedio del puntaje global (aiScore) de las tareas creadas dentro del rango. */
+	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to")
+	Double averageAiScoreBetween(@Param("from") Date from, @Param("to") Date to);
+
+	/** Proyección de fecha de audio y puntaje de las tareas creadas dentro del rango. */
+	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore FROM SupervisionTask st "
+			+ "WHERE st.audioDate IS NOT NULL AND st.created BETWEEN :from AND :to")
+	List<Tuple> findAudioDateAndAiScoreBetween(@Param("from") Date from, @Param("to") Date to);
+
+	/** Promedio de cada dimensión de calidad de las tareas creadas dentro del rango. */
 	@Query("SELECT AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
-			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st")
-	Tuple findAverageDimensionScores();
+			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st "
+			+ "WHERE st.created BETWEEN :from AND :to")
+	Tuple findAverageDimensionScoresBetween(@Param("from") Date from, @Param("to") Date to);
 
-	/** Promedio del puntaje global agrupado por proyecto (alchemerStudyName). */
+	/** Promedio del puntaje global agrupado por proyecto de las tareas creadas dentro del rango. */
 	@Query("SELECT st.alchemerStudyName as studyName, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
-			+ "WHERE st.alchemerStudyName IS NOT NULL GROUP BY st.alchemerStudyName ORDER BY st.alchemerStudyName")
-	List<Tuple> findAverageAiScoreByStudy();
+			+ "WHERE st.alchemerStudyName IS NOT NULL AND st.created BETWEEN :from AND :to "
+			+ "GROUP BY st.alchemerStudyName ORDER BY st.alchemerStudyName")
+	List<Tuple> findAverageAiScoreByStudyBetween(@Param("from") Date from, @Param("to") Date to);
 
 	// ---- Reporte por proyecto (filtrado por alchemerStudyName; null = todos) ----
 
