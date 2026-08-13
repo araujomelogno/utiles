@@ -1,6 +1,10 @@
 package uy.com.bay.utiles.views.supervision;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -14,8 +18,10 @@ import com.github.appreciated.apexcharts.config.plotoptions.Bar;
 import com.github.appreciated.apexcharts.helper.Series;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -45,6 +51,9 @@ public class SupervisionStudyReportView extends VerticalLayout {
 	private static final String ALL_STUDIES = "Todos los estudios";
 
 	private final SupervisionSummaryService summaryService;
+	private final ComboBox<String> studyComboBox = new ComboBox<>("Estudio");
+	private final DatePicker fromDatePicker = new DatePicker("Desde");
+	private final DatePicker toDatePicker = new DatePicker("Hasta");
 	private final Div content = new Div();
 
 	public SupervisionStudyReportView(SupervisionSummaryService summaryService) {
@@ -56,12 +65,12 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		addClassName("supervision-study-report-view");
 
 		add(buildHeader());
-		add(buildStudySelector());
+		add(buildFilters());
 
 		content.setWidthFull();
 		add(content);
 
-		refresh(null);
+		refresh();
 	}
 
 	private Div buildHeader() {
@@ -75,26 +84,51 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		return header;
 	}
 
-	private Component buildStudySelector() {
+	/**
+	 * Fila horizontal de filtros: el combobox de proyecto y los DatePicker "Desde" y
+	 * "Hasta" que acotan las tareas por su fecha de creación. "Desde" arranca seis
+	 * meses atrás y "Hasta" en el día actual; al cambiar cualquiera se recalcula todo.
+	 */
+	private Component buildFilters() {
 		List<String> items = new ArrayList<>();
 		items.add(ALL_STUDIES);
 		items.addAll(summaryService.findStudyNames());
 
-		ComboBox<String> studyComboBox = new ComboBox<>("Estudio");
 		studyComboBox.setItems(items);
 		studyComboBox.setValue(ALL_STUDIES);
 		studyComboBox.setWidth("320px");
-		studyComboBox.getStyle().set("margin-bottom", "16px");
-		studyComboBox.addValueChangeListener(event -> {
-			String value = event.getValue();
-			refresh(value == null || ALL_STUDIES.equals(value) ? null : value);
-		});
-		return studyComboBox;
+		studyComboBox.addValueChangeListener(event -> refresh());
+
+		LocalDate today = LocalDate.now();
+		toDatePicker.setValue(today);
+		fromDatePicker.setValue(today.minusMonths(6));
+		fromDatePicker.addValueChangeListener(event -> refresh());
+		toDatePicker.addValueChangeListener(event -> refresh());
+
+		HorizontalLayout filters = new HorizontalLayout(studyComboBox, fromDatePicker, toDatePicker);
+		filters.setAlignItems(Alignment.BASELINE);
+		filters.getStyle().set("margin-bottom", "16px");
+		return filters;
 	}
 
-	/** Recalcula y vuelve a dibujar los indicadores para el proyecto seleccionado. */
-	private void refresh(String studyName) {
-		SupervisionStudyReportDTO report = summaryService.computeStudyReport(studyName);
+	/**
+	 * Recalcula y vuelve a dibujar los indicadores para el proyecto seleccionado,
+	 * considerando sólo las tareas cuyo {@code created} cae dentro del rango elegido.
+	 */
+	private void refresh() {
+		LocalDate fromDate = fromDatePicker.getValue();
+		LocalDate toDate = toDatePicker.getValue();
+		if (fromDate == null || toDate == null) {
+			return;
+		}
+
+		Date from = Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		Date to = Date.from(toDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
+
+		String value = studyComboBox.getValue();
+		String studyName = value == null || ALL_STUDIES.equals(value) ? null : value;
+
+		SupervisionStudyReportDTO report = summaryService.computeStudyReport(studyName, from, to);
 
 		content.removeAll();
 		content.add(buildKpiRow(report));

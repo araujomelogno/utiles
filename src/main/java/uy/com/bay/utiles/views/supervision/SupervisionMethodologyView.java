@@ -128,7 +128,8 @@ public class SupervisionMethodologyView extends VerticalLayout {
 		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.DONUT).build())
 				.withLabels(labels).withColors(colors).withSeries(series)
 				.withStroke(StrokeBuilder.get().withWidth(2.0).withColors("#ffffff").build())
-				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
+				.withDataLabels(DataLabelsBuilder.get().withEnabled(true)
+						.withFormatter("function (val) { return Math.round(val) + '%'; }").build())
 				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build()).build();
 		chart.setWidth("100%");
 		chart.setHeight("240px");
