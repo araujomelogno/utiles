@@ -168,7 +168,8 @@ public class SupervisionSummaryView extends VerticalLayout {
 				.withLabels("Nivel de supervisión", "Restante").withColors(ACCENT, "#E1E6EE")
 				.withSeries(new Double[] { levelPct, rest })
 				.withStroke(StrokeBuilder.get().withWidth(2.0).withColors("#ffffff").build())
-				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
+				.withDataLabels(DataLabelsBuilder.get().withEnabled(true)
+						.withFormatter("function (val) { return Math.round(val) + '%'; }").build())
 				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build()).build();
 		chart.setWidth("100%");
 		chart.setHeight("300px");
@@ -289,7 +290,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 	}
 
 	private String formatPercentage(double ratio) {
-		return String.format(Locale.US, "%.1f%%", ratio * 100d);
+		return String.format(Locale.US, "%.0f%%", ratio * 100d);
 	}
 
 	private static double round1(double value) {
