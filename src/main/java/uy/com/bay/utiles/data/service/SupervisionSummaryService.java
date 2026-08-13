@@ -95,38 +95,41 @@ public class SupervisionSummaryService {
 
 	/**
 	 * Indicadores del reporte por proyecto. Cuando {@code studyName} es {@code null}
-	 * se consideran todas las tareas de supervisión ("Todos los estudios").
+	 * se consideran todos los proyectos ("Todos los estudios"). Sólo se consideran
+	 * las tareas cuyo {@code created} está comprendido entre {@code from} y
+	 * {@code to} (ambos inclusive).
 	 */
 	@Transactional(readOnly = true)
-	public SupervisionStudyReportDTO computeStudyReport(String studyName) {
+	public SupervisionStudyReportDTO computeStudyReport(String studyName, Date from, Date to) {
 		SupervisionStudyReportDTO dto = new SupervisionStudyReportDTO();
 
 		// Encuestas supervisadas: cantidad de tareas del proyecto.
-		long supervised = supervisionTaskRepository.countByStudy(studyName);
+		long supervised = supervisionTaskRepository.countByStudy(studyName, from, to);
 		dto.setSupervisedSurveys(supervised);
 
 		// Encuestas completas: suma de getCompleted de los fieldworks asociados a los
 		// alchemerSuerveyId distintos del proyecto.
 		long completed = computeCompletedSurveys(
-				supervisionTaskRepository.findDistinctAlchemerSuerveyIdsByStudy(studyName));
+				supervisionTaskRepository.findDistinctAlchemerSuerveyIdsByStudy(studyName, from, to));
 		dto.setCompletedSurveys(completed);
 
 		// Nivel de supervisión: cociente entre supervisadas y completas.
 		dto.setSupervisionLevel(completed > 0 ? (double) supervised / completed : 0d);
 
 		// Puntaje global promedio del proyecto.
-		Double avg = supervisionTaskRepository.averageAiScoreByStudy(studyName);
+		Double avg = supervisionTaskRepository.averageAiScoreByStudy(studyName, from, to);
 		dto.setGlobalScoreAverage(avg != null ? avg : 0d);
 
 		// Promedio por encuestador: supervisadas / encuestadores distintos.
-		long surveyors = supervisionTaskRepository.countDistinctSurveyorByStudy(studyName);
+		long surveyors = supervisionTaskRepository.countDistinctSurveyorByStudy(studyName, from, to);
 		dto.setAveragePerSurveyor(surveyors > 0 ? (double) supervised / surveyors : 0d);
 
 		// Dimensiones del proyecto (promedios).
-		dto.setDimensionScores(toDimensionScores(supervisionTaskRepository.findAverageDimensionScoresByStudy(studyName)));
+		dto.setDimensionScores(
+				toDimensionScores(supervisionTaskRepository.findAverageDimensionScoresByStudy(studyName, from, to)));
 
 		// Puntaje global por encuestador.
-		dto.setScoreBySurveyor(computeScoreBySurveyor(studyName));
+		dto.setScoreBySurveyor(computeScoreBySurveyor(studyName, from, to));
 
 		return dto;
 	}
@@ -134,9 +137,11 @@ public class SupervisionSummaryService {
 	/**
 	 * Indicadores del reporte por encuestador: ranking por puntaje global promedio y
 	 * el perfil por dimensión del mejor encuestador frente al que requiere apoyo.
+	 * Sólo se consideran las tareas cuyo {@code created} está comprendido entre
+	 * {@code from} y {@code to} (ambos inclusive).
 	 */
 	@Transactional(readOnly = true)
-	public SupervisionSurveyorReportDTO computeSurveyorReport() {
+	public SupervisionSurveyorReportDTO computeSurveyorReport(Date from, Date to) {
 		SupervisionSurveyorReportDTO dto = new SupervisionSurveyorReportDTO();
 
 		List<SurveyorScore> ranking = new ArrayList<>();
@@ -145,7 +150,7 @@ public class SupervisionSummaryService {
 		double bestScore = Double.NEGATIVE_INFINITY;
 		double worstScore = Double.POSITIVE_INFINITY;
 
-		for (Tuple tuple : supervisionTaskRepository.findSurveyorStats()) {
+		for (Tuple tuple : supervisionTaskRepository.findSurveyorStats(from, to)) {
 			String surveyor = tuple.get("surveyor", String.class);
 			double average = value(tuple, "avgScore");
 			ranking.add(new SurveyorScore(surveyor, round1(average)));
@@ -181,13 +186,15 @@ public class SupervisionSummaryService {
 
 	/**
 	 * Evolución temporal del encuestador seleccionado (null = todos): promedio del
-	 * puntaje global y de cada dimensión, agrupados por mes del audioDate.
+	 * puntaje global y de cada dimensión, agrupados por mes del audioDate. Sólo se
+	 * consideran las tareas cuyo {@code created} está comprendido entre {@code from}
+	 * y {@code to} (ambos inclusive).
 	 */
 	@Transactional(readOnly = true)
-	public SupervisionTimelineReportDTO computeTimelineReport(String surveyor) {
+	public SupervisionTimelineReportDTO computeTimelineReport(String surveyor, Date from, Date to) {
 		// Acumuladores por año-mes: [sumScore, sumCob, sumFid, sumNeu, sumFlu, count].
 		Map<YearMonth, double[]> byMonth = new TreeMap<>();
-		for (Tuple tuple : supervisionTaskRepository.findMonthlyStatsBySurveyor(surveyor)) {
+		for (Tuple tuple : supervisionTaskRepository.findMonthlyStatsBySurveyor(surveyor, from, to)) {
 			Date audioDate = tuple.get("audioDate", Date.class);
 			if (audioDate == null) {
 				continue;
@@ -216,9 +223,9 @@ public class SupervisionSummaryService {
 		return dto;
 	}
 
-	private List<SurveyorScore> computeScoreBySurveyor(String studyName) {
+	private List<SurveyorScore> computeScoreBySurveyor(String studyName, Date from, Date to) {
 		List<SurveyorScore> scores = new ArrayList<>();
-		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreBySurveyor(studyName)) {
+		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreBySurveyor(studyName, from, to)) {
 			String surveyor = tuple.get("surveyor", String.class);
 			Double average = tuple.get("avgScore", Double.class);
 			scores.add(new SurveyorScore(surveyor, round1(average != null ? average : 0d)));

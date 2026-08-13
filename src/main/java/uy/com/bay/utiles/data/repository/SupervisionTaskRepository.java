@@ -100,46 +100,53 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "ORDER BY st.alchemerStudyName")
 	List<String> findDistinctAlchemerStudyNames();
 
-	/** Identificadores de encuesta distintos del proyecto seleccionado (null = todos). */
+	/** Identificadores de encuesta distintos del proyecto seleccionado (null = todos), creados dentro del rango. */
 	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st WHERE st.alchemerSuerveyId IS NOT NULL "
-			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
-	List<Integer> findDistinctAlchemerSuerveyIdsByStudy(@Param("studyName") String studyName);
+			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to")
+	List<Integer> findDistinctAlchemerSuerveyIdsByStudy(@Param("studyName") String studyName, @Param("from") Date from,
+			@Param("to") Date to);
 
-	/** Cantidad de tareas de supervisión del proyecto seleccionado (null = todos). */
-	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
-	long countByStudy(@Param("studyName") String studyName);
+	/** Cantidad de tareas de supervisión del proyecto seleccionado (null = todos), creadas dentro del rango. */
+	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
+			+ "AND st.created BETWEEN :from AND :to")
+	long countByStudy(@Param("studyName") String studyName, @Param("from") Date from, @Param("to") Date to);
 
-	/** Promedio del puntaje global del proyecto seleccionado (null = todos). */
-	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
-	Double averageAiScoreByStudy(@Param("studyName") String studyName);
+	/** Promedio del puntaje global del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
+	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
+			+ "AND st.created BETWEEN :from AND :to")
+	Double averageAiScoreByStudy(@Param("studyName") String studyName, @Param("from") Date from, @Param("to") Date to);
 
-	/** Cantidad de encuestadores distintos del proyecto seleccionado (null = todos). */
+	/** Cantidad de encuestadores distintos del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
 	@Query("SELECT COUNT(DISTINCT st.surveyor) FROM SupervisionTask st WHERE st.surveyor IS NOT NULL "
-			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
-	long countDistinctSurveyorByStudy(@Param("studyName") String studyName);
+			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to")
+	long countDistinctSurveyorByStudy(@Param("studyName") String studyName, @Param("from") Date from,
+			@Param("to") Date to);
 
-	/** Promedio de cada dimensión de calidad del proyecto seleccionado (null = todos). */
+	/** Promedio de cada dimensión de calidad del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
 	@Query("SELECT AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
 			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st "
-			+ "WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName)")
-	Tuple findAverageDimensionScoresByStudy(@Param("studyName") String studyName);
+			+ "WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to")
+	Tuple findAverageDimensionScoresByStudy(@Param("studyName") String studyName, @Param("from") Date from,
+			@Param("to") Date to);
 
-	/** Promedio del puntaje global agrupado por encuestador del proyecto seleccionado (null = todos). */
+	/** Promedio del puntaje global agrupado por encuestador del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
 	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
 			+ "WHERE st.surveyor IS NOT NULL AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
-			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
-	List<Tuple> findAverageAiScoreBySurveyor(@Param("studyName") String studyName);
+			+ "AND st.created BETWEEN :from AND :to GROUP BY st.surveyor ORDER BY st.surveyor")
+	List<Tuple> findAverageAiScoreBySurveyor(@Param("studyName") String studyName, @Param("from") Date from,
+			@Param("to") Date to);
 
 	/**
 	 * Estadísticas por encuestador: promedio del puntaje global y promedio de cada
-	 * dimensión, agrupados por surveyor. Alimenta el ranking y el radar mejor/peor.
+	 * dimensión, agrupados por surveyor, de las tareas creadas dentro del rango.
+	 * Alimenta el ranking y el radar mejor/peor.
 	 */
 	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore, "
 			+ "AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
 			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez "
-			+ "FROM SupervisionTask st WHERE st.surveyor IS NOT NULL "
+			+ "FROM SupervisionTask st WHERE st.surveyor IS NOT NULL AND st.created BETWEEN :from AND :to "
 			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
-	List<Tuple> findSurveyorStats();
+	List<Tuple> findSurveyorStats(@Param("from") Date from, @Param("to") Date to);
 
 	// ---- Evolución temporal (filtrado por surveyor; null = todos) ----
 
@@ -149,12 +156,14 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 
 	/**
 	 * Proyección de fecha de audio, puntaje global y dimensiones del encuestador
-	 * seleccionado (null = todos), para agrupar la evolución por mes en memoria.
+	 * seleccionado (null = todos), de las tareas creadas dentro del rango, para
+	 * agrupar la evolución por mes en memoria.
 	 */
 	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore, "
 			+ "st.scoreCobertura as cobertura, st.scoreFidelidad as fidelidad, "
 			+ "st.scoreNeutralidad as neutralidad, st.scoreFluidez as fluidez "
 			+ "FROM SupervisionTask st WHERE st.audioDate IS NOT NULL "
-			+ "AND (:surveyor IS NULL OR st.surveyor = :surveyor)")
-	List<Tuple> findMonthlyStatsBySurveyor(@Param("surveyor") String surveyor);
+			+ "AND (:surveyor IS NULL OR st.surveyor = :surveyor) AND st.created BETWEEN :from AND :to")
+	List<Tuple> findMonthlyStatsBySurveyor(@Param("surveyor") String surveyor, @Param("from") Date from,
+			@Param("to") Date to);
 }
