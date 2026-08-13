@@ -13,6 +13,7 @@ import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
 import com.github.appreciated.apexcharts.config.builder.DataLabelsBuilder;
 import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
 import com.github.appreciated.apexcharts.config.builder.StrokeBuilder;
+import com.github.appreciated.apexcharts.config.builder.YAxisBuilder;
 import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.legend.Position;
 import com.github.appreciated.apexcharts.helper.Series;
@@ -147,6 +148,7 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.LINE).build())
 				.withColors(ACCENT).withStroke(StrokeBuilder.get().withWidth(3.0).build())
 				.withDataLabels(DataLabelsBuilder.get().withEnabled(false).build())
+				.withYaxis(YAxisBuilder.get().withMin(0.0).build())
 				.withSeries(new Series<>("Puntaje Global", toPoints(report.getMonths(), report.getGlobalScore())))
 				.build();
 		chart.setWidth("100%");
@@ -178,6 +180,7 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.LINE).build())
 				.withColors(DIMENSION_COLORS).withStroke(StrokeBuilder.get().withWidth(2.0).build())
 				.withDataLabels(DataLabelsBuilder.get().withEnabled(false).build())
+				.withYaxis(YAxisBuilder.get().withMin(0.0).build())
 				.withLegend(LegendBuilder.get().withPosition(Position.BOTTOM).build()).withSeries(series).build();
 		chart.setWidth("100%");
 		chart.setHeight("340px");
