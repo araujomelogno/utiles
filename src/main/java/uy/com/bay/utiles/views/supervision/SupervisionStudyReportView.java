@@ -255,6 +255,6 @@ public class SupervisionStudyReportView extends VerticalLayout {
 	}
 
 	private String formatPercentage(double ratio) {
-		return String.format(Locale.US, "%.1f%%", ratio * 100d);
+		return String.format(Locale.US, "%.0f%%", ratio * 100d);
 	}
 }
