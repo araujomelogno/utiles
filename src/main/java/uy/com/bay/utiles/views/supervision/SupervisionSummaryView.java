@@ -1,5 +1,9 @@
 package uy.com.bay.utiles.views.supervision;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -15,8 +19,10 @@ import com.github.appreciated.apexcharts.config.legend.Position;
 import com.github.appreciated.apexcharts.config.plotoptions.Bar;
 import com.github.appreciated.apexcharts.helper.Series;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -44,18 +50,67 @@ public class SupervisionSummaryView extends VerticalLayout {
 
 	private static final String ACCENT = "#2E6DB4";
 
+	private final SupervisionSummaryService summaryService;
+	private final DatePicker fromDatePicker = new DatePicker("Desde");
+	private final DatePicker toDatePicker = new DatePicker("Hasta");
+	private final Div content = new Div();
+
 	public SupervisionSummaryView(SupervisionSummaryService summaryService) {
+		this.summaryService = summaryService;
+
 		setSizeFull();
 		setPadding(true);
 		setSpacing(false);
 		addClassName("supervision-summary-view");
 
-		SupervisionSummaryDTO summary = summaryService.computeSummary();
-
 		add(buildHeader());
-		add(buildKpiRow(summary));
-		add(buildChartsTopRow(summary));
-		add(buildChartsBottomRow(summary));
+		add(buildDateFilterRow());
+
+		content.setWidthFull();
+		add(content);
+
+		refresh();
+	}
+
+	/**
+	 * Fila horizontal con los DatePicker "Desde" y "Hasta" que acotan las tareas de
+	 * supervisión por su fecha de creación. "Desde" arranca seis meses atrás y
+	 * "Hasta" en el día actual; al cambiar cualquiera se recalcula toda la vista.
+	 */
+	private Component buildDateFilterRow() {
+		LocalDate today = LocalDate.now();
+		toDatePicker.setValue(today);
+		fromDatePicker.setValue(today.minusMonths(6));
+
+		fromDatePicker.addValueChangeListener(event -> refresh());
+		toDatePicker.addValueChangeListener(event -> refresh());
+
+		HorizontalLayout row = new HorizontalLayout(fromDatePicker, toDatePicker);
+		row.setAlignItems(Alignment.BASELINE);
+		row.getStyle().set("margin-bottom", "16px");
+		return row;
+	}
+
+	/**
+	 * Recalcula y vuelve a dibujar todos los cards y gráficos considerando sólo las
+	 * tareas cuyo {@code created} cae dentro del rango elegido en los DatePicker.
+	 */
+	private void refresh() {
+		LocalDate fromDate = fromDatePicker.getValue();
+		LocalDate toDate = toDatePicker.getValue();
+		if (fromDate == null || toDate == null) {
+			return;
+		}
+
+		Date from = Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		Date to = Date.from(toDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
+
+		SupervisionSummaryDTO summary = summaryService.computeSummary(from, to);
+
+		content.removeAll();
+		content.add(buildKpiRow(summary));
+		content.add(buildChartsTopRow(summary));
+		content.add(buildChartsBottomRow(summary));
 	}
 
 	private Div buildHeader() {
