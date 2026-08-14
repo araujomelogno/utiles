@@ -299,6 +299,8 @@ public class SupervisionSummaryService {
 			Double average = tuple.get("avgScore", Double.class);
 			scores.add(new StudyScore(study, round1(average != null ? average : 0d)));
 		}
+		// Ordenado de mayor a menor puntaje global promedio.
+		scores.sort((a, b) -> Double.compare(b.score(), a.score()));
 		return scores;
 	}
 
