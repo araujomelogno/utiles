@@ -139,7 +139,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 		row.add(kpiCard("Encuestas completas", formatInteger(summary.getCompletedSurveys()), "#2F8F6B"));
 		row.add(kpiCard("Encuestas supervisadas", formatInteger(summary.getSupervisedSurveys()), "#8A6FB0"));
 		row.add(kpiCard("Nivel de supervisión", formatPercentage(summary.getSupervisionLevel()), "#E4A11B"));
-		row.add(kpiCard("Puntaje global prom.", formatDecimal(summary.getGlobalScoreAverage()), "#C5503F"));
+		row.add(kpiCard("Puntaje global prom. (de audios procesados)", formatDecimal(summary.getGlobalScoreAverage()), "#C5503F"));
 		return row;
 	}
 

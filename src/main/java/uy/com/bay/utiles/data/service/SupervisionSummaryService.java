@@ -195,7 +195,7 @@ public class SupervisionSummaryService {
 		// Acumuladores por año-mes: [sumScore, sumCob, sumFid, sumNeu, sumFlu, count].
 		Map<YearMonth, double[]> byMonth = new TreeMap<>();
 		for (Tuple tuple : supervisionTaskRepository.findMonthlyStatsBySurveyor(surveyor, from, to)) {
-			Date audioDate = tuple.get("audioDate", Date.class);
+			Date audioDate = tuple.get("created", Date.class);
 			if (audioDate == null) {
 				continue;
 			}
@@ -259,7 +259,7 @@ public class SupervisionSummaryService {
 		// Agrupado cronológicamente por año-mes para conservar el orden del eje X.
 		Map<YearMonth, double[]> byMonth = new TreeMap<>();
 		for (Tuple tuple : supervisionTaskRepository.findAudioDateAndAiScoreBetween(from, to)) {
-			Date audioDate = tuple.get("audioDate", Date.class);
+			Date audioDate = tuple.get("created", Date.class);
 			Double score = tuple.get("aiScore", Double.class);
 			if (audioDate == null) {
 				continue;

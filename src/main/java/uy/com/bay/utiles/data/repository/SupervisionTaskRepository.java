@@ -77,8 +77,8 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	Double averageAiScoreBetween(@Param("from") Date from, @Param("to") Date to);
 
 	/** Proyección de fecha de audio y puntaje de las tareas creadas dentro del rango. */
-	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore FROM SupervisionTask st "
-			+ "WHERE st.audioDate IS NOT NULL AND st.created BETWEEN :from AND :to")
+	@Query("SELECT st.created as created, st.aiScore as aiScore FROM SupervisionTask st "
+			+ "WHERE  st.created BETWEEN :from AND :to")
 	List<Tuple> findAudioDateAndAiScoreBetween(@Param("from") Date from, @Param("to") Date to);
 
 	/** Promedio de cada dimensión de calidad de las tareas creadas dentro del rango. */
@@ -162,11 +162,11 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	 * seleccionado (null = todos), de las tareas creadas dentro del rango, para
 	 * agrupar la evolución por mes en memoria.
 	 */
-	@Query("SELECT st.audioDate as audioDate, st.aiScore as aiScore, "
+	@Query("SELECT st.created as created, st.aiScore as aiScore, "
 			+ "st.scoreCobertura as cobertura, st.scoreFidelidad as fidelidad, "
 			+ "st.scoreNeutralidad as neutralidad, st.scoreFluidez as fluidez "
-			+ "FROM SupervisionTask st WHERE st.audioDate IS NOT NULL "
-			+ "AND (:surveyor IS NULL OR st.surveyor = :surveyor) AND st.created BETWEEN :from AND :to")
+			+ "FROM SupervisionTask st WHERE "
+			+ " (:surveyor IS NULL OR st.surveyor = :surveyor) AND st.created BETWEEN :from AND :to")
 	List<Tuple> findMonthlyStatsBySurveyor(@Param("surveyor") String surveyor, @Param("from") Date from,
 			@Param("to") Date to);
 }

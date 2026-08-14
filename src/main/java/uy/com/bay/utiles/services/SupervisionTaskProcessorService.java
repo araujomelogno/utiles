@@ -51,7 +51,7 @@ public class SupervisionTaskProcessorService {
 		this.chatClient = chatClientBuilder.build();
 
 		String loadedPrompt = "";
-		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision2.txt")) {
+		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision4.txt")) {
 			if (inputStream != null) {
 				byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
 				loadedPrompt = new String(byteArray, StandardCharsets.UTF_8);
