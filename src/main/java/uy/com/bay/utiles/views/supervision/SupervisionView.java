@@ -1,10 +1,14 @@
 package uy.com.bay.utiles.views.supervision;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
@@ -56,17 +60,44 @@ public class SupervisionView extends VerticalLayout {
 		tipoComboBox.addValueChangeListener(event -> {
 			studyComboBox.clear();
 			SupervisionTaskType selectedType = event.getValue();
-			if (selectedType == SupervisionTaskType.CALLE) {
-				List<AlchemerStudy> studies = studyService.findAll().stream()
-						.map(study -> new AlchemerStudy(
-								study.getId() != null ? study.getId().intValue() : 0, study.getName()))
-						.collect(Collectors.toList());
-				studyComboBox.setItems(studies);
-			} else if (selectedType == SupervisionTaskType.TELEFONICO) {
-				studyComboBox.setItems(alchemerSurveyService.fetchRecentSurveys());
-			} else {
+			if (selectedType == null) {
 				studyComboBox.setItems(new ArrayList<>());
+				return;
 			}
+
+			// Modal bloqueante mientras se popula el combobox de estudios. Se muestra el
+			// mensaje "Recuperando estudio" y no se puede cerrar ni operar el resto de la
+			// vista hasta que la recuperación termina.
+			Dialog loadingDialog = new Dialog();
+			loadingDialog.setCloseOnEsc(false);
+			loadingDialog.setCloseOnOutsideClick(false);
+			ProgressBar progressBar = new ProgressBar();
+			progressBar.setIndeterminate(true);
+			VerticalLayout dialogLayout = new VerticalLayout(new Span("Recuperando estudio"), progressBar);
+			dialogLayout.setAlignItems(Alignment.CENTER);
+			loadingDialog.add(dialogLayout);
+			loadingDialog.open();
+
+			// La recuperación se hace en segundo plano para que el modal se renderice y
+			// permanezca visible; al terminar se actualiza el combobox y se cierra el modal
+			// vía UI.access (Push está habilitado en la aplicación).
+			UI ui = UI.getCurrent();
+			new Thread(() -> {
+				List<AlchemerStudy> studies;
+				try {
+					studies = fetchStudiesForType(selectedType);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					studies = new ArrayList<>();
+				}
+				final List<AlchemerStudy> result = studies;
+				if (ui != null) {
+					ui.access(() -> {
+						studyComboBox.setItems(result);
+						loadingDialog.close();
+					});
+				}
+			}).start();
 		});
 
 		H2 title = new H2("Audios");
@@ -141,6 +172,24 @@ public class SupervisionView extends VerticalLayout {
 				questionnaireUpload, processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
+	}
+
+	/**
+	 * Recupera los estudios con los que se debe poblar el combobox "Estudio" según el
+	 * tipo seleccionado. Para {@code CALLE} se usan las entidades {@link Study}
+	 * (mapeadas al DTO {@link AlchemerStudy} con su id y name); para
+	 * {@code TELEFONICO} se recuperan las encuestas recientes de Alchemer.
+	 */
+	private List<AlchemerStudy> fetchStudiesForType(SupervisionTaskType type) {
+		if (type == SupervisionTaskType.CALLE) {
+			return studyService.findAll().stream()
+					.map(study -> new AlchemerStudy(study.getId() != null ? study.getId().intValue() : 0,
+							study.getName()))
+					.collect(Collectors.toList());
+		} else if (type == SupervisionTaskType.TELEFONICO) {
+			return alchemerSurveyService.fetchRecentSurveys();
+		}
+		return new ArrayList<>();
 	}
 
 	/**
