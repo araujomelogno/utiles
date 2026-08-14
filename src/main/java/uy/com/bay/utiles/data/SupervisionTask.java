@@ -25,6 +25,10 @@ public class SupervisionTask extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private SupervisionTaskType type;
 
+	@Lob
+	@Column(columnDefinition = "LONGTEXT")
+	private String fineTuning;
+
 	private String fileName;
 
 	private Date audioDate;
@@ -126,6 +130,14 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setType(SupervisionTaskType type) {
 		this.type = type;
+	}
+
+	public String getFineTuning() {
+		return fineTuning;
+	}
+
+	public void setFineTuning(String fineTuning) {
+		this.fineTuning = fineTuning;
 	}
 
 	public String getFileName() {

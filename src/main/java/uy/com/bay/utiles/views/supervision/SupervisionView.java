@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
@@ -111,6 +112,11 @@ public class SupervisionView extends VerticalLayout {
 		Upload questionnaireUpload = new Upload(questionnaireBuffer);
 		questionnaireUpload
 				.setAcceptedFileTypes("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+		H2 fineTuningTitle = new H2("Fine Tuning");
+		TextArea fineTuningTextArea = new TextArea();
+		fineTuningTextArea.setWidthFull();
+
 		Button processButton = new Button("Procesar", e -> {
 
 			if (tipoComboBox.getValue() == null) {
@@ -140,6 +146,7 @@ public class SupervisionView extends VerticalLayout {
 						task.setCreated(new java.util.Date());
 						task.setStatus(uy.com.bay.utiles.data.Status.PENDING);
 						task.setType(tipoComboBox.getValue());
+						task.setFineTuning(fineTuningTextArea.getValue());
 						task.setFileName(fileName);
 						parseFileName(task, fileName);
 						task.setAudioContent(audioContent);
@@ -169,7 +176,7 @@ public class SupervisionView extends VerticalLayout {
 		});
 
 		add(tipoTitle, tipoComboBox, estudioTitle, studyComboBox, title, multiFileUpload, questionnaireTitle,
-				questionnaireUpload, processButton);
+				questionnaireUpload, fineTuningTitle, fineTuningTextArea, processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
 	}
