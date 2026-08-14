@@ -142,7 +142,8 @@ public class SupervisionSurveyorReportView extends VerticalLayout {
 			return card;
 		}
 
-		ChartPoint[] points = ranking.stream().map(s -> new ChartPoint(s.surveyor(), s.score()))
+		ChartPoint[] points = ranking.stream()
+				.map(s -> new ChartPoint(s.surveyor() + " — " + s.count() + " casos supervisados", s.score()))
 				.toArray(ChartPoint[]::new);
 
 		Bar bar = new Bar();
