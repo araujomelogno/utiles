@@ -28,6 +28,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionSummaryService;
 import uy.com.bay.utiles.dto.SupervisionTimelineReportDTO;
 import uy.com.bay.utiles.views.ApexChartRenderHelper;
@@ -52,6 +53,7 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 	private final ComboBox<String> surveyorComboBox = new ComboBox<>("Encuestador");
 	private final DatePicker fromDatePicker = new DatePicker("Desde");
 	private final DatePicker toDatePicker = new DatePicker("Hasta");
+	private final ComboBox<SupervisionTaskType> typeComboBox = new ComboBox<>("Tipo");
 	private final Div content = new Div();
 
 	public SupervisionTimelineReportView(SupervisionSummaryService summaryService) {
@@ -103,7 +105,12 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 		fromDatePicker.addValueChangeListener(event -> refresh());
 		toDatePicker.addValueChangeListener(event -> refresh());
 
-		HorizontalLayout filters = new HorizontalLayout(surveyorComboBox, fromDatePicker, toDatePicker);
+		// Combobox "Tipo": arranca sin selección; al elegir un valor se filtra por el
+		// atributo type de las tareas de supervisión y se recalcula la vista.
+		typeComboBox.setItems(SupervisionTaskType.values());
+		typeComboBox.addValueChangeListener(event -> refresh());
+
+		HorizontalLayout filters = new HorizontalLayout(surveyorComboBox, fromDatePicker, toDatePicker, typeComboBox);
 		filters.setAlignItems(Alignment.BASELINE);
 		filters.getStyle().set("margin-bottom", "16px");
 		return filters;
@@ -126,7 +133,8 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 		String value = surveyorComboBox.getValue();
 		String surveyor = value == null || ALL_SURVEYORS.equals(value) ? null : value;
 
-		SupervisionTimelineReportDTO report = summaryService.computeTimelineReport(surveyor, from, to);
+		SupervisionTimelineReportDTO report = summaryService.computeTimelineReport(surveyor, from, to,
+				typeComboBox.getValue());
 
 		content.removeAll();
 		content.add(buildGlobalScoreCard(report));

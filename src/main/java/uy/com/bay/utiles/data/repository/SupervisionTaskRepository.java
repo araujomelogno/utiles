@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.SupervisionTask;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 
 @Repository
 public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask, Long> {
@@ -60,38 +61,50 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 
 	/** Cantidad de proyectos distintos de las tareas creadas dentro del rango. */
 	@Query("SELECT COUNT(DISTINCT st.alchemerStudyName) FROM SupervisionTask st "
-			+ "WHERE st.alchemerStudyName IS NOT NULL AND st.created BETWEEN :from AND :to")
-	long countDistinctAlchemerStudyNameBetween(@Param("from") Date from, @Param("to") Date to);
+			+ "WHERE st.alchemerStudyName IS NOT NULL AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
+	long countDistinctAlchemerStudyNameBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Cantidad de tareas de supervisión creadas dentro del rango. */
-	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to")
-	long countByCreatedBetween(@Param("from") Date from, @Param("to") Date to);
+	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
+	long countByCreatedBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Identificadores de encuesta distintos de las tareas creadas dentro del rango. */
 	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st "
-			+ "WHERE st.alchemerSuerveyId IS NOT NULL AND st.created BETWEEN :from AND :to")
-	List<Integer> findDistinctAlchemerSuerveyIdsBetween(@Param("from") Date from, @Param("to") Date to);
+			+ "WHERE st.alchemerSuerveyId IS NOT NULL AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
+	List<Integer> findDistinctAlchemerSuerveyIdsBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Promedio del puntaje global (aiScore) de las tareas creadas dentro del rango. */
-	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to")
-	Double averageAiScoreBetween(@Param("from") Date from, @Param("to") Date to);
+	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
+	Double averageAiScoreBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Proyección de fecha de audio y puntaje de las tareas creadas dentro del rango. */
 	@Query("SELECT st.created as created, st.aiScore as aiScore FROM SupervisionTask st "
-			+ "WHERE  st.created BETWEEN :from AND :to")
-	List<Tuple> findAudioDateAndAiScoreBetween(@Param("from") Date from, @Param("to") Date to);
+			+ "WHERE  st.created BETWEEN :from AND :to AND (:type IS NULL OR st.type = :type)")
+	List<Tuple> findAudioDateAndAiScoreBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Promedio de cada dimensión de calidad de las tareas creadas dentro del rango. */
 	@Query("SELECT AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
 			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st "
-			+ "WHERE st.created BETWEEN :from AND :to")
-	Tuple findAverageDimensionScoresBetween(@Param("from") Date from, @Param("to") Date to);
+			+ "WHERE st.created BETWEEN :from AND :to AND (:type IS NULL OR st.type = :type)")
+	Tuple findAverageDimensionScoresBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Promedio del puntaje global agrupado por proyecto de las tareas creadas dentro del rango. */
 	@Query("SELECT st.alchemerStudyName as studyName, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
 			+ "WHERE st.alchemerStudyName IS NOT NULL AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type) "
 			+ "GROUP BY st.alchemerStudyName ORDER BY st.alchemerStudyName")
-	List<Tuple> findAverageAiScoreByStudyBetween(@Param("from") Date from, @Param("to") Date to);
+	List<Tuple> findAverageAiScoreByStudyBetween(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	// ---- Reporte por proyecto (filtrado por alchemerStudyName; null = todos) ----
 
@@ -102,32 +115,37 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 
 	/** Identificadores de encuesta distintos del proyecto seleccionado (null = todos), creados dentro del rango. */
 	@Query("SELECT DISTINCT st.alchemerSuerveyId FROM SupervisionTask st WHERE st.alchemerSuerveyId IS NOT NULL "
-			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to")
+			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
 	List<Integer> findDistinctAlchemerSuerveyIdsByStudy(@Param("studyName") String studyName, @Param("from") Date from,
-			@Param("to") Date to);
+			@Param("to") Date to, @Param("type") SupervisionTaskType type);
 
 	/** Cantidad de tareas de supervisión del proyecto seleccionado (null = todos), creadas dentro del rango. */
 	@Query("SELECT COUNT(st) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
-			+ "AND st.created BETWEEN :from AND :to")
-	long countByStudy(@Param("studyName") String studyName, @Param("from") Date from, @Param("to") Date to);
+			+ "AND st.created BETWEEN :from AND :to AND (:type IS NULL OR st.type = :type)")
+	long countByStudy(@Param("studyName") String studyName, @Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Promedio del puntaje global del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
 	@Query("SELECT AVG(st.aiScore) FROM SupervisionTask st WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
-			+ "AND st.created BETWEEN :from AND :to")
-	Double averageAiScoreByStudy(@Param("studyName") String studyName, @Param("from") Date from, @Param("to") Date to);
+			+ "AND st.created BETWEEN :from AND :to AND (:type IS NULL OR st.type = :type)")
+	Double averageAiScoreByStudy(@Param("studyName") String studyName, @Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	/** Cantidad de encuestadores distintos del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
 	@Query("SELECT COUNT(DISTINCT st.surveyor) FROM SupervisionTask st WHERE st.surveyor IS NOT NULL "
-			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to")
+			+ "AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
 	long countDistinctSurveyorByStudy(@Param("studyName") String studyName, @Param("from") Date from,
-			@Param("to") Date to);
+			@Param("to") Date to, @Param("type") SupervisionTaskType type);
 
 	/** Promedio de cada dimensión de calidad del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
 	@Query("SELECT AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
 			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st "
-			+ "WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to")
+			+ "WHERE (:studyName IS NULL OR st.alchemerStudyName = :studyName) AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
 	Tuple findAverageDimensionScoresByStudy(@Param("studyName") String studyName, @Param("from") Date from,
-			@Param("to") Date to);
+			@Param("to") Date to, @Param("type") SupervisionTaskType type);
 
 	/**
 	 * Promedio del puntaje global y cantidad de tareas agrupados por encuestador del
@@ -135,9 +153,10 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	 */
 	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore, COUNT(st) as cnt FROM SupervisionTask st "
 			+ "WHERE st.surveyor IS NOT NULL AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
-			+ "AND st.created BETWEEN :from AND :to GROUP BY st.surveyor ORDER BY st.surveyor")
+			+ "AND st.created BETWEEN :from AND :to AND (:type IS NULL OR st.type = :type) "
+			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
 	List<Tuple> findAverageAiScoreBySurveyor(@Param("studyName") String studyName, @Param("from") Date from,
-			@Param("to") Date to);
+			@Param("to") Date to, @Param("type") SupervisionTaskType type);
 
 	/**
 	 * Estadísticas por encuestador: promedio del puntaje global, cantidad de tareas y
@@ -148,8 +167,10 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
 			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez "
 			+ "FROM SupervisionTask st WHERE st.surveyor IS NOT NULL AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type) "
 			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
-	List<Tuple> findSurveyorStats(@Param("from") Date from, @Param("to") Date to);
+	List<Tuple> findSurveyorStats(@Param("from") Date from, @Param("to") Date to,
+			@Param("type") SupervisionTaskType type);
 
 	// ---- Evolución temporal (filtrado por surveyor; null = todos) ----
 
@@ -166,7 +187,8 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "st.scoreCobertura as cobertura, st.scoreFidelidad as fidelidad, "
 			+ "st.scoreNeutralidad as neutralidad, st.scoreFluidez as fluidez "
 			+ "FROM SupervisionTask st WHERE "
-			+ " (:surveyor IS NULL OR st.surveyor = :surveyor) AND st.created BETWEEN :from AND :to")
+			+ " (:surveyor IS NULL OR st.surveyor = :surveyor) AND st.created BETWEEN :from AND :to "
+			+ "AND (:type IS NULL OR st.type = :type)")
 	List<Tuple> findMonthlyStatsBySurveyor(@Param("surveyor") String surveyor, @Param("from") Date from,
-			@Param("to") Date to);
+			@Param("to") Date to, @Param("type") SupervisionTaskType type);
 }
