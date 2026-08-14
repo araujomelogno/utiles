@@ -22,6 +22,9 @@ public class SupervisionTask extends AbstractEntity {
 	@Enumerated(EnumType.STRING)
 	private Status status;
 
+	@Enumerated(EnumType.STRING)
+	private SupervisionTaskType type;
+
 	private String fileName;
 
 	private Date audioDate;
@@ -115,6 +118,14 @@ public class SupervisionTask extends AbstractEntity {
 
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+
+	public SupervisionTaskType getType() {
+		return type;
+	}
+
+	public void setType(SupervisionTaskType type) {
+		this.type = type;
 	}
 
 	public String getFileName() {
