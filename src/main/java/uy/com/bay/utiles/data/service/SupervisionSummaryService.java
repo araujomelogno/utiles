@@ -153,7 +153,7 @@ public class SupervisionSummaryService {
 		for (Tuple tuple : supervisionTaskRepository.findSurveyorStats(from, to)) {
 			String surveyor = tuple.get("surveyor", String.class);
 			double average = value(tuple, "avgScore");
-			ranking.add(new SurveyorScore(surveyor, round1(average)));
+			ranking.add(new SurveyorScore(surveyor, round1(average), longValue(tuple, "cnt")));
 			if (average > bestScore) {
 				bestScore = average;
 				bestTuple = tuple;
@@ -228,8 +228,10 @@ public class SupervisionSummaryService {
 		for (Tuple tuple : supervisionTaskRepository.findAverageAiScoreBySurveyor(studyName, from, to)) {
 			String surveyor = tuple.get("surveyor", String.class);
 			Double average = tuple.get("avgScore", Double.class);
-			scores.add(new SurveyorScore(surveyor, round1(average != null ? average : 0d)));
+			scores.add(new SurveyorScore(surveyor, round1(average != null ? average : 0d), longValue(tuple, "cnt")));
 		}
+		// Ordenado de mayor a menor puntaje global promedio.
+		scores.sort((a, b) -> Double.compare(b.score(), a.score()));
 		return scores;
 	}
 
@@ -308,6 +310,11 @@ public class SupervisionSummaryService {
 	private double intValue(Tuple tuple, String alias) {
 		Integer v = tuple.get(alias, Integer.class);
 		return v != null ? v : 0d;
+	}
+
+	private long longValue(Tuple tuple, String alias) {
+		Long v = tuple.get(alias, Long.class);
+		return v != null ? v : 0L;
 	}
 
 	private String monthLabel(YearMonth month) {

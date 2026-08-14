@@ -33,8 +33,8 @@ public class SupervisionStudyReportDTO {
 	/** Promedio del puntaje global por encuestador. */
 	private List<SurveyorScore> scoreBySurveyor = new ArrayList<>();
 
-	/** Puntaje global promedio de un encuestador. */
-	public record SurveyorScore(String surveyor, double score) {
+	/** Puntaje global promedio de un encuestador y cantidad de tareas consideradas. */
+	public record SurveyorScore(String surveyor, double score, long count) {
 	}
 
 	public long getCompletedSurveys() {

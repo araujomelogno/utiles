@@ -129,19 +129,22 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 	Tuple findAverageDimensionScoresByStudy(@Param("studyName") String studyName, @Param("from") Date from,
 			@Param("to") Date to);
 
-	/** Promedio del puntaje global agrupado por encuestador del proyecto seleccionado (null = todos), de las tareas creadas dentro del rango. */
-	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore FROM SupervisionTask st "
+	/**
+	 * Promedio del puntaje global y cantidad de tareas agrupados por encuestador del
+	 * proyecto seleccionado (null = todos), de las tareas creadas dentro del rango.
+	 */
+	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore, COUNT(st) as cnt FROM SupervisionTask st "
 			+ "WHERE st.surveyor IS NOT NULL AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
 			+ "AND st.created BETWEEN :from AND :to GROUP BY st.surveyor ORDER BY st.surveyor")
 	List<Tuple> findAverageAiScoreBySurveyor(@Param("studyName") String studyName, @Param("from") Date from,
 			@Param("to") Date to);
 
 	/**
-	 * Estadísticas por encuestador: promedio del puntaje global y promedio de cada
-	 * dimensión, agrupados por surveyor, de las tareas creadas dentro del rango.
-	 * Alimenta el ranking y el radar mejor/peor.
+	 * Estadísticas por encuestador: promedio del puntaje global, cantidad de tareas y
+	 * promedio de cada dimensión, agrupados por surveyor, de las tareas creadas dentro
+	 * del rango. Alimenta el ranking y el radar mejor/peor.
 	 */
-	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore, "
+	@Query("SELECT st.surveyor as surveyor, AVG(st.aiScore) as avgScore, COUNT(st) as cnt, "
 			+ "AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
 			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez "
 			+ "FROM SupervisionTask st WHERE st.surveyor IS NOT NULL AND st.created BETWEEN :from AND :to "
