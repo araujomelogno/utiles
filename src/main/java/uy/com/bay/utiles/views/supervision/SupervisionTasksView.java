@@ -36,6 +36,7 @@ import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Status;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionTaskService;
 import uy.com.bay.utiles.dto.SupervisionTaskDTO;
 import uy.com.bay.utiles.services.WordExportService;
@@ -51,6 +52,7 @@ public class SupervisionTasksView extends VerticalLayout {
 
 	private final DatePicker fromDateField = new DatePicker("Desde:");
 	private final DatePicker toDateField = new DatePicker("Hasta:");
+	private final ComboBox<SupervisionTaskType> typeField = new ComboBox<>("Tipo:");
 	private final Grid<SupervisionTaskDTO> grid = new Grid<>(SupervisionTaskDTO.class, false);
 	private final TextField fileNameFilter = new TextField();
 	private final TextField alchemerStudyNameFilter = new TextField();
@@ -167,11 +169,13 @@ public class SupervisionTasksView extends VerticalLayout {
 	}
 
 	private HorizontalLayout getToolbar() {
+		typeField.setItems(SupervisionTaskType.values());
 		Button searchButton = new Button("Buscar");
 		searchButton.addClickListener(e -> refreshGrid());
 		Button exportButton = new Button("Exportar");
 		exportButton.addClickListener(e -> exportToExcel());
-		HorizontalLayout toolbar = new HorizontalLayout(fromDateField, toDateField, searchButton, exportButton);
+		HorizontalLayout toolbar = new HorizontalLayout(fromDateField, toDateField, typeField, searchButton,
+				exportButton);
 		toolbar.setAlignItems(Alignment.BASELINE);
 		return toolbar;
 	}
@@ -182,7 +186,8 @@ public class SupervisionTasksView extends VerticalLayout {
 		Date to = Date.from(toDateField.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
 		if (from != null && to != null) {
 			currentItems = supervisionTaskService.findDTOsByCreatedBetweenAndFileNameAndStatus(from, to,
-					fileNameFilter.getValue(), alchemerStudyNameFilter.getValue(), statusFilter.getValue());
+					fileNameFilter.getValue(), alchemerStudyNameFilter.getValue(), statusFilter.getValue(),
+					typeField.getValue());
 			grid.setItems(currentItems);
 		}
 	}

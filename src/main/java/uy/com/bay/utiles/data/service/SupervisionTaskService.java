@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import jakarta.persistence.Tuple;
 import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.SupervisionTask;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
 import uy.com.bay.utiles.dto.SupervisionTaskDTO;
 
@@ -30,13 +31,13 @@ public class SupervisionTaskService {
 
 	public List<SupervisionTaskDTO> findDTOsByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
 			Status status) {
-		return findDTOsByCreatedBetweenAndFileNameAndStatus(from, to, fileName, null, status);
+		return findDTOsByCreatedBetweenAndFileNameAndStatus(from, to, fileName, null, status, null);
 	}
 
 	public List<SupervisionTaskDTO> findDTOsByCreatedBetweenAndFileNameAndStatus(Date from, Date to, String fileName,
-			String alchemerStudyName, Status status) {
+			String alchemerStudyName, Status status, SupervisionTaskType type) {
 		List<Tuple> tuples = repository.findTuplesByCreatedBetweenOrderByCreatedDesc(from, to, fileName,
-				alchemerStudyName, status);
+				alchemerStudyName, status, type);
 		Map<Long, SupervisionTaskDTO> dtoMap = new LinkedHashMap<>();
 
 		for (Tuple tuple : tuples) {
