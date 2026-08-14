@@ -41,10 +41,11 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			+ "FROM SupervisionTask st LEFT JOIN st.durationBySpeakers ds " + "WHERE st.created BETWEEN :from AND :to "
 			+ "AND (:fileName IS NULL OR :fileName = '' OR lower(st.fileName) LIKE lower(concat('%', :fileName, '%'))) "
 			+ "AND (:alchemerStudyName IS NULL OR :alchemerStudyName = '' OR lower(st.alchemerStudyName) LIKE lower(concat('%', :alchemerStudyName, '%'))) "
-			+ "AND (:status IS NULL OR st.status = :status) " + "ORDER BY st.created DESC")
+			+ "AND (:status IS NULL OR st.status = :status) "
+			+ "AND (:type IS NULL OR st.type = :type) " + "ORDER BY st.created DESC")
 	List<Tuple> findTuplesByCreatedBetweenOrderByCreatedDesc(@Param("from") Date from, @Param("to") Date to,
 			@Param("fileName") String fileName, @Param("alchemerStudyName") String alchemerStudyName,
-			@Param("status") Status status);
+			@Param("status") Status status, @Param("type") SupervisionTaskType type);
 
 	@Query("SELECT st.id as id, KEY(c) as itemId, VALUE(c) as coincidence "
 			+ "FROM SupervisionTask st JOIN st.coincidenceByItem c WHERE st.id IN :ids")
