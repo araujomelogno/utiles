@@ -15,6 +15,7 @@ import com.github.appreciated.apexcharts.config.builder.DataLabelsBuilder;
 import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
 import com.github.appreciated.apexcharts.config.builder.PlotOptionsBuilder;
 import com.github.appreciated.apexcharts.config.builder.StrokeBuilder;
+import com.github.appreciated.apexcharts.config.builder.YAxisBuilder;
 import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.legend.Position;
 import com.github.appreciated.apexcharts.config.plotoptions.Bar;
@@ -201,6 +202,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 				.withColors(ACCENT)
 				.withStroke(StrokeBuilder.get().withWidth(3.0).build())
 				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
+				.withYaxis(YAxisBuilder.get().withMin(0.0).build())
 				.withSeries(new Series<>("Puntaje Global", points)).build();
 		chart.setWidth("100%");
 		chart.setHeight("300px");
