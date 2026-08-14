@@ -17,12 +17,15 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -137,6 +140,13 @@ public class SupervisionTasksView extends VerticalLayout {
 			return downloadLink;
 		}).setHeader("Audio");
 
+		grid.addComponentColumn(task -> {
+			Button deleteButton = new Button("Borrar");
+			deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+			deleteButton.addClickListener(e -> confirmDelete(task));
+			return deleteButton;
+		}).setHeader("Borrar");
+
 		HeaderRow headerRow = grid.appendHeaderRow();
 
 		alchemerStudyNameFilter.setValueChangeMode(ValueChangeMode.LAZY);
@@ -175,6 +185,30 @@ public class SupervisionTasksView extends VerticalLayout {
 					fileNameFilter.getValue(), alchemerStudyNameFilter.getValue(), statusFilter.getValue());
 			grid.setItems(currentItems);
 		}
+	}
+
+	private void confirmDelete(SupervisionTaskDTO task) {
+		if (task == null || task.getId() == null) {
+			return;
+		}
+		ConfirmDialog dialog = new ConfirmDialog();
+		dialog.setHeader("Confirmar Borrado");
+		dialog.setText("¿Estás seguro de que quieres borrar esta tarea de supervisión? Esta acción no se puede deshacer.");
+		dialog.setCancelable(true);
+		dialog.setConfirmText("Borrar");
+		dialog.setConfirmButtonTheme("error primary");
+		dialog.addConfirmListener(event -> {
+			try {
+				supervisionTaskService.delete(task.getId());
+				refreshGrid();
+				Notification.show("Tarea de supervisión borrada exitosamente.", 3000,
+						Notification.Position.BOTTOM_START);
+			} catch (Exception ex) {
+				Notification.show("Error al borrar la tarea de supervisión: " + ex.getMessage(), 5000,
+						Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+			}
+		});
+		dialog.open();
 	}
 
 	private void exportToExcel() {
