@@ -15,6 +15,7 @@ import com.vaadin.flow.server.StreamResource;
 import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.Study;
 import uy.com.bay.utiles.data.SupervisionTask;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionTaskService;
 import uy.com.bay.utiles.dto.AlchemerStudy;
 import uy.com.bay.utiles.services.AlchemerSurveyService;
@@ -27,6 +28,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @PageTitle("Supervisión de Encuestas")
 @Route(value = "supervision", layout = MainLayout.class)
@@ -43,10 +45,29 @@ public class SupervisionView extends VerticalLayout {
 		this.studyService = studyService;
 		this.alchemerSurveyService = alchemerSurveyService;
 
+		H2 tipoTitle = new H2("Tipo");
+		ComboBox<SupervisionTaskType> tipoComboBox = new ComboBox<>("Tipo");
+		tipoComboBox.setItems(SupervisionTaskType.values());
+
 		H2 estudioTitle = new H2("Estudio");
 		ComboBox<AlchemerStudy> studyComboBox = new ComboBox<>("Estudio");
-		studyComboBox.setItems(alchemerSurveyService.fetchRecentSurveys());
 		studyComboBox.setItemLabelGenerator(AlchemerStudy::title);
+
+		tipoComboBox.addValueChangeListener(event -> {
+			studyComboBox.clear();
+			SupervisionTaskType selectedType = event.getValue();
+			if (selectedType == SupervisionTaskType.CALLE) {
+				List<AlchemerStudy> studies = studyService.findAll().stream()
+						.map(study -> new AlchemerStudy(
+								study.getId() != null ? study.getId().intValue() : 0, study.getName()))
+						.collect(Collectors.toList());
+				studyComboBox.setItems(studies);
+			} else if (selectedType == SupervisionTaskType.TELEFONICO) {
+				studyComboBox.setItems(alchemerSurveyService.fetchRecentSurveys());
+			} else {
+				studyComboBox.setItems(new ArrayList<>());
+			}
+		});
 
 		H2 title = new H2("Audios");
 
@@ -61,6 +82,10 @@ public class SupervisionView extends VerticalLayout {
 				.setAcceptedFileTypes("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 		Button processButton = new Button("Procesar", e -> {
 
+			if (tipoComboBox.getValue() == null) {
+				Notification.show("Debe seleccionar tipo");
+				return;
+			}
 			if (studyComboBox.getValue() == null) {
 				Notification.show("Por favor, seleccione un estudio.");
 				return;
@@ -83,6 +108,7 @@ public class SupervisionView extends VerticalLayout {
 						SupervisionTask task = new SupervisionTask();
 						task.setCreated(new java.util.Date());
 						task.setStatus(uy.com.bay.utiles.data.Status.PENDING);
+						task.setType(tipoComboBox.getValue());
 						task.setFileName(fileName);
 						parseFileName(task, fileName);
 						task.setAudioContent(audioContent);
@@ -111,8 +137,8 @@ public class SupervisionView extends VerticalLayout {
 			}
 		});
 
-		add(estudioTitle, studyComboBox, title, multiFileUpload, questionnaireTitle, questionnaireUpload,
-				processButton);
+		add(tipoTitle, tipoComboBox, estudioTitle, studyComboBox, title, multiFileUpload, questionnaireTitle,
+				questionnaireUpload, processButton);
 		setSpacing(true);
 		setAlignItems(Alignment.CENTER);
 	}
