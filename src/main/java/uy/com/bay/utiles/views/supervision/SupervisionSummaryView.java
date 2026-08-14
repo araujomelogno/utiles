@@ -21,6 +21,7 @@ import com.github.appreciated.apexcharts.config.legend.Position;
 import com.github.appreciated.apexcharts.config.plotoptions.Bar;
 import com.github.appreciated.apexcharts.helper.Series;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
@@ -30,6 +31,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionSummaryService;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
@@ -56,6 +58,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 	private final SupervisionSummaryService summaryService;
 	private final DatePicker fromDatePicker = new DatePicker("Desde");
 	private final DatePicker toDatePicker = new DatePicker("Hasta");
+	private final ComboBox<SupervisionTaskType> typeComboBox = new ComboBox<>("Tipo");
 	private final Div content = new Div();
 
 	public SupervisionSummaryView(SupervisionSummaryService summaryService) {
@@ -88,7 +91,12 @@ public class SupervisionSummaryView extends VerticalLayout {
 		fromDatePicker.addValueChangeListener(event -> refresh());
 		toDatePicker.addValueChangeListener(event -> refresh());
 
-		HorizontalLayout row = new HorizontalLayout(fromDatePicker, toDatePicker);
+		// Combobox "Tipo": arranca sin selección; al elegir un valor se filtra por el
+		// atributo type de las tareas de supervisión y se recalcula la vista.
+		typeComboBox.setItems(SupervisionTaskType.values());
+		typeComboBox.addValueChangeListener(event -> refresh());
+
+		HorizontalLayout row = new HorizontalLayout(fromDatePicker, toDatePicker, typeComboBox);
 		row.setAlignItems(Alignment.BASELINE);
 		row.getStyle().set("margin-bottom", "16px");
 		return row;
@@ -108,7 +116,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 		Date from = Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 		Date to = Date.from(toDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
 
-		SupervisionSummaryDTO summary = summaryService.computeSummary(from, to);
+		SupervisionSummaryDTO summary = summaryService.computeSummary(from, to, typeComboBox.getValue());
 
 		content.removeAll();
 		content.add(buildKpiRow(summary));

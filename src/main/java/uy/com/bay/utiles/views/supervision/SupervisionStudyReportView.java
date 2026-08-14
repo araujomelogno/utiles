@@ -27,6 +27,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
+import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionSummaryService;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
@@ -54,6 +55,7 @@ public class SupervisionStudyReportView extends VerticalLayout {
 	private final ComboBox<String> studyComboBox = new ComboBox<>("Estudio");
 	private final DatePicker fromDatePicker = new DatePicker("Desde");
 	private final DatePicker toDatePicker = new DatePicker("Hasta");
+	private final ComboBox<SupervisionTaskType> typeComboBox = new ComboBox<>("Tipo");
 	private final Div content = new Div();
 
 	public SupervisionStudyReportView(SupervisionSummaryService summaryService) {
@@ -105,7 +107,12 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		fromDatePicker.addValueChangeListener(event -> refresh());
 		toDatePicker.addValueChangeListener(event -> refresh());
 
-		HorizontalLayout filters = new HorizontalLayout(studyComboBox, fromDatePicker, toDatePicker);
+		// Combobox "Tipo": arranca sin selección; al elegir un valor se filtra por el
+		// atributo type de las tareas de supervisión y se recalcula la vista.
+		typeComboBox.setItems(SupervisionTaskType.values());
+		typeComboBox.addValueChangeListener(event -> refresh());
+
+		HorizontalLayout filters = new HorizontalLayout(studyComboBox, fromDatePicker, toDatePicker, typeComboBox);
 		filters.setAlignItems(Alignment.BASELINE);
 		filters.getStyle().set("margin-bottom", "16px");
 		return filters;
@@ -128,7 +135,8 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		String value = studyComboBox.getValue();
 		String studyName = value == null || ALL_STUDIES.equals(value) ? null : value;
 
-		SupervisionStudyReportDTO report = summaryService.computeStudyReport(studyName, from, to);
+		SupervisionStudyReportDTO report = summaryService.computeStudyReport(studyName, from, to,
+				typeComboBox.getValue());
 
 		content.removeAll();
 		content.add(buildKpiRow(report));
