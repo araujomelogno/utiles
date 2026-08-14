@@ -116,4 +116,8 @@ public class SupervisionTaskService {
 	public byte[] getAudioContent(Long id) {
 		return repository.findAudioContentById(id);
 	}
+
+	public void delete(Long id) {
+		repository.deleteById(id);
+	}
 }
