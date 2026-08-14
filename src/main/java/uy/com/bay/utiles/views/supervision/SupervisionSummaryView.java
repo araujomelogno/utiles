@@ -3,6 +3,7 @@ package uy.com.bay.utiles.views.supervision;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -49,6 +50,7 @@ import uy.com.bay.utiles.views.MainLayout;
 public class SupervisionSummaryView extends VerticalLayout {
 
 	private static final String ACCENT = "#2E6DB4";
+	private static final String AVERAGE_COLOR = "#E4A11B";
 
 	private final SupervisionSummaryService summaryService;
 	private final DatePicker fromDatePicker = new DatePicker("Desde");
@@ -264,8 +266,13 @@ public class SupervisionSummaryView extends VerticalLayout {
 			return card;
 		}
 
-		ChartPoint[] points = scoreByStudy.stream().map(s -> new ChartPoint(s.study(), s.score()))
-				.toArray(ChartPoint[]::new);
+		// Primera barra "Promedio" (con color propio) = promedio del resto de las barras.
+		double average = scoreByStudy.stream().mapToDouble(StudyScore::score).average().orElse(0d);
+
+		List<ChartPoint> pointList = new ArrayList<>();
+		pointList.add(new ChartPoint("Promedio", round1(average), AVERAGE_COLOR));
+		scoreByStudy.forEach(s -> pointList.add(new ChartPoint(s.study(), s.score())));
+		ChartPoint[] points = pointList.toArray(new ChartPoint[0]);
 
 		Bar bar = new Bar();
 		bar.setHorizontal(true);
@@ -276,7 +283,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 				.withColors(ACCENT)
 				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
 				.withSeries(new Series<>("Puntaje Global", points)).build();
-		int height = Math.max(320, scoreByStudy.size() * 42 + 80);
+		int height = Math.max(320, points.length * 42 + 80);
 		chart.setWidth("100%");
 		chart.setHeight(height + "px");
 		card.add(ApexChartRenderHelper.deferred(chart));
@@ -293,10 +300,16 @@ public class SupervisionSummaryView extends VerticalLayout {
 	public static class ChartPoint {
 		private final String x;
 		private final Double y;
+		private final String fillColor;
 
 		public ChartPoint(String x, Double y) {
+			this(x, y, null);
+		}
+
+		public ChartPoint(String x, Double y, String fillColor) {
 			this.x = x;
 			this.y = y;
+			this.fillColor = fillColor;
 		}
 
 		public String getX() {
@@ -305,6 +318,11 @@ public class SupervisionSummaryView extends VerticalLayout {
 
 		public Double getY() {
 			return y;
+		}
+
+		/** Color propio de la barra; {@code null} usa el color de la serie (se omite en el JSON). */
+		public String getFillColor() {
+			return fillColor;
 		}
 	}
 
