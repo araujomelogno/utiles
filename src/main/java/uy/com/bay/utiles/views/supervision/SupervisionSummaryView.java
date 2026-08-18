@@ -147,7 +147,8 @@ public class SupervisionSummaryView extends VerticalLayout {
 		row.add(kpiCard("Encuestas completas", formatInteger(summary.getCompletedSurveys()), "#2F8F6B"));
 		row.add(kpiCard("Encuestas supervisadas", formatInteger(summary.getSupervisedSurveys()), "#8A6FB0"));
 		row.add(kpiCard("Nivel de supervisión", formatPercentage(summary.getSupervisionLevel()), "#E4A11B"));
-		row.add(kpiCard("Puntaje global prom. (de audios procesados)", formatDecimal(summary.getGlobalScoreAverage()), "#C5503F"));
+		row.add(kpiCard("Puntaje global prom. (de audios procesados)",
+				formatInteger(Math.round(summary.getGlobalScoreAverage())), "#C5503F"));
 		return row;
 	}
 
@@ -224,8 +225,8 @@ public class SupervisionSummaryView extends VerticalLayout {
 		card.add(cardTitle("Nivel de supervisión"));
 		card.add(cardCaption("Supervisadas sobre completas"));
 
-		double levelPct = round1(Math.max(0d, Math.min(1d, level)) * 100d);
-		double rest = round1(100d - levelPct);
+		double levelPct = roundToInt(Math.max(0d, Math.min(1d, level)) * 100d);
+		double rest = roundToInt(100d - levelPct);
 
 		Div chartContainer = new Div();
 		chartContainer.getStyle().set("display", "flex").set("align-items", "center").set("justify-content", "center");
@@ -251,8 +252,8 @@ public class SupervisionSummaryView extends VerticalLayout {
 		card.add(cardTitle("Perfil de calidad por dimensión"));
 		card.add(cardCaption("Promedio por dimensión de la rúbrica"));
 
-		Double[] values = { dimensions.cobertura(), dimensions.fidelidad(), dimensions.neutralidad(),
-				dimensions.fluidez() };
+		Double[] values = { roundToInt(dimensions.cobertura()), roundToInt(dimensions.fidelidad()),
+				roundToInt(dimensions.neutralidad()), roundToInt(dimensions.fluidez()) };
 
 		ApexCharts chart = ApexChartsBuilder.get()
 				.withChart(ChartBuilder.get().withType(Type.RADAR).build())
@@ -280,7 +281,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 		double average = scoreByStudy.stream().mapToDouble(StudyScore::score).average().orElse(0d);
 
 		List<ChartPoint> pointList = new ArrayList<>();
-		pointList.add(new ChartPoint("Promedio", round1(average), AVERAGE_COLOR));
+		pointList.add(new ChartPoint("Promedio", average, AVERAGE_COLOR));
 		scoreByStudy.forEach(s -> pointList.add(new ChartPoint(s.study(), s.score())));
 		ChartPoint[] points = pointList.toArray(new ChartPoint[0]);
 
@@ -304,8 +305,8 @@ public class SupervisionSummaryView extends VerticalLayout {
 
 	/**
 	 * Punto de datos {@code {x, y}} consumido por ApexCharts. El eje X toma la
-	 * etiqueta (mes o proyecto) y el eje Y el valor numérico. Jackson serializa
-	 * ambos campos en el objeto de datos de la serie.
+	 * etiqueta (mes o proyecto) y el eje Y el valor numérico, redondeado a entero.
+	 * Jackson serializa ambos campos en el objeto de datos de la serie.
 	 */
 	public static class ChartPoint {
 		private final String x;
@@ -318,7 +319,7 @@ public class SupervisionSummaryView extends VerticalLayout {
 
 		public ChartPoint(String x, Double y, String fillColor) {
 			this.x = x;
-			this.y = y;
+			this.y = y == null ? null : (double) Math.round(y);
 			this.fillColor = fillColor;
 		}
 
@@ -368,15 +369,12 @@ public class SupervisionSummaryView extends VerticalLayout {
 		return String.format(Locale.US, "%,d", value);
 	}
 
-	private String formatDecimal(double value) {
-		return String.format(Locale.US, "%.1f", value);
-	}
-
 	private String formatPercentage(double ratio) {
 		return String.format(Locale.US, "%.0f%%", ratio * 100d);
 	}
 
-	private static double round1(double value) {
-		return Math.round(value * 10d) / 10d;
+	/** Redondea un valor de gráfico al entero más cercano (conservando el tipo {@code double}). */
+	private static double roundToInt(double value) {
+		return Math.round(value);
 	}
 }

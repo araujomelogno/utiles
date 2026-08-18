@@ -208,8 +208,8 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 
 	/**
 	 * Punto de datos {@code {x, y}} consumido por ApexCharts. El eje X toma el mes y
-	 * el eje Y el valor promedio. Jackson serializa ambos campos en el objeto de
-	 * datos de la serie.
+	 * el eje Y el valor promedio, redondeado a entero. Jackson serializa ambos
+	 * campos en el objeto de datos de la serie.
 	 */
 	public static class ChartPoint {
 		private final String x;
@@ -217,7 +217,7 @@ public class SupervisionTimelineReportView extends VerticalLayout {
 
 		public ChartPoint(String x, Double y) {
 			this.x = x;
-			this.y = y;
+			this.y = y == null ? null : (double) Math.round(y);
 		}
 
 		public String getX() {
