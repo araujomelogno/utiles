@@ -193,16 +193,16 @@ public class SupervisionSurveyorReportView extends VerticalLayout {
 	}
 
 	private Double[] dimensionValues(SurveyorProfile profile) {
-		return new Double[] { profile.dimensions().cobertura(), profile.dimensions().fidelidad(),
-				profile.dimensions().neutralidad(), profile.dimensions().fluidez() };
+		return new Double[] { roundToInt(profile.dimensions().cobertura()), roundToInt(profile.dimensions().fidelidad()),
+				roundToInt(profile.dimensions().neutralidad()), roundToInt(profile.dimensions().fluidez()) };
 	}
 
 	// --------------------------------------------------------------- Helpers
 
 	/**
 	 * Punto de datos {@code {x, y}} consumido por ApexCharts. El eje X toma el
-	 * encuestador y el eje Y el puntaje promedio. Jackson serializa ambos campos en
-	 * el objeto de datos de la serie.
+	 * encuestador y el eje Y el puntaje promedio, redondeado a entero. Jackson
+	 * serializa ambos campos en el objeto de datos de la serie.
 	 */
 	public static class ChartPoint {
 		private final String x;
@@ -210,7 +210,7 @@ public class SupervisionSurveyorReportView extends VerticalLayout {
 
 		public ChartPoint(String x, Double y) {
 			this.x = x;
-			this.y = y;
+			this.y = y == null ? null : (double) Math.round(y);
 		}
 
 		public String getX() {
@@ -248,5 +248,10 @@ public class SupervisionSurveyorReportView extends VerticalLayout {
 		Span span = new Span("Sin datos disponibles");
 		span.getStyle().set("color", "#8A93A3").set("font-size", "13px").set("font-style", "italic");
 		return span;
+	}
+
+	/** Redondea un valor de gráfico al entero más cercano (conservando el tipo {@code double}). */
+	private static double roundToInt(double value) {
+		return Math.round(value);
 	}
 }

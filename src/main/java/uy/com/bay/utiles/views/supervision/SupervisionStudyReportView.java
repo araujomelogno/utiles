@@ -154,8 +154,8 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		row.add(kpiCard("Encuestas completas", formatInteger(report.getCompletedSurveys()), "#2F8F6B"));
 		row.add(kpiCard("Encuestas supervisadas", formatInteger(report.getSupervisedSurveys()), "#8A6FB0"));
 		row.add(kpiCard("Nivel de supervisión", formatPercentage(report.getSupervisionLevel()), "#E4A11B"));
-		row.add(kpiCard("Puntaje global prom.", formatDecimal(report.getGlobalScoreAverage()), "#C5503F"));
-		row.add(kpiCard("Prom. x encuestador", formatDecimal(report.getAveragePerSurveyor()), ACCENT));
+		row.add(kpiCard("Puntaje global prom.", formatInteger(Math.round(report.getGlobalScoreAverage())), "#C5503F"));
+		row.add(kpiCard("Prom. x encuestador", formatInteger(Math.round(report.getAveragePerSurveyor())), ACCENT));
 		return row;
 	}
 
@@ -194,8 +194,8 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		card.add(cardTitle("Dimensiones del proyecto"));
 		card.add(cardCaption("Promedio por dimensión de la rúbrica"));
 
-		Double[] values = { dimensions.cobertura(), dimensions.fidelidad(), dimensions.neutralidad(),
-				dimensions.fluidez() };
+		Double[] values = { roundToInt(dimensions.cobertura()), roundToInt(dimensions.fidelidad()),
+				roundToInt(dimensions.neutralidad()), roundToInt(dimensions.fluidez()) };
 
 		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.RADAR).build())
 				.withColors(ACCENT).withLabels("Cobertura", "Fidelidad", "Neutralidad", "Fluidez")
@@ -240,8 +240,8 @@ public class SupervisionStudyReportView extends VerticalLayout {
 
 	/**
 	 * Punto de datos {@code {x, y}} consumido por ApexCharts. El eje X toma la
-	 * etiqueta (encuestador) y el eje Y el valor numérico. Jackson serializa ambos
-	 * campos en el objeto de datos de la serie.
+	 * etiqueta (encuestador) y el eje Y el valor numérico, redondeado a entero.
+	 * Jackson serializa ambos campos en el objeto de datos de la serie.
 	 */
 	public static class ChartPoint {
 		private final String x;
@@ -249,7 +249,7 @@ public class SupervisionStudyReportView extends VerticalLayout {
 
 		public ChartPoint(String x, Double y) {
 			this.x = x;
-			this.y = y;
+			this.y = y == null ? null : (double) Math.round(y);
 		}
 
 		public String getX() {
@@ -293,11 +293,12 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		return String.format(Locale.US, "%,d", value);
 	}
 
-	private String formatDecimal(double value) {
-		return String.format(Locale.US, "%.1f", value);
-	}
-
 	private String formatPercentage(double ratio) {
 		return String.format(Locale.US, "%.0f%%", ratio * 100d);
+	}
+
+	/** Redondea un valor de gráfico al entero más cercano (conservando el tipo {@code double}). */
+	private static double roundToInt(double value) {
+		return Math.round(value);
 	}
 }
