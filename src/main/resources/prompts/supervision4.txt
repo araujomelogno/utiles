@@ -27,6 +27,7 @@ REGLAS ESPECÍFICAS
 - Nunca tomes como evidencia de lectura correcta un fragmento dicho por el ENCUESTADO.
 - Dentro del cuestioanrio, las palabras que están escritas todas sus letras en  mayúsculas no es necesario que el encuestador las lea.
 - Toda evidencia citada debe provenir de intervenciones del ENCUESTADOR.
+- %s
 
 TAREA
 A) Identificá y alineá cada pregunta o ítem del cuestionario con el/los fragmentos correspondientes de la transcripción (si existen).

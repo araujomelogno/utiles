@@ -56,10 +56,10 @@ public class SupervisionTaskProcessorService {
 				byte[] byteArray = FileCopyUtils.copyToByteArray(inputStream);
 				loadedPrompt = new String(byteArray, StandardCharsets.UTF_8);
 			} else {
-				logger.error("Prompt file not found: /prompts/supervision2.txt");
+				logger.error("Prompt file not found: /prompts/supervision4.txt");
 			}
 		} catch (IOException e) {
-			logger.error("Error loading prompt /prompts/supervision2.txt", e);
+			logger.error("Error loading prompt /prompts/supervision4.txt", e);
 		}
 		this.basePrompt = loadedPrompt;
 	}
@@ -133,7 +133,7 @@ public class SupervisionTaskProcessorService {
 					task.getQuestionnaireFileName());
 
 			// Evaluación
-			String formattedPrompt = basePrompt.formatted(questionnaireString, transcription);
+			String formattedPrompt = basePrompt.formatted(questionnaireString, transcription, task.getFineTuning());
 			task.setFullPrompt(formattedPrompt);
 
 			String response = callChatClientWithRetry(formattedPrompt);
