@@ -123,6 +123,9 @@ public class MainLayout extends AppLayout {
 		SideNavItem ganttItem = new SideNavItem("Gantt", "gantt");
 		ganttItem.setPrefixComponent(new Icon("vaadin", "chart-timeline"));
 		proyectosItem.addItem(ganttItem);
+		SideNavItem doobloProjectsItem = new SideNavItem("Id proyectos Dooblo", "dooblo-projects");
+		doobloProjectsItem.setPrefixComponent(new Icon("vaadin", "key-o"));
+		proyectosItem.addItem(doobloProjectsItem);
 		nav.addItem(proyectosItem);
 
 		List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
