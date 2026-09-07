@@ -1,12 +1,24 @@
 package uy.com.bay.utiles.views.proyectos;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
@@ -21,8 +33,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.RolesAllowed;
-import uy.com.bay.utiles.dto.DoobloProjectDTO;
-import uy.com.bay.utiles.tasks.DoobloSurveyRetriever;
 import uy.com.bay.utiles.views.MainLayout;
 
 /**
@@ -34,14 +44,20 @@ import uy.com.bay.utiles.views.MainLayout;
 @RolesAllowed("ADMIN")
 public class DoobloProjectsView extends VerticalLayout {
 
-	private final DoobloSurveyRetriever doobloSurveyRetriever;
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	private final String username;
+	private final String password;
+	private final RestTemplate restTemplate = new RestTemplate();
 
 	private final DatePicker fromDatePicker = new DatePicker("Desde");
 	private final DatePicker toDatePicker = new DatePicker("Hasta");
-	private final Grid<DoobloProjectDTO> grid = new Grid<>(DoobloProjectDTO.class, false);
+	private final Grid<JsonNode> grid = new Grid<>();
 
-	public DoobloProjectsView(DoobloSurveyRetriever doobloSurveyRetriever) {
-		this.doobloSurveyRetriever = doobloSurveyRetriever;
+	public DoobloProjectsView(@Value("${surveyToGo.username}") String username,
+			@Value("${surveyToGo.password}") String password) {
+		this.username = username;
+		this.password = password;
 
 		setSizeFull();
 		setPadding(true);
@@ -49,8 +65,10 @@ public class DoobloProjectsView extends VerticalLayout {
 
 		add(buildDateFilterRow());
 
-		grid.addColumn(DoobloProjectDTO::getSurveyName).setHeader("Estudio").setAutoWidth(true).setSortable(true);
-		grid.addColumn(DoobloProjectDTO::getSurveyId).setHeader("Id Doolo").setAutoWidth(true).setSortable(true);
+		grid.addColumn(project -> project.path("SurveyName").asText("")).setHeader("Estudio").setAutoWidth(true)
+				.setSortable(true);
+		grid.addColumn(project -> project.path("SurveyID").asText("")).setHeader("Id Doolo").setAutoWidth(true)
+				.setSortable(true);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		grid.setSizeFull();
 		add(grid);
@@ -78,8 +96,9 @@ public class DoobloProjectsView extends VerticalLayout {
 	}
 
 	/**
-	 * Consulta los proyectos de Dooblo para el rango elegido y los vuelca en la
-	 * grilla.
+	 * Consulta {@code Account/GetUsageByPeriod} para el rango elegido, usando la
+	 * misma autenticación básica y el mismo formato de fecha ({@code yyyy-MM-dd})
+	 * que el resto de las llamadas a Dooblo, y vuelca los proyectos en la grilla.
 	 */
 	private void refresh() {
 		LocalDate fromDate = fromDatePicker.getValue();
@@ -94,17 +113,49 @@ public class DoobloProjectsView extends VerticalLayout {
 			return;
 		}
 
-		Date from = Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-		Date to = Date.from(toDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
+		String startDate = URLEncoder.encode(fromDate.format(DATE_FORMAT), StandardCharsets.UTF_8);
+		String endDate = URLEncoder.encode(toDate.format(DATE_FORMAT), StandardCharsets.UTF_8);
+		String url = String.format("http://api.dooblo.net/newapi/Account/GetUsageByPeriod?StartDate=%s&EndDate=%s",
+				startDate, endDate);
+
+		HttpHeaders headers = new HttpHeaders();
+		String auth = username + ":" + password;
+		byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.US_ASCII));
+		headers.set("Authorization", "Basic " + new String(encodedAuth));
 
 		try {
-			List<DoobloProjectDTO> projects = doobloSurveyRetriever.getUsageByPeriod(from, to);
-			grid.setItems(projects);
+			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers),
+					String.class);
+
+			Map<String, JsonNode> byId = new LinkedHashMap<>();
+			collectProjects(new ObjectMapper().readTree(response.getBody()), byId);
+			grid.setItems(new ArrayList<>(byId.values()));
 		} catch (Exception e) {
 			grid.setItems(Collections.emptyList());
 			Notification notification = Notification.show("No se pudieron obtener los proyectos de Dooblo.", 5000,
 					Position.MIDDLE);
 			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		}
+	}
+
+	/**
+	 * Recorre la respuesta de {@code GetUsageByPeriod} y acumula en {@code byId}
+	 * todo objeto que traiga un SurveyID, sin importar a qué profundidad venga
+	 * anidado dentro del JSON, descartando los repetidos.
+	 */
+	private void collectProjects(JsonNode node, Map<String, JsonNode> byId) {
+		if (node == null) {
+			return;
+		}
+		if (node.isObject()) {
+			JsonNode idNode = node.get("SurveyID");
+			if (idNode != null && !idNode.isNull() && !idNode.asText().isBlank()) {
+				byId.putIfAbsent(idNode.asText(), node);
+				return;
+			}
+		}
+		if (node.isArray() || node.isObject()) {
+			node.forEach(child -> collectProjects(child, byId));
 		}
 	}
 }
