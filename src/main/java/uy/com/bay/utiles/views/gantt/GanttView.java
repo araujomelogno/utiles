@@ -204,9 +204,71 @@ public class GanttView extends VerticalLayout {
 					subStep.setMovable(false);
 					gantt.addSubStep(subStep);
 //					treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
+					currentDate = currentDate.plusMonths(1);
+				}
+				Step totalCasosTelStep = new Step();
+				totalCasosTelStep.setCaption("Total Casos Telefónico");
+				totalCasosTelStep.setUid(UUID.randomUUID().toString());
+				totalCasosTelStep.setStartDate(startDateField.getValue().atStartOfDay());
+				totalCasosTelStep.setEndDate(endDateField.getValue().atStartOfDay());
+//				totalCasosCalleStep.setBackgroundColor("#1E90FF");
+				totalCasosTelStep.setMovable(false);
+				gantt.addStep(totalCasosTelStep);
+				currentDate = startDateField.getValue();
+				while (currentDate.isBefore(endDateField.getValue())) {
+					LocalDate startOfMonth2 = currentDate.withDayOfMonth(1);
+					LocalDate endOfMonth2 = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+					int casosDelMes = fieldworks.stream()
+							.filter(fw -> fw.getType() == FieldworkType.TELEFONICO
+									&& !fw.getInitPlannedDate().isAfter(endOfMonth2)
+									&& !fw.getEndPlannedDate().isBefore(startOfMonth2))
+							.mapToInt(Fieldwork::getGoalQuantity).sum();
+
+					SubStep subStepTel = new SubStep(totalCasosTelStep);
+					subStepTel.setCaption("Casos del mes: " + casosDelMes);
+					subStepTel.setStartDate(startOfMonth2.atStartOfDay());
+					subStepTel.setEndDate(endOfMonth2.atStartOfDay().plusDays(1));
+					subStepTel.setUid(UUID.randomUUID().toString());
+					subStepTel.setBackgroundColor("#ADD8E6");
+					subStepTel.setMovable(false);
+					gantt.addSubStep(subStepTel);
+//						treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
 
 					currentDate = currentDate.plusMonths(1);
 				}
+
+				Step totalCasosWebStep = new Step();
+				totalCasosWebStep.setCaption("Total Casos Web");
+				totalCasosWebStep.setUid(UUID.randomUUID().toString());
+				totalCasosWebStep.setStartDate(startDateField.getValue().atStartOfDay());
+				totalCasosWebStep.setEndDate(endDateField.getValue().atStartOfDay());
+//					totalCasosCalleStep.setBackgroundColor("#1E90FF");
+				totalCasosWebStep.setMovable(false);
+				gantt.addStep(totalCasosWebStep);
+
+				currentDate = startDateField.getValue();
+				while (currentDate.isBefore(endDateField.getValue())) {
+					LocalDate startOfMonth2 = currentDate.withDayOfMonth(1);
+					LocalDate endOfMonth2 = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+					int casosDelMes = fieldworks.stream()
+							.filter(fw -> fw.getType() == FieldworkType.WEB
+									&& !fw.getInitPlannedDate().isAfter(endOfMonth2)
+									&& !fw.getEndPlannedDate().isBefore(startOfMonth2))
+							.mapToInt(Fieldwork::getGoalQuantity).sum();
+
+					SubStep subStepWEb = new SubStep(totalCasosWebStep);
+					subStepWEb.setCaption("Casos del mes: " + casosDelMes);
+					subStepWEb.setStartDate(startOfMonth2.atStartOfDay());
+					subStepWEb.setEndDate(endOfMonth2.atStartOfDay().plusDays(1));
+					subStepWEb.setUid(UUID.randomUUID().toString());
+					subStepWEb.setBackgroundColor("#ADD8E6");
+					subStepWEb.setMovable(false);
+					gantt.addSubStep(subStepWEb);
+//						treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
+
+					currentDate = currentDate.plusMonths(1);
+				}
+
 			}
 		}
 	}
