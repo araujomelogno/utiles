@@ -3,6 +3,7 @@ package uy.com.bay.utiles.tasks;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,6 +36,7 @@ import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.SurveyorRepository;
 import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
+import uy.com.bay.utiles.dto.DoobloProjectDTO;
 import uy.com.bay.utiles.services.BudgetEntryService;
 
 @Component
@@ -200,6 +202,66 @@ public class DoobloSurveyRetriever {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Consulta el endpoint {@code Account/GetUsageByPeriod} de Dooblo y devuelve los
+	 * proyectos (estudios) con actividad en el período indicado. Usa la misma
+	 * autenticación básica y el mismo formato de fechas ({@code yyyy-MM-dd}) que el
+	 * resto de las llamadas a la API de Dooblo.
+	 *
+	 * @return los proyectos encontrados, sin repetidos por SurveyID
+	 */
+	public List<DoobloProjectDTO> getUsageByPeriod(Date fromDate, Date toDate) {
+		Map<String, DoobloProjectDTO> byId = new LinkedHashMap<>();
+		if (fromDate == null || toDate == null || fromDate.after(toDate)) {
+			return new ArrayList<>(byId.values());
+		}
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String startStr = URLEncoder.encode(dateFormat.format(fromDate), StandardCharsets.UTF_8);
+		String endStr = URLEncoder.encode(dateFormat.format(toDate), StandardCharsets.UTF_8);
+		String usageUrl = String.format(
+				"http://api.dooblo.net/newapi/Account/GetUsageByPeriod?StartDate=%s&EndDate=%s", startStr, endStr);
+
+		try {
+			ResponseEntity<String> response = restTemplate.exchange(usageUrl, HttpMethod.GET, createAuthHeaders(),
+					String.class);
+			LOGGER.info("Successfully retrieved Dooblo usage between {} and {}. Response: {}", fromDate, toDate,
+					response.getBody());
+
+			ObjectMapper mapper = new ObjectMapper();
+			collectProjects(mapper.readTree(response.getBody()), byId);
+		} catch (Exception e) {
+			LOGGER.error("Failed to retrieve Dooblo usage between {} and {}", fromDate, toDate, e);
+			throw new IllegalStateException("No se pudieron obtener los proyectos de Dooblo", e);
+		}
+
+		return new ArrayList<>(byId.values());
+	}
+
+	/**
+	 * Recorre la respuesta de {@code GetUsageByPeriod} y acumula en {@code byId}
+	 * todo objeto que traiga un SurveyID, sin importar a qué profundidad venga
+	 * anidado dentro del JSON.
+	 */
+	private void collectProjects(JsonNode node, Map<String, DoobloProjectDTO> byId) {
+		if (node == null) {
+			return;
+		}
+		if (node.isObject()) {
+			JsonNode idNode = node.get("SurveyID");
+			if (idNode != null && !idNode.isNull() && !idNode.asText().isBlank()) {
+				JsonNode nameNode = node.get("SurveyName");
+				String surveyId = idNode.asText();
+				String surveyName = (nameNode == null || nameNode.isNull()) ? "" : nameNode.asText();
+				byId.putIfAbsent(surveyId, new DoobloProjectDTO(surveyName, surveyId));
+				return;
+			}
+		}
+		if (node.isArray() || node.isObject()) {
+			node.forEach(child -> collectProjects(child, byId));
+		}
 	}
 
 	private HttpEntity<String> createAuthHeaders() {
