@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.springframework.data.domain.Pageable;
 
@@ -166,32 +167,40 @@ public class BudgetForm extends VerticalLayout {
 			if (budgetEntry.getFieldworks() != null) {
 				Double totalFielwdorkCost = 0.0;
 				for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
+					if (fieldwork.getInitPlannedDate() == null || fieldwork.getEndPlannedDate() == null) {
+						continue;
+					}
+					boolean hasAlchemer = fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty();
+					boolean hasDooblo = fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty();
+					if (!hasAlchemer && !hasDooblo) {
+						continue;
+					}
 					// se obtienen las completas un mes antes de la fecha planificada de inicio y
 					// hasta 3 meses despues.
 					Date initDate = Date.from((fieldwork.getInitPlannedDate().minusMonths(1))
 							.atStartOfDay(ZoneId.systemDefault()).toInstant());
 					Date endDate = Date.from((fieldwork.getEndPlannedDate().plusMonths(3))
 							.atStartOfDay(ZoneId.systemDefault()).toInstant());
-					if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
-						Map<Date, Integer> completedSurveys = alchemerSurveyResponseHelper
-								.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate);
-						fieldwork.setCompletedByMonth(completedSurveys);
-						fieldworkService.save(fieldwork);
-						if (completedSurveys != null && budgetEntry.getAmmount() != null) {
-							totalFielwdorkCost += fieldwork.getCompleted() * budgetEntry.getAmmount();
-						}
-					} else {
-						if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
-							Map<Date, Integer> completedSurveys = doobloSurveyRetriever
-									.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate);
-							fieldwork.setCompletedByMonth(completedSurveys);
-							fieldworkService.save(fieldwork);
-							if (completedSurveys != null && budgetEntry.getAmmount() != null) {
-								totalFielwdorkCost += fieldwork.getCompleted() * budgetEntry.getAmmount();
-							}
-						}
+
+					// Un fieldwork puede tener ids de Alchemer y de Dooblo a la vez: se
+					// consultan ambas fuentes y se suman los completos de cada mes.
+					Map<Date, Integer> completedSurveys = new TreeMap<>();
+					if (hasAlchemer) {
+						mergeCompletedByMonth(completedSurveys, alchemerSurveyResponseHelper
+								.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate));
+					}
+					if (hasDooblo) {
+						mergeCompletedByMonth(completedSurveys, doobloSurveyRetriever
+								.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate));
 					}
 
+					fieldwork.getCompletedByMonth().clear();
+					fieldwork.getCompletedByMonth().putAll(completedSurveys);
+					fieldworkService.save(fieldwork);
+
+					if (budgetEntry.getAmmount() != null) {
+						totalFielwdorkCost += fieldwork.getCompleted() * budgetEntry.getAmmount();
+					}
 				}
 
 			}
@@ -200,6 +209,18 @@ public class BudgetForm extends VerticalLayout {
 
 		entriesGrid.setItems(binder.getBean().getEntries());
 		updateTotal();
+	}
+
+	private void mergeCompletedByMonth(Map<Date, Integer> target, Map<Date, Integer> source) {
+		if (source == null) {
+			return;
+		}
+		for (Map.Entry<Date, Integer> entry : source.entrySet()) {
+			if (entry.getKey() == null) {
+				continue;
+			}
+			target.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
+		}
 	}
 
 	private void refreshCostsFromOdoo() {
