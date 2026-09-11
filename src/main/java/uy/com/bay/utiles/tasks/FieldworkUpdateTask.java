@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,18 +111,39 @@ public class FieldworkUpdateTask {
 					.atStartOfDay(ZoneId.systemDefault()).toInstant());
 			Date endDate = Date.from(fieldwork.getEndPlannedDate().plusMonths(3)
 					.atStartOfDay(ZoneId.systemDefault()).toInstant());
-			if (fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty()) {
-				Map<Date, Integer> completedSurveys = alchemerSurveyResponseHelper
-						.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate);
-				fieldwork.setCompletedByMonth(completedSurveys);
-				fieldworkService.save(fieldwork);
-				
-			} else if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
-				Map<Date, Integer> completedSurveys = doobloSurveyRetriever
-						.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate);
-				fieldwork.setCompletedByMonth(completedSurveys);
-				fieldworkService.save(fieldwork);
+			boolean hasAlchemer = fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty();
+			boolean hasDooblo = fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty();
+			if (!hasAlchemer && !hasDooblo) {
+				continue;
 			}
+
+			// Un fieldwork puede tener ids de Alchemer y de Dooblo a la vez: se
+			// consultan ambas fuentes y se suman los completos de cada mes.
+			Map<Date, Integer> completedSurveys = new TreeMap<>();
+			if (hasAlchemer) {
+				mergeCompletedByMonth(completedSurveys,
+						alchemerSurveyResponseHelper.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate));
+			}
+			if (hasDooblo) {
+				mergeCompletedByMonth(completedSurveys,
+						doobloSurveyRetriever.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate));
+			}
+
+			fieldwork.getCompletedByMonth().clear();
+			fieldwork.getCompletedByMonth().putAll(completedSurveys);
+			fieldworkService.save(fieldwork);
+		}
+	}
+
+	private void mergeCompletedByMonth(Map<Date, Integer> target, Map<Date, Integer> source) {
+		if (source == null) {
+			return;
+		}
+		for (Map.Entry<Date, Integer> entry : source.entrySet()) {
+			if (entry.getKey() == null) {
+				continue;
+			}
+			target.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
 		}
 	}
 
