@@ -115,6 +115,7 @@ public class FieldworkUpdateTask {
 						.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate);
 				fieldwork.setCompletedByMonth(completedSurveys);
 				fieldworkService.save(fieldwork);
+				
 			} else if (fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty()) {
 				Map<Date, Integer> completedSurveys = doobloSurveyRetriever
 						.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate);
