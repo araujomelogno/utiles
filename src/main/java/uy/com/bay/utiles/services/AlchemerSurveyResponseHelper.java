@@ -6,9 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +24,7 @@ import uy.com.bay.utiles.data.AlchemerSurveyResponse;
 import uy.com.bay.utiles.data.AlchemerSurveyResponseData;
 import uy.com.bay.utiles.data.repository.AlchemerAnswerRepository;
 import uy.com.bay.utiles.data.repository.AlchemerContactRepository;
+import uy.com.bay.utiles.dto.CompletedSurveysCount;
 import uy.com.bay.utiles.dto.SurveyResponseDTO;
 
 @Service
@@ -52,8 +51,8 @@ public class AlchemerSurveyResponseHelper {
         this.objectMapper = objectMapper;
     }
 
-    public Map<Date, Integer> getCompletedSurveys(List<String> surveyIds, Date startDate, Date endDate) {
-        Map<Date, Integer> merged = new LinkedHashMap<>();
+    public CompletedSurveysCount getCompletedSurveys(List<String> surveyIds, Date startDate, Date endDate) {
+        CompletedSurveysCount merged = new CompletedSurveysCount();
         if (surveyIds == null) {
             return merged;
         }
@@ -61,23 +60,22 @@ public class AlchemerSurveyResponseHelper {
             if (surveyId == null || surveyId.isBlank()) {
                 continue;
             }
-            Map<Date, Integer> partial = getCompletedSurveys(surveyId, startDate, endDate);
-            for (Map.Entry<Date, Integer> entry : partial.entrySet()) {
-                merged.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
-            }
+            merged.merge(getCompletedSurveys(surveyId, startDate, endDate));
         }
         return merged;
     }
 
-    public Map<Date, Integer> getCompletedSurveys(String surveyId, Date startDate, Date endDate) {
-        Map<Date, Integer> result = new LinkedHashMap<>();
+    /**
+     * Obtiene los completos mes a mes y, para los meses con completos, dia a dia
+     * (solo hasta el dia de hoy).
+     */
+    public CompletedSurveysCount getCompletedSurveys(String surveyId, Date startDate, Date endDate) {
+        CompletedSurveysCount result = new CompletedSurveysCount();
         if (startDate == null || endDate == null || startDate.after(endDate)) {
             return result;
         }
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        
- 
+        Date now = new Date();
         Calendar cursor = Calendar.getInstance();
         cursor.setTime(startDate);
         cursor.set(Calendar.DAY_OF_MONTH, 1);
@@ -96,31 +94,65 @@ public class AlchemerSurveyResponseHelper {
             monthEndCal.set(Calendar.SECOND, 59);
             Date monthEnd = monthEndCal.getTime();
 
+            int monthCount;
             try {
-                String startStr = URLEncoder.encode(dateFormat.format(monthStart), StandardCharsets.UTF_8);
-                String endStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
-
-                String url = String.format(
-                        "https://api.alchemer.com/v5/survey/%s/surveyresponse?api_token=%s&api_token_secret=%s"
-                                + "&filter[field][0]=date_submitted&filter[operator][0]=>=&filter[value][0]=%s"
-                                + "&filter[field][1]=date_submitted&filter[operator][1]=<=&filter[value][1]=%s"
-                                + "&filter[field][2]=status&filter[operator][2]==&filter[value][2]=Complete"
-                                + "&resultsperpage=1",
-                        surveyId, apiToken, apiTokenSecret, startStr, endStr);
-
-                String response = restTemplate.getForObject(url, String.class);
-                JsonNode root = objectMapper.readTree(response);
-                result.put(monthStart, root.path("total_count").asInt());
+                monthCount = countCompleted(surveyId, monthStart, monthEnd);
             } catch (Exception e) {
                 LOGGER.error("Error fetching completed surveys from Alchemer API for surveyId {} month {}",
                         surveyId, monthStart, e);
-                result.put(monthStart, 0);
+                monthCount = 0;
+            }
+            result.getByMonth().put(monthStart, monthCount);
+
+            if (monthCount > 0) {
+                int daysSum = 0;
+                Calendar dayCursor = (Calendar) cursor.clone();
+                while (!dayCursor.getTime().after(monthEnd) && !dayCursor.getTime().after(now)) {
+                    Date dayStart = dayCursor.getTime();
+                    Calendar dayEndCal = (Calendar) dayCursor.clone();
+                    dayEndCal.set(Calendar.HOUR_OF_DAY, 23);
+                    dayEndCal.set(Calendar.MINUTE, 59);
+                    dayEndCal.set(Calendar.SECOND, 59);
+                    try {
+                        int dayCount = countCompleted(surveyId, dayStart, dayEndCal.getTime());
+                        if (dayCount > 0) {
+                            result.getByDay().put(dayStart, dayCount);
+                            daysSum += dayCount;
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Error fetching completed surveys from Alchemer API for surveyId {} day {}",
+                                surveyId, dayStart, e);
+                    }
+                    dayCursor.add(Calendar.DAY_OF_MONTH, 1);
+                }
+                if (daysSum != monthCount) {
+                    LOGGER.warn("Alchemer surveyId {}: la suma diaria ({}) no coincide con el total del mes {} ({})",
+                            surveyId, daysSum, monthStart, monthCount);
+                }
             }
 
             cursor.add(Calendar.MONTH, 1);
         }
 
         return result;
+    }
+
+    private int countCompleted(String surveyId, Date from, Date to) throws JsonProcessingException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String startStr = URLEncoder.encode(dateFormat.format(from), StandardCharsets.UTF_8);
+        String endStr = URLEncoder.encode(dateFormat.format(to), StandardCharsets.UTF_8);
+
+        String url = String.format(
+                "https://api.alchemer.com/v5/survey/%s/surveyresponse?api_token=%s&api_token_secret=%s"
+                        + "&filter[field][0]=date_submitted&filter[operator][0]=>=&filter[value][0]=%s"
+                        + "&filter[field][1]=date_submitted&filter[operator][1]=<=&filter[value][1]=%s"
+                        + "&filter[field][2]=status&filter[operator][2]==&filter[value][2]=Complete"
+                        + "&resultsperpage=1",
+                surveyId, apiToken, apiTokenSecret, startStr, endStr);
+
+        String response = restTemplate.getForObject(url, String.class);
+        JsonNode root = objectMapper.readTree(response);
+        return root.path("total_count").asInt();
     }
 
     public String buildSurveyResponseJson(int surveyId, String phoneNumber) throws JsonProcessingException {

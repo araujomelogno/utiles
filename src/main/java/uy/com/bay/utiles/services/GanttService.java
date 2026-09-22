@@ -26,6 +26,7 @@ public class GanttService {
         List<Fieldwork> fieldworks = fieldworkRepository
                 .findAllByInitPlannedDateLessThanAndEndPlannedDateGreaterThan(endDate, startDate);
         for (Fieldwork fieldwork : fieldworks) {
+            Hibernate.initialize(fieldwork.getCompletedByDay());
             Study study = fieldwork.getStudy();
             if (study == null) {
                 continue;

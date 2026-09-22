@@ -68,6 +68,16 @@ public class Fieldwork extends AbstractEntity {
 	@Column(name = "completed")
 	private Map<Date, Integer> completedByMonth = new HashMap<>();
 
+	// Completos dia a dia (clave: el dia a las 00:00). Es LAZY para no multiplicar
+	// las filas de la carga EAGER del resto de las colecciones; quien lo use debe
+	// inicializarlo dentro de la transaccion (ver GanttService).
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "fieldwork_completed_by_day", joinColumns = @JoinColumn(name = "fieldwork_id"))
+	@MapKeyColumn(name = "day")
+	@MapKeyTemporal(TemporalType.DATE)
+	@Column(name = "completed")
+	private Map<Date, Integer> completedByDay = new HashMap<>();
+
 	public List<String> getDoobloId() {
 		return doobloId;
 	}
@@ -185,5 +195,13 @@ public class Fieldwork extends AbstractEntity {
 
 	public void setCompletedByMonth(Map<Date, Integer> completedByMonth) {
 		this.completedByMonth = completedByMonth;
+	}
+
+	public Map<Date, Integer> getCompletedByDay() {
+		return completedByDay;
+	}
+
+	public void setCompletedByDay(Map<Date, Integer> completedByDay) {
+		this.completedByDay = completedByDay != null ? completedByDay : new HashMap<>();
 	}
 }

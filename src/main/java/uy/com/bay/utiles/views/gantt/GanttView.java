@@ -1,13 +1,18 @@
 package uy.com.bay.utiles.views.gantt;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -58,6 +64,9 @@ public class GanttView extends VerticalLayout {
 	private DatePicker endDateField;
 	private ComboBox<String> typeFilterComboBox;
 	private Button filterbutton;
+	private Button zoomButton;
+	// false: totales de casos por mes; true: zoom in a casos por dia.
+	private boolean dailyZoom = false;
 	private Double budgetTotal = 0d;
 	private Double totalSpent = 0d;
 
@@ -172,105 +181,95 @@ public class GanttView extends VerticalLayout {
 			totalCompleted = 0;
 		});
 
-		if (startDateField.getValue() != null && endDateField.getValue() != null)
-
-		{
-			if (startDateField.getValue().plusMonths(1).isBefore(endDateField.getValue())) {
-				Step totalCasosCalleStep = new Step();
-				totalCasosCalleStep.setCaption("Total Casos Calle");
-				totalCasosCalleStep.setUid(UUID.randomUUID().toString());
-				totalCasosCalleStep.setStartDate(startDateField.getValue().atStartOfDay());
-				totalCasosCalleStep.setEndDate(endDateField.getValue().atStartOfDay());
-//				totalCasosCalleStep.setBackgroundColor("#1E90FF");
-				totalCasosCalleStep.setMovable(false);
-				gantt.addStep(totalCasosCalleStep);
-
-				LocalDate currentDate = startDateField.getValue();
-				while (currentDate.isBefore(endDateField.getValue())) {
-					LocalDate startOfMonth = currentDate.withDayOfMonth(1);
-					LocalDate endOfMonth = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
-					int casosDelMes = fieldworks.stream()
-							.filter(fw -> fw.getType() == FieldworkType.CALLE
-									&& !fw.getInitPlannedDate().isAfter(endOfMonth)
-									&& !fw.getEndPlannedDate().isBefore(startOfMonth))
-							.mapToInt(Fieldwork::getGoalQuantity).sum();
-
-					SubStep subStep = new SubStep(totalCasosCalleStep);
-					subStep.setCaption("Casos del mes: " + casosDelMes);
-					subStep.setStartDate(startOfMonth.atStartOfDay());
-					subStep.setEndDate(endOfMonth.atStartOfDay().plusDays(1));
-					subStep.setUid(UUID.randomUUID().toString());
-					subStep.setBackgroundColor("#ADD8E6");
-					subStep.setMovable(false);
-					gantt.addSubStep(subStep);
-//					treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
-					currentDate = currentDate.plusMonths(1);
-				}
-				Step totalCasosTelStep = new Step();
-				totalCasosTelStep.setCaption("Total Casos Telefónico");
-				totalCasosTelStep.setUid(UUID.randomUUID().toString());
-				totalCasosTelStep.setStartDate(startDateField.getValue().atStartOfDay());
-				totalCasosTelStep.setEndDate(endDateField.getValue().atStartOfDay());
-//				totalCasosCalleStep.setBackgroundColor("#1E90FF");
-				totalCasosTelStep.setMovable(false);
-				gantt.addStep(totalCasosTelStep);
-				currentDate = startDateField.getValue();
-				while (currentDate.isBefore(endDateField.getValue())) {
-					LocalDate startOfMonth2 = currentDate.withDayOfMonth(1);
-					LocalDate endOfMonth2 = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
-					int casosDelMes = fieldworks.stream()
-							.filter(fw -> fw.getType() == FieldworkType.TELEFONICO
-									&& !fw.getInitPlannedDate().isAfter(endOfMonth2)
-									&& !fw.getEndPlannedDate().isBefore(startOfMonth2))
-							.mapToInt(Fieldwork::getGoalQuantity).sum();
-
-					SubStep subStepTel = new SubStep(totalCasosTelStep);
-					subStepTel.setCaption("Casos del mes: " + casosDelMes);
-					subStepTel.setStartDate(startOfMonth2.atStartOfDay());
-					subStepTel.setEndDate(endOfMonth2.atStartOfDay().plusDays(1));
-					subStepTel.setUid(UUID.randomUUID().toString());
-					subStepTel.setBackgroundColor("#ADD8E6");
-					subStepTel.setMovable(false);
-					gantt.addSubStep(subStepTel);
-//						treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
-
-					currentDate = currentDate.plusMonths(1);
-				}
-
-				Step totalCasosWebStep = new Step();
-				totalCasosWebStep.setCaption("Total Casos Web");
-				totalCasosWebStep.setUid(UUID.randomUUID().toString());
-				totalCasosWebStep.setStartDate(startDateField.getValue().atStartOfDay());
-				totalCasosWebStep.setEndDate(endDateField.getValue().atStartOfDay());
-//					totalCasosCalleStep.setBackgroundColor("#1E90FF");
-				totalCasosWebStep.setMovable(false);
-				gantt.addStep(totalCasosWebStep);
-
-				currentDate = startDateField.getValue();
-				while (currentDate.isBefore(endDateField.getValue())) {
-					LocalDate startOfMonth2 = currentDate.withDayOfMonth(1);
-					LocalDate endOfMonth2 = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
-					int casosDelMes = fieldworks.stream()
-							.filter(fw -> fw.getType() == FieldworkType.WEB
-									&& !fw.getInitPlannedDate().isAfter(endOfMonth2)
-									&& !fw.getEndPlannedDate().isBefore(startOfMonth2))
-							.mapToInt(Fieldwork::getGoalQuantity).sum();
-
-					SubStep subStepWEb = new SubStep(totalCasosWebStep);
-					subStepWEb.setCaption("Casos del mes: " + casosDelMes);
-					subStepWEb.setStartDate(startOfMonth2.atStartOfDay());
-					subStepWEb.setEndDate(endOfMonth2.atStartOfDay().plusDays(1));
-					subStepWEb.setUid(UUID.randomUUID().toString());
-					subStepWEb.setBackgroundColor("#ADD8E6");
-					subStepWEb.setMovable(false);
-					gantt.addSubStep(subStepWEb);
-//						treeGrid.getTreeData().addItem(totalCasosCalleStep, subStep);
-
-					currentDate = currentDate.plusMonths(1);
-				}
-
+		LocalDate start = startDateField.getValue();
+		LocalDate end = endDateField.getValue();
+		if (start != null && end != null) {
+			// En la vista por mes se exige al menos un mes de rango (como antes); en la
+			// vista por dia alcanza con que el rango no sea vacio.
+			boolean showTotals = dailyZoom ? start.isBefore(end) : start.plusMonths(1).isBefore(end);
+			if (showTotals) {
+				addTotalsStep("Total Casos Calle", FieldworkType.CALLE, fieldworks, start, end);
+				addTotalsStep("Total Casos Telefónico", FieldworkType.TELEFONICO, fieldworks, start, end);
+				addTotalsStep("Total Casos Web", FieldworkType.WEB, fieldworks, start, end);
 			}
 		}
+	}
+
+	/**
+	 * Agrega una fila de totales para el tipo de fieldwork indicado. En la vista
+	 * por mes muestra, para cada mes, el objetivo de los fieldworks activos y los
+	 * completos del mes (completedByMonth). En la vista por dia muestra los
+	 * completos de cada dia (completedByDay).
+	 */
+	private void addTotalsStep(String caption, FieldworkType type, List<Fieldwork> fieldworks, LocalDate start,
+			LocalDate end) {
+		Step totalStep = new Step();
+		totalStep.setCaption(caption);
+		totalStep.setUid(UUID.randomUUID().toString());
+		totalStep.setStartDate(start.atStartOfDay());
+		totalStep.setEndDate(end.atStartOfDay());
+		totalStep.setMovable(false);
+		gantt.addStep(totalStep);
+
+		List<Fieldwork> ofType = fieldworks.stream().filter(fw -> fw.getType() == type).collect(Collectors.toList());
+
+		if (dailyZoom) {
+			Map<LocalDate, Integer> completedByDay = new TreeMap<>();
+			for (Fieldwork fw : ofType) {
+				fw.getCompletedByDay().forEach((date, completed) -> {
+					if (date != null && completed != null)
+						completedByDay.merge(toLocalDate(date), completed, Integer::sum);
+				});
+			}
+			completedByDay.forEach((day, completed) -> {
+				if (completed == 0 || day.isBefore(start) || !day.isBefore(end))
+					return;
+				SubStep subStep = new SubStep(totalStep);
+				subStep.setCaption(String.valueOf(completed));
+				subStep.setStartDate(day.atStartOfDay());
+				subStep.setEndDate(day.plusDays(1).atStartOfDay());
+				subStep.setUid(UUID.randomUUID().toString());
+				subStep.setBackgroundColor("#ADD8E6");
+				subStep.setMovable(false);
+				gantt.addSubStep(subStep);
+			});
+			return;
+		}
+
+		Map<YearMonth, Integer> completedByMonth = new HashMap<>();
+		for (Fieldwork fw : ofType) {
+			fw.getCompletedByMonth().forEach((date, completed) -> {
+				if (date != null && completed != null)
+					completedByMonth.merge(YearMonth.from(toLocalDate(date)), completed, Integer::sum);
+			});
+		}
+
+		LocalDate currentDate = start;
+		while (currentDate.isBefore(end)) {
+			LocalDate startOfMonth = currentDate.withDayOfMonth(1);
+			LocalDate endOfMonth = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+			int casosDelMes = ofType.stream()
+					.filter(fw -> !fw.getInitPlannedDate().isAfter(endOfMonth)
+							&& !fw.getEndPlannedDate().isBefore(startOfMonth))
+					.mapToInt(Fieldwork::getGoalQuantity).sum();
+			int completasDelMes = completedByMonth.getOrDefault(YearMonth.from(startOfMonth), 0);
+
+			SubStep subStep = new SubStep(totalStep);
+			subStep.setCaption("Casos del mes: " + casosDelMes + " - Completas: " + completasDelMes);
+			subStep.setStartDate(startOfMonth.atStartOfDay());
+			subStep.setEndDate(endOfMonth.atStartOfDay().plusDays(1));
+			subStep.setUid(UUID.randomUUID().toString());
+			subStep.setBackgroundColor("#ADD8E6");
+			subStep.setMovable(false);
+			gantt.addSubStep(subStep);
+			currentDate = currentDate.plusMonths(1);
+		}
+	}
+
+	private static LocalDate toLocalDate(Date date) {
+		// Las claves vienen como java.sql.Date (MapKeyTemporal DATE), que no soporta
+		// toInstant(): se convierte a partir de los milisegundos.
+		return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 
 	private Gantt createGantt() {
@@ -417,11 +416,30 @@ public class GanttView extends VerticalLayout {
 
 		});
 
-		tools.add(startDateField, endDateField, typeFilterComboBox, filterbutton);
-		tools.setVerticalComponentAlignment(FlexComponent.Alignment.END, filterbutton);
+		zoomButton = new Button();
+		updateZoomButton();
+		zoomButton.addClickListener(e -> {
+			dailyZoom = !dailyZoom;
+			updateZoomButton();
+			clearGantt();
+			fillGantt();
+		});
+
+		tools.add(startDateField, endDateField, typeFilterComboBox, filterbutton, zoomButton);
+		tools.setVerticalComponentAlignment(FlexComponent.Alignment.END, filterbutton, zoomButton);
 		tools.setPadding(true);
 		tools.setSpacing(true);
 		return tools;
+	}
+
+	private void updateZoomButton() {
+		if (dailyZoom) {
+			zoomButton.setText("Ver casos por mes");
+			zoomButton.setIcon(VaadinIcon.SEARCH_MINUS.create());
+		} else {
+			zoomButton.setText("Ver casos por día");
+			zoomButton.setIcon(VaadinIcon.SEARCH_PLUS.create());
+		}
 	}
 
 	private void clearGantt() {
