@@ -56,6 +56,9 @@ import uy.com.bay.utiles.services.GanttService;
 @PermitAll
 public class GanttView extends VerticalLayout {
 	private static final String ALL_TYPES = "TODOS";
+	// Dias con completos dentro / fuera de la fecha planificada del fieldwork.
+	private static final String IN_PLAN_COLOR = "#ADD8E6";
+	private static final String OUT_OF_PLAN_COLOR = "#F4A6A6";
 
 	private final GanttService ganttService;
 	private Gantt gantt;
@@ -155,6 +158,19 @@ public class GanttView extends VerticalLayout {
 							+ " Completas:" + fieldwork.getCompleted());
 					subStep.setStartDate(fieldwork.getInitPlannedDate().atStartOfDay());
 					subStep.setEndDate(fieldwork.getEndPlannedDate().atStartOfDay());
+					if (dailyZoom) {
+						// Se estira la fila para que entren los dias con completos fuera de la
+						// fecha planificada (se pintan en rojo en addDailySubSteps).
+						TreeMap<LocalDate, Integer> visibleDays = visibleCompletedByDay(fieldwork);
+						if (!visibleDays.isEmpty()) {
+							LocalDate firstDay = visibleDays.firstKey();
+							LocalDate lastDay = visibleDays.lastKey();
+							if (firstDay.isBefore(fieldwork.getInitPlannedDate()))
+								subStep.setStartDate(firstDay.atStartOfDay());
+							if (!lastDay.isBefore(fieldwork.getEndPlannedDate()))
+								subStep.setEndDate(lastDay.plusDays(1).atStartOfDay());
+						}
+					}
 					String uid = UUID.randomUUID().toString();
 					subStep.setUid(uid);
 					subStep.setBackgroundColor("#E6E6E6");
@@ -295,29 +311,41 @@ public class GanttView extends VerticalLayout {
 			// La fila todavia no esta en el gantt (estudio colapsado).
 			return;
 		}
-		LocalDate start = gantt.getStartDate();
-		LocalDate end = gantt.getEndDate();
-		Map<LocalDate, Integer> completedByDay = new TreeMap<>();
-		fieldwork.getCompletedByDay().forEach((date, completed) -> {
-			if (date != null && completed != null)
-				completedByDay.merge(toLocalDate(date), completed, Integer::sum);
-		});
-		completedByDay.forEach((day, completed) -> {
-			if (completed == 0 || (start != null && day.isBefore(start)) || (end != null && !day.isBefore(end)))
-				return;
+		LocalDate plannedStart = fieldwork.getInitPlannedDate();
+		LocalDate plannedEnd = fieldwork.getEndPlannedDate();
+		visibleCompletedByDay(fieldwork).forEach((day, completed) -> {
 			SubStep daySubStep = new SubStep(fieldworkStep);
 			daySubStep.setCaption(String.valueOf(completed));
 			daySubStep.setStartDate(day.atStartOfDay());
 			daySubStep.setEndDate(day.plusDays(1).atStartOfDay());
 			String uid = UUID.randomUUID().toString();
 			daySubStep.setUid(uid);
-			daySubStep.setBackgroundColor("#ADD8E6");
+			boolean outOfPlan = (plannedStart != null && day.isBefore(plannedStart))
+					|| (plannedEnd != null && day.isAfter(plannedEnd));
+			daySubStep.setBackgroundColor(outOfPlan ? OUT_OF_PLAN_COLOR : IN_PLAN_COLOR);
 			daySubStep.setMovable(false);
 			gantt.addSubStep(daySubStep);
 			// Al hacer click en un dia se abre el detalle del fieldwork.
 			stepToFieldworkMap.put(uid, fieldwork);
 		});
 		fieldworkStepsWithDailySubSteps.add(fieldworkStep.getUid());
+	}
+
+	/**
+	 * Completos por dia del fieldwork (solo dias con completos y dentro del rango
+	 * del gantt), ordenados por fecha.
+	 */
+	private TreeMap<LocalDate, Integer> visibleCompletedByDay(Fieldwork fieldwork) {
+		LocalDate start = gantt.getStartDate();
+		LocalDate end = gantt.getEndDate();
+		TreeMap<LocalDate, Integer> result = new TreeMap<>();
+		fieldwork.getCompletedByDay().forEach((date, completed) -> {
+			if (date != null && completed != null)
+				result.merge(toLocalDate(date), completed, Integer::sum);
+		});
+		result.entrySet().removeIf(e -> e.getValue() == 0 || (start != null && e.getKey().isBefore(start))
+				|| (end != null && !e.getKey().isBefore(end)));
+		return result;
 	}
 
 	private static LocalDate toLocalDate(Date date) {
