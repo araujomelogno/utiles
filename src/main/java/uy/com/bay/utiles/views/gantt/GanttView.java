@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -54,6 +56,9 @@ import uy.com.bay.utiles.services.GanttService;
 @PermitAll
 public class GanttView extends VerticalLayout {
 	private static final String ALL_TYPES = "TODOS";
+	// Dias con completos dentro / fuera de la fecha planificada del fieldwork.
+	private static final String IN_PLAN_COLOR = "#ADD8E6";
+	private static final String OUT_OF_PLAN_COLOR = "#F4A6A6";
 
 	private final GanttService ganttService;
 	private Gantt gantt;
@@ -75,6 +80,8 @@ public class GanttView extends VerticalLayout {
 	private int totalCompleted = 0;
 	private final Map<String, Fieldwork> stepToFieldworkMap;
 	private final Map<String, Study> stepToStudyMap;
+	// Filas de fieldwork que ya tienen dibujados sus sub-steps por dia.
+	private final Set<String> fieldworkStepsWithDailySubSteps = new HashSet<>();
 
 	public GanttView(GanttService ganttService) {
 		this.ganttService = ganttService;
@@ -107,6 +114,12 @@ public class GanttView extends VerticalLayout {
 		treeGrid.setWidth("30%");
 		treeGrid.setAllRowsVisible(true);
 		treeGrid.getStyle().set("--gantt-caption-grid-row-height", "30px");
+		// Las filas de fieldwork se agregan al gantt al expandir su estudio (y se
+		// quitan al colapsarlo), por eso los completos por dia se dibujan al expandir.
+		treeGrid.addExpandListener(event -> event.getItems().forEach(
+				parent -> treeGrid.getTreeData().getChildren(parent).forEach(this::addDailySubSteps)));
+		treeGrid.addCollapseListener(event -> event.getItems().forEach(parent -> treeGrid.getTreeData()
+				.getChildren(parent).forEach(child -> fieldworkStepsWithDailySubSteps.remove(child.getUid()))));
 
 		gantt.setMovableStepsBetweenRows(false);
 		gantt.setMovableSteps(false);
@@ -145,12 +158,26 @@ public class GanttView extends VerticalLayout {
 							+ " Completas:" + fieldwork.getCompleted());
 					subStep.setStartDate(fieldwork.getInitPlannedDate().atStartOfDay());
 					subStep.setEndDate(fieldwork.getEndPlannedDate().atStartOfDay());
+					if (dailyZoom) {
+						// Se estira la fila para que entren los dias con completos fuera de la
+						// fecha planificada (se pintan en rojo en addDailySubSteps).
+						TreeMap<LocalDate, Integer> visibleDays = visibleCompletedByDay(fieldwork);
+						if (!visibleDays.isEmpty()) {
+							LocalDate firstDay = visibleDays.firstKey();
+							LocalDate lastDay = visibleDays.lastKey();
+							if (firstDay.isBefore(fieldwork.getInitPlannedDate()))
+								subStep.setStartDate(firstDay.atStartOfDay());
+							if (!lastDay.isBefore(fieldwork.getEndPlannedDate()))
+								subStep.setEndDate(lastDay.plusDays(1).atStartOfDay());
+						}
+					}
 					String uid = UUID.randomUUID().toString();
 					subStep.setUid(uid);
 					subStep.setBackgroundColor("#E6E6E6");
 					subStep.setMovable(false);
 					treeGrid.getTreeData().addItem(studyStep, subStep);
 					stepToFieldworkMap.put(uid, fieldwork);
+					addDailySubSteps(subStep);
 					if (fieldwork.getGoalQuantity() != null)
 						totalgoal = totalgoal + fieldwork.getGoalQuantity();
 					if (fieldwork.getCompleted() != null)
@@ -264,6 +291,61 @@ public class GanttView extends VerticalLayout {
 			gantt.addSubStep(subStep);
 			currentDate = currentDate.plusMonths(1);
 		}
+	}
+
+	/**
+	 * En la vista por dia agrega a la fila del fieldwork un sub-step por cada dia
+	 * con completos (completedByDay), con la cantidad como caption. Solo se puede
+	 * hacer cuando la fila ya esta en el gantt (estudio expandido).
+	 */
+	private void addDailySubSteps(Step fieldworkStep) {
+		Fieldwork fieldwork = stepToFieldworkMap.get(fieldworkStep.getUid());
+		if (!dailyZoom || fieldwork == null || fieldworkStepsWithDailySubSteps.contains(fieldworkStep.getUid())) {
+			return;
+		}
+		try {
+			if (gantt.getStepElement(fieldworkStep.getUid()) == null) {
+				return;
+			}
+		} catch (RuntimeException e) {
+			// La fila todavia no esta en el gantt (estudio colapsado).
+			return;
+		}
+		LocalDate plannedStart = fieldwork.getInitPlannedDate();
+		LocalDate plannedEnd = fieldwork.getEndPlannedDate();
+		visibleCompletedByDay(fieldwork).forEach((day, completed) -> {
+			SubStep daySubStep = new SubStep(fieldworkStep);
+			daySubStep.setCaption(String.valueOf(completed));
+			daySubStep.setStartDate(day.atStartOfDay());
+			daySubStep.setEndDate(day.plusDays(1).atStartOfDay());
+			String uid = UUID.randomUUID().toString();
+			daySubStep.setUid(uid);
+			boolean outOfPlan = (plannedStart != null && day.isBefore(plannedStart))
+					|| (plannedEnd != null && day.isAfter(plannedEnd));
+			daySubStep.setBackgroundColor(outOfPlan ? OUT_OF_PLAN_COLOR : IN_PLAN_COLOR);
+			daySubStep.setMovable(false);
+			gantt.addSubStep(daySubStep);
+			// Al hacer click en un dia se abre el detalle del fieldwork.
+			stepToFieldworkMap.put(uid, fieldwork);
+		});
+		fieldworkStepsWithDailySubSteps.add(fieldworkStep.getUid());
+	}
+
+	/**
+	 * Completos por dia del fieldwork (solo dias con completos y dentro del rango
+	 * del gantt), ordenados por fecha.
+	 */
+	private TreeMap<LocalDate, Integer> visibleCompletedByDay(Fieldwork fieldwork) {
+		LocalDate start = gantt.getStartDate();
+		LocalDate end = gantt.getEndDate();
+		TreeMap<LocalDate, Integer> result = new TreeMap<>();
+		fieldwork.getCompletedByDay().forEach((date, completed) -> {
+			if (date != null && completed != null)
+				result.merge(toLocalDate(date), completed, Integer::sum);
+		});
+		result.entrySet().removeIf(e -> e.getValue() == 0 || (start != null && e.getKey().isBefore(start))
+				|| (end != null && !e.getKey().isBefore(end)));
+		return result;
 	}
 
 	private static LocalDate toLocalDate(Date date) {
@@ -443,6 +525,7 @@ public class GanttView extends VerticalLayout {
 	}
 
 	private void clearGantt() {
+		fieldworkStepsWithDailySubSteps.clear();
 		this.gantt.removeSteps(gantt.getSteps());
 
 	}
