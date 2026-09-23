@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,7 @@ import uy.com.bay.utiles.entities.Budget;
 import uy.com.bay.utiles.entities.BudgetConcept;
 import uy.com.bay.utiles.entities.BudgetEntry;
 import uy.com.bay.utiles.entities.OdooCost;
+import uy.com.bay.utiles.dto.CompletedSurveysCount;
 import uy.com.bay.utiles.services.AlchemerSurveyResponseHelper;
 import uy.com.bay.utiles.services.OdooCostService;
 import uy.com.bay.utiles.services.OdooService;
@@ -118,32 +119,23 @@ public class FieldworkUpdateTask {
 			}
 
 			// Un fieldwork puede tener ids de Alchemer y de Dooblo a la vez: se
-			// consultan ambas fuentes y se suman los completos de cada mes.
-			Map<Date, Integer> completedSurveys = new TreeMap<>();
+			// consultan ambas fuentes y se suman los completos de cada mes y de cada dia.
+			CompletedSurveysCount completedSurveys = new CompletedSurveysCount();
 			if (hasAlchemer) {
-				mergeCompletedByMonth(completedSurveys,
-						alchemerSurveyResponseHelper.getCompletedSurveys(fieldwork.getAlchemerId(), initDate, endDate));
+				completedSurveys.merge(alchemerSurveyResponseHelper.getCompletedSurveys(fieldwork.getAlchemerId(),
+						initDate, endDate));
 			}
 			if (hasDooblo) {
-				mergeCompletedByMonth(completedSurveys,
+				completedSurveys.merge(
 						doobloSurveyRetriever.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate));
 			}
 
 			fieldwork.getCompletedByMonth().clear();
-			fieldwork.getCompletedByMonth().putAll(completedSurveys);
+			fieldwork.getCompletedByMonth().putAll(completedSurveys.getByMonth());
+			// Se reemplaza el mapa (en lugar de clear/putAll) porque es LAZY y el
+			// fieldwork puede no estar asociado a una sesion abierta.
+			fieldwork.setCompletedByDay(new HashMap<>(completedSurveys.getByDay()));
 			fieldworkService.save(fieldwork);
-		}
-	}
-
-	private void mergeCompletedByMonth(Map<Date, Integer> target, Map<Date, Integer> source) {
-		if (source == null) {
-			return;
-		}
-		for (Map.Entry<Date, Integer> entry : source.entrySet()) {
-			if (entry.getKey() == null) {
-				continue;
-			}
-			target.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
 		}
 	}
 

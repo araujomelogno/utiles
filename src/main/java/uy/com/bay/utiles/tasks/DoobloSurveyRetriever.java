@@ -6,9 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -25,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 
@@ -35,6 +34,7 @@ import uy.com.bay.utiles.data.Surveyor;
 import uy.com.bay.utiles.data.SurveyorRepository;
 import uy.com.bay.utiles.data.repository.DoobloResponseRepository;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
+import uy.com.bay.utiles.dto.CompletedSurveysCount;
 import uy.com.bay.utiles.services.BudgetEntryService;
 
 @Component
@@ -109,8 +109,8 @@ public class DoobloSurveyRetriever {
 		}
 	}
 
-	public Map<Date, Integer> getCompletedSurveys(List<String> surveyIds, Date fromDate, Date toDate) {
-		Map<Date, Integer> merged = new LinkedHashMap<>();
+	public CompletedSurveysCount getCompletedSurveys(List<String> surveyIds, Date fromDate, Date toDate) {
+		CompletedSurveysCount merged = new CompletedSurveysCount();
 		if (surveyIds == null) {
 			return merged;
 		}
@@ -118,23 +118,23 @@ public class DoobloSurveyRetriever {
 			if (surveyId == null || surveyId.isBlank()) {
 				continue;
 			}
-			Map<Date, Integer> partial = getCompletedSurveys(surveyId, fromDate, toDate);
-			for (Map.Entry<Date, Integer> entry : partial.entrySet()) {
-				merged.merge(entry.getKey(), entry.getValue() == null ? 0 : entry.getValue(), Integer::sum);
-			}
+			merged.merge(getCompletedSurveys(surveyId, fromDate, toDate));
 		}
 		return merged;
 	}
 
-	public Map<Date, Integer> getCompletedSurveys(String surveyId, Date fromDate, Date toDate) {
-		Map<Date, Integer> result = new LinkedHashMap<>();
+	/**
+	 * Obtiene los completos (descontando los cancelados) mes a mes y, para los
+	 * meses con completos, dia a dia (solo hasta el dia de hoy).
+	 */
+	public CompletedSurveysCount getCompletedSurveys(String surveyId, Date fromDate, Date toDate) {
+		CompletedSurveysCount result = new CompletedSurveysCount();
 		if (fromDate == null || toDate == null || fromDate.after(toDate)) {
 			return result;
 		}
 
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		HttpEntity<String> entity = createAuthHeaders();
-		ObjectMapper mapper = new ObjectMapper();
+		Date now = new Date();
 
 		Calendar cursor = Calendar.getInstance();
 		cursor.setTime(fromDate);
@@ -154,52 +154,84 @@ public class DoobloSurveyRetriever {
 			monthEndCal.set(Calendar.SECOND, 59);
 			Date monthEnd = monthEndCal.getTime();
 
+			int monthCount = 0;
+			int monthCancelled = 0;
 			try {
-				Thread.sleep(2000);
-
-				String fromStr = URLEncoder.encode(dateFormat.format(monthStart), StandardCharsets.UTF_8);
-				String toStr = URLEncoder.encode(dateFormat.format(monthEnd), StandardCharsets.UTF_8);
-
-				String interviewsUrl = String.format(
-						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&testMode=False&completed=True&filtered=False&dateStart=%s&dateEnd=%s",
-						surveyId, fromStr, toStr);
-
-				ResponseEntity<String> interviewsResponse = restTemplate.exchange(interviewsUrl, HttpMethod.GET, entity,
-						String.class);
-				LOGGER.info("Successfully retrieved interview IDs for SurveyID {} between {} and {}. Response: {}",
-						surveyId, monthStart, monthEnd, interviewsResponse.getBody());
-
-				JsonNode interviewsRoot = mapper.readTree(interviewsResponse.getBody());
-				int count = (interviewsRoot != null && interviewsRoot.isArray()) ? interviewsRoot.size() : 0;
-
-				Thread.sleep(2000);
-				String cancelledInterviewsUrl = String.format(
-						"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&testMode=False&completed=True&filtered=False&statuses=7&dateStart=%s&dateEnd=%s",
-						surveyId, fromStr, toStr);
-
-				ResponseEntity<String> cancelledInterviewsResponse = restTemplate.exchange(cancelledInterviewsUrl,
-						HttpMethod.GET, entity, String.class);
-				LOGGER.info("Successfully retrieved interview IDs for SurveyID {} between {} and {}. Response: {}",
-						surveyId, monthStart, monthEnd, cancelledInterviewsResponse.getBody());
-
-				JsonNode canceledInterviewsRoot = mapper.readTree(cancelledInterviewsResponse.getBody());
-				int cancelledCount = (canceledInterviewsRoot != null && canceledInterviewsRoot.isArray())
-						? canceledInterviewsRoot.size()
-						: 0;
-
-				result.put(monthStart, count - cancelledCount);
+				monthCount = countInterviews(entity, surveyId, monthStart, monthEnd, false);
+				monthCancelled = countInterviews(entity, surveyId, monthStart, monthEnd, true);
+				result.getByMonth().put(monthStart, monthCount - monthCancelled);
 			} catch (Exception e) {
 				LOGGER.error("Failed to retrieve completed surveys for SurveyID {} for month {}", surveyId, monthStart,
 						e);
-				Notification.show("Failed to retrieve completed surveys for SurveyID {} for month {}", 5000,
-						Position.MIDDLE);
-				result.put(monthStart, 0);
+				showNotification(String.format("Failed to retrieve completed surveys for SurveyID %s for month %s",
+						surveyId, monthStart));
+				result.getByMonth().put(monthStart, 0);
+				monthCount = 0;
+			}
+
+			if (monthCount - monthCancelled > 0) {
+				int daysSum = 0;
+				Calendar dayCursor = (Calendar) cursor.clone();
+				while (!dayCursor.getTime().after(monthEnd) && !dayCursor.getTime().after(now)) {
+					Date day = dayCursor.getTime();
+					try {
+						int dayCount = countInterviews(entity, surveyId, day, day, false);
+						// Solo se consultan los cancelados del dia si hubo cancelados en el mes.
+						int dayCancelled = (dayCount > 0 && monthCancelled > 0)
+								? countInterviews(entity, surveyId, day, day, true)
+								: 0;
+						int completed = dayCount - dayCancelled;
+						if (completed != 0) {
+							result.getByDay().put(day, completed);
+							daysSum += completed;
+						}
+					} catch (Exception e) {
+						LOGGER.error("Failed to retrieve completed surveys for SurveyID {} for day {}", surveyId, day,
+								e);
+					}
+					dayCursor.add(Calendar.DAY_OF_MONTH, 1);
+				}
+				if (daysSum != monthCount - monthCancelled) {
+					LOGGER.warn("Dooblo SurveyID {}: la suma diaria ({}) no coincide con el total del mes {} ({})",
+							surveyId, daysSum, monthStart, monthCount - monthCancelled);
+				}
 			}
 
 			cursor.add(Calendar.MONTH, 1);
 		}
 
 		return result;
+	}
+
+	/**
+	 * Cantidad de entrevistas completas entre {@code from} y {@code to} (fechas
+	 * inclusive, se usa solo el dia). Con {@code cancelled} se cuentan solo las
+	 * canceladas (status 7).
+	 */
+	private int countInterviews(HttpEntity<String> entity, String surveyId, Date from, Date to, boolean cancelled)
+			throws Exception {
+		Thread.sleep(2000);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String fromStr = URLEncoder.encode(dateFormat.format(from), StandardCharsets.UTF_8);
+		String toStr = URLEncoder.encode(dateFormat.format(to), StandardCharsets.UTF_8);
+
+		String url = String.format(
+				"http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=%s&testMode=False&completed=True&filtered=False%s&dateStart=%s&dateEnd=%s",
+				surveyId, cancelled ? "&statuses=7" : "", fromStr, toStr);
+
+		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+		LOGGER.info("Successfully retrieved {}interview IDs for SurveyID {} between {} and {}. Response: {}",
+				cancelled ? "cancelled " : "", surveyId, fromStr, toStr, response.getBody());
+
+		JsonNode root = new ObjectMapper().readTree(response.getBody());
+		return (root != null && root.isArray()) ? root.size() : 0;
+	}
+
+	private void showNotification(String message) {
+		// La tarea programada corre sin UI: en ese caso solo se loguea.
+		if (UI.getCurrent() != null) {
+			Notification.show(message, 5000, Position.MIDDLE);
+		}
 	}
 
 	private HttpEntity<String> createAuthHeaders() {
