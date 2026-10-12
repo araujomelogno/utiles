@@ -3,8 +3,8 @@ package uy.com.bay.utiles.services;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.sound.sampled.AudioFileFormat;
@@ -13,7 +13,6 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,10 +49,15 @@ public class OpenAiService {
 	private static final String OPENAI_API_URL = "https://api.openai.com/v1/audio/transcriptions";
 
 	private final ObjectMapper objectMapper;
+	private final AudioDurationService audioDurationService;
+
+	@Value("${audio.ffmpeg.path:ffmpeg}")
+	private String ffmpegExecutable = "ffmpeg";
 
 	@Autowired
-	public OpenAiService(ObjectMapper objectMapper) {
+	public OpenAiService(ObjectMapper objectMapper, AudioDurationService audioDurationService) {
 		this.objectMapper = objectMapper;
+		this.audioDurationService = audioDurationService;
 	}
 
 	private RestTemplate buildRestTemplate() {
@@ -64,14 +68,8 @@ public class OpenAiService {
 		return new RestTemplate(rf);
 	}
 
-	protected double getDuration(File file) {
-		try {
-			org.jaudiotagger.audio.AudioFile audioFile = AudioFileIO.read(file);
-			return audioFile.getAudioHeader().getTrackLength();
-		} catch (Exception e) {
-			logger.warn("Could not determine duration using jaudiotagger: {}", e.getMessage());
-			return 0;
-		}
+	protected double getDuration(File file) throws IOException {
+		return audioDurationService.getDuration(file);
 	}
 
 	protected String callApi(byte[] bytes, String filename) {
@@ -184,9 +182,9 @@ public class OpenAiService {
 				try {
 					return processChunksWav(tempFile);
 				} catch (UnsupportedAudioFileException | IllegalArgumentException | java.io.IOException e) {
-					logger.warn("WAV splitting failed (unsupported format or IO error?), falling back to byte splitting: {}",
+					logger.warn("Java audio decoding failed; trying FFmpeg: {}",
 							e.getMessage());
-					return processChunksBytes(bytes, filename, duration);
+					return processChunksWithFfmpeg(tempFile);
 				}
 			}
 		} finally {
@@ -307,91 +305,16 @@ public class OpenAiService {
 		return objectMapper.writeValueAsString(mergedResponse);
 	}
 
-	private String processChunksBytes(byte[] bytes, String filename, double totalDuration) throws Exception {
-		// Fallback implementation: split by bytes (risky but necessary for unsupported
-		// formats without ffmpeg)
-		long totalBytes = bytes.length;
-		double chunkDurationSeconds = 400.0; // Reduced from 1000s for safety
-		long bytesPerChunk = (long) (totalBytes * (chunkDurationSeconds / totalDuration));
-		if (bytesPerChunk < 1024)
-			bytesPerChunk = totalBytes;
-		// Cap at 6MB
-		long maxBytes = 6 * 1024 * 1024;
-		if (bytesPerChunk > maxBytes) {
-			bytesPerChunk = maxBytes;
+	private String processChunksWithFfmpeg(File inputFile) throws Exception {
+		File decodedFile = File.createTempFile("openai_decoded_", ".wav");
+		try {
+			MediaCommand.run(List.of(ffmpegExecutable, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
+					"-i", inputFile.getAbsolutePath(), "-map", "0:a:0", "-vn", "-ac", "1", "-ar", "16000",
+					"-c:a", "pcm_s16le", decodedFile.getAbsolutePath()), Duration.ofMinutes(2));
+			return processChunksWav(decodedFile);
+		} finally {
+			java.nio.file.Files.deleteIfExists(decodedFile.toPath());
 		}
-
-		int numberOfChunks = (int) Math.ceil((double) totalBytes / bytesPerChunk);
-
-		ObjectNode mergedResponse = objectMapper.createObjectNode();
-		StringBuilder combinedText = new StringBuilder();
-		ArrayNode combinedSegments = objectMapper.createArrayNode();
-		String task = null;
-		String language = null;
-		double currentOffset = 0.0;
-		double totalProcessedDuration = 0.0;
-
-		for (int i = 0; i < numberOfChunks; i++) {
-			int start = (int) (i * bytesPerChunk);
-			int end = (int) Math.min((i + 1) * bytesPerChunk, totalBytes);
-			if (start >= end)
-				break;
-
-			byte[] chunkBytes = Arrays.copyOfRange(bytes, start, end);
-			String chunkFilename = "chunk_" + i + "_" + filename;
-
-			String responseJson = callApi(chunkBytes, chunkFilename);
-			JsonNode responseNode = objectMapper.readTree(responseJson);
-
-			if (i == 0) {
-				if (responseNode.has("task"))
-					task = responseNode.get("task").asText();
-				if (responseNode.has("language"))
-					language = responseNode.get("language").asText();
-			}
-
-			if (responseNode.has("text")) {
-				if (combinedText.length() > 0)
-					combinedText.append(" ");
-				combinedText.append(responseNode.get("text").asText());
-			}
-
-			if (responseNode.has("segments")) {
-				JsonNode segments = responseNode.get("segments");
-				if (segments.isArray()) {
-					for (JsonNode segment : segments) {
-						if (segment.isObject()) {
-							ObjectNode segmentObj = (ObjectNode) segment;
-							if (segmentObj.has("start")) {
-								segmentObj.put("start", segmentObj.get("start").asDouble() + currentOffset);
-							}
-							if (segmentObj.has("end")) {
-								segmentObj.put("end", segmentObj.get("end").asDouble() + currentOffset);
-							}
-							combinedSegments.add(segmentObj);
-						}
-					}
-				}
-			}
-
-			if (responseNode.has("duration")) {
-				double duration = responseNode.get("duration").asDouble();
-				currentOffset += duration;
-				totalProcessedDuration += duration;
-			} else {
-				currentOffset += chunkDurationSeconds;
-			}
-		}
-
-		if (task != null)
-			mergedResponse.put("task", task);
-		if (language != null)
-			mergedResponse.put("language", language);
-		mergedResponse.put("duration", totalProcessedDuration);
-		mergedResponse.put("text", combinedText.toString());
-		mergedResponse.set("segments", combinedSegments);
-
-		return objectMapper.writeValueAsString(mergedResponse);
 	}
 
 }

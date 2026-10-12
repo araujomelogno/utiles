@@ -14,7 +14,6 @@ import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.jaudiotagger.audio.AudioFileIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -41,14 +40,16 @@ public class SupervisionTaskProcessorService {
 	private final SupervisionTaskRepository supervisionTaskRepository;
 	private final OpenAiService openAiService;
 	private final ChatClient chatClient;
+	private final AudioDurationService audioDurationService;
 
 	private final String basePrompt;
 
 	public SupervisionTaskProcessorService(SupervisionTaskRepository supervisionTaskRepository,
-			OpenAiService openAiService, ChatClient.Builder chatClientBuilder) {
+			OpenAiService openAiService, ChatClient.Builder chatClientBuilder, AudioDurationService audioDurationService) {
 		this.supervisionTaskRepository = supervisionTaskRepository;
 		this.openAiService = openAiService;
 		this.chatClient = chatClientBuilder.build();
+		this.audioDurationService = audioDurationService;
 
 		String loadedPrompt = "";
 		try (InputStream inputStream = getClass().getResourceAsStream("/prompts/supervision4.txt")) {
@@ -89,11 +90,7 @@ public class SupervisionTaskProcessorService {
 				try (FileOutputStream fos = new FileOutputStream(tempFile)) {
 					fos.write(task.getAudioContent());
 				}
-				org.jaudiotagger.audio.AudioFile taggedFile = AudioFileIO.read(tempFile);
-				int duration = taggedFile.getAudioHeader().getTrackLength();
-				task.setTotalAudioDuration((double) duration);
-			} catch (Exception e) {
-				logger.error("Error calculating audio duration for task {}: {}", task.getId(), e.getMessage(), e);
+				task.setTotalAudioDuration(audioDurationService.getDuration(tempFile));
 			} finally {
 				if (tempFile != null) {
 					// noinspection ResultOfMethodCallIgnored
