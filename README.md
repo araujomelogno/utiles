@@ -14,6 +14,24 @@ If you install the Vaadin plugin for IntelliJ, you should instead launch the `Ap
 
 ## Deploying to Production
 
+### Audio processing prerequisites
+
+Install FFmpeg (which includes `ffprobe`) on every machine that processes supervision audio,
+including the Tomcat server. On macOS use `brew install ffmpeg`; on Ubuntu/Debian use
+`sudo apt install ffmpeg`. Both executables must be available in the application process's
+`PATH`, or configure absolute paths using `audio.ffprobe.path` and `audio.ffmpeg.path`
+in your external Spring configuration. Verify availability as the user running Tomcat.
+
+Audio duration is read with jaudiotagger first and ffprobe as a fallback. If neither can
+determine a positive duration, the task fails before uploading audio instead of treating
+the duration as zero. For audio longer than 20 minutes that Java cannot decode (such as
+M4A), FFmpeg converts it to mono 16 kHz PCM WAV before splitting into valid audio files.
+Allow temporary disk space for the decoded WAV (about 1.92 MB per minute), and conversion
+must finish within two minutes. Duration probing has a 30-second timeout.
+
+Run unit tests with `./mvnw test`. To also exercise real ffprobe and FFmpeg with a generated
+28-minute M4A (no external API calls), run `./mvnw -Daudio.media.integration=true test`.
+
 The project is a standard Maven project. To create a production build, call 
 
 ```
