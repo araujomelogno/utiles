@@ -14,23 +14,31 @@ If you install the Vaadin plugin for IntelliJ, you should instead launch the `Ap
 
 ## Deploying to Production
 
-### Audio processing prerequisites
+### Audio processing
 
-Install FFmpeg (which includes `ffprobe`) on every machine that processes supervision audio,
-including the Tomcat server. On macOS use `brew install ffmpeg`; on Ubuntu/Debian use
-`sudo apt install ffmpeg`. Both executables must be available in the application process's
-`PATH`, or configure absolute paths using `audio.ffprobe.path` and `audio.ffmpeg.path`
-in your external Spring configuration. Verify availability as the user running Tomcat.
+M4A/MP4 duration and splitting run entirely in Java using `org.mp4parser:muxer`,
+which Maven includes in the WAR. No FFmpeg, ffprobe, executable paths, or extra
+server installation are needed. The former `audio.ffprobe.path` and
+`audio.ffmpeg.path` settings can be removed; they are no longer read.
 
-Audio duration is read with jaudiotagger first and ffprobe as a fallback. If neither can
-determine a positive duration, the task fails before uploading audio instead of treating
-the duration as zero. For audio longer than 20 minutes that Java cannot decode (such as
-M4A), FFmpeg converts it to mono 16 kHz PCM WAV before splitting into valid audio files.
-Allow temporary disk space for the decoded WAV (about 1.92 MB per minute), and conversion
-must finish within two minutes. Duration probing has a 30-second timeout.
+The reader supports regular, extended 64-bit, and EOF-sized MP4 boxes. An EOF-sized
+box is normalized in a private temporary copy, leaving the original recording
+unchanged. Duration is measured from the first audio track's encoded sample timing,
+so it can include a small amount of encoder padding. Other formats continue to use
+jaudiotagger. Unreadable audio fails before upload rather than receiving a zero duration.
 
-Run unit tests with `./mvnw test`. To also exercise real ffprobe and FFmpeg with a generated
-28-minute M4A (no external API calls), run `./mvnw -Daudio.media.integration=true test`.
+M4A/MP4 recordings longer than 20 minutes or larger than 6 MiB are remuxed into
+standalone M4A containers at complete audio sample boundaries, without recoding or
+splitting arbitrary bytes. Chunks are limited to 400 seconds and 6 MiB including
+container headers. The first audio track is selected; video and other tracks are
+excluded. Transcription timestamps use the original sample timeline, including
+silence, even when the API does not return a duration. Other long audio formats
+use the existing Java Sound WAV splitting when a decoder is available.
+
+Run all tests with `./mvnw test`. Tests include real AAC fixtures, both problematic
+`mdat` header variants, and a 28-minute M4A constructed in Java. They validate all
+chunk containers, unchanged samples, and timestamp offsets without external
+programs or OpenAI calls.
 
 The project is a standard Maven project. To create a production build, call 
 
