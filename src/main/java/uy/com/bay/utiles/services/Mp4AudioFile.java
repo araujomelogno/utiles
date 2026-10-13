@@ -10,10 +10,14 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
+import java.util.Properties;
 
+import org.mp4parser.IsoFile;
+import org.mp4parser.PropertyBoxParserImpl;
+import org.mp4parser.boxes.iso14496.part12.TrackBox;
 import org.mp4parser.muxer.FileRandomAccessSourceImpl;
+import org.mp4parser.muxer.Mp4TrackImpl;
 import org.mp4parser.muxer.Track;
-import org.mp4parser.muxer.container.mp4.MovieCreator;
 
 /** Owns the sample data source, which mp4parser's Track.close() does not close. */
 final class Mp4AudioFile implements AutoCloseable {
@@ -45,10 +49,15 @@ final class Mp4AudioFile implements AutoCloseable {
 		FileRandomAccessSourceImpl source = null;
 		try {
 			source = new FileRandomAccessSourceImpl(new RandomAccessFile(input.toFile(), "r"));
-			try (var channel = FileChannel.open(input, StandardOpenOption.READ)) {
-				var movie = MovieCreator.build(channel, source, file.getName());
-				Track audio = movie.getTracks().stream().filter(track -> "soun".equals(track.getHandler()))
+			try (var channel = FileChannel.open(input, StandardOpenOption.READ);
+					var isoFile = new IsoFile(channel, boxParser())) {
+				if (isoFile.getMovieBox() == null) {
+					throw new IOException("MP4 contains no movie metadata");
+				}
+				TrackBox audioBox = isoFile.getMovieBox().getBoxes(TrackBox.class).stream()
+						.filter(box -> "soun".equals(box.getMediaBox().getHandlerBox().getHandlerType()))
 						.findFirst().orElseThrow(() -> new IOException("MP4 contains no audio track"));
+				Track audio = new Mp4TrackImpl(audioBox.getTrackHeaderBox().getTrackId(), isoFile, source, file.getName());
 				if (audio.getTrackMetaData().getTimescale() <= 0 || audio.getDuration() <= 0
 						|| audio.getSampleDurations().length != audio.getSamples().size()) {
 					throw new IOException("MP4 audio track has invalid timing or sample tables");
@@ -64,6 +73,19 @@ final class Mp4AudioFile implements AutoCloseable {
 			}
 			throw new IOException("Cannot read M4A/MP4 audio: " + e.getMessage(), e);
 		}
+	}
+
+	private static PropertyBoxParserImpl boxParser() throws IOException {
+		// The library's default constructor uses the system loader, which cannot see WEB-INF/lib.
+		// Load from the defining class instead; no global cache or server classpath changes are needed.
+		Properties mapping = new Properties();
+		try (var resource = PropertyBoxParserImpl.class.getResourceAsStream("/isoparser2-default.properties")) {
+			if (resource == null) {
+				throw new IOException("mp4parser box mapping is missing from the application's isoparser JAR");
+			}
+			mapping.load(resource);
+		}
+		return new PropertyBoxParserImpl(mapping);
 	}
 
 	Track track() {
