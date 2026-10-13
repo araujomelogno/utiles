@@ -223,7 +223,14 @@
 			<version>5.2.3</version> <!-- Usá la misma versión que tu poi-ooxml -->
 		</dependency>
 
-		<!-- jaudiotagger for audio duration -->
+		<!-- Pure-Java M4A/MP4 parsing and remuxing; packaged in the WAR. -->
+		<dependency>
+			<groupId>org.mp4parser</groupId>
+			<artifactId>muxer</artifactId>
+			<version>1.9.56</version>
+		</dependency>
+
+		<!-- jaudiotagger for duration of other audio formats -->
 		<dependency>
 			<groupId>org.jaudiotagger</groupId>
 			<artifactId>jaudiotagger</artifactId>

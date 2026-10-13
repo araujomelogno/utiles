@@ -51,9 +51,6 @@ public class OpenAiService {
 	private final ObjectMapper objectMapper;
 	private final AudioDurationService audioDurationService;
 
-	@Value("${audio.ffmpeg.path:ffmpeg}")
-	private String ffmpegExecutable = "ffmpeg";
-
 	@Autowired
 	public OpenAiService(ObjectMapper objectMapper, AudioDurationService audioDurationService) {
 		this.objectMapper = objectMapper;
@@ -175,17 +172,12 @@ public class OpenAiService {
 
 			double duration = getDuration(tempFile);
 
-			if (duration <= 1200) {
+			if (duration <= 1200 && bytes.length <= Mp4AudioChunks.MAX_UPLOAD_BYTES) {
 				return callApi(bytes, filename);
+			} else if (Mp4AudioFile.isMp4(tempFile)) {
+				return processChunksMp4(tempFile);
 			} else {
-				// Try robust WAV splitting first
-				try {
-					return processChunksWav(tempFile);
-				} catch (UnsupportedAudioFileException | IllegalArgumentException | java.io.IOException e) {
-					logger.warn("Java audio decoding failed; trying FFmpeg: {}",
-							e.getMessage());
-					return processChunksWithFfmpeg(tempFile);
-				}
+				return processChunksWav(tempFile);
 			}
 		} finally {
 			if (tempFile != null && tempFile.exists()) {
@@ -284,6 +276,7 @@ public class OpenAiService {
 						} else {
 							double approxDuration = (double) totalRead / (decodedFormat.getFrameRate() * frameSize);
 							currentOffset += approxDuration;
+							totalProcessedDuration += approxDuration;
 						}
 
 					} finally {
@@ -305,16 +298,46 @@ public class OpenAiService {
 		return objectMapper.writeValueAsString(mergedResponse);
 	}
 
-	private String processChunksWithFfmpeg(File inputFile) throws Exception {
-		File decodedFile = File.createTempFile("openai_decoded_", ".wav");
-		try {
-			MediaCommand.run(List.of(ffmpegExecutable, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-					"-i", inputFile.getAbsolutePath(), "-map", "0:a:0", "-vn", "-ac", "1", "-ar", "16000",
-					"-c:a", "pcm_s16le", decodedFile.getAbsolutePath()), Duration.ofMinutes(2));
-			return processChunksWav(decodedFile);
-		} finally {
-			java.nio.file.Files.deleteIfExists(decodedFile.toPath());
-		}
+	private String processChunksMp4(File inputFile) throws Exception {
+		ObjectNode merged = objectMapper.createObjectNode();
+		ArrayNode segments = objectMapper.createArrayNode();
+		StringBuilder text = new StringBuilder();
+		Mp4AudioChunks.process(inputFile, (bytes, offset, duration) -> {
+			JsonNode response = objectMapper.readTree(callApi(bytes, "chunk.m4a"));
+			if (offset == 0) {
+				if (response.has("task")) {
+					merged.set("task", response.get("task"));
+				}
+				if (response.has("language")) {
+					merged.set("language", response.get("language"));
+				}
+			}
+			if (response.has("text")) {
+				if (text.length() > 0) {
+					text.append(' ');
+				}
+				text.append(response.get("text").asText());
+			}
+			if (response.path("segments").isArray()) {
+				for (JsonNode segment : response.path("segments")) {
+					if (segment.isObject()) {
+						ObjectNode adjusted = segment.deepCopy();
+						if (adjusted.has("start")) {
+							adjusted.put("start", adjusted.path("start").asDouble() + offset);
+						}
+						if (adjusted.has("end")) {
+							adjusted.put("end", adjusted.path("end").asDouble() + offset);
+						}
+						segments.add(adjusted);
+					}
+				}
+			}
+			// Use encoded sample timing, including silent portions, even if the API omits duration.
+			merged.put("duration", offset + duration);
+		});
+		merged.put("text", text.toString());
+		merged.set("segments", segments);
+		return objectMapper.writeValueAsString(merged);
 	}
 
 }
