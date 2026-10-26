@@ -18,6 +18,7 @@ import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.repository.FieldworkRepository;
 import uy.com.bay.utiles.data.repository.SupervisionTaskRepository;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
+import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorDimensionScores;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
 import uy.com.bay.utiles.dto.SupervisionSurveyorReportDTO;
 import uy.com.bay.utiles.dto.SupervisionSurveyorReportDTO.SurveyorProfile;
@@ -131,6 +132,14 @@ public class SupervisionSummaryService {
 		// Dimensiones del proyecto (promedios).
 		dto.setDimensionScores(toDimensionScores(
 				supervisionTaskRepository.findAverageDimensionScoresByStudy(studyName, from, to, type)));
+
+		// Dimensiones del proyecto diferenciadas por encuestador (promedios).
+		List<SurveyorDimensionScores> dimensionsBySurveyor = new ArrayList<>();
+		for (Tuple tuple : supervisionTaskRepository.findAverageDimensionScoresBySurveyor(studyName, from, to, type)) {
+			dimensionsBySurveyor.add(
+					new SurveyorDimensionScores(tuple.get("surveyor", String.class), toDimensionScores(tuple)));
+		}
+		dto.setDimensionScoresBySurveyor(dimensionsBySurveyor);
 
 		// Puntaje global por encuestador.
 		dto.setScoreBySurveyor(computeScoreBySurveyor(studyName, from, to, type));
