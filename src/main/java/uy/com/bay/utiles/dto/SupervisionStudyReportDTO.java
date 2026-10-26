@@ -33,8 +33,15 @@ public class SupervisionStudyReportDTO {
 	/** Promedio del puntaje global por encuestador. */
 	private List<SurveyorScore> scoreBySurveyor = new ArrayList<>();
 
+	/** Promedio de cada dimensión de calidad por encuestador. */
+	private List<SurveyorDimensionScores> dimensionScoresBySurveyor = new ArrayList<>();
+
 	/** Puntaje global promedio de un encuestador y cantidad de tareas consideradas. */
 	public record SurveyorScore(String surveyor, double score, long count) {
+	}
+
+	/** Promedio de cada dimensión de calidad de un encuestador. */
+	public record SurveyorDimensionScores(String surveyor, DimensionScores scores) {
 	}
 
 	public long getCompletedSurveys() {
@@ -91,5 +98,13 @@ public class SupervisionStudyReportDTO {
 
 	public void setScoreBySurveyor(List<SurveyorScore> scoreBySurveyor) {
 		this.scoreBySurveyor = scoreBySurveyor;
+	}
+
+	public List<SurveyorDimensionScores> getDimensionScoresBySurveyor() {
+		return dimensionScoresBySurveyor;
+	}
+
+	public void setDimensionScoresBySurveyor(List<SurveyorDimensionScores> dimensionScoresBySurveyor) {
+		this.dimensionScoresBySurveyor = dimensionScoresBySurveyor;
 	}
 }

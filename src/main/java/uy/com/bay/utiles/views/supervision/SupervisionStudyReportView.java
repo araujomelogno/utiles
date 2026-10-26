@@ -17,6 +17,7 @@ import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.plotoptions.Bar;
 import com.github.appreciated.apexcharts.helper.Series;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
@@ -30,6 +31,7 @@ import jakarta.annotation.security.RolesAllowed;
 import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionSummaryService;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO;
+import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorDimensionScores;
 import uy.com.bay.utiles.dto.SupervisionStudyReportDTO.SurveyorScore;
 import uy.com.bay.utiles.dto.SupervisionSummaryDTO.DimensionScores;
 import uy.com.bay.utiles.views.ApexChartRenderHelper;
@@ -40,8 +42,8 @@ import uy.com.bay.utiles.views.MainLayout;
  * un proyecto (alchemerStudyName) o "Todos los estudios"; al cambiar la selección
  * se recalculan los indicadores (encuestas completas, supervisadas, nivel de
  * supervisión, puntaje global promedio y promedio por encuestador) y los gráficos
- * ApexCharts: dimensiones del proyecto (radar) y puntaje global por encuestador
- * (barras).
+ * ApexCharts: dimensiones del proyecto (radar, opcionalmente con una línea por
+ * encuestador) y puntaje global por encuestador (barras).
  */
 @PageTitle("Reporte por proyecto")
 @Route(value = "supervision-study-report", layout = MainLayout.class)
@@ -51,12 +53,19 @@ public class SupervisionStudyReportView extends VerticalLayout {
 	private static final String ACCENT = "#2E6DB4";
 	private static final String ALL_STUDIES = "Todos los estudios";
 
+	/** Paleta para las líneas del radar diferenciado por encuestador (se repite en ciclo). */
+	private static final String[] SURVEYOR_COLORS = { "#2E6DB4", "#C5503F", "#2F8F6B", "#E4A11B", "#8A6FB0",
+			"#1F9BAA", "#D16BA5", "#6B8E23", "#A0522D", "#5C6BC0", "#F06292", "#00897B" };
+
 	private final SupervisionSummaryService summaryService;
 	private final ComboBox<String> studyComboBox = new ComboBox<>("Estudio");
 	private final DatePicker fromDatePicker = new DatePicker("Desde");
 	private final DatePicker toDatePicker = new DatePicker("Hasta");
 	private final ComboBox<SupervisionTaskType> typeComboBox = new ComboBox<>("Tipo");
 	private final Div content = new Div();
+
+	/** Si el radar de dimensiones muestra una línea por encuestador (se conserva entre refrescos). */
+	private boolean dimensionsBySurveyor = false;
 
 	public SupervisionStudyReportView(SupervisionSummaryService summaryService) {
 		this.summaryService = summaryService;
@@ -183,28 +192,85 @@ public class SupervisionStudyReportView extends VerticalLayout {
 		row.setWidthFull();
 		row.getStyle().set("display", "grid").set("grid-template-columns", "1fr 1fr").set("gap", "16px");
 
-		row.add(buildDimensionCard(report.getDimensionScores()));
+		row.add(buildDimensionCard(report));
 		row.add(buildScoreBySurveyorCard(report.getScoreBySurveyor()));
 		return row;
 	}
 
-	/** DIMENSIONES DEL PROYECTO: gráfico de radar con los promedios. */
-	private Div buildDimensionCard(DimensionScores dimensions) {
+	/**
+	 * DIMENSIONES DEL PROYECTO: gráfico de radar con los promedios. Un checkbox
+	 * permite diferenciar los resultados por encuestador, dibujando una línea por
+	 * cada uno en lugar del promedio general.
+	 */
+	private Div buildDimensionCard(SupervisionStudyReportDTO report) {
 		Div card = card();
 		card.add(cardTitle("Dimensiones del proyecto"));
-		card.add(cardCaption("Promedio por dimensión de la rúbrica"));
+		Span caption = cardCaption("");
+		card.add(caption);
 
-		Double[] values = { roundToInt(dimensions.cobertura()), roundToInt(dimensions.fidelidad()),
-				roundToInt(dimensions.neutralidad()), roundToInt(dimensions.fluidez()) };
+		Checkbox bySurveyorCheckbox = new Checkbox("Diferenciar por encuestador", dimensionsBySurveyor);
+		card.add(bySurveyorCheckbox);
 
+		Div chartHolder = new Div();
+		chartHolder.setWidthFull();
+		card.add(chartHolder);
+
+		Runnable render = () -> {
+			chartHolder.removeAll();
+			if (dimensionsBySurveyor) {
+				caption.setText("Promedio por dimensión de la rúbrica, por encuestador");
+				chartHolder.add(buildDimensionChartBySurveyor(report.getDimensionScoresBySurveyor()));
+			} else {
+				caption.setText("Promedio por dimensión de la rúbrica");
+				chartHolder.add(buildDimensionChart(report.getDimensionScores()));
+			}
+		};
+		bySurveyorCheckbox.addValueChangeListener(event -> {
+			dimensionsBySurveyor = Boolean.TRUE.equals(event.getValue());
+			render.run();
+		});
+		render.run();
+		return card;
+	}
+
+	/** Radar con el promedio general de cada dimensión. */
+	private Component buildDimensionChart(DimensionScores dimensions) {
 		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.RADAR).build())
 				.withColors(ACCENT).withLabels("Cobertura", "Fidelidad", "Neutralidad", "Fluidez")
 				.withDataLabels(DataLabelsBuilder.get().withEnabled(true).build())
-				.withSeries(new Series<>("Promedio", values)).build();
+				.withSeries(new Series<>("Promedio", dimensionValues(dimensions))).build();
 		chart.setWidth("100%");
 		chart.setHeight("320px");
-		card.add(ApexChartRenderHelper.deferred(chart));
-		return card;
+		return ApexChartRenderHelper.deferred(chart);
+	}
+
+	/** Radar con una línea (serie) por encuestador. */
+	private Component buildDimensionChartBySurveyor(List<SurveyorDimensionScores> bySurveyor) {
+		if (bySurveyor.isEmpty()) {
+			return noData();
+		}
+
+		@SuppressWarnings("unchecked")
+		Series<Double>[] series = bySurveyor.stream()
+				.map(s -> new Series<>(s.surveyor(), dimensionValues(s.scores()))).toArray(Series[]::new);
+		String[] colors = new String[bySurveyor.size()];
+		for (int i = 0; i < colors.length; i++) {
+			colors[i] = SURVEYOR_COLORS[i % SURVEYOR_COLORS.length];
+		}
+
+		// Con varias líneas las etiquetas de datos se superponen: se ocultan y los
+		// valores quedan disponibles en el tooltip.
+		ApexCharts chart = ApexChartsBuilder.get().withChart(ChartBuilder.get().withType(Type.RADAR).build())
+				.withColors(colors).withLabels("Cobertura", "Fidelidad", "Neutralidad", "Fluidez")
+				.withDataLabels(DataLabelsBuilder.get().withEnabled(false).build()).withSeries(series).build();
+		chart.setWidth("100%");
+		chart.setHeight("420px");
+		return ApexChartRenderHelper.deferred(chart);
+	}
+
+	private static Double[] dimensionValues(DimensionScores dimensions) {
+		return new Double[] { roundToInt(dimensions.cobertura()), roundToInt(dimensions.fidelidad()),
+				roundToInt(dimensions.neutralidad()), roundToInt(dimensions.fluidez()) };
 	}
 
 	/** PUNTAJE GLOBAL POR ENCUESTADOR: gráfico de barras (promedio por encuestador). */

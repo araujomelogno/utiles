@@ -149,6 +149,19 @@ public interface SupervisionTaskRepository extends JpaRepository<SupervisionTask
 			@Param("to") Date to, @Param("type") SupervisionTaskType type);
 
 	/**
+	 * Promedio de cada dimensión de calidad agrupado por encuestador del proyecto
+	 * seleccionado (null = todos), de las tareas creadas dentro del rango. Alimenta
+	 * el radar "Dimensiones del proyecto" diferenciado por encuestador.
+	 */
+	@Query("SELECT st.surveyor as surveyor, AVG(st.scoreCobertura) as cobertura, AVG(st.scoreFidelidad) as fidelidad, "
+			+ "AVG(st.scoreNeutralidad) as neutralidad, AVG(st.scoreFluidez) as fluidez FROM SupervisionTask st "
+			+ "WHERE st.surveyor IS NOT NULL AND (:studyName IS NULL OR st.alchemerStudyName = :studyName) "
+			+ "AND st.created BETWEEN :from AND :to AND (:type IS NULL OR st.type = :type) "
+			+ "GROUP BY st.surveyor ORDER BY st.surveyor")
+	List<Tuple> findAverageDimensionScoresBySurveyor(@Param("studyName") String studyName, @Param("from") Date from,
+			@Param("to") Date to, @Param("type") SupervisionTaskType type);
+
+	/**
 	 * Promedio del puntaje global y cantidad de tareas agrupados por encuestador del
 	 * proyecto seleccionado (null = todos), de las tareas creadas dentro del rango.
 	 */

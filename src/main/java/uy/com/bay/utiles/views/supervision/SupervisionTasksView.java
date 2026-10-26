@@ -16,18 +16,23 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -39,6 +44,7 @@ import uy.com.bay.utiles.data.Status;
 import uy.com.bay.utiles.data.SupervisionTaskType;
 import uy.com.bay.utiles.data.service.SupervisionTaskService;
 import uy.com.bay.utiles.dto.SupervisionTaskDTO;
+import uy.com.bay.utiles.services.ClaudeReportService;
 import uy.com.bay.utiles.services.WordExportService;
 import uy.com.bay.utiles.views.MainLayout;
 
@@ -49,6 +55,7 @@ public class SupervisionTasksView extends VerticalLayout {
 
 	private final SupervisionTaskService supervisionTaskService;
 	private final WordExportService wordExportService;
+	private final ClaudeReportService claudeReportService;
 
 	private final DatePicker fromDateField = new DatePicker("Desde:");
 	private final DatePicker toDateField = new DatePicker("Hasta:");
@@ -60,9 +67,11 @@ public class SupervisionTasksView extends VerticalLayout {
 
 	private List<SupervisionTaskDTO> currentItems = List.of();
 
-	public SupervisionTasksView(SupervisionTaskService supervisionTaskService, WordExportService wordExportService) {
+	public SupervisionTasksView(SupervisionTaskService supervisionTaskService, WordExportService wordExportService,
+			ClaudeReportService claudeReportService) {
 		this.supervisionTaskService = supervisionTaskService;
 		this.wordExportService = wordExportService;
+		this.claudeReportService = claudeReportService;
 		setSizeFull();
 		configureGrid();
 		add(getToolbar(), grid);
@@ -143,6 +152,14 @@ public class SupervisionTasksView extends VerticalLayout {
 		}).setHeader("Audio");
 
 		grid.addComponentColumn(task -> {
+			Button reportButton = new Button("Generar informe");
+			// El informe sólo puede generarse sobre tareas finalizadas (status DONE).
+			reportButton.setEnabled(task.getStatus() == Status.DONE);
+			reportButton.addClickListener(e -> generateReport(task));
+			return reportButton;
+		}).setHeader("Informe");
+
+		grid.addComponentColumn(task -> {
 			Button deleteButton = new Button("Borrar");
 			deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 			deleteButton.addClickListener(e -> confirmDelete(task));
@@ -190,6 +207,76 @@ public class SupervisionTasksView extends VerticalLayout {
 					typeField.getValue());
 			grid.setItems(currentItems);
 		}
+	}
+
+	/**
+	 * Genera el informe de la tarea con la API de Claude. La llamada se hace en
+	 * segundo plano mientras se muestra un modal de progreso; al terminar se
+	 * muestra el informe con la opción de descargarlo en Word (Push habilitado).
+	 */
+	private void generateReport(SupervisionTaskDTO task) {
+		if (task == null || task.getId() == null) {
+			return;
+		}
+		if (task.getStatus() != Status.DONE) {
+			Notification.show("La tarea debe estar en estado DONE para generar el informe.", 4000,
+					Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+			return;
+		}
+
+		Dialog dialog = new Dialog();
+		dialog.setHeaderTitle("Informe de supervisión - " + (task.getFileName() != null ? task.getFileName() : ""));
+		dialog.setCloseOnOutsideClick(false);
+		dialog.setWidth("900px");
+		dialog.setMaxWidth("95vw");
+
+		ProgressBar progressBar = new ProgressBar();
+		progressBar.setIndeterminate(true);
+		VerticalLayout loadingLayout = new VerticalLayout(new Span("Generando informe con Claude..."), progressBar);
+		loadingLayout.setAlignItems(Alignment.CENTER);
+		dialog.add(loadingLayout);
+
+		Button closeButton = new Button("Cerrar", e -> dialog.close());
+		dialog.getFooter().add(closeButton);
+		dialog.open();
+
+		UI ui = UI.getCurrent();
+		new Thread(() -> {
+			String report = null;
+			String error = null;
+			try {
+				report = claudeReportService.generateReport(task.getId());
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				error = ex.getMessage();
+			}
+			final String result = report;
+			final String errorMessage = error;
+			ui.access(() -> {
+				dialog.removeAll();
+				if (result == null) {
+					dialog.close();
+					Notification.show("Error al generar el informe: " + errorMessage, 6000,
+							Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+					return;
+				}
+
+				Div reportText = new Div();
+				reportText.setText(result);
+				reportText.getStyle().set("white-space", "pre-wrap").set("font-size", "14px");
+				dialog.add(reportText);
+
+				Anchor downloadLink = new Anchor(new StreamResource(
+						"Informe_" + (task.getFileName() != null ? task.getFileName() : task.getId()) + ".docx",
+						() -> wordExportService.generateMarkdownReport(result)), "");
+				downloadLink.getElement().setAttribute("download", true);
+				Button downloadButton = new Button("Descargar Word");
+				downloadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+				downloadLink.add(downloadButton);
+				dialog.getFooter().removeAll();
+				dialog.getFooter().add(downloadLink, closeButton);
+			});
+		}).start();
 	}
 
 	private void confirmDelete(SupervisionTaskDTO task) {
