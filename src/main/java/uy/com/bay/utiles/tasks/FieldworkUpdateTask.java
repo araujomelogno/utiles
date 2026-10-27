@@ -105,38 +105,49 @@ public class FieldworkUpdateTask {
 			return;
 		}
 		for (Fieldwork fieldwork : budgetEntry.getFieldworks()) {
-			if (fieldwork.getInitPlannedDate() == null || fieldwork.getEndPlannedDate() == null) {
-				continue;
-			}
-			Date initDate = Date.from(fieldwork.getInitPlannedDate().minusMonths(1)
-					.atStartOfDay(ZoneId.systemDefault()).toInstant());
-			Date endDate = Date.from(fieldwork.getEndPlannedDate().plusMonths(3)
-					.atStartOfDay(ZoneId.systemDefault()).toInstant());
-			boolean hasAlchemer = fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty();
-			boolean hasDooblo = fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty();
-			if (!hasAlchemer && !hasDooblo) {
-				continue;
-			}
-
-			// Un fieldwork puede tener ids de Alchemer y de Dooblo a la vez: se
-			// consultan ambas fuentes y se suman los completos de cada mes y de cada dia.
-			CompletedSurveysCount completedSurveys = new CompletedSurveysCount();
-			if (hasAlchemer) {
-				completedSurveys.merge(alchemerSurveyResponseHelper.getCompletedSurveys(fieldwork.getAlchemerId(),
-						initDate, endDate));
-			}
-			if (hasDooblo) {
-				completedSurveys.merge(
-						doobloSurveyRetriever.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate));
-			}
-
-			fieldwork.getCompletedByMonth().clear();
-			fieldwork.getCompletedByMonth().putAll(completedSurveys.getByMonth());
-			// Se reemplaza el mapa (en lugar de clear/putAll) porque es LAZY y el
-			// fieldwork puede no estar asociado a una sesion abierta.
-			fieldwork.setCompletedByDay(new HashMap<>(completedSurveys.getByDay()));
-			fieldworkService.save(fieldwork);
+			updateCompleted(fieldwork);
 		}
+	}
+
+	/**
+	 * Recalcula los completos (por mes y por dia) del fieldwork consultando todos
+	 * sus ids de Alchemer y de Dooblo, y lo guarda.
+	 *
+	 * @return {@code true} si el fieldwork tenia fechas e ids y se actualizo.
+	 */
+	public boolean updateCompleted(Fieldwork fieldwork) {
+		if (fieldwork.getInitPlannedDate() == null || fieldwork.getEndPlannedDate() == null) {
+			return false;
+		}
+		Date initDate = Date.from(fieldwork.getInitPlannedDate().minusMonths(1)
+				.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		Date endDate = Date.from(fieldwork.getEndPlannedDate().plusMonths(3)
+				.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		boolean hasAlchemer = fieldwork.getAlchemerId() != null && !fieldwork.getAlchemerId().isEmpty();
+		boolean hasDooblo = fieldwork.getDoobloId() != null && !fieldwork.getDoobloId().isEmpty();
+		if (!hasAlchemer && !hasDooblo) {
+			return false;
+		}
+
+		// Un fieldwork puede tener ids de Alchemer y de Dooblo a la vez: se
+		// consultan ambas fuentes y se suman los completos de cada mes y de cada dia.
+		CompletedSurveysCount completedSurveys = new CompletedSurveysCount();
+		if (hasAlchemer) {
+			completedSurveys.merge(alchemerSurveyResponseHelper.getCompletedSurveys(fieldwork.getAlchemerId(),
+					initDate, endDate));
+		}
+		if (hasDooblo) {
+			completedSurveys.merge(
+					doobloSurveyRetriever.getCompletedSurveys(fieldwork.getDoobloId(), initDate, endDate));
+		}
+
+		fieldwork.getCompletedByMonth().clear();
+		fieldwork.getCompletedByMonth().putAll(completedSurveys.getByMonth());
+		// Se reemplaza el mapa (en lugar de clear/putAll) porque es LAZY y el
+		// fieldwork puede no estar asociado a una sesion abierta.
+		fieldwork.setCompletedByDay(new HashMap<>(completedSurveys.getByDay()));
+		fieldworkService.save(fieldwork);
+		return true;
 	}
 
 	private void refreshCostsFromOdoo(Study study) {

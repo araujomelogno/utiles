@@ -92,6 +92,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 	private final Button cancel = new Button("Cancelar");
 	private final Button save = new Button("Guardar");
 	private final Button delete = new Button("Eliminar");
+	private final Button updateCompleted = new Button("Actualizar campos");
 
 	private final BeanValidationBinder<Fieldwork> binder;
 
@@ -250,6 +251,67 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 						Notification.Position.MIDDLE);
 			}
 		});
+
+		updateCompleted.addClickListener(e -> updateCompletedOfCurrentFieldwork());
+	}
+
+	/**
+	 * Recalcula las completas de la solicitud seleccionada consultando todos sus
+	 * ids de Alchemer (y de Dooblo, si tiene). Puede demorar por el limite de
+	 * requests de Alchemer, por eso se ejecuta en segundo plano (Push esta
+	 * habilitado) y al terminar se refrescan el formulario y la grilla.
+	 */
+	private void updateCompletedOfCurrentFieldwork() {
+		if (this.fieldwork == null || this.fieldwork.getId() == null) {
+			Notification.show("Guarde la solicitud de campo antes de actualizar las completas.", 4000,
+					Notification.Position.MIDDLE);
+			return;
+		}
+		if (binder.hasChanges()) {
+			Notification.show("Hay cambios sin guardar. Guarde la solicitud antes de actualizar las completas.", 4000,
+					Notification.Position.MIDDLE);
+			return;
+		}
+		Long fieldworkId = this.fieldwork.getId();
+		updateCompleted.setEnabled(false);
+		Notification.show("Actualizando completas...", 3000, Notification.Position.BOTTOM_START);
+
+		UI ui = UI.getCurrent();
+		new Thread(() -> {
+			String error = null;
+			boolean updated = false;
+			try {
+				Optional<Fieldwork> fromBackend = fieldworkService.get(fieldworkId);
+				if (fromBackend.isPresent()) {
+					updated = fieldworkUpdateTask.updateCompleted(fromBackend.get());
+				} else {
+					error = "la solicitud de campo ya no existe";
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				error = ex.getMessage();
+			}
+			final boolean wasUpdated = updated;
+			final String errorMessage = error;
+			ui.access(() -> {
+				updateCompleted.setEnabled(true);
+				if (errorMessage != null) {
+					Notification.show("Error al actualizar las completas: " + errorMessage, 6000,
+							Notification.Position.MIDDLE);
+					return;
+				}
+				if (!wasUpdated) {
+					Notification.show("La solicitud no tiene fechas planificadas o ids de Alchemer/Dooblo.", 4000,
+							Notification.Position.MIDDLE);
+					return;
+				}
+				grid.getDataProvider().refreshAll();
+				if (this.fieldwork != null && fieldworkId.equals(this.fieldwork.getId())) {
+					fieldworkService.get(fieldworkId).ifPresent(this::populateForm);
+				}
+				Notification.show("Completas actualizadas.", 3000, Notification.Position.BOTTOM_START);
+			});
+		}).start();
 	}
 
 	@Override
@@ -358,7 +420,7 @@ public class FieldworksView extends Div implements BeforeEnterObserver {
 		buttonLayout.setClassName("button-layout");
 		save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-		buttonLayout.add(save, delete, cancel);
+		buttonLayout.add(save, delete, cancel, updateCompleted);
 		editorLayoutDiv.add(buttonLayout);
 	}
 
