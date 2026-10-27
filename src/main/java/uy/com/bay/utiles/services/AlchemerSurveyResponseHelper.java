@@ -11,7 +11,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -42,6 +44,21 @@ public class AlchemerSurveyResponseHelper {
 
     @Value("${alchemer.api.token.secret}")
     private String apiTokenSecret;
+
+    /**
+     * Intervalo minimo entre llamadas a la API de Alchemer. El limite por defecto
+     * de Alchemer es 240 requests por minuto (uno cada 250 ms); se deja margen para
+     * otras llamadas que se hagan en paralelo con la misma cuenta.
+     */
+    @Value("${alchemer.api.min-interval-ms:350}")
+    private long minIntervalMs;
+
+    /** Cantidad de reintentos cuando Alchemer responde 429 Too Many Requests. */
+    @Value("${alchemer.api.max-retries:5}")
+    private int maxRetries;
+
+    private final Object throttleLock = new Object();
+    private long lastRequestAt = 0;
 
     public AlchemerSurveyResponseHelper(AlchemerContactRepository contactRepository,
                                 AlchemerAnswerRepository answerRepository,
@@ -123,6 +140,11 @@ public class AlchemerSurveyResponseHelper {
                         LOGGER.error("Error fetching completed surveys from Alchemer API for surveyId {} day {}",
                                 surveyId, dayStart, e);
                     }
+                    if (daysSum >= monthCount) {
+                        // Ya se encontraron todos los completos del mes: los dias restantes
+                        // no tienen completos y no hace falta consultarlos.
+                        break;
+                    }
                     dayCursor.add(Calendar.DAY_OF_MONTH, 1);
                 }
                 if (daysSum != monthCount) {
@@ -150,9 +172,63 @@ public class AlchemerSurveyResponseHelper {
                         + "&resultsperpage=1",
                 surveyId, apiToken, apiTokenSecret, startStr, endStr);
 
-        String response = restTemplate.getForObject(url, String.class);
+        String response = getWithRetry(url, surveyId);
         JsonNode root = objectMapper.readTree(response);
         return root.path("total_count").asInt();
+    }
+
+    /**
+     * Hace el GET respetando el intervalo minimo entre llamadas y, si Alchemer
+     * responde 429, espera (Retry-After o backoff exponencial) y reintenta.
+     */
+    private String getWithRetry(String url, String surveyId) {
+        long backoffMs = 10_000;
+        for (int attempt = 0;; attempt++) {
+            throttle();
+            try {
+                return restTemplate.getForObject(url, String.class);
+            } catch (HttpClientErrorException.TooManyRequests e) {
+                if (attempt >= maxRetries) {
+                    throw e;
+                }
+                long waitMs = retryAfterMs(e.getResponseHeaders(), backoffMs);
+                LOGGER.warn("Alchemer surveyId {}: 429 Too Many Requests, reintento {}/{} en {} ms", surveyId,
+                        attempt + 1, maxRetries, waitMs);
+                sleep(waitMs);
+                backoffMs = Math.min(backoffMs * 2, 60_000);
+            }
+        }
+    }
+
+    private long retryAfterMs(HttpHeaders headers, long defaultMs) {
+        String retryAfter = headers != null ? headers.getFirst(HttpHeaders.RETRY_AFTER) : null;
+        if (retryAfter != null) {
+            try {
+                return Math.max(1, Long.parseLong(retryAfter.trim())) * 1000;
+            } catch (NumberFormatException ignored) {
+                // Retry-After puede venir como fecha HTTP; se usa el backoff por defecto.
+            }
+        }
+        return defaultMs;
+    }
+
+    private void throttle() {
+        synchronized (throttleLock) {
+            long wait = lastRequestAt + minIntervalMs - System.currentTimeMillis();
+            if (wait > 0) {
+                sleep(wait);
+            }
+            lastRequestAt = System.currentTimeMillis();
+        }
+    }
+
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrumpido esperando el limite de la API de Alchemer", e);
+        }
     }
 
     public String buildSurveyResponseJson(int surveyId, String phoneNumber) throws JsonProcessingException {
